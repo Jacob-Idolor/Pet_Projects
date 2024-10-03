@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +16,7 @@ import (
 func main() {
 	// Initialize MongoDB connection
 	client, collection := db.ConnectMongoDB()
-	defer client.Disconnect(nil)
+	defer client.Disconnect(context.Background())
 
 	// Prompt user for action
 	reader := bufio.NewReader(os.Stdin)

@@ -14,6 +14,8 @@ import (
 // FetchPlayers calls the BallDontLie API to fetch player data
 func FetchPlayers() ([]models.Player, error) {
 	apiKey := os.Getenv("BALDONTLIE_API_KEY")
+	fmt.Println("API Key:", apiKey) // Debug: Print API key
+
 	if apiKey == "" {
 		return nil, errors.New("API Key not set in environment")
 	}
@@ -35,10 +37,13 @@ func FetchPlayers() ([]models.Player, error) {
 			return nil, fmt.Errorf("error fetching players: %v", err)
 		}
 
+		// Debug: Print raw response
+		fmt.Println("Raw response:", string(resp.Body()))
+
 		var apiResponse models.APIResponse
 		err = json.Unmarshal(resp.Body(), &apiResponse)
 		if err != nil {
-			return nil, fmt.Errorf("error unmarshaling response: %v", err)
+			return nil, fmt.Errorf("error unmarshaling response: %v\nRaw response: %s", err, string(resp.Body()))
 		}
 
 		allPlayers = append(allPlayers, apiResponse.Data...)
