@@ -30,19 +30,13 @@ func main() {
 			log.Fatalf("Error fetching players: %v", err)
 		}
 
-		// Empty the collection before inserting new data
-		err = db.EmptyCollection(collection)
-		if err != nil {
-			log.Fatalf("Error emptying collection: %v", err)
-		}
-
-		// Insert data into MongoDB
+		// Insert or update data in MongoDB
 		err = db.InsertPlayers(collection, players)
 		if err != nil {
-			log.Fatalf("Error inserting players: %v", err)
+			log.Fatalf("Error inserting/updating players: %v", err)
 		}
 
-		fmt.Println("New data fetched and inserted successfully!")
+		fmt.Println("Database updated with new player data!")
 	} else {
 		fmt.Println("Using existing data from the database.")
 	}

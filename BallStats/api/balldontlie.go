@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"os"
 
 	"BallStats/models"
@@ -20,21 +20,34 @@ func FetchPlayers() ([]models.Player, error) {
 
 	url := "https://api.balldontlie.io/v1/players"
 	clientResty := resty.New()
+	var allPlayers []models.Player
+	cursor := 1
 
-	resp, err := clientResty.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Authorization", apiKey).
-		Get(url)
+	for {
+		resp, err := clientResty.R().
+			SetHeader("Content-Type", "application/json").
+			SetHeader("Authorization", apiKey).
+			SetQueryParam("per_page", "100").
+			SetQueryParam("cursor", fmt.Sprintf("%d", cursor)).
+			Get(url)
 
-	if err != nil {
-		log.Fatal(err)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching players: %v", err)
+		}
+
+		var apiResponse models.APIResponse
+		err = json.Unmarshal(resp.Body(), &apiResponse)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshaling response: %v", err)
+		}
+
+		allPlayers = append(allPlayers, apiResponse.Data...)
+
+		if apiResponse.Meta.NextCursor == 0 {
+			break
+		}
+		cursor = apiResponse.Meta.NextCursor
 	}
 
-	var apiResponse models.APIResponse
-	err = json.Unmarshal(resp.Body(), &apiResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiResponse.Data, nil
+	return allPlayers, nil
 }
