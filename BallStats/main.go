@@ -37,7 +37,13 @@ func main() {
 			log.Fatalf("Error inserting/updating players: %v", err)
 		}
 
-		fmt.Println("Database updated with new player data!")
+		// Validate the inserted data
+		err = db.ValidatePlayerData(collection)
+		if err != nil {
+			log.Fatalf("Error validating player data: %v", err)
+		}
+
+		fmt.Println("Database updated and validated with new player data!")
 	} else {
 		fmt.Println("Using existing data from the database.")
 	}

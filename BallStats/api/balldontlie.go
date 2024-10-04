@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"BallStats/models"
 
@@ -23,14 +24,14 @@ func FetchPlayers() ([]models.Player, error) {
 	url := "https://api.balldontlie.io/v1/players"
 	clientResty := resty.New()
 	var allPlayers []models.Player
-	cursor := 1
+	page := 1
+	perPage := 100 // Maximum allowed per page
 
 	for {
 		resp, err := clientResty.R().
-			SetHeader("Content-Type", "application/json").
 			SetHeader("Authorization", apiKey).
-			SetQueryParam("per_page", "100").
-			SetQueryParam("cursor", fmt.Sprintf("%d", cursor)).
+			SetQueryParam("per_page", fmt.Sprintf("%d", perPage)).
+			SetQueryParam("page", fmt.Sprintf("%d", page)).
 			Get(url)
 
 		if err != nil {
@@ -48,10 +49,13 @@ func FetchPlayers() ([]models.Player, error) {
 
 		allPlayers = append(allPlayers, apiResponse.Data...)
 
-		if apiResponse.Meta.NextCursor == 0 {
+		if len(apiResponse.Data) < perPage {
 			break
 		}
-		cursor = apiResponse.Meta.NextCursor
+		page++
+
+		// Respect rate limit
+		time.Sleep(2 * time.Second)
 	}
 
 	return allPlayers, nil

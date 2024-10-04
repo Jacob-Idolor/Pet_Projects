@@ -1,11 +1,10 @@
 package db
 
 import (
+	"BallStats/models"
 	"context"
 	"fmt"
 	"log"
-
-	"BallStats/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -70,5 +69,30 @@ func EmptyCollection(collection *mongo.Collection) error {
 	if err != nil {
 		return fmt.Errorf("error emptying collection: %v", err)
 	}
+	return nil
+}
+
+func ValidatePlayerData(collection *mongo.Collection) error {
+	count, err := collection.CountDocuments(context.TODO(), bson.M{})
+	if err != nil {
+		return fmt.Errorf("error counting documents: %v", err)
+	}
+
+	if count == 0 {
+		return fmt.Errorf("no players found in the database")
+	}
+
+	fmt.Printf("Successfully inserted/updated %d players\n", count)
+
+	// Sample validation: Check if a specific player exists
+	filter := bson.M{"last_name": "James"}
+	var player models.Player
+	err = collection.FindOne(context.TODO(), filter).Decode(&player)
+	if err != nil {
+		return fmt.Errorf("error finding sample player: %v", err)
+	}
+
+	fmt.Printf("Sample player found: %s %s\n", player.FirstName, player.LastName)
+
 	return nil
 }
