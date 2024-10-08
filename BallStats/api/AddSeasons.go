@@ -182,3 +182,108 @@ func AddSeasons(startYear, endYear int) error {
 	log.Println("Data insertion complete.")
 	return nil
 }
+
+func GetAllPlayers(collection *mongo.Collection) ([]Player, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := collection.Find(ctx, bson.M{}, options.Find().SetProjection(bson.M{"PlayerName": 1, "PlayerID": 1, "_id": 0}))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch players: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var players []Player
+	if err = cursor.All(ctx, &players); err != nil {
+		return nil, fmt.Errorf("failed to decode players: %v", err)
+	}
+
+	return players, nil
+}
+
+func GetPlayerData(collection *mongo.Collection, input string) (Player, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var player Player
+	filter := bson.M{
+		"$or": []bson.M{
+			{"PlayerName": input},
+			{"PlayerID": input},
+		},
+	}
+
+	err := collection.FindOne(ctx, filter).Decode(&player)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return Player{}, fmt.Errorf("no player found with name or ID: %s", input)
+		}
+		return Player{}, fmt.Errorf("error fetching player data: %v", err)
+	}
+
+	return player, nil
+}
+
+func ConnectToMongoDB() (*mongo.Client, error) {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to MongoDB: %v", err)
+	}
+
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
+	}
+
+	return client, nil
+}
+
+func GetPlayerSeasons(collection *mongo.Collection, playerName string) ([]Player, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"PlayerName": playerName}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch player data: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var seasons []Player
+	if err = cursor.All(ctx, &seasons); err != nil {
+		return nil, fmt.Errorf("failed to decode player seasons: %v", err)
+	}
+
+	return seasons, nil
+}
+
+func GetUniquePlayerNames(collection *mongo.Collection) ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$PlayerName"}}}},
+		{{Key: "$sort", Value: bson.D{{Key: "_id", Value: 1}}}},
+	}
+
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to aggregate player names: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var results []struct {
+		Name string `bson:"_id"`
+	}
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("failed to decode player names: %v", err)
+	}
+
+	var names []string
+	for _, result := range results {
+		names = append(names, result.Name)
+	}
+
+	return names, nil
+}
