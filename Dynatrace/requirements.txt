@@ -1,0 +1,5 @@
+fastapi
+requests
+pydantic
+python-dotenv
+jinja2

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynatrace Problems</title>
+    <link rel="stylesheet" href="/static/css/problems.css">
+</head>
+<body>
+    <!-- <form method="get" action="/problems">
+        <label for="zone">Management Zone:</label>
+        <input type="text" id="zone" name="zone" value="{{ zone or '' }}">
+    
+        <button type="submit">Filter</button> 
+    </form> -->
+    
+    <div class="container">
+        <h1>Dynatrace Problems</h1>
+        {% if message %}
+            <p class="message">{{ message }}</p>
+        {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Impact</th>
+                    <th>Start Time</th>
+                    <th>Management Zones</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for problem in problems %}
+                <tr>
+                    <td>{{ problem.title }}</td>
+                    <td>{{ problem.status }}</td>
+                    <td>{{ problem.impactLevel }}</td>
+                    <td>{{ problem.startTime | convert_epoch }}</td>
+                    <td>
+                        {% for zone in problem.managementZones %}
+                            {{ zone.name }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{{ problem.problemId | dynalink }}" target="_blank">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</body>
+</html>
