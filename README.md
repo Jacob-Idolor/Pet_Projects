@@ -11,7 +11,6 @@ A curated collection of personal coding projects showcasing skills in Go, Python
 - [Getting Started](#getting-started)  
 - [Prerequisites](#prerequisites)  
 - [Contributing](#contributing)  
-- [License](#license)  
 
 ---
 
