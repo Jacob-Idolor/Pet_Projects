@@ -87,7 +87,7 @@ func AddSeasons(startYear, endYear int) error {
 		}
 
 		for _, player := range players {
-			filter := bson.M{"id": player.ID}
+                       filter := bson.M{"_id": player.ID}
 			update := bson.M{"$set": bson.M{
 				"playername": player.PlayerName,
 				"position":   player.Position,
