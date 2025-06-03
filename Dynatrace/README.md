@@ -73,3 +73,7 @@ dynatrace_api_url=https://your-env.live.dynatrace.com
     uvicorn main:app --reload
     ```
 6.  **Visit the application**: Open your web browser and go to `http://127.0.0.1:8000/problems`.
+7.  **Run tests** (optional):
+    ```bash
+    pytest
+    ```
