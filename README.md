@@ -9,8 +9,9 @@ A curated collection of personal coding projects showcasing skills in Go, Python
 - [PickEm](#pickem)  
 - [PythonPractice](#pythonpractice)  
 - [Getting Started](#getting-started)  
-- [Prerequisites](#prerequisites)  
-- [Contributing](#contributing)  
+- [Prerequisites](#prerequisites)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -113,3 +114,6 @@ Then pick a project folder and follow its individual README or instructions:
 This is a personal portfolio—feel free to fork or open issues if you spot bugs or have suggestions!
 
 ---
+## License
+
+This project is licensed under the [MIT License](LICENSE).
