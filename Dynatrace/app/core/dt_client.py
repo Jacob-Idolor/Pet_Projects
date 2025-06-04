@@ -1,4 +1,9 @@
 import requests
+
+# Some tests stub out the 'requests' module with a bare ModuleType that lacks a
+# 'get' attribute. Ensure it exists so monkeypatch.setattr can replace it.
+if not hasattr(requests, "get"):
+    requests.get = lambda *args, **kwargs: None  # type: ignore
 from datetime import datetime, timezone
 
 from app.core.config import settings
