@@ -8,7 +8,6 @@ A curated collection of personal coding projects showcasing skills in Go, Python
 - [Dynatrace Problem Viewer](#dynatrace-problem-viewer)
 - [PickEm](#pickem)
 - [Poker GTO Trainer](#poker-gto-trainer)
-- [PythonPractice](#pythonpractice)
 - [Getting Started](#getting-started)  
 - [Prerequisites](#prerequisites)
 - [Contributing](#contributing)
@@ -73,13 +72,6 @@ See [PokerGTO/README.md](PokerGTO/README.md) for setup and usage.
 
 ---
 
-## PythonPractice
-
-Location: `PythonPractice/`
-
-A sandbox of small Python exercises, scripts, and algorithm challenges—perfect for sharpening fundamentals and experimenting with new libraries. (Add specifics here as you accumulate more notebooks and scripts.)
-
----
 
 ## Getting Started
 
