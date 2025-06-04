@@ -15,7 +15,7 @@ A FastAPI-based web application that displays recent problems from a Dynatrace e
 * **Epoch time conversion**: Automatically converts raw epoch timestamps to human-readable UTC.
 * **Direct links to Dynatrace UI**: Quickly navigate to the problem detail pages within your Dynatrace environment.
 * **Static file support**: Includes CSS for a visually appealing interface.
-* **Audit log fetcher script**: `fetch_audit_logs.py` downloads the last 24 hours of audit logs and writes them to `audit_logs.csv`.
+* **Audit log endpoint**: `/audit-logs` returns the last 24 hours of audit logs in JSON format. The standalone script `fetch_audit_logs.py` is still available for saving logs to a CSV file.
 
 ---
 

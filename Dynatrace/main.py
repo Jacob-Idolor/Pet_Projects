@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import problems
+from app.api import problems, audit_logs
 from app.core.config import settings
 from fastapi.staticfiles import StaticFiles
 app = FastAPI()
@@ -12,6 +12,7 @@ def read_root():
     return {"message": "Dynatrace Self-Service Tower Running"}
 
 app.include_router(problems.router)
+app.include_router(audit_logs.router)
 
 def dynalink(problem_id):
     return f"{settings.dynatrace_api_url}/ui/problems/{problem_id}"
