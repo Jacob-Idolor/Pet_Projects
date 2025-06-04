@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Simulated Hands</h2>
+<ul>
+    {% for player in players %}
+    <li><strong>{{ player.name }}:</strong> {{ player.hand[0] }}, {{ player.hand[1] }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
