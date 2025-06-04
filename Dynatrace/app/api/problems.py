@@ -9,13 +9,6 @@ templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["convert_epoch"] = convert_epoch  
 templates.env.filters["dynalink"] = dynalink
 
-# Register custom filter here
-def dynalink(problem_id):
-    return f"{settings.dynatrace_api_url}/ui/problems/{problem_id}"
-
-templates.env.filters["dynalink"] = dynalink
-
-from fastapi import HTTPException
 
 @router.get("/problems", response_class=HTMLResponse)
 def problems_view(
