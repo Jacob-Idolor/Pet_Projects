@@ -5,9 +5,10 @@ A curated collection of personal coding projects showcasing skills in Go, Python
 ## Table of Contents
 
 - [BallStats](#ballstats)  
-- [Dynatrace Problem Viewer](#dynatrace-problem-viewer)  
-- [PickEm](#pickem)  
-- [PythonPractice](#pythonpractice)  
+- [Dynatrace Problem Viewer](#dynatrace-problem-viewer)
+- [PickEm](#pickem)
+- [Poker GTO Trainer](#poker-gto-trainer)
+- [PythonPractice](#pythonpractice)
 - [Getting Started](#getting-started)  
 - [Prerequisites](#prerequisites)
 - [Contributing](#contributing)
@@ -58,6 +59,17 @@ A suite of Python scripts, datasets, and simple GUI tools for NBA “Pick ’Em�
 - **Technologies**: Python, pandas, JSON/CSV, tkinter, basic machine learning  
 
 See `PickEm/readme.md` for usage examples and workflow.
+
+---
+
+## Poker GTO Trainer
+
+Location: `PokerGTO/`
+
+A lightweight Flask web application that introduces Game Theory Optimal concepts
+and displays example opening ranges by position.
+
+See [PokerGTO/README.md](PokerGTO/README.md) for setup and usage.
 
 ---
 

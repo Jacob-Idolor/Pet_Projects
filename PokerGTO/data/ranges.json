@@ -1,0 +1,8 @@
+{
+  "UTG": ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","KQs","AQo"],
+  "MP": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AJs","ATs","KQs","AKo","AQo"],
+  "CO": ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","ATs","KQs","KJs","QJs","JTs","AKo","AQo","AJo"],
+  "BTN": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","AKs","AQs","AJs","ATs","A9s","A8s","KQs","KJs","KTs","QJs","QTs","JTs","T9s","98s","AKo","AQo","AJo","KQo"],
+  "SB": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s","KQs","KJs","KTs","K9s","QJs","QTs","JTs","T9s","98s","87s","AKo","AQo","AJo","KQo","QJo"],
+  "BB": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s","KQs","KJs","KTs","K9s","K8s","QJs","QTs","Q9s","JTs","J9s","T9s","98s","87s","76s","65s","54s","AKo","AQo","AJo","ATo","KQo","KJo","QJo","JTo"]
+}
