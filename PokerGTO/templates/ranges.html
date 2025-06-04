@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Opening Ranges by Position</h2>
+{% for position, hands in ranges.items() %}
+<section>
+    <h3>{{ position }}</h3>
+    <p>{{ ', '.join(hands) }}</p>
+</section>
+{% endfor %}
+{% endblock %}
