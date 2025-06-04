@@ -24,3 +24,14 @@ python app.py
 ```
 
 Visit `http://127.0.0.1:5000/` in your browser.
+
+## Simulating Hands
+
+To deal random starting hands, visit the `/simulate` route. You can optionally
+specify the number of players with the `players` query parameter:
+
+```
+http://127.0.0.1:5000/simulate?players=4
+```
+
+Each request shuffles a new deck and displays two cards for every player.
