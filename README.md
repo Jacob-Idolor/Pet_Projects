@@ -52,8 +52,10 @@ A suite of Python scripts, datasets, and simple GUI tools for NBA “Pick ’Em�
 
 - **Data gathering**: `GatherCurrentNBA*.py`, `GetStats.py`, `GetMatchups.py`  
 - **Cleaning & merging**: `CleanupLines.py`, `Mergetest.py`, `Merge*`  
-- **Analytics & modeling**: `predictive_model_script.py`, `ShowMetheMoney.py`  
-- **GUI exploration**: `Gui.py`  
+- **Analytics & modeling**: `predictive_model_script.py`, `ShowMetheMoney.py`
+- **Simple predictions**: `simple_prediction_service.py` aggregates historical overs and unders from `combined_data.csv`
+- **ML predictions**: `ml_prediction_service.py` trains a lightweight logistic model for over/under forecasts
+- **GUI exploration**: `Gui.py`
 - **Datasets**: CSVs, JSON game logs, PrizePicks API extracts  
 - **Technologies**: Python, pandas, JSON/CSV, tkinter, basic machine learning  
 
