@@ -49,7 +49,13 @@ python predictive_model_script.py
 
 Interpret the classification metrics to gauge model quality—higher precision and recall indicate better predictions. Use the aggregated prediction table to spot players with frequent predicted overs or unders.
 
-## 7. Visualize and explore
+## 7. Simple Prediction Service
+Run `python simple_prediction_service.py` to aggregate historical overs and unders and save to `simple_predictions.json`. The script automatically reads `combined_data.csv` from the same folder so it works whether you call it from the repository root or the `PickEm` directory.
+
+## 8. Machine Learning Prediction Service
+Run `python ml_prediction_service.py` to train a lightweight logistic regression model and output aggregated predictions to `ml_predictions.json`.
+
+## 9. Visualize and explore
 Run `ShowMetheMoney.py` to explore the merged dataset with additional summaries and graphs. The script uses seaborn and matplotlib to display trends.
 
 ```bash
