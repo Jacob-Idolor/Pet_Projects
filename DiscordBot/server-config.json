@@ -1,0 +1,36 @@
+{
+  "740235261673341049": {
+    "tickers": [
+      "SBET",
+      "GLXY",
+      "BMNR",
+      "ETHA",
+      "ETH"
+    ],
+    "intervalMs": 60000,
+    "running": true,
+    "earnings": {
+      "channelId": null,
+      "hourUTC": 15,
+      "running": false,
+      "lastPostISO": null
+    },
+    "twitter": {
+      "channelId": "1404260924566671390",
+      "running": true,
+      "users": [
+        "amitisinvesting",
+        "fundstrat",
+        "unusual_whales",
+        "riskonbobby",
+        "PelosiTracker_"
+      ],
+      "lastIds": {
+        "amitisinvesting": "1954647054258725156"
+      },
+      "intervalMs": 60000
+    },
+    "channelId": "1404260098632585236",
+    "messageId": "1404260228375253124"
+  }
+}

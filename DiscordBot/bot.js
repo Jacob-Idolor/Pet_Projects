@@ -23,7 +23,7 @@ if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
   process.exit(1);
 }
 
-/* --------------- Persistence --------------- */
+/* ---------------- Persistence ---------------- */
 const DATA_PATH = path.resolve('./server-config.json');
 /**
  store per guild:
@@ -47,9 +47,8 @@ async function loadStore() {
   try { store = JSON.parse(await fs.readFile(DATA_PATH, 'utf8') || '{}'); }
   catch { store = {}; }
 }
-async function saveStore() {
-  await fs.writeFile(DATA_PATH, JSON.stringify(store, null, 2));
-}
+async function saveStore() { await fs.writeFile(DATA_PATH, JSON.stringify(store, null, 2)); }
+
 function cfgFor(gid) {
   if (!store[gid]) store[gid] = {};
   const c = store[gid];
@@ -61,8 +60,21 @@ function cfgFor(gid) {
   return c;
 }
 
-/* --------------- Utilities --------------- */
+/* ---------------- Utilities ---------------- */
 function chunk(arr, n) { const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
+
+function highlightTickers(text, watchlist = []) {
+  if (!text) return text;
+  // First: highlight $CASHTAGS
+  text = text.replace(/\$([A-Za-z]{1,5})\b/g, (m, t) => `**$${t.toUpperCase()}**`);
+  // Then: highlight any watchlist tickers appearing as standalone words (AAPL, TSLA, etc.)
+  const wl = Array.from(new Set((watchlist || []).map(s => s.toUpperCase()))).filter(Boolean);
+  if (wl.length) {
+    const re = new RegExp(`\\b(${wl.map(t => t.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'g');
+    text = text.replace(re, (m) => `**${m.toUpperCase()}**`);
+  }
+  return text;
+}
 
 async function fetchQuoteSafe(t) {
   try {
@@ -83,7 +95,7 @@ async function fetchQuoteSafe(t) {
   } catch { return { ticker: t, error: 'API error' }; }
 }
 
-/* --------------- Watchlist rendering --------------- */
+/* ---------------- Watchlist rendering ---------------- */
 async function renderWatchEmbed(gid) {
   const c = cfgFor(gid); const tickers = (c.tickers || []).map(s => s.toUpperCase());
   if (!tickers.length) {
@@ -127,7 +139,7 @@ async function postOrUpdateWatchMessage(gid) {
 function startWatch(gid, ms) { stopWatch(gid); timers.set(gid, setInterval(() => postOrUpdateWatchMessage(gid), ms)); const c = cfgFor(gid); c.running = true; c.intervalMs = ms; saveStore(); }
 function stopWatch(gid) { const t = timers.get(gid); if (t) clearInterval(t); timers.delete(gid); const c = cfgFor(gid); c.running = false; saveStore(); }
 
-/* --------------- Options P/L (single leg) --------------- */
+/* ---------------- Options P/L (single leg) ---------------- */
 function computePL({ type, strike, premium, target, contractSize = 100 }) {
   const sT = target;
   const intrinsic = type === 'CALL' ? Math.max(0, sT - strike) : Math.max(0, strike - sT);
@@ -135,11 +147,11 @@ function computePL({ type, strike, premium, target, contractSize = 100 }) {
   const pnl = pnlPerShare * contractSize;
   const breakeven = type === 'CALL' ? strike + premium : strike - premium;
   const maxLoss = premium * contractSize;
-  const maxGain = type === 'CALL' ? Infinity : premium * contractSize; // simplistic cap for PUT (0 floor)
+  const maxGain = type === 'CALL' ? Infinity : premium * contractSize; // simple floor assumption
   return { intrinsic, pnlPerShare, pnl, breakeven, maxLoss, maxGain };
 }
 
-/* --------------- Earnings Digest (watchlist) --------------- */
+/* ---------------- Earnings Digest ---------------- */
 async function fetchEarningsFor(ticker) {
   try {
     const summary = await yahooFinance.quoteSummary(ticker, { modules: ['calendarEvents'] });
@@ -165,7 +177,6 @@ async function runDailyEarningsDigest() {
         results.push(...(await Promise.all(g.map(fetchEarningsFor))).filter(Boolean));
         await new Promise(r => setTimeout(r, 350));
       }
-
       const lines = [];
       for (const r of results) {
         const next = r.dates?.map(d => new Date(d)).sort((a,b)=>a-b)[0];
@@ -196,36 +207,46 @@ function scheduleDailyDigest() {
   }, 60 * 1000);
 }
 
-/* --------------- Twitter → AI Summaries --------------- */
+/* ---------------- Twitter → AI Summaries ---------------- */
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
+
 async function fetchLatestTweet(username, sinceId) {
   if (!TWITTER_BEARER) return null;
-  const userRes = await fetch(`https://api.twitter.com/2/users/by/username/${username}`, { headers: { Authorization: `Bearer ${TWITTER_BEARER}` } });
-  if (!userRes.ok) return null;
-  const userData = await userRes.json(); const userId = userData?.data?.id; if (!userId) return null;
 
+  // 1) resolve handle → user id
+  const u = await fetch(`https://api.twitter.com/2/users/by/username/${username}`, {
+    headers: { Authorization: `Bearer ${TWITTER_BEARER}` }
+  });
+  if (!u.ok) return null;
+  const ujson = await u.json();
+  const userId = ujson?.data?.id;
+  if (!userId) return null;
+
+  // 2) fetch latest tweets
   const url = new URL(`https://api.twitter.com/2/users/${userId}/tweets`);
   url.searchParams.set('exclude', 'replies');
-  if (sinceId) url.searchParams.set('since_id', sinceId);
   url.searchParams.set('max_results', '5');
   url.searchParams.set('tweet.fields', 'created_at,public_metrics');
+  if (sinceId) url.searchParams.set('since_id', sinceId);
 
-  const tlRes = await fetch(url, { headers: { Authorization: `Bearer ${TWITTER_BEARER}` } });
-  if (!tlRes.ok) return null;
-  const tlData = await tlRes.json();
-  const tweets = tlData?.data || [];
+  const t = await fetch(url, { headers: { Authorization: `Bearer ${TWITTER_BEARER}` } });
+  if (!t.ok) return null;
+  const tjson = await t.json();
+  const tweets = tjson?.data || [];
   const newest = tweets[0]?.id || sinceId;
   return { last: newest, tweets };
 }
+
 async function summarizeText(text) {
   if (!openai) return `📝 ${text.slice(0, 240)}${text.length > 240 ? '…' : ''}`;
   const r = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     temperature: 0.2,
-    messages: [{ role: 'user', content: `Summarize this trading-related tweet in 1–2 bullets: focus on tickers, levels, catalysts, actions.\n\n${text}` }]
+    messages: [{ role: 'user', content: `Summarize this trading-related tweet in 1–2 bullets. Focus on tickers, catalysts, price levels, and actions if any.\n\n${text}` }]
   });
   return r.choices?.[0]?.message?.content?.trim() || text;
 }
+
 async function pollTweets(gid) {
   const c = cfgFor(gid);
   if (!c.twitter.running || !c.twitter.channelId || !(c.twitter.users?.length)) return;
@@ -237,30 +258,35 @@ async function pollTweets(gid) {
       const last = c.twitter.lastIds?.[user];
       const data = await fetchLatestTweet(user, last);
       if (!data) continue;
+
+      // store newest id for next pass
       if (!c.twitter.lastIds) c.twitter.lastIds = {};
       if (data.last) c.twitter.lastIds[user] = data.last;
 
+      // post newest last so Discord flow is chronological
       const toPost = (data.tweets || []).reverse();
       for (const t of toPost) {
-        const sum = await summarizeText(t.text || '');
+        const raw = t.text || '';
+        const sum = await summarizeText(raw);
+        const highlighted = highlightTickers(sum, c.tickers);
         const url = `https://x.com/${user}/status/${t.id}`;
         const embed = new EmbedBuilder()
           .setTitle(`@${user} — new tweet`)
-          .setDescription(sum)
+          .setDescription(highlighted)
           .addFields({ name: 'Link', value: url })
           .setTimestamp(new Date(t.created_at))
           .setColor(0x5865F2);
         await channel.send({ embeds: [embed] });
       }
       await saveStore();
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 400)); // gentle throttle
     }
   } catch (e) { console.error('tweet poll error:', e?.message || e); }
 }
 function startTweetPoll(gid, ms) { stopTweetPoll(gid); tweetTimers.set(gid, setInterval(() => pollTweets(gid), ms)); const c = cfgFor(gid); c.twitter.running = true; c.twitter.intervalMs = ms; saveStore(); }
 function stopTweetPoll(gid) { const t = tweetTimers.get(gid); if (t) clearInterval(t); tweetTimers.delete(gid); const c = cfgFor(gid); c.twitter.running = false; saveStore(); }
 
-/* --------------- Slash command definitions --------------- */
+/* ---------------- Slash commands ---------------- */
 const slashDefs = [
   new SlashCommandBuilder().setName('ping').setDescription('Bot health check'),
   new SlashCommandBuilder().setName('help').setDescription('Show available commands'),
@@ -327,7 +353,7 @@ async function registerSlash() {
   console.log('✅ Slash commands registered.');
 }
 
-/* --------------- Client --------------- */
+/* ---------------- Client ---------------- */
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
   partials: [Partials.Channel],
@@ -337,7 +363,7 @@ client.once('ready', async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   await loadStore();
   await registerSlash();
-  // restore loops
+  // restore watch & twitter
   for (const [gid] of Object.entries(store)) {
     const c = cfgFor(gid);
     if (c.running && c.channelId && c.tickers?.length) startWatch(gid, c.intervalMs || 60000);
@@ -346,7 +372,7 @@ client.once('ready', async () => {
   scheduleDailyDigest();
 });
 
-/* --------------- Slash handler --------------- */
+/* ---------------- Slash handler ---------------- */
 client.on('interactionCreate', async (ix) => {
   try {
     if (!ix.isChatInputCommand()) return;
@@ -446,6 +472,7 @@ client.on('interactionCreate', async (ix) => {
     if (ix.commandName === 'follow') {
       if (!TWITTER_BEARER) return ix.reply({ content: 'Twitter not configured. Add TWITTER_BEARER in .env', ephemeral: true });
       const sub = ix.options.getSubcommand();
+
       if (sub === 'add') {
         const user = ix.options.getString('user', true).replace(/^@/, '');
         c.twitter.users = Array.from(new Set([...(c.twitter.users||[]), user])); await saveStore();
@@ -456,7 +483,9 @@ client.on('interactionCreate', async (ix) => {
         c.twitter.users = (c.twitter.users||[]).filter(u=>u!==user); await saveStore();
         return ix.reply({ content: `🗑️ Unfollowed @${user}`, ephemeral: true });
       }
-      if (sub === 'list') return ix.reply({ content: `📋 Following: ${c.twitter.users?.length ? c.twitter.users.map(u=>'@'+u).join(', ') : '(none)'}`, ephemeral: true });
+      if (sub === 'list') {
+        return ix.reply({ content: `📋 Following: ${c.twitter.users?.length ? c.twitter.users.map(u=>'@'+u).join(', ') : '(none)'}`, ephemeral: true });
+      }
       if (sub === 'channel') {
         const ch = ix.options.getChannel('channel', true);
         if (ch.type !== ChannelType.GuildText) return ix.reply({ content: 'Pick a text channel.', ephemeral: true });
@@ -465,8 +494,8 @@ client.on('interactionCreate', async (ix) => {
       }
       if (sub === 'start') {
         const s = ix.options.getInteger('interval') || 60;
-        if (!c.twitter.channelId) return ix.reply({ content: 'Set channel: `/follow channel`', ephemeral: true });
-        if (!c.twitter.users?.length) return ix.reply({ content: 'Add users: `/follow add`', ephemeral: true });
+        if (!c.twitter.channelId) return ix.reply({ content: 'Set channel first: `/follow channel`', ephemeral: true });
+        if (!c.twitter.users?.length) return ix.reply({ content: 'Add users first: `/follow add`', ephemeral: true });
         startTweetPoll(gid, Math.max(30, s)*1000);
         return ix.reply({ content: `▶️ Tweet polling started every ${Math.max(30, s)}s.`, ephemeral: true });
       }
@@ -478,7 +507,7 @@ client.on('interactionCreate', async (ix) => {
   }
 });
 
-/* --------------- Prefix (!) handler --------------- */
+/* ---------------- Prefix (!) handler ---------------- */
 client.on('messageCreate', async (msg) => {
   try {
     if (msg.author.bot || !msg.content.startsWith(PREFIX)) return;
@@ -504,6 +533,7 @@ client.on('messageCreate', async (msg) => {
     }
 
     if (cmd === 'pl') {
+      // !pl TICKER CALL|PUT STRIKE PREMIUM EXPIRY TARGET
       const [ticker, ttype, sStr, premStr, expiry, targetStr] = args;
       const type = (ttype || '').toUpperCase();
       const strike = Number(sStr), premium = Number(premStr), target = Number(targetStr);
@@ -524,6 +554,45 @@ client.on('messageCreate', async (msg) => {
       return void msg.channel.send({ embeds: [embed] });
     }
 
+    // Prefix follow commands (mirror slash)
+    if (cmd === 'follow') {
+      if (!TWITTER_BEARER) return void msg.reply('Twitter not configured. Add TWITTER_BEARER in .env');
+      const sub = (args.shift() || '').toLowerCase();
+
+      if (sub === 'add') {
+        const user = (args[0] || '').replace(/^@/, '');
+        if (!user) return void msg.reply(`Usage: \`${PREFIX}follow add handle\``);
+        c.twitter.users = Array.from(new Set([...(c.twitter.users||[]), user])); await saveStore();
+        return void msg.reply(`✅ Following @${user}`);
+      }
+      if (sub === 'remove') {
+        const user = (args[0] || '').replace(/^@/, '');
+        if (!user) return void msg.reply(`Usage: \`${PREFIX}follow remove handle\``);
+        c.twitter.users = (c.twitter.users||[]).filter(u=>u!==user); await saveStore();
+        return void msg.reply(`🗑️ Unfollowed @${user}`);
+      }
+      if (sub === 'list') {
+        return void msg.reply(`📋 Following: ${c.twitter.users?.length ? c.twitter.users.map(u=>'@'+u).join(', ') : '(none)'}`);
+      }
+      if (sub === 'channel') {
+        const ch = msg.mentions.channels.first(); if (!ch) return void msg.reply(`Usage: \`${PREFIX}follow channel #channel\``);
+        if (ch.type !== ChannelType.GuildText) return void msg.reply('Pick a text channel.');
+        c.twitter.channelId = ch.id; await saveStore();
+        return void msg.reply(`📨 Twitter channel set to ${ch}.`);
+      }
+      if (sub === 'start') {
+        const s = Number(args[0]) || 60;
+        if (!c.twitter.channelId) return void msg.reply('Set channel first: `!follow channel #channel`');
+        if (!c.twitter.users?.length) return void msg.reply('Add users first: `!follow add handle`');
+        startTweetPoll(gid, Math.max(30, s)*1000);
+        return void msg.reply(`▶️ Tweet polling started every ${Math.max(30, s)}s.`);
+      }
+      if (sub === 'stop') { stopTweetPoll(gid); return void msg.reply('⏸️ Tweet polling stopped.'); }
+
+      return void msg.reply(`Use: add/remove/list/channel/start/stop — or \`/follow\` for guided UI.`);
+    }
+
+    // Watch commands
     if (cmd === 'watch') {
       const sub = (args.shift() || '').toLowerCase();
       if (sub === 'add') {
@@ -557,6 +626,8 @@ client.on('messageCreate', async (msg) => {
       }
       return void msg.reply(`Use: add/remove/list/channel/start/stop/interval — or \`/watch\` for guided UI.`);
     }
+
+    return void msg.reply(`Unknown command. Try \`${PREFIX}help\`.`);
   } catch (e) { console.error('message handler error:', e?.message || e); }
 });
 
@@ -592,9 +663,13 @@ function helpEmbed() {
       '• `/earnings start [utchour]` — enable daily post (UTC)',
       '• `/earnings stop`',
       '',
-      '**Twitter → Summaries**',
-      '• `/follow add user:handle`  • `/follow remove user:handle`',
-      '• `/follow list`   • `/follow channel`   • `/follow start [interval]`   • `/follow stop`',
+      '**Twitter → Summaries (with ticker highlighting)**',
+      `• \`${PREFIX}follow add handle\` / \`/follow add\``,
+      `• \`${PREFIX}follow remove handle\` / \`/follow remove\``,
+      `• \`${PREFIX}follow list\` / \`/follow list\``,
+      `• \`${PREFIX}follow channel #ch\` / \`/follow channel\``,
+      `• \`${PREFIX}follow start [sec]\` / \`/follow start\``,
+      `• \`${PREFIX}follow stop\` / \`/follow stop\``,
       '_Requires TWITTER_BEARER and (optional) OPENAI_API_KEY._'
     ].join('\n'));
 }
