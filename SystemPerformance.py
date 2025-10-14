@@ -10,12 +10,13 @@ import os
 import threading
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import ctypes
 from ctypes import wintypes, windll
 import tempfile
 import sys
+import random
 
 class SystemOptimizer:
     """Built-in cursor and input optimization modules"""
@@ -162,7 +163,13 @@ class SystemPerformanceMonitor:
         self.manual_paused = False
         self.auto_mode = True
         self.last_notification = ""
-        self.force_running = False  # New: Force modules to stay running during hours
+        self.manual_run_var = tk.BooleanVar(value=False)
+        self.clock_var = tk.StringVar(value="--:--:-- --")
+        self.current_status_message = ""
+        self.log_entries = []
+        self.grace_stop_time = None
+        self.grace_schedule_date = None
+        self.grace_stop_triggered = False
        
         # Create temporary module files
         self.cursor_module = SystemOptimizer.create_cursor_optimizer()
@@ -174,16 +181,12 @@ class SystemPerformanceMonitor:
         # Create GUI (compact version)
         self.setup_compact_gui()
         self.setup_activity_monitoring()
-       
+
         # Start auto management
         self.auto_manage_scripts()
        
         # Auto-minimize after startup
         self.root.after(3000, self.auto_minimize)
-       
-        # Force start modules if within work hours
-        if self.is_within_work_hours() and self.settings.get("always_on_during_hours", True):
-            self.root.after(2000, self.force_start_if_needed)
        
         # Bind window state changes and hotkeys
         self.root.bind('<Unmap>', self.on_window_minimize)
@@ -194,36 +197,17 @@ class SystemPerformanceMonitor:
     def load_settings(self):
         """Load settings from config file or use defaults"""
         default_settings = {
-            # IMPORTANT: Use Eastern timezone since laptop is physically on East Coast
-            "timezone": "US/Eastern",  # Laptop timezone (where it's physically located)
-           
-            # West Coast work schedule converted to Eastern time
-            "work_start_hour": 11,      # 8:30am PST = 11:30am EST
-            "work_start_minute": 30,    # 8:30am PST = 11:30am EST  
-            "work_end_hour": 19,        # 4:30pm PST = 7:30pm EST
-            "work_end_minute": 30,      # 4:30pm PST = 7:30pm EST
-           
-            # Your specific dual-coast scenario
-            "east_coast_morning": True,     # You're physically present 11:30am-1pm EST
-            "west_coast_afternoon": True,   # You're remote 1pm-7:30pm EST (10am-4:30pm PST)
-            "transition_hour": 13,          # 1pm EST = 10am PST (when you switch)
-           
-            # Enhanced settings for your situation
-            "idle_timeout": 3,              # Very sensitive during East Coast hours
-            "west_coast_idle_timeout": 1,   # Always active during West Coast hours
-            "auto_resume_delay": 8,         # Quick resume
-            "keypress_interval": 120,       # Every 2 minutes (frequent)
-            "mouse_interval": 25,           # Every 25 seconds
-           
-            # Always-on settings
+            "timezone": "US/Eastern",
+            "work_start_hour": 9,
+            "work_start_minute": 0,
+            "work_end_hour": 17,
+            "work_end_minute": 0,
+            "idle_timeout": 3,
+            "auto_resume_delay": 8,
             "always_on_during_hours": True,
             "aggressive_detection": True,
             "auto_start": True,
-           
-            # Keys that won't interfere with anything
             "keys_to_press": ["F15", "F16", "Scroll_Lock"],
-           
-            # Stealth settings
             "stealth_mode": True,
             "notifications": False,
             "debug_mode": False
@@ -278,19 +262,6 @@ class SystemPerformanceMonitor:
         else:
             self.root.iconify()
    
-    def force_start_if_needed(self):
-        """Force start modules during business hours if not running"""
-        if (self.is_within_work_hours() and
-            self.auto_mode and
-            not self.manual_paused and
-            self.settings.get("always_on_during_hours", True)):
-           
-            running = any(proc.poll() is None for proc in self.processes.values())
-            if not running:
-                self.start_module('mouse', self.cursor_module)
-                self.start_module('key', self.input_module)
-                self.update_status("Auto-Started")
-
     def setup_compact_gui(self):
         """Setup a compact, discreet GUI interface"""
         # Create menu bar
@@ -311,36 +282,46 @@ class SystemPerformanceMonitor:
        
         # Status variables
         self.status_vars = {
-            'mouse': tk.StringVar(value='Off'),
-            'key': tk.StringVar(value='Off'),
-            'overall': tk.StringVar(value='Ready')
+            'mouse': tk.StringVar(value='STOPPED'),
+            'key': tk.StringVar(value='STOPPED'),
+            'overall': tk.StringVar(value='INIT')
         }
-       
+
         # Compact title
         title_label = ttk.Label(main_frame, text="System Monitor",
                                font=("Arial", 12, "bold"))
         title_label.grid(row=0, column=0, columnspan=3, pady=(0, 8))
-       
+
         # Status display - single line
         status_frame = ttk.Frame(main_frame)
         status_frame.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(0, 8))
-       
-        ttk.Label(status_frame, text="Status:", font=("Arial", 9)).grid(row=0, column=0, sticky=tk.W)
+        status_frame.grid_columnconfigure(1, weight=1)
+
+        ttk.Label(status_frame, text="Status:", font=("Arial", 9, "bold")).grid(row=0, column=0, sticky=tk.W)
         status_label = ttk.Label(status_frame, textvariable=self.status_vars['overall'],
-                                font=("Arial", 9), foreground="green")
+                                font=("Arial", 10, "bold"), foreground="dark red")
         status_label.grid(row=0, column=1, sticky=tk.W, padx=(5, 0))
-       
+
+        clock_label = ttk.Label(status_frame, textvariable=self.clock_var,
+                                font=("Arial", 9, "bold"), foreground="navy")
+        clock_label.grid(row=0, column=2, sticky=tk.E, padx=(10, 5))
+
         # Auto mode toggle - compact
         self.auto_mode_var = tk.BooleanVar(value=self.auto_mode)
         auto_check = ttk.Checkbutton(status_frame, text="Auto",
                                    variable=self.auto_mode_var,
                                    command=self.toggle_auto_mode)
-        auto_check.grid(row=0, column=2, padx=(15, 0))
-       
+        auto_check.grid(row=0, column=3, padx=(5, 0))
+
+        manual_check = ttk.Checkbutton(status_frame, text="Manual Run",
+                                      variable=self.manual_run_var,
+                                      command=self.toggle_manual_run)
+        manual_check.grid(row=0, column=4, padx=(5, 0))
+
         # Compact control buttons
         control_frame = ttk.Frame(main_frame)
         control_frame.grid(row=2, column=0, columnspan=3, pady=(0, 8))
-       
+
         ttk.Button(control_frame, text="Start", width=8,
                   command=self.start_all_modules).grid(row=0, column=0, padx=2)
         ttk.Button(control_frame, text="Pause", width=8,
@@ -353,26 +334,43 @@ class SystemPerformanceMonitor:
         modules_frame.grid(row=3, column=0, columnspan=3, sticky="ew", pady=(0, 8))
        
         # Cursor module
-        ttk.Label(modules_frame, text="Cursor:", font=("Arial", 8)).grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(modules_frame, text="Cursor:", font=("Arial", 8, "bold")).grid(row=0, column=0, sticky=tk.W)
         ttk.Label(modules_frame, textvariable=self.status_vars['mouse'],
-                 font=("Arial", 8)).grid(row=0, column=1, padx=(5, 15), sticky=tk.W)
-       
-        # Input module  
-        ttk.Label(modules_frame, text="Input:", font=("Arial", 8)).grid(row=0, column=2, sticky=tk.W)
+                 font=("Arial", 8, "bold"), foreground="dark green").grid(row=0, column=1, padx=(5, 15), sticky=tk.W)
+
+        # Input module
+        ttk.Label(modules_frame, text="Input:", font=("Arial", 8, "bold")).grid(row=0, column=2, sticky=tk.W)
         ttk.Label(modules_frame, textvariable=self.status_vars['key'],
-                 font=("Arial", 8)).grid(row=0, column=3, padx=(5, 0), sticky=tk.W)
-       
+                 font=("Arial", 8, "bold"), foreground="dark green").grid(row=0, column=3, padx=(5, 0), sticky=tk.W)
+
         # Quick access buttons - minimal
         quick_frame = ttk.Frame(main_frame)
         quick_frame.grid(row=4, column=0, columnspan=3, pady=(0, 5))
-       
+
         ttk.Button(quick_frame, text="Settings", width=10,
                   command=self.show_settings).grid(row=0, column=0, padx=2)
         ttk.Button(quick_frame, text="Hide", width=10,
                   command=self.root.iconify).grid(row=0, column=1, padx=2)
         ttk.Button(quick_frame, text="About", width=10,
                   command=self.show_about).grid(row=0, column=2, padx=2)
-       
+
+        # Activity log
+        log_frame = ttk.LabelFrame(main_frame, text="Activity Log", padding="3")
+        log_frame.grid(row=5, column=0, columnspan=3, sticky="nsew")
+        log_frame.grid_rowconfigure(0, weight=1)
+        log_frame.grid_columnconfigure(0, weight=1)
+
+        scrollbar = ttk.Scrollbar(log_frame)
+        scrollbar.grid(row=0, column=1, sticky='ns')
+
+        self.log_text = tk.Text(log_frame, height=6, width=40, state='disabled',
+                                font=("Consolas", 8))
+        self.log_text.grid(row=0, column=0, sticky='nsew')
+        self.log_text.configure(yscrollcommand=scrollbar.set)
+        scrollbar.configure(command=self.log_text.yview)
+
+        self.log_event("Monitor initialized")
+
         # Configure grid weights for responsive design
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
@@ -461,55 +459,90 @@ class SystemPerformanceMonitor:
                     self.stop_module(name)
                 self.user_active = True
    
-    def is_within_work_hours(self):
-        """Check if current time is within your West Coast work schedule (in EST)"""
+    def get_timezone(self):
         try:
-            # Always use Eastern time since laptop is on East Coast
-            est = pytz.timezone('US/Eastern')
-            now = datetime.now(est)
-           
-            # Skip weekends unless needed
-            if now.weekday() >= 5:  # Saturday = 5, Sunday = 6
+            return pytz.timezone(self.settings.get("timezone", "US/Eastern"))
+        except Exception:
+            return pytz.timezone("US/Eastern")
+
+    def get_local_now(self):
+        tz = self.get_timezone()
+        return datetime.now(tz)
+
+    def get_work_schedule(self, now=None):
+        if now is None:
+            now = self.get_local_now()
+
+        start = now.replace(
+            hour=self.settings.get("work_start_hour", 9),
+            minute=self.settings.get("work_start_minute", 0),
+            second=0,
+            microsecond=0,
+        )
+        end = now.replace(
+            hour=self.settings.get("work_end_hour", 17),
+            minute=self.settings.get("work_end_minute", 0),
+            second=0,
+            microsecond=0,
+        )
+
+        if end <= start:
+            end += timedelta(days=1)
+
+        return start, end
+
+    def is_within_work_hours(self, now=None):
+        """Check if current time is within scheduled hours"""
+        try:
+            if now is None:
+                now = self.get_local_now()
+
+            if now.weekday() >= 5:
                 return False
-           
-            current_hour = now.hour + now.minute / 60.0
-           
-            # Your West Coast schedule converted to Eastern time:
-            # 8:30am PST = 11:30am EST
-            # 4:30pm PST = 7:30pm EST
-            work_start = 11.5  # 11:30am EST
-            work_end = 19.5    # 7:30pm EST
-           
-            return work_start <= current_hour <= work_end
-           
+
+            start, end = self.get_work_schedule(now)
+            return start <= now <= end
+
         except Exception:
-            return True  # Default to active if timezone calculation fails
-   
-    def get_current_work_mode(self):
-        """Determine current work mode based on East Coast time"""
+            return True
+
+    def is_within_grace_period(self, now=None):
         try:
-            est = pytz.timezone('US/Eastern')
-            now = datetime.now(est)
-            current_hour = now.hour + now.minute / 60.0
-           
-            # East Coast morning: 8:00am - 11:30am EST (you're physically present)
-            if 8.0 <= current_hour < 11.5:
-                return "east_coast_morning"
-           
-            # West Coast afternoon: 11:30am - 7:30pm EST (you're working remotely on PST schedule)
-            elif 11.5 <= current_hour <= 19.5:
-                return "west_coast_afternoon"
-           
-            # Outside work hours
-            else:
-                return "off_hours"
-               
+            if now is None:
+                now = self.get_local_now()
+            if now.weekday() >= 5:
+                return False
+            _, end = self.get_work_schedule(now)
+            grace_end = end + timedelta(minutes=15)
+            return end < now <= grace_end
         except Exception:
-            return "west_coast_afternoon"  # Default to work mode if calculation fails
+            return False
    
     def update_status(self, message):
-        """Update the overall status display"""
-        self.status_vars['overall'].set(message)
+        """Update the overall status display with a 12-hour timestamp"""
+        now = self.get_local_now()
+        time_str = now.strftime('%I:%M:%S %p')
+        uppercase = message.upper()
+        if uppercase != self.current_status_message:
+            self.log_event(uppercase)
+            self.current_status_message = uppercase
+        self.status_vars['overall'].set(f"{uppercase} @ {time_str}")
+
+    def log_event(self, message):
+        """Record activity in the live log and console"""
+        timestamp = self.get_local_now().strftime('%I:%M:%S %p')
+        entry = f"[{timestamp}] {message}"
+        print(entry)
+        self.log_entries.append(entry)
+        if len(self.log_entries) > 200:
+            self.log_entries = self.log_entries[-200:]
+
+        if hasattr(self, 'log_text'):
+            self.log_text.configure(state='normal')
+            self.log_text.delete('1.0', 'end')
+            self.log_text.insert('end', "\n".join(self.log_entries) + "\n")
+            self.log_text.configure(state='disabled')
+            self.log_text.see('end')
    
     def show_notification(self, message, msg_type="info"):
         """Show notification if enabled in settings (more discreet)"""
@@ -528,15 +561,16 @@ class SystemPerformanceMonitor:
    
     def start_module(self, name, module_file):
         """Start a specific optimization module"""
-        if not self.auto_mode and not self.is_within_work_hours():
+        if (not self.auto_mode and not self.manual_run_var.get() and
+                not self.is_within_work_hours()):
             return
-           
+
         if self.manual_paused:
             return
-           
+
         if name in self.processes and self.processes[name].poll() is None:
             return
-       
+
         try:
             # Start the process
             self.processes[name] = subprocess.Popen(
@@ -547,26 +581,26 @@ class SystemPerformanceMonitor:
                 bufsize=1,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
             )
-           
-            self.status_vars[name].set('On')
-            self.update_status(f"{name.capitalize()} active")
-           
+
+            self.status_vars[name].set('RUNNING')
+            self.log_event(f"{name.capitalize()} module started")
+
         except Exception as e:
             if self.settings.get("debug_mode", False):
                 self.show_notification(f"Failed to start {name} module: {e}", "error")
-   
+
     def stop_module(self, name):
         """Stop a specific optimization module"""
         if name in self.processes and self.processes[name].poll() is None:
             try:
                 self.processes[name].terminate()
                 self.processes[name].wait(timeout=5)
-                self.status_vars[name].set('Off')
-                self.update_status(f"{name.capitalize()} stopped")
+                self.status_vars[name].set('STOPPED')
+                self.log_event(f"{name.capitalize()} module stopped")
             except subprocess.TimeoutExpired:
                 self.processes[name].kill()
-                self.status_vars[name].set('Off')
-                self.update_status(f"{name.capitalize()} stopped")
+                self.status_vars[name].set('STOPPED')
+                self.log_event(f"{name.capitalize()} module force stopped")
             except Exception as e:
                 if self.settings.get("debug_mode", False):
                     self.show_notification(f"Error stopping {name} module: {e}", "error")
@@ -595,104 +629,110 @@ class SystemPerformanceMonitor:
         self.auto_mode = self.auto_mode_var.get()
         if self.auto_mode:
             self.manual_paused = False
-            self.update_status("Auto On")
+            self.update_status("Auto on")
         else:
             self.update_status("Manual")
+
+    def toggle_manual_run(self):
+        """Enable or disable manual always-on mode"""
+        if self.manual_run_var.get():
+            self.manual_paused = False
+            self.update_status("Manual run enabled")
+        else:
+            self.update_status("Manual run disabled")
    
     def auto_manage_scripts(self):
-        """Enhanced automatic management with dual-mode for East Coast/West Coast schedule"""
-        # Always run this loop
-        self.root.after(500, self.auto_manage_scripts)  # Check every 500ms for responsiveness
-       
+        """Automatically manage optimization modules"""
+        self.root.after(500, self.auto_manage_scripts)
+
+        now = self.get_local_now()
+        self.clock_var.set(now.strftime('%I:%M:%S %p'))
+
         running = any(proc.poll() is None for proc in self.processes.values())
         idle_time = time.time() - self.last_user_activity
-        within_hours = self.is_within_work_hours()
-        work_mode = self.get_current_work_mode()
-       
-        # Reset activity counter periodically
+        within_hours = self.is_within_work_hours(now)
+        in_grace = self.is_within_grace_period(now)
+
         if idle_time > 30:
             self.activity_counter = 0
-       
-        if not within_hours or work_mode == "off_hours":
-            # Outside work hours - force stop everything
-            if running:
-                for name in list(self.processes.keys()):
-                    self.stop_module(name)
-                self.update_status("Off Hours")
-                self.user_active = False
-                self.force_running = False
-            return
-       
-        # Adjust settings based on work mode
-        if work_mode == "east_coast_morning":
-            # You're physically present - be more conservative
-            idle_threshold = self.settings.get("idle_timeout", 3)  # More sensitive
-            auto_resume_delay = self.settings.get("auto_resume_delay", 8)
-            self.update_status("East Coast Mode")
-           
-        elif work_mode == "west_coast_afternoon":
-            # You're remote on PST schedule - be more aggressive
-            idle_threshold = self.settings.get("west_coast_idle_timeout", 1)  # Very sensitive
-            auto_resume_delay = 5  # Quick resume for remote work
-            self.update_status("West Coast Mode")
-           
-        else:
-            # Default settings
-            idle_threshold = self.settings.get("idle_timeout", 3)
-            auto_resume_delay = self.settings.get("auto_resume_delay", 8)
-            self.update_status("Standard Mode")
-       
-        # Handle manual controls
+
         if self.manual_paused:
-            # Manual pause overrides everything
             if running:
                 for name in list(self.processes.keys()):
                     self.stop_module(name)
             self.update_status("Paused")
-            self.force_running = False
-           
-        elif not self.auto_mode:
-            # Manual mode - user controls
-            self.update_status("Manual")
-            self.force_running = False
-           
-        elif idle_time < idle_threshold or self.activity_counter > 5:
-            # User is actively using laptop - pause modules
-            if running and not self.user_active:
-                for name in list(self.processes.keys()):
-                    self.stop_module(name)
-                mode_text = "East Coast" if work_mode == "east_coast_morning" else "West Coast"
-                self.update_status(f"User Active ({mode_text})")
-            self.user_active = True
-            self.force_running = False
-           
-        elif idle_time >= auto_resume_delay:
-            # User has been idle long enough - resume/start modules
-            self.user_active = False
-            self.force_running = True
-           
+            return
+
+        if self.manual_run_var.get():
             if not running:
-                # Always restart modules after idle period during work hours
-                self.start_module('mouse', self.cursor_module)
-                self.start_module('key', self.input_module)
-                mode_text = "East Coast" if work_mode == "east_coast_morning" else "West Coast"
-                self.update_status(f"Auto-Resumed ({mode_text})")
+                self.start_all_modules()
+            self.update_status("Manual run active")
+            return
+
+        if not self.auto_mode:
+            self.update_status("Manual control")
+            return
+
+        if within_hours:
+            if self.grace_schedule_date != now.date():
+                self.grace_stop_time = None
+                self.grace_stop_triggered = False
+                self.grace_schedule_date = now.date()
+
+            idle_threshold = self.settings.get("idle_timeout", 3)
+            auto_resume_delay = self.settings.get("auto_resume_delay", 8)
+
+            if idle_time < idle_threshold or self.activity_counter > 5:
+                if running and not self.user_active:
+                    for name in list(self.processes.keys()):
+                        self.stop_module(name)
+                self.user_active = True
+                self.update_status("User active")
+            elif idle_time >= auto_resume_delay:
+                self.user_active = False
+                if not running:
+                    self.start_all_modules()
+                    self.update_status("Auto-resumed")
+                else:
+                    self.update_status("Active")
             else:
-                mode_text = "East Coast" if work_mode == "east_coast_morning" else "West Coast"
-                self.update_status(f"Active ({mode_text})")
-               
-        else:
-            # In transition period - waiting to resume
-            mode_text = "East Coast" if work_mode == "east_coast_morning" else "West Coast"
-            self.update_status(f"Resuming in {int(auto_resume_delay - idle_time)}s ({mode_text})")
-       
-        # Enhanced robustness for always-on during West Coast hours
-        if (within_hours and self.force_running and not self.manual_paused and
-            self.auto_mode and work_mode == "west_coast_afternoon"):
-            if not running and idle_time >= auto_resume_delay:
-                # Force restart if modules died unexpectedly during critical West Coast hours
-                self.start_module('mouse', self.cursor_module)
-                self.start_module('key', self.input_module)
+                remaining = int(max(auto_resume_delay - idle_time, 0))
+                self.update_status(f"Resuming in {remaining}s")
+            return
+
+        if in_grace:
+            if self.grace_schedule_date != now.date():
+                self.grace_stop_time = None
+                self.grace_stop_triggered = False
+                self.grace_schedule_date = now.date()
+
+            if self.grace_stop_time is None:
+                _, end = self.get_work_schedule(now)
+                offset = random.randint(0, 15 * 60)
+                self.grace_stop_time = end + timedelta(seconds=offset)
+                self.log_event(
+                    f"Grace stop scheduled for {self.grace_stop_time.strftime('%I:%M:%S %p')}"
+                )
+
+            if (not self.grace_stop_triggered and self.grace_stop_time and
+                    now >= self.grace_stop_time):
+                if running:
+                    for name in list(self.processes.keys()):
+                        self.stop_module(name)
+                self.grace_stop_triggered = True
+                self.update_status("Grace stop executed")
+            else:
+                self.update_status("Grace period")
+            return
+
+        if running:
+            for name in list(self.processes.keys()):
+                self.stop_module(name)
+        self.update_status("Off hours")
+        self.user_active = False
+        if self.grace_schedule_date != now.date():
+            self.grace_stop_time = None
+            self.grace_stop_triggered = False
    
     def show_settings(self):
         """Show settings dialog"""
