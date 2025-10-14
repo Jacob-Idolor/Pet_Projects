@@ -167,6 +167,7 @@ class SystemPerformanceMonitor:
         self.clock_var = tk.StringVar(value="--:--:-- --")
         self.current_status_message = ""
         self.log_entries = []
+        self.log_frame = None
         self.grace_stop_time = None
         self.grace_schedule_date = None
         self.grace_stop_triggered = False
@@ -210,7 +211,8 @@ class SystemPerformanceMonitor:
             "keys_to_press": ["F15", "F16", "Scroll_Lock"],
             "stealth_mode": True,
             "notifications": False,
-            "debug_mode": False
+            "debug_mode": False,
+            "show_activity_log": True
         }
        
         try:
@@ -355,15 +357,15 @@ class SystemPerformanceMonitor:
                   command=self.show_about).grid(row=0, column=2, padx=2)
 
         # Activity log
-        log_frame = ttk.LabelFrame(main_frame, text="Activity Log", padding="3")
-        log_frame.grid(row=5, column=0, columnspan=3, sticky="nsew")
-        log_frame.grid_rowconfigure(0, weight=1)
-        log_frame.grid_columnconfigure(0, weight=1)
+        self.log_frame = ttk.LabelFrame(main_frame, text="Activity Log", padding="3")
+        self.log_frame.grid(row=5, column=0, columnspan=3, sticky="nsew")
+        self.log_frame.grid_rowconfigure(0, weight=1)
+        self.log_frame.grid_columnconfigure(0, weight=1)
 
-        scrollbar = ttk.Scrollbar(log_frame)
+        scrollbar = ttk.Scrollbar(self.log_frame)
         scrollbar.grid(row=0, column=1, sticky='ns')
 
-        self.log_text = tk.Text(log_frame, height=6, width=40, state='disabled',
+        self.log_text = tk.Text(self.log_frame, height=6, width=40, state='disabled',
                                 font=("Consolas", 8))
         self.log_text.grid(row=0, column=0, sticky='nsew')
         self.log_text.configure(yscrollcommand=scrollbar.set)
@@ -375,6 +377,8 @@ class SystemPerformanceMonitor:
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
         main_frame.grid_columnconfigure(1, weight=1)
+
+        self.apply_log_visibility()
    
     def setup_activity_monitoring(self):
         """Setup enhanced user activity monitoring"""
@@ -551,14 +555,24 @@ class SystemPerformanceMonitor:
         if message == self.last_notification:
             return  # Avoid duplicate notifications
         self.last_notification = message
-       
+
         # Only show critical errors, suppress info messages for discretion
         if msg_type == "error":
             messagebox.showerror("System Error", message)
         elif msg_type == "warning":
             messagebox.showwarning("System Warning", message)
         # Skip info messages for better discretion
-   
+
+    def apply_log_visibility(self):
+        """Show or hide the activity log based on settings"""
+        if not hasattr(self, 'log_frame') or self.log_frame is None:
+            return
+
+        if self.settings.get("show_activity_log", True):
+            self.log_frame.grid()
+        else:
+            self.log_frame.grid_remove()
+
     def start_module(self, name, module_file):
         """Start a specific optimization module"""
         if (not self.auto_mode and not self.manual_run_var.get() and
@@ -759,15 +773,63 @@ class SystemPerformanceMonitor:
         ttk.Label(hours_frame, text="End Time:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
         end_hour = tk.IntVar(value=self.settings["work_end_hour"])
         end_minute = tk.IntVar(value=self.settings["work_end_minute"])
-       
+
         ttk.Spinbox(hours_frame, from_=0, to=23, textvariable=end_hour, width=5).grid(row=1, column=1, padx=5)
         ttk.Label(hours_frame, text=":").grid(row=1, column=2)
         ttk.Spinbox(hours_frame, from_=0, to=59, textvariable=end_minute, width=5).grid(row=1, column=3, padx=5)
-       
+
+        ttk.Label(hours_frame, text="Timezone:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
+        timezone_var = tk.StringVar(value=self.settings.get("timezone", "US/Eastern"))
+        timezone_combo = ttk.Combobox(hours_frame, textvariable=timezone_var,
+                                      values=pytz.common_timezones, width=30)
+        timezone_combo.grid(row=2, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
+
+        timezone_status = tk.StringVar()
+
+        def update_timezone_preview(*_):
+            tz_name = timezone_var.get().strip()
+            try:
+                tz = pytz.timezone(tz_name)
+            except Exception:
+                timezone_status.set("Invalid timezone selected")
+                return
+
+            now = datetime.now(tz)
+            start_dt = now.replace(
+                hour=start_hour.get(),
+                minute=start_minute.get(),
+                second=0,
+                microsecond=0,
+            )
+            end_dt = now.replace(
+                hour=end_hour.get(),
+                minute=end_minute.get(),
+                second=0,
+                microsecond=0,
+            )
+            if end_dt <= start_dt:
+                end_dt += timedelta(days=1)
+
+            within = start_dt <= now <= end_dt
+            status = now.strftime("Current time: %I:%M %p")
+            if within:
+                status += " (within working hours)"
+            else:
+                status += " (outside working hours)"
+            timezone_status.set(status)
+
+        for var in (start_hour, start_minute, end_hour, end_minute):
+            var.trace_add("write", update_timezone_preview)
+        timezone_var.trace_add("write", update_timezone_preview)
+        update_timezone_preview()
+
+        ttk.Label(hours_frame, textvariable=timezone_status, wraplength=360,
+                  foreground="navy").grid(row=3, column=0, columnspan=4, padx=5, pady=(0, 5), sticky=tk.W)
+
         # Behavior Tab
         behavior_frame = ttk.Frame(notebook)
         notebook.add(behavior_frame, text="Behavior")
-       
+
         ttk.Label(behavior_frame, text="Idle Timeout (seconds):").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
         idle_timeout = tk.IntVar(value=self.settings["idle_timeout"])
         ttk.Spinbox(behavior_frame, from_=2, to=30, textvariable=idle_timeout, width=10).grid(row=0, column=1, padx=5, pady=5)
@@ -795,12 +857,34 @@ class SystemPerformanceMonitor:
         notifications = tk.BooleanVar(value=self.settings["notifications"])
         ttk.Checkbutton(behavior_frame, text="Show notifications",
                        variable=notifications).grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=5, pady=5)
-       
+
         debug_mode = tk.BooleanVar(value=self.settings.get("debug_mode", False))
         ttk.Checkbutton(behavior_frame, text="Debug mode (show output)",
                        variable=debug_mode).grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=5, pady=5)
-       
+
+        show_log = tk.BooleanVar(value=self.settings.get("show_activity_log", True))
+        ttk.Checkbutton(behavior_frame, text="Show activity log",
+                       variable=show_log).grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=5, pady=5)
+
         def save_settings():
+            tz_name = timezone_var.get().strip()
+            try:
+                pytz.timezone(tz_name)
+            except Exception:
+                messagebox.showerror("Invalid Timezone", "Please select a valid timezone before saving.")
+                return
+
+            start_total = start_hour.get() * 60 + start_minute.get()
+            end_total = end_hour.get() * 60 + end_minute.get()
+
+            if start_total == end_total:
+                messagebox.showerror("Invalid Schedule", "Start and end times must be different.")
+                return
+
+            if start_total > end_total:
+                messagebox.showerror("Invalid Schedule", "End time must be later than start time.")
+                return
+
             self.settings.update({
                 "work_start_hour": start_hour.get(),
                 "work_start_minute": start_minute.get(),
@@ -813,10 +897,13 @@ class SystemPerformanceMonitor:
                 "aggressive_detection": aggressive_detection.get(),
                 "stealth_mode": stealth_mode.get(),
                 "notifications": notifications.get(),
-                "debug_mode": debug_mode.get()
+                "debug_mode": debug_mode.get(),
+                "timezone": tz_name,
+                "show_activity_log": show_log.get()
             })
             self.save_settings()
             settings_win.destroy()
+            self.apply_log_visibility()
             if notifications.get():
                 self.show_notification("Settings saved successfully")
        
