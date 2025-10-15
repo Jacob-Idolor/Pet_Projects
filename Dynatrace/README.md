@@ -45,8 +45,21 @@ Dynatrace/
 ## 📄 .env Format
 
 Create a file named `.env` in the root of your project with the following content:
+
+```
 dynatrace_api_token=your_dynatrace_api_token
 dynatrace_api_url=https://your-env.live.dynatrace.com
+```
+
+You can also use the uppercase `DYNATRACE_*` variants if you prefer exporting values in your shell.
+
+Optional environment overrides are available for tuning the HTTP client:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `DYNATRACE_REQUEST_TIMEOUT` | Timeout (seconds) for Dynatrace API calls | `10` |
+| `DYNATRACE_PROBLEMS_PAGE_SIZE` | Page size when fetching problems | `100` |
+| `DYNATRACE_AUDIT_LOGS_PAGE_SIZE` | Page size when fetching audit logs | `1000` |
 
 **Replace `your_dynatrace_api_token` with your actual Dynatrace API token and `https://your-env.live.dynatrace.com` with your Dynatrace environment URL.**
 
