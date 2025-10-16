@@ -13,7 +13,6 @@ const {
   CLIENT_ID,
   GUILD_ID,
   PREFIX = '!',
-  TWITTER_BEARER,
   OPENAI_API_KEY,
   EARNINGS_UTC_HOUR = '15',
 } = process.env;
@@ -23,6 +22,8 @@ if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
   process.exit(1);
 }
 
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
+
 /* ---------------- Persistence ---------------- */
 const DATA_PATH = path.resolve('./server-config.json');
 /**
@@ -31,16 +32,13 @@ const DATA_PATH = path.resolve('./server-config.json');
    [guildId]: {
      // watchlist
      channelId, messageId, intervalMs, running, tickers: [],
-     // earnings
-     earnings: { channelId, hourUTC, running, lastPostISO },
-     // twitter
-     twitter: { channelId, running, users: [], lastIds: { handle: "tweetId" }, intervalMs }
-   }
- }
+    // earnings
+    earnings: { channelId, hourUTC, running, lastPostISO }
+  }
+}
 */
 let store = {};
 const timers = new Map();      // watchlist timers
-const tweetTimers = new Map(); // twitter timers
 let dailyTicker;               // earnings scheduler
 
 async function loadStore() {
@@ -56,25 +54,11 @@ function cfgFor(gid) {
   if (!c.intervalMs) c.intervalMs = 60000;
   if (c.running === undefined) c.running = false;
   if (!c.earnings) c.earnings = { channelId: null, hourUTC: Number(EARNINGS_UTC_HOUR) || 15, running: false, lastPostISO: null };
-  if (!c.twitter) c.twitter = { channelId: null, running: false, users: [], lastIds: {}, intervalMs: 60000 };
   return c;
 }
 
 /* ---------------- Utilities ---------------- */
 function chunk(arr, n) { const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
-
-function highlightTickers(text, watchlist = []) {
-  if (!text) return text;
-  // First: highlight $CASHTAGS
-  text = text.replace(/\$([A-Za-z]{1,5})\b/g, (m, t) => `**$${t.toUpperCase()}**`);
-  // Then: highlight any watchlist tickers appearing as standalone words (AAPL, TSLA, etc.)
-  const wl = Array.from(new Set((watchlist || []).map(s => s.toUpperCase()))).filter(Boolean);
-  if (wl.length) {
-    const re = new RegExp(`\\b(${wl.map(t => t.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'g');
-    text = text.replace(re, (m) => `**${m.toUpperCase()}**`);
-  }
-  return text;
-}
 
 async function fetchQuoteSafe(t) {
   try {
@@ -93,6 +77,68 @@ async function fetchQuoteSafe(t) {
     }
     return { ticker: t, price, currency, changeTxt, dayLow, dayHigh };
   } catch { return { ticker: t, error: 'API error' }; }
+}
+
+async function buildAnalysisEmbed(ticker) {
+  const q = await fetchQuoteSafe(ticker);
+  if (q.error) return { error: q.error };
+
+  let targetHigh, targetLow, targetMean;
+  try {
+    const qs = await yahooFinance.quoteSummary(ticker, { modules: ['financialData'] });
+    const fd = qs?.financialData;
+    targetHigh = fd?.targetHighPrice != null ? Number(fd.targetHighPrice) : null;
+    targetLow = fd?.targetLowPrice != null ? Number(fd.targetLowPrice) : null;
+    targetMean = fd?.targetMeanPrice != null ? Number(fd.targetMeanPrice) : null;
+  } catch {}
+
+  let perf5d = null, lastChange = null, outlier = false;
+  try {
+    const hist = await yahooFinance.historical(ticker, { period1: new Date(Date.now() - 7*86400e3), interval: '1d' });
+    if (hist.length >= 2) {
+      const start = hist[0].close;
+      const end = hist[hist.length - 1].close;
+      perf5d = ((end - start) / start) * 100;
+      const prev = hist[hist.length - 2].close;
+      lastChange = ((end - prev) / prev) * 100;
+      outlier = Math.abs(lastChange) >= 5;
+    }
+  } catch {}
+
+  let bull = '', bear = '';
+  if (openai) {
+    try {
+      const prompt = `Give two concise bullet points each for bullish and bearish cases for ${ticker}.` +
+        `\nFormat as:\nBullish:\n- ...\n- ...\nBearish:\n- ...\n- ...`;
+      const r = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.2,
+        messages: [{ role: 'user', content: prompt }]
+      });
+      const text = r.choices?.[0]?.message?.content || '';
+      const parts = text.split(/Bearish:/i);
+      bull = parts[0]?.replace(/Bullish:/i, '').trim();
+      bear = parts[1]?.trim() || '';
+    } catch { bull = bear = 'AI error'; }
+  } else {
+    bull = bear = 'OpenAI not configured';
+  }
+
+  const fields = [
+    { name: 'Price', value: `${q.price.toFixed(2)} ${q.currency}`, inline: true },
+    { name: 'Change', value: q.changeTxt, inline: true },
+  ];
+  if (perf5d != null) fields.push({ name: '5d Perf', value: `${perf5d >= 0 ? '+' : ''}${perf5d.toFixed(2)}%`, inline: true });
+  if (targetMean != null) {
+    const tgt = `Low ${targetLow?.toFixed(2) || 'N/A'} / Mean ${targetMean.toFixed(2)} / High ${targetHigh?.toFixed(2) || 'N/A'}`;
+    fields.push({ name: 'Price Targets', value: tgt, inline: false });
+  }
+  if (bull) fields.push({ name: 'Bullish', value: bull, inline: false });
+  if (bear) fields.push({ name: 'Bearish', value: bear, inline: false });
+  if (outlier && lastChange != null) {
+    fields.push({ name: '⚠️ Outlier Move', value: `${lastChange >= 0 ? '+' : ''}${lastChange.toFixed(2)}% today`, inline: false });
+  }
+  return new EmbedBuilder().setTitle(`${ticker} Analysis`).addFields(fields).setColor(0x2b7).setTimestamp(new Date());
 }
 
 /* ---------------- Watchlist rendering ---------------- */
@@ -207,85 +253,6 @@ function scheduleDailyDigest() {
   }, 60 * 1000);
 }
 
-/* ---------------- Twitter → AI Summaries ---------------- */
-const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
-
-async function fetchLatestTweet(username, sinceId) {
-  if (!TWITTER_BEARER) return null;
-
-  // 1) resolve handle → user id
-  const u = await fetch(`https://api.twitter.com/2/users/by/username/${username}`, {
-    headers: { Authorization: `Bearer ${TWITTER_BEARER}` }
-  });
-  if (!u.ok) return null;
-  const ujson = await u.json();
-  const userId = ujson?.data?.id;
-  if (!userId) return null;
-
-  // 2) fetch latest tweets
-  const url = new URL(`https://api.twitter.com/2/users/${userId}/tweets`);
-  url.searchParams.set('exclude', 'replies');
-  url.searchParams.set('max_results', '5');
-  url.searchParams.set('tweet.fields', 'created_at,public_metrics');
-  if (sinceId) url.searchParams.set('since_id', sinceId);
-
-  const t = await fetch(url, { headers: { Authorization: `Bearer ${TWITTER_BEARER}` } });
-  if (!t.ok) return null;
-  const tjson = await t.json();
-  const tweets = tjson?.data || [];
-  const newest = tweets[0]?.id || sinceId;
-  return { last: newest, tweets };
-}
-
-async function summarizeText(text) {
-  if (!openai) return `📝 ${text.slice(0, 240)}${text.length > 240 ? '…' : ''}`;
-  const r = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0.2,
-    messages: [{ role: 'user', content: `Summarize this trading-related tweet in 1–2 bullets. Focus on tickers, catalysts, price levels, and actions if any.\n\n${text}` }]
-  });
-  return r.choices?.[0]?.message?.content?.trim() || text;
-}
-
-async function pollTweets(gid) {
-  const c = cfgFor(gid);
-  if (!c.twitter.running || !c.twitter.channelId || !(c.twitter.users?.length)) return;
-  try {
-    const channel = await client.channels.fetch(c.twitter.channelId);
-    if (!channel || channel.type !== ChannelType.GuildText) return;
-
-    for (const user of c.twitter.users) {
-      const last = c.twitter.lastIds?.[user];
-      const data = await fetchLatestTweet(user, last);
-      if (!data) continue;
-
-      // store newest id for next pass
-      if (!c.twitter.lastIds) c.twitter.lastIds = {};
-      if (data.last) c.twitter.lastIds[user] = data.last;
-
-      // post newest last so Discord flow is chronological
-      const toPost = (data.tweets || []).reverse();
-      for (const t of toPost) {
-        const raw = t.text || '';
-        const sum = await summarizeText(raw);
-        const highlighted = highlightTickers(sum, c.tickers);
-        const url = `https://x.com/${user}/status/${t.id}`;
-        const embed = new EmbedBuilder()
-          .setTitle(`@${user} — new tweet`)
-          .setDescription(highlighted)
-          .addFields({ name: 'Link', value: url })
-          .setTimestamp(new Date(t.created_at))
-          .setColor(0x5865F2);
-        await channel.send({ embeds: [embed] });
-      }
-      await saveStore();
-      await new Promise(r => setTimeout(r, 400)); // gentle throttle
-    }
-  } catch (e) { console.error('tweet poll error:', e?.message || e); }
-}
-function startTweetPoll(gid, ms) { stopTweetPoll(gid); tweetTimers.set(gid, setInterval(() => pollTweets(gid), ms)); const c = cfgFor(gid); c.twitter.running = true; c.twitter.intervalMs = ms; saveStore(); }
-function stopTweetPoll(gid) { const t = tweetTimers.get(gid); if (t) clearInterval(t); tweetTimers.delete(gid); const c = cfgFor(gid); c.twitter.running = false; saveStore(); }
-
 /* ---------------- Slash commands ---------------- */
 const slashDefs = [
   new SlashCommandBuilder().setName('ping').setDescription('Bot health check'),
@@ -294,6 +261,11 @@ const slashDefs = [
   new SlashCommandBuilder()
     .setName('quote')
     .setDescription('Get a quick stock/ETF quote')
+    .addStringOption(o => o.setName('ticker').setDescription('Ticker (e.g., AAPL)').setRequired(true)),
+
+  new SlashCommandBuilder()
+    .setName('analysis')
+    .setDescription('Detailed stock analysis')
     .addStringOption(o => o.setName('ticker').setDescription('Ticker (e.g., AAPL)').setRequired(true)),
 
   new SlashCommandBuilder()
@@ -330,21 +302,7 @@ const slashDefs = [
       .addChannelOption(o => o.setName('channel').setDescription('Text channel').setRequired(true)))
     .addSubcommand(sc => sc.setName('start').setDescription('Enable daily digest')
       .addIntegerOption(o => o.setName('utchour').setDescription('UTC hour 0-23')))
-    .addSubcommand(sc => sc.setName('stop').setDescription('Disable daily digest')),
-
-  new SlashCommandBuilder()
-    .setName('follow')
-    .setDescription('Mirror & summarize tweets (X)')
-    .addSubcommand(sc => sc.setName('add').setDescription('Follow @handle (no @)')
-      .addStringOption(o => o.setName('user').setDescription('e.g., unusual_whales').setRequired(true)))
-    .addSubcommand(sc => sc.setName('remove').setDescription('Unfollow')
-      .addStringOption(o => o.setName('user').setDescription('handle').setRequired(true)))
-    .addSubcommand(sc => sc.setName('list').setDescription('List followed users'))
-    .addSubcommand(sc => sc.setName('channel').setDescription('Set target channel')
-      .addChannelOption(o => o.setName('channel').setDescription('Text channel').setRequired(true)))
-    .addSubcommand(sc => sc.setName('start').setDescription('Start polling')
-      .addIntegerOption(o => o.setName('interval').setDescription('Seconds (>=30)')))
-    .addSubcommand(sc => sc.setName('stop').setDescription('Stop polling')),
+    .addSubcommand(sc => sc.setName('stop').setDescription('Disable daily digest'))
 ].map(c => c.toJSON());
 
 async function registerSlash() {
@@ -363,11 +321,10 @@ client.once('ready', async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   await loadStore();
   await registerSlash();
-  // restore watch & twitter
+  // restore watch
   for (const [gid] of Object.entries(store)) {
     const c = cfgFor(gid);
     if (c.running && c.channelId && c.tickers?.length) startWatch(gid, c.intervalMs || 60000);
-    if (c.twitter.running && c.twitter.channelId && c.twitter.users?.length) startTweetPoll(gid, c.twitter.intervalMs || 60000);
   }
   scheduleDailyDigest();
 });
@@ -392,6 +349,14 @@ client.on('interactionCreate', async (ix) => {
       ];
       if (r.dayLow != null && r.dayHigh != null) fields.push({ name: 'Day Range', value: `${r.dayLow.toFixed(2)}–${r.dayHigh.toFixed(2)}`, inline: true });
       const embed = new EmbedBuilder().setTitle(`${t} Quote`).addFields(fields).setColor(0x2b7);
+      return ix.editReply({ embeds: [embed] });
+    }
+
+    if (ix.commandName === 'analysis') {
+      const t = ix.options.getString('ticker', true).toUpperCase();
+      await ix.deferReply();
+      const embed = await buildAnalysisEmbed(t);
+      if (embed?.error) return ix.editReply(`No data for \`${t}\`.`);
       return ix.editReply({ embeds: [embed] });
     }
 
@@ -421,34 +386,34 @@ client.on('interactionCreate', async (ix) => {
         const toAdd = ix.options.getString('tickers', true).split(/[,\s]+/).map(s=>s.toUpperCase()).filter(Boolean);
         c.tickers = Array.from(new Set([...(c.tickers||[]), ...toAdd])); await saveStore();
         if (c.running) await postOrUpdateWatchMessage(gid);
-        return ix.reply({ content: `✅ Added: ${toAdd.join(', ')}\nCurrent: ${c.tickers.join(', ')}`, ephemeral: true });
+        return ix.reply(`✅ Added: ${toAdd.join(', ')}\nCurrent: ${c.tickers.join(', ')}`);
       }
       if (sub === 'remove') {
         const sym = ix.options.getString('ticker', true).toUpperCase();
         c.tickers = (c.tickers||[]).filter(s=>s!==sym); await saveStore();
         if (c.running) await postOrUpdateWatchMessage(gid);
-        return ix.reply({ content: `🗑️ Removed: ${sym}\nCurrent: ${c.tickers.join(', ') || '(none)'}`, ephemeral: true });
+        return ix.reply(`🗑️ Removed: ${sym}\nCurrent: ${c.tickers.join(', ') || '(none)'}`);
       }
-      if (sub === 'list') return ix.reply({ content: `📋 Current: ${c.tickers?.length ? c.tickers.join(', ') : '(none)'}`, ephemeral: true });
+      if (sub === 'list') return ix.reply(`📋 Current: ${c.tickers?.length ? c.tickers.join(', ') : '(none)'}`);
       if (sub === 'channel') {
         const ch = ix.options.getChannel('channel', true);
-        if (ch.type !== ChannelType.GuildText) return ix.reply({ content: 'Pick a text channel.', ephemeral: true });
+        if (ch.type !== ChannelType.GuildText) return ix.reply('Pick a text channel.');
         c.channelId = ch.id; c.messageId = null; await saveStore();
-        return ix.reply({ content: `📨 Watchlist channel set to ${ch}`, ephemeral: true });
+        return ix.reply(`📨 Watchlist channel set to ${ch}`);
       }
       if (sub === 'start') {
         const s = ix.options.getInteger('interval') || 60;
-        if (!c.channelId) return ix.reply({ content: 'Set channel: `/watch channel`', ephemeral: true });
-        if (!c.tickers?.length) return ix.reply({ content: 'Add tickers: `/watch add`', ephemeral: true });
+        if (!c.channelId) return ix.reply('Set channel: `/watch channel`');
+        if (!c.tickers?.length) return ix.reply('Add tickers: `/watch add`');
         c.intervalMs = Math.max(15, s)*1000; await saveStore(); startWatch(gid, c.intervalMs); await postOrUpdateWatchMessage(gid);
-        return ix.reply({ content: `▶️ Started every ${Math.round(c.intervalMs/1000)}s.`, ephemeral: true });
+        return ix.reply(`▶️ Started every ${Math.round(c.intervalMs/1000)}s.`);
       }
-      if (sub === 'stop') { stopWatch(gid); return ix.reply({ content: '⏸️ Stopped.', ephemeral: true }); }
+      if (sub === 'stop') { stopWatch(gid); return ix.reply('⏸️ Stopped.'); }
       if (sub === 'interval') {
         const s = ix.options.getInteger('seconds', true);
-        if (s < 15) return ix.reply({ content: 'Provide >= 15 seconds.', ephemeral: true });
+        if (s < 15) return ix.reply('Provide >= 15 seconds.');
         c.intervalMs = s*1000; await saveStore(); if (c.running) startWatch(gid, c.intervalMs);
-        return ix.reply({ content: `⏱️ Interval set to ${s}s.`, ephemeral: true });
+        return ix.reply(`⏱️ Interval set to ${s}s.`);
       }
     }
 
@@ -456,51 +421,19 @@ client.on('interactionCreate', async (ix) => {
       const sub = ix.options.getSubcommand();
       if (sub === 'channel') {
         const ch = ix.options.getChannel('channel', true);
-        if (ch.type !== ChannelType.GuildText) return ix.reply({ content: 'Pick a text channel.', ephemeral: true });
+        if (ch.type !== ChannelType.GuildText) return ix.reply('Pick a text channel.');
         c.earnings.channelId = ch.id; await saveStore();
-        return ix.reply({ content: `📨 Earnings digest channel set to ${ch}`, ephemeral: true });
+        return ix.reply(`📨 Earnings digest channel set to ${ch}`);
       }
       if (sub === 'start') {
         const hour = ix.options.getInteger('utchour') ?? c.earnings.hourUTC ?? 15;
         c.earnings.running = true; c.earnings.hourUTC = Math.min(23, Math.max(0, Number(hour)));
         await saveStore(); scheduleDailyDigest();
-        return ix.reply({ content: `▶️ Earnings digest enabled at ${c.earnings.hourUTC}:00 UTC daily.`, ephemeral: true });
+        return ix.reply(`▶️ Earnings digest enabled at ${c.earnings.hourUTC}:00 UTC daily.`);
       }
-      if (sub === 'stop') { c.earnings.running = false; await saveStore(); return ix.reply({ content: '⏸️ Earnings digest disabled.', ephemeral: true }); }
+      if (sub === 'stop') { c.earnings.running = false; await saveStore(); return ix.reply('⏸️ Earnings digest disabled.'); }
     }
 
-    if (ix.commandName === 'follow') {
-      if (!TWITTER_BEARER) return ix.reply({ content: 'Twitter not configured. Add TWITTER_BEARER in .env', ephemeral: true });
-      const sub = ix.options.getSubcommand();
-
-      if (sub === 'add') {
-        const user = ix.options.getString('user', true).replace(/^@/, '');
-        c.twitter.users = Array.from(new Set([...(c.twitter.users||[]), user])); await saveStore();
-        return ix.reply({ content: `✅ Following @${user}`, ephemeral: true });
-      }
-      if (sub === 'remove') {
-        const user = ix.options.getString('user', true).replace(/^@/, '');
-        c.twitter.users = (c.twitter.users||[]).filter(u=>u!==user); await saveStore();
-        return ix.reply({ content: `🗑️ Unfollowed @${user}`, ephemeral: true });
-      }
-      if (sub === 'list') {
-        return ix.reply({ content: `📋 Following: ${c.twitter.users?.length ? c.twitter.users.map(u=>'@'+u).join(', ') : '(none)'}`, ephemeral: true });
-      }
-      if (sub === 'channel') {
-        const ch = ix.options.getChannel('channel', true);
-        if (ch.type !== ChannelType.GuildText) return ix.reply({ content: 'Pick a text channel.', ephemeral: true });
-        c.twitter.channelId = ch.id; await saveStore();
-        return ix.reply({ content: `📨 Twitter channel set to ${ch}`, ephemeral: true });
-      }
-      if (sub === 'start') {
-        const s = ix.options.getInteger('interval') || 60;
-        if (!c.twitter.channelId) return ix.reply({ content: 'Set channel first: `/follow channel`', ephemeral: true });
-        if (!c.twitter.users?.length) return ix.reply({ content: 'Add users first: `/follow add`', ephemeral: true });
-        startTweetPoll(gid, Math.max(30, s)*1000);
-        return ix.reply({ content: `▶️ Tweet polling started every ${Math.max(30, s)}s.`, ephemeral: true });
-      }
-      if (sub === 'stop') { stopTweetPoll(gid); return ix.reply({ content: '⏸️ Tweet polling stopped.', ephemeral: true }); }
-    }
   } catch (e) {
     console.error('interaction error:', e?.message || e);
     if (!ix.replied) ix.reply({ content: 'Error handling command.', ephemeral: true }).catch(()=>{});
@@ -532,6 +465,13 @@ client.on('messageCreate', async (msg) => {
       return void msg.channel.send({ embeds: [embed] });
     }
 
+    if (cmd === 'analysis') {
+      const t = (args[0] || '').toUpperCase(); if (!t) return void msg.reply(`Usage: \`${PREFIX}analysis TICKER\``);
+      const embed = await buildAnalysisEmbed(t);
+      if (embed?.error) return void msg.reply(`No data for \`${t}\`.`);
+      return void msg.channel.send({ embeds: [embed] });
+    }
+
     if (cmd === 'pl') {
       // !pl TICKER CALL|PUT STRIKE PREMIUM EXPIRY TARGET
       const [ticker, ttype, sStr, premStr, expiry, targetStr] = args;
@@ -552,44 +492,6 @@ client.on('messageCreate', async (msg) => {
         )
         .setColor(0x2b7);
       return void msg.channel.send({ embeds: [embed] });
-    }
-
-    // Prefix follow commands (mirror slash)
-    if (cmd === 'follow') {
-      if (!TWITTER_BEARER) return void msg.reply('Twitter not configured. Add TWITTER_BEARER in .env');
-      const sub = (args.shift() || '').toLowerCase();
-
-      if (sub === 'add') {
-        const user = (args[0] || '').replace(/^@/, '');
-        if (!user) return void msg.reply(`Usage: \`${PREFIX}follow add handle\``);
-        c.twitter.users = Array.from(new Set([...(c.twitter.users||[]), user])); await saveStore();
-        return void msg.reply(`✅ Following @${user}`);
-      }
-      if (sub === 'remove') {
-        const user = (args[0] || '').replace(/^@/, '');
-        if (!user) return void msg.reply(`Usage: \`${PREFIX}follow remove handle\``);
-        c.twitter.users = (c.twitter.users||[]).filter(u=>u!==user); await saveStore();
-        return void msg.reply(`🗑️ Unfollowed @${user}`);
-      }
-      if (sub === 'list') {
-        return void msg.reply(`📋 Following: ${c.twitter.users?.length ? c.twitter.users.map(u=>'@'+u).join(', ') : '(none)'}`);
-      }
-      if (sub === 'channel') {
-        const ch = msg.mentions.channels.first(); if (!ch) return void msg.reply(`Usage: \`${PREFIX}follow channel #channel\``);
-        if (ch.type !== ChannelType.GuildText) return void msg.reply('Pick a text channel.');
-        c.twitter.channelId = ch.id; await saveStore();
-        return void msg.reply(`📨 Twitter channel set to ${ch}.`);
-      }
-      if (sub === 'start') {
-        const s = Number(args[0]) || 60;
-        if (!c.twitter.channelId) return void msg.reply('Set channel first: `!follow channel #channel`');
-        if (!c.twitter.users?.length) return void msg.reply('Add users first: `!follow add handle`');
-        startTweetPoll(gid, Math.max(30, s)*1000);
-        return void msg.reply(`▶️ Tweet polling started every ${Math.max(30, s)}s.`);
-      }
-      if (sub === 'stop') { stopTweetPoll(gid); return void msg.reply('⏸️ Tweet polling stopped.'); }
-
-      return void msg.reply(`Use: add/remove/list/channel/start/stop — or \`/follow\` for guided UI.`);
     }
 
     // Watch commands
@@ -644,6 +546,7 @@ function helpEmbed() {
       '',
       '**Market Data**',
       `• \`${PREFIX}quote TICKER\`  /  \`/quote ticker:\``,
+      `• \`${PREFIX}analysis TICKER\`  /  \`/analysis ticker:\``,
       '',
       '**Watchlist (live embed)**',
       `• \`${PREFIX}watch add TICKER [T2 ...]\`  /  \`/watch add\``,
@@ -661,16 +564,7 @@ function helpEmbed() {
       '**Earnings Digest (daily)**',
       '• `/earnings channel` — set post channel',
       '• `/earnings start [utchour]` — enable daily post (UTC)',
-      '• `/earnings stop`',
-      '',
-      '**Twitter → Summaries (with ticker highlighting)**',
-      `• \`${PREFIX}follow add handle\` / \`/follow add\``,
-      `• \`${PREFIX}follow remove handle\` / \`/follow remove\``,
-      `• \`${PREFIX}follow list\` / \`/follow list\``,
-      `• \`${PREFIX}follow channel #ch\` / \`/follow channel\``,
-      `• \`${PREFIX}follow start [sec]\` / \`/follow start\``,
-      `• \`${PREFIX}follow stop\` / \`/follow stop\``,
-      '_Requires TWITTER_BEARER and (optional) OPENAI_API_KEY._'
+      '• `/earnings stop`'
     ].join('\n'));
 }
 
