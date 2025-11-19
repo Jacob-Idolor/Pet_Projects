@@ -1,11 +1,12 @@
 # Poker GTO Trainer
 
-A simple Flask web application providing introductory Game Theory Optimal (GTO) poker information and example opening ranges.
+A simple Flask web application providing introductory Game Theory Optimal (GTO) poker information, example opening ranges, and a lightweight hand simulator.
 
 ## Features
 
-* **Home page** describing basic GTO concepts.
+* **Home page** describing basic GTO concepts with a quick hand simulator.
 * **Range charts** for standard table positions loaded from `data/ranges.json`.
+* **Hand simulation** for 2-9 players with friendly validation messaging.
 * **Lightweight** setup using Flask and Jinja2 templates.
 
 ## Requirements

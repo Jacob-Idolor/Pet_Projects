@@ -1,8 +1,40 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Welcome to the Poker GTO Trainer</h2>
-<p>This small web application introduces Game Theory Optimal (GTO) poker concepts.
-It explains basic opening ranges and provides quick reference charts so you can
-study optimal hands for each table position.</p>
-<p>Use the navigation above to browse the example range charts.</p>
+<section class="hero">
+    <div>
+        <h2>Welcome to the Poker GTO Trainer</h2>
+        <p>This lightweight web app provides a fast refresher on Game Theory Optimal (GTO) fundamentals.
+        Browse recommended opening ranges and instantly deal sample hands to keep your instincts sharp.</p>
+        <div class="cta">
+            <a class="button" href="{{ url_for('ranges') }}">View Ranges</a>
+            <a class="button secondary" href="{{ url_for('simulate') }}">Shuffle &amp; Deal</a>
+        </div>
+    </div>
+    <div class="card-callout">
+        <h3>Quick Hand Simulator</h3>
+        <p>Choose the number of players and generate fresh starting hands.</p>
+        <form action="{{ url_for('simulate') }}" method="get" class="inline-form">
+            <label for="players">Players</label>
+            <input id="players" name="players" type="number" min="{{ min_players }}" max="{{ max_players }}" value="2" required>
+            <button type="submit">Deal</button>
+        </form>
+        <p class="hint">Supports between {{ min_players }} and {{ max_players }} players.</p>
+    </div>
+</section>
+
+<section class="grid">
+    <article>
+        <h3>Why think in ranges?</h3>
+        <p>Great players make decisions based on the full set of hands they could hold, not a single combo.
+        Reviewing ranges helps you build balanced strategies that are harder to exploit.</p>
+    </article>
+    <article>
+        <h3>Table position matters</h3>
+        <p>Positions like the Button (BTN) and Cutoff (CO) can open wider. Early positions should stay tighter to avoid tricky multiway pots.</p>
+    </article>
+    <article>
+        <h3>Keep practicing</h3>
+        <p>Use the simulator before a session to warm up. Identify how your opening range shifts as player counts change.</p>
+    </article>
+</section>
 {% endblock %}

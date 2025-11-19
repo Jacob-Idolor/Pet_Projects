@@ -1,10 +1,28 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Opening Ranges by Position</h2>
-{% for position, hands in ranges.items() %}
-<section>
-    <h3>{{ position }}</h3>
-    <p>{{ ', '.join(hands) }}</p>
+<section class="page-header">
+    <div>
+        <h2>Opening Ranges by Position</h2>
+        <p>These sample preflop ranges help you visualise balanced opens from each seat.
+        Adjust them based on stack depth, table dynamics, and player tendencies.</p>
+    </div>
+    <div class="range-legend">
+        <p><strong>Legend:</strong> <span class="tag">s</span> = suited, <span class="tag">o</span> = offsuit.</p>
+    </div>
 </section>
-{% endfor %}
+
+{% if error %}
+    <div class="alert">{{ error }}</div>
+{% elif ranges %}
+    <div class="range-grid">
+        {% for position, hands in ranges.items() %}
+        <article class="card">
+            <h3>{{ position }}</h3>
+            <p class="range-text">{{ ', '.join(hands) }}</p>
+        </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No range data available.</p>
+{% endif %}
 {% endblock %}
