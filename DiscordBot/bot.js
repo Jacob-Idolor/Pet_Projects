@@ -7,6 +7,7 @@ import yahooFinance from 'yahoo-finance2';
 import fs from 'fs/promises';
 import path from 'path';
 import OpenAI from 'openai';
+import { verifyLicense, tierFeatures, formatTier } from './license-manager.js';
 
 const {
   DISCORD_TOKEN: TOKEN,
@@ -15,6 +16,11 @@ const {
   PREFIX = '!',
   OPENAI_API_KEY,
   EARNINGS_UTC_HOUR = '15',
+  SALES_URL = 'https://yourdomain.com/discord-bot',
+  SUPPORT_EMAIL = 'support@example.com',
+  TRIAL_DAYS = '7',
+  FREE_WATCH_LIMIT = '3',
+  FREE_MIN_INTERVAL = '300',
 } = process.env;
 
 if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
@@ -47,6 +53,21 @@ async function loadStore() {
 }
 async function saveStore() { await fs.writeFile(DATA_PATH, JSON.stringify(store, null, 2)); }
 
+let savePending = false;
+function scheduleSave() {
+  if (savePending) return;
+  savePending = true;
+  setTimeout(async () => {
+    savePending = false;
+    try { await saveStore(); }
+    catch (err) { console.error('save error:', err?.message || err); }
+  }, 0);
+}
+
+const TRIAL_DURATION_MS = Math.max(1, Number(TRIAL_DAYS) || 7) * 86400e3;
+const WATCH_LIMIT_FREE = Math.max(1, Number(FREE_WATCH_LIMIT) || 3);
+const WATCH_MIN_INTERVAL_FREE = Math.max(60, Number(FREE_MIN_INTERVAL) || 300);
+
 function cfgFor(gid) {
   if (!store[gid]) store[gid] = {};
   const c = store[gid];
@@ -54,7 +75,101 @@ function cfgFor(gid) {
   if (!c.intervalMs) c.intervalMs = 60000;
   if (c.running === undefined) c.running = false;
   if (!c.earnings) c.earnings = { channelId: null, hourUTC: Number(EARNINGS_UTC_HOUR) || 15, running: false, lastPostISO: null };
+  if (!c.subscription) {
+    const expiresAt = new Date(Date.now() + TRIAL_DURATION_MS).toISOString();
+    c.subscription = {
+      tier: 'trial',
+      activatedAt: new Date().toISOString(),
+      expiresAt,
+      source: 'auto-trial'
+    };
+    scheduleSave();
+  }
   return c;
+}
+
+function subscriptionTier(c) {
+  const sub = c.subscription;
+  if (!sub) return 'free';
+  const { tier = 'free', expiresAt } = sub;
+  if (expiresAt) {
+    const exp = new Date(expiresAt).getTime();
+    if (!Number.isNaN(exp) && exp < Date.now()) {
+      if (tier !== 'free') {
+        sub.tier = 'free';
+        sub.expiresAt = null;
+        sub.licenseKey = null;
+        sub.lastInvalidReason = 'expired';
+        scheduleSave();
+      }
+      return 'free';
+    }
+  }
+  return tier || 'free';
+}
+
+function effectiveTier(gid) {
+  return subscriptionTier(cfgFor(gid));
+}
+
+function hasFeature(gid, feature) {
+  const tier = effectiveTier(gid);
+  return tierFeatures(tier).has(feature);
+}
+
+function featureGateMessage(gid, feature) {
+  const c = cfgFor(gid);
+  const tier = subscriptionTier(c);
+  const sub = c.subscription || {};
+  const tierLabel = formatTier(tier, sub.expiresAt);
+  const label = FEATURE_LABELS[feature] || feature;
+  const upsell = `Upgrade required for ${label} features. Visit ${SALES_URL} or run \`/plans\` to compare tiers.`;
+  if (tier === 'trial' && sub.expiresAt) {
+    return `${upsell}\nYour trial expires on ${new Date(sub.expiresAt).toISOString().slice(0, 10)}.`;
+  }
+  return `${upsell}\nCurrent plan: ${tierLabel}. Need help? Email ${SUPPORT_EMAIL}.`;
+}
+
+const FEATURE_LABELS = {
+  quotes: 'Real-time quotes',
+  'watch-basic': `Watchlist (${WATCH_LIMIT_FREE} tickers)`,
+  'watch-pro': 'Unlimited watchlist + rapid refresh',
+  analysis: 'AI-powered analysis',
+  earnings: 'Automated earnings digest',
+  pl: 'Options P/L calculator',
+  ai: 'AI enhancements',
+  webhooks: 'CRM/Webhook integrations'
+};
+
+function enforceWatchLimits(gid) {
+  const c = cfgFor(gid);
+  if (hasFeature(gid, 'watch-pro')) return c;
+  if (c.tickers.length > WATCH_LIMIT_FREE) {
+    c.tickers = c.tickers.slice(0, WATCH_LIMIT_FREE);
+    scheduleSave();
+  }
+  if ((c.intervalMs || 60000) < WATCH_MIN_INTERVAL_FREE * 1000) {
+    c.intervalMs = WATCH_MIN_INTERVAL_FREE * 1000;
+    if (c.running) startWatch(gid, c.intervalMs);
+    scheduleSave();
+  }
+  return c;
+}
+
+async function requireFeatureSlash(ix, feature) {
+  const gid = ix.guildId;
+  if (!gid) return true;
+  if (hasFeature(gid, feature)) return true;
+  await ix.reply({ content: featureGateMessage(gid, feature), ephemeral: true });
+  return false;
+}
+
+async function requireFeatureMessage(msg, feature) {
+  const gid = msg.guild?.id;
+  if (!gid) return true;
+  if (hasFeature(gid, feature)) return true;
+  await msg.reply(featureGateMessage(gid, feature));
+  return false;
 }
 
 /* ---------------- Utilities ---------------- */
@@ -197,6 +312,90 @@ function computePL({ type, strike, premium, target, contractSize = 100 }) {
   return { intrinsic, pnlPerShare, pnl, breakeven, maxLoss, maxGain };
 }
 
+function plansEmbed() {
+  const embed = new EmbedBuilder()
+    .setTitle('💼 GrowthBot Plans')
+    .setColor(0x2b7)
+    .setDescription(`Turn your trading community into recurring revenue. Learn more at ${SALES_URL}.`)
+    .addFields(
+      {
+        name: 'Free',
+        value: [
+          '• 3 watchlist tickers (5 min refresh)',
+          '• Live quotes & options P/L',
+          '• Community upsell drip',
+          `Trial: ${Math.max(1, Number(TRIAL_DAYS) || 7)} days of Pro features`
+        ].join('\n'),
+        inline: false
+      },
+      {
+        name: 'Pro — $19/mo per server',
+        value: [
+          '• Unlimited tickers & 60s refresh',
+          '• AI-powered analysis summaries',
+          '• Automated earnings digests',
+          '• Reseller dashboard & license keys'
+        ].join('\n'),
+        inline: false
+      },
+      {
+        name: 'Enterprise — $49/mo',
+        value: [
+          '• Everything in Pro',
+          '• SLA + priority support',
+          '• Webhook + CRM integrations (beta)',
+          `• Concierge onboarding — ${SUPPORT_EMAIL}`
+        ].join('\n'),
+        inline: false
+      }
+    );
+  return embed;
+}
+
+function licenseStatusEmbed(gid) {
+  const c = cfgFor(gid);
+  const tier = subscriptionTier(c);
+  const expiresAt = c.subscription?.expiresAt || null;
+  const features = Array.from(tierFeatures(tier) || []).map(f => `• ${FEATURE_LABELS[f] || f}`).join('\n') || '• quotes\n• pl';
+  return new EmbedBuilder()
+    .setTitle('🔐 License Status')
+    .addFields(
+      { name: 'Plan', value: formatTier(tier, expiresAt), inline: true },
+      { name: 'Auto Trial Started', value: c.subscription?.activatedAt ? new Date(c.subscription.activatedAt).toISOString().slice(0, 10) : 'N/A', inline: true },
+      { name: 'Features', value: features, inline: false }
+    )
+    .setFooter({ text: `Need help? ${SUPPORT_EMAIL}` })
+    .setColor(0x2b7);
+}
+
+function tierTag(gid) {
+  const c = cfgFor(gid);
+  const tier = subscriptionTier(c);
+  const expiresAt = c.subscription?.expiresAt;
+  return formatTier(tier, expiresAt);
+}
+
+function onboardingEmbed(guild, gid) {
+  return new EmbedBuilder()
+    .setTitle('🚀 Welcome to GrowthBot')
+    .setColor(0x2b7)
+    .setDescription([
+      `Thanks for inviting me to **${guild.name}**!`,
+      '',
+      'What happens next:',
+      '1. Use /plans to review Free vs Pro perks.',
+      `2. Start your auto-trial (${Math.max(1, Number(TRIAL_DAYS) || 7)} days) by running /license status.`,
+      '3. Set up your first watchlist: /watch add AAPL TSLA and /watch channel #trading.',
+      '',
+      `Ready to resell signals? Activate a license key from ${SALES_URL}.`
+    ].join('\n'))
+    .addFields(
+      { name: 'Current Plan', value: tierTag(gid), inline: true },
+      { name: 'Support', value: SUPPORT_EMAIL, inline: true }
+    )
+    .setFooter({ text: 'Turn your Discord community into passive income.' });
+}
+
 /* ---------------- Earnings Digest ---------------- */
 async function fetchEarningsFor(ticker) {
   try {
@@ -243,6 +442,7 @@ function scheduleDailyDigest() {
     const now = new Date();
     for (const [gid] of Object.entries(store)) {
       const c = cfgFor(gid);
+      enforceWatchLimits(gid);
       if (!c.earnings.running) continue;
       const targetHour = Number(c.earnings.hourUTC ?? 15);
       const lastISO = c.earnings.lastPostISO;
@@ -257,6 +457,7 @@ function scheduleDailyDigest() {
 const slashDefs = [
   new SlashCommandBuilder().setName('ping').setDescription('Bot health check'),
   new SlashCommandBuilder().setName('help').setDescription('Show available commands'),
+  new SlashCommandBuilder().setName('plans').setDescription('See pricing tiers and features'),
 
   new SlashCommandBuilder()
     .setName('quote')
@@ -302,7 +503,15 @@ const slashDefs = [
       .addChannelOption(o => o.setName('channel').setDescription('Text channel').setRequired(true)))
     .addSubcommand(sc => sc.setName('start').setDescription('Enable daily digest')
       .addIntegerOption(o => o.setName('utchour').setDescription('UTC hour 0-23')))
-    .addSubcommand(sc => sc.setName('stop').setDescription('Disable daily digest'))
+    .addSubcommand(sc => sc.setName('stop').setDescription('Disable daily digest')),
+
+  new SlashCommandBuilder()
+    .setName('license')
+    .setDescription('Manage subscription license')
+    .addSubcommand(sc => sc.setName('status').setDescription('Show current plan'))
+    .addSubcommand(sc => sc.setName('activate').setDescription('Activate a license key')
+      .addStringOption(o => o.setName('key').setDescription('License key string').setRequired(true)))
+    .addSubcommand(sc => sc.setName('revoke').setDescription('Revert to free plan'))
 ].map(c => c.toJSON());
 
 async function registerSlash() {
@@ -329,6 +538,33 @@ client.once('ready', async () => {
   scheduleDailyDigest();
 });
 
+client.on('guildCreate', async (guild) => {
+  try {
+    const gid = guild.id;
+    const c = cfgFor(gid);
+    if (c?.subscription?.welcomeSent) return;
+    let channel = null;
+    if (guild.systemChannelId) {
+      channel = await guild.channels.fetch(guild.systemChannelId).catch(() => null);
+      if (channel?.type !== ChannelType.GuildText) channel = null;
+    }
+    if (!channel) {
+      try {
+        const fetched = await guild.channels.fetch();
+        channel = fetched.find(ch => ch?.type === ChannelType.GuildText);
+      } catch {}
+    }
+    if (!channel) return;
+    await channel.send({
+      content: `Hi ${guild.name}! I'm GrowthBot — your automated finance sidekick.`,
+      embeds: [onboardingEmbed(guild, gid)]
+    });
+    if (c?.subscription) { c.subscription.welcomeSent = true; scheduleSave(); }
+  } catch (e) {
+    console.error('guildCreate welcome error:', e?.message || e);
+  }
+});
+
 /* ---------------- Slash handler ---------------- */
 client.on('interactionCreate', async (ix) => {
   try {
@@ -337,6 +573,7 @@ client.on('interactionCreate', async (ix) => {
 
     if (ix.commandName === 'ping') return ix.reply({ content: 'pong', ephemeral: true });
     if (ix.commandName === 'help') return ix.reply({ embeds: [helpEmbed()], ephemeral: true });
+    if (ix.commandName === 'plans') return ix.reply({ embeds: [plansEmbed()], ephemeral: true });
 
     if (ix.commandName === 'quote') {
       const t = ix.options.getString('ticker', true).toUpperCase();
@@ -353,6 +590,7 @@ client.on('interactionCreate', async (ix) => {
     }
 
     if (ix.commandName === 'analysis') {
+      if (!(await requireFeatureSlash(ix, 'analysis'))) return;
       const t = ix.options.getString('ticker', true).toUpperCase();
       await ix.deferReply();
       const embed = await buildAnalysisEmbed(t);
@@ -385,12 +623,18 @@ client.on('interactionCreate', async (ix) => {
       if (sub === 'add') {
         const toAdd = ix.options.getString('tickers', true).split(/[,\s]+/).map(s=>s.toUpperCase()).filter(Boolean);
         c.tickers = Array.from(new Set([...(c.tickers||[]), ...toAdd])); await saveStore();
+        enforceWatchLimits(gid);
+        if (!hasFeature(gid, 'watch-pro') && c.tickers.length >= WATCH_LIMIT_FREE) {
+          if (c.running) await postOrUpdateWatchMessage(gid);
+          return ix.reply(`✅ Added (Free plan limit ${WATCH_LIMIT_FREE}). Current: ${c.tickers.join(', ')}`);
+        }
         if (c.running) await postOrUpdateWatchMessage(gid);
         return ix.reply(`✅ Added: ${toAdd.join(', ')}\nCurrent: ${c.tickers.join(', ')}`);
       }
       if (sub === 'remove') {
         const sym = ix.options.getString('ticker', true).toUpperCase();
         c.tickers = (c.tickers||[]).filter(s=>s!==sym); await saveStore();
+        enforceWatchLimits(gid);
         if (c.running) await postOrUpdateWatchMessage(gid);
         return ix.reply(`🗑️ Removed: ${sym}\nCurrent: ${c.tickers.join(', ') || '(none)'}`);
       }
@@ -405,13 +649,19 @@ client.on('interactionCreate', async (ix) => {
         const s = ix.options.getInteger('interval') || 60;
         if (!c.channelId) return ix.reply('Set channel: `/watch channel`');
         if (!c.tickers?.length) return ix.reply('Add tickers: `/watch add`');
-        c.intervalMs = Math.max(15, s)*1000; await saveStore(); startWatch(gid, c.intervalMs); await postOrUpdateWatchMessage(gid);
+        if (!hasFeature(gid, 'watch-pro') && s < WATCH_MIN_INTERVAL_FREE) {
+          return ix.reply(`Free plan minimum interval is ${WATCH_MIN_INTERVAL_FREE} seconds. Upgrade for faster refresh.`);
+        }
+        c.intervalMs = Math.max(15, s)*1000; await saveStore(); startWatch(gid, c.intervalMs); enforceWatchLimits(gid); await postOrUpdateWatchMessage(gid);
         return ix.reply(`▶️ Started every ${Math.round(c.intervalMs/1000)}s.`);
       }
       if (sub === 'stop') { stopWatch(gid); return ix.reply('⏸️ Stopped.'); }
       if (sub === 'interval') {
         const s = ix.options.getInteger('seconds', true);
         if (s < 15) return ix.reply('Provide >= 15 seconds.');
+        if (!hasFeature(gid, 'watch-pro') && s < WATCH_MIN_INTERVAL_FREE) {
+          return ix.reply(`Free plan minimum interval is ${WATCH_MIN_INTERVAL_FREE} seconds.`);
+        }
         c.intervalMs = s*1000; await saveStore(); if (c.running) startWatch(gid, c.intervalMs);
         return ix.reply(`⏱️ Interval set to ${s}s.`);
       }
@@ -420,18 +670,53 @@ client.on('interactionCreate', async (ix) => {
     if (ix.commandName === 'earnings') {
       const sub = ix.options.getSubcommand();
       if (sub === 'channel') {
+        if (!(await requireFeatureSlash(ix, 'earnings'))) return;
         const ch = ix.options.getChannel('channel', true);
         if (ch.type !== ChannelType.GuildText) return ix.reply('Pick a text channel.');
         c.earnings.channelId = ch.id; await saveStore();
         return ix.reply(`📨 Earnings digest channel set to ${ch}`);
       }
       if (sub === 'start') {
+        if (!(await requireFeatureSlash(ix, 'earnings'))) return;
         const hour = ix.options.getInteger('utchour') ?? c.earnings.hourUTC ?? 15;
         c.earnings.running = true; c.earnings.hourUTC = Math.min(23, Math.max(0, Number(hour)));
         await saveStore(); scheduleDailyDigest();
         return ix.reply(`▶️ Earnings digest enabled at ${c.earnings.hourUTC}:00 UTC daily.`);
       }
       if (sub === 'stop') { c.earnings.running = false; await saveStore(); return ix.reply('⏸️ Earnings digest disabled.'); }
+    }
+
+    if (ix.commandName === 'license') {
+      const sub = ix.options.getSubcommand();
+      if (sub === 'status') {
+        return ix.reply({ embeds: [licenseStatusEmbed(gid)], ephemeral: true });
+      }
+      if (sub === 'activate') {
+        const key = ix.options.getString('key', true).trim();
+        const result = verifyLicense(key, gid);
+        if (!result.valid) {
+          c.subscription.lastInvalidReason = result.reason;
+          scheduleSave();
+          return ix.reply({ content: `❌ ${result.reason}`, ephemeral: true });
+        }
+        c.subscription = {
+          tier: result.tier,
+          licenseKey: key,
+          expiresAt: result.expiresAt || null,
+          activatedAt: new Date().toISOString(),
+          source: 'license',
+          payload: result.payload
+        };
+        await saveStore();
+        enforceWatchLimits(gid);
+        return ix.reply({ content: `✅ Activated ${tierTag(gid)}.`, ephemeral: true });
+      }
+      if (sub === 'revoke') {
+        c.subscription = { tier: 'free', activatedAt: new Date().toISOString(), source: 'revoke' };
+        enforceWatchLimits(gid);
+        await saveStore();
+        return ix.reply({ content: '🔓 Reverted to free tier.', ephemeral: true });
+      }
     }
 
   } catch (e) {
@@ -451,6 +736,7 @@ client.on('messageCreate', async (msg) => {
 
     if (cmd === 'ping') return void msg.reply('pong');
     if (cmd === 'help') return void msg.reply({ embeds: [helpEmbed()] });
+    if (cmd === 'plans') return void msg.reply({ embeds: [plansEmbed()] });
 
     if (cmd === 'quote') {
       const t = (args[0] || '').toUpperCase(); if (!t) return void msg.reply(`Usage: \`${PREFIX}quote TICKER\``);
@@ -466,6 +752,7 @@ client.on('messageCreate', async (msg) => {
     }
 
     if (cmd === 'analysis') {
+      if (!(await requireFeatureMessage(msg, 'analysis'))) return;
       const t = (args[0] || '').toUpperCase(); if (!t) return void msg.reply(`Usage: \`${PREFIX}analysis TICKER\``);
       const embed = await buildAnalysisEmbed(t);
       if (embed?.error) return void msg.reply(`No data for \`${t}\`.`);
@@ -500,12 +787,18 @@ client.on('messageCreate', async (msg) => {
       if (sub === 'add') {
         const toAdd = args.map(x=>x.toUpperCase()).filter(Boolean);
         if (!toAdd.length) return void msg.reply(`Usage: \`${PREFIX}watch add AAPL TSLA SPY\``);
-        c.tickers = Array.from(new Set([...(c.tickers||[]), ...toAdd])); await saveStore(); if (c.running) await postOrUpdateWatchMessage(gid);
+        c.tickers = Array.from(new Set([...(c.tickers||[]), ...toAdd])); await saveStore();
+        enforceWatchLimits(gid);
+        if (!hasFeature(gid, 'watch-pro') && c.tickers.length >= WATCH_LIMIT_FREE) {
+          if (c.running) await postOrUpdateWatchMessage(gid);
+          return void msg.reply(`✅ Added (Free plan limit ${WATCH_LIMIT_FREE}). Current: ${c.tickers.join(', ')}`);
+        }
+        if (c.running) await postOrUpdateWatchMessage(gid);
         return void msg.reply(`✅ Added: ${toAdd.join(', ')}\nCurrent: ${c.tickers.join(', ')}`);
       }
       if (sub === 'remove') {
         const sym = (args[0]||'').toUpperCase(); if (!sym) return void msg.reply(`Usage: \`${PREFIX}watch remove TICKER\``);
-        c.tickers = (c.tickers||[]).filter(s=>s!==sym); await saveStore(); if (c.running) await postOrUpdateWatchMessage(gid);
+        c.tickers = (c.tickers||[]).filter(s=>s!==sym); await saveStore(); enforceWatchLimits(gid); if (c.running) await postOrUpdateWatchMessage(gid);
         return void msg.reply(`🗑️ Removed: ${sym}\nCurrent: ${c.tickers.join(', ')||'(none)'}`);
       }
       if (sub === 'list') return void msg.reply(`📋 Current: ${c.tickers?.length ? c.tickers.join(', ') : '(none)'}`);
@@ -518,15 +811,56 @@ client.on('messageCreate', async (msg) => {
         const s = Number(args[0]) || 60;
         if (!c.channelId) return void msg.reply('Set channel first.');
         if (!c.tickers?.length) return void msg.reply('Add tickers first.');
-        c.intervalMs = Math.max(15, s)*1000; await saveStore(); startWatch(gid, c.intervalMs); await postOrUpdateWatchMessage(gid);
+        if (!hasFeature(gid, 'watch-pro') && s < WATCH_MIN_INTERVAL_FREE) {
+          return void msg.reply(`Free plan minimum interval is ${WATCH_MIN_INTERVAL_FREE} seconds. Upgrade for faster refresh.`);
+        }
+        c.intervalMs = Math.max(15, s)*1000; await saveStore(); startWatch(gid, c.intervalMs); enforceWatchLimits(gid); await postOrUpdateWatchMessage(gid);
         return void msg.reply(`▶️ Started every ${Math.round(c.intervalMs/1000)}s.`);
       }
       if (sub === 'stop') { stopWatch(gid); return void msg.reply('⏸️ Stopped.'); }
       if (sub === 'interval') {
         const s = Number(args[0]); if (!s || s < 15) return void msg.reply('Provide seconds >= 15.');
+        if (!hasFeature(gid, 'watch-pro') && s < WATCH_MIN_INTERVAL_FREE) {
+          return void msg.reply(`Free plan minimum interval is ${WATCH_MIN_INTERVAL_FREE} seconds.`);
+        }
         c.intervalMs = s*1000; await saveStore(); if (c.running) startWatch(gid, c.intervalMs); return void msg.reply(`⏱️ Interval set to ${s}s.`);
       }
       return void msg.reply(`Use: add/remove/list/channel/start/stop/interval — or \`/watch\` for guided UI.`);
+    }
+
+    if (cmd === 'license') {
+      const sub = (args.shift() || '').toLowerCase();
+      if (sub === 'status') {
+        return void msg.reply({ embeds: [licenseStatusEmbed(gid)] });
+      }
+      if (sub === 'activate') {
+        const key = (args[0] || '').trim();
+        if (!key) return void msg.reply(`Usage: \`${PREFIX}license activate YOUR_KEY\``);
+        const result = verifyLicense(key, gid);
+        if (!result.valid) {
+          c.subscription.lastInvalidReason = result.reason;
+          scheduleSave();
+          return void msg.reply(`❌ ${result.reason}`);
+        }
+        c.subscription = {
+          tier: result.tier,
+          licenseKey: key,
+          expiresAt: result.expiresAt || null,
+          activatedAt: new Date().toISOString(),
+          source: 'license',
+          payload: result.payload
+        };
+        await saveStore();
+        enforceWatchLimits(gid);
+        return void msg.reply(`✅ Activated ${tierTag(gid)}.`);
+      }
+      if (sub === 'revoke') {
+        c.subscription = { tier: 'free', activatedAt: new Date().toISOString(), source: 'revoke' };
+        enforceWatchLimits(gid);
+        await saveStore();
+        return void msg.reply('🔓 Reverted to free tier.');
+      }
+      return void msg.reply(`Usage: \`${PREFIX}license status|activate|revoke\``);
     }
 
     return void msg.reply(`Unknown command. Try \`${PREFIX}help\`.`);
@@ -543,6 +877,7 @@ function helpEmbed() {
       '**General**',
       `• \`${PREFIX}ping\`  /  \`/ping\``,
       `• \`${PREFIX}help\`  /  \`/help\``,
+      `• \`${PREFIX}plans\` / \`/plans\` — pricing & features`,
       '',
       '**Market Data**',
       `• \`${PREFIX}quote TICKER\`  /  \`/quote ticker:\``,
@@ -556,6 +891,7 @@ function helpEmbed() {
       `• \`${PREFIX}watch start [sec]\`          /  \`/watch start\``,
       `• \`${PREFIX}watch stop\`                 /  \`/watch stop\``,
       `• \`${PREFIX}watch interval sec\`         /  \`/watch interval\``,
+      `  Free tier: ${WATCH_LIMIT_FREE} tickers / ${WATCH_MIN_INTERVAL_FREE}s minimum`,
       '',
       '**Options**',
       `• \`${PREFIX}pl TICKER CALL|PUT STRIKE PREMIUM EXPIRY TARGET\`  /  \`/pl …\``,
@@ -564,7 +900,12 @@ function helpEmbed() {
       '**Earnings Digest (daily)**',
       '• `/earnings channel` — set post channel',
       '• `/earnings start [utchour]` — enable daily post (UTC)',
-      '• `/earnings stop`'
+      '• `/earnings stop`',
+      '',
+      '**Billing**',
+      `• \`${PREFIX}license status\` / \`/license status\``,
+      `• \`${PREFIX}license activate KEY\` / \`/license activate\``,
+      `• \`${PREFIX}license revoke\` / \`/license revoke\``
     ].join('\n'));
 }
 
