@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request
 import json
 from pathlib import Path
@@ -6,6 +8,9 @@ from typing import Optional, Tuple
 import simulator
 
 app = Flask(__name__)
+
+ADSENSE_CLIENT_ID = os.getenv("ADSENSE_CLIENT_ID")
+ADSENSE_SLOT_ID = os.getenv("ADSENSE_SLOT_ID")
 
 RANGES_PATH = Path(__file__).parent / "data" / "ranges.json"
 DEFAULT_PLAYERS = 2
@@ -47,6 +52,24 @@ def parse_players(raw_value: Optional[str]) -> Tuple[int, Optional[str]]:
         )
 
     return parsed, None
+
+
+def ad_settings() -> dict:
+    """Return ad configuration toggles for templates."""
+
+    ads_enabled = bool(ADSENSE_CLIENT_ID and ADSENSE_SLOT_ID)
+    return {
+        "ads_enabled": ads_enabled,
+        "ads_client": ADSENSE_CLIENT_ID,
+        "ads_slot": ADSENSE_SLOT_ID,
+    }
+
+
+@app.context_processor
+def inject_ads():
+    """Expose ad settings to every template."""
+
+    return {"ad_settings": ad_settings()}
 
 
 @app.route("/")

@@ -230,6 +230,49 @@ button {
     font-family: monospace;
 }
 
+.ad-block {
+    margin-top: 24px;
+    background: #0f1320;
+    border: 1px solid #1f2531;
+    border-radius: 12px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+    align-items: center;
+}
+
+.ad-block.compact {
+    grid-template-columns: 1fr;
+}
+
+.ad-container {
+    background: #0c0d10;
+    border: 1px dashed #2f3745;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.ad-placeholder {
+    background: #121520;
+    border: 1px dashed #384152;
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: #cfd3de;
+}
+
+.ad-placeholder ul {
+    margin: 8px 0 0 16px;
+    color: #9da5b4;
+}
+
+.ad-placeholder code {
+    background: #0c0d10;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: #f4b400;
+}
+
 @media (max-width: 720px) {
     .hero {
         grid-template-columns: 1fr;
@@ -238,5 +281,9 @@ button {
     .page-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .ad-block {
+        grid-template-columns: 1fr;
     }
 }

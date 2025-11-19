@@ -26,6 +26,21 @@ python app.py
 
 Visit `http://127.0.0.1:5000/` in your browser.
 
+## Enabling Monetization
+
+Responsive ad slots are available across the site. To enable Google AdSense:
+
+1. Configure environment variables before starting the app:
+
+   ```bash
+   export ADSENSE_CLIENT_ID="ca-pub-xxxxxxxxxxxxxxxx"
+   export ADSENSE_SLOT_ID="1234567890"
+   python app.py
+   ```
+
+2. Replace the placeholder values with your AdSense client and slot IDs.
+3. When the variables are missing, the app shows a friendly placeholder so you can swap in affiliate links, newsletters, or premium coaching offers instead.
+
 ## Simulating Hands
 
 To deal random starting hands, visit the `/simulate` route. You can optionally
