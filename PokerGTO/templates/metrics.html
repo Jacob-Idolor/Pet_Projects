@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h2>Practice Metrics</h2>
+        <p>See how the community is performing and log your own study reps. No login needed—just share your progress.</p>
+    </div>
+    <a class="button" href="{{ url_for('simulate') }}">Log a new session</a>
+</section>
+
+{% if submitted %}
+<div class="alert success">Thanks for sharing your session! It has been added to the public stats.</div>
+{% endif %}
+
+<section class="metrics-grid">
+    <div class="stat-card">
+        <p class="label">Total sessions</p>
+        <p class="value">{{ summary.total_sessions }}</p>
+    </div>
+    <div class="stat-card">
+        <p class="label">Decisions reviewed</p>
+        <p class="value">{{ summary.total_decisions }}</p>
+    </div>
+    <div class="stat-card">
+        <p class="label">Correct decisions</p>
+        <p class="value">{{ summary.total_correct }}</p>
+    </div>
+    <div class="stat-card">
+        <p class="label">Avg. accuracy</p>
+        <p class="value">{{ summary.average_accuracy }}%</p>
+    </div>
+</section>
+
+<section class="leaderboard">
+    <header>
+        <div>
+            <h3>Open leaderboard</h3>
+            <p class="hint">Aggregate accuracy by alias. Jump in with a quick alias—no account or login.</p>
+        </div>
+        <a class="button secondary" href="{{ url_for('simulate') }}">Record your score</a>
+    </header>
+    {% if summary.leaderboard %}
+    <div class="table">
+        <div class="table-row table-head">
+            <span>Alias</span>
+            <span>Sessions</span>
+            <span>Decisions</span>
+            <span>Accuracy</span>
+        </div>
+        {% for row in summary.leaderboard %}
+        <div class="table-row">
+            <span>{{ row.alias }}</span>
+            <span>{{ row.sessions }}</span>
+            <span>{{ row.decisions }}</span>
+            <span>{{ row.accuracy }}%</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="hint">No sessions logged yet. Be the first to share your study run!</p>
+    {% endif %}
+</section>
+
+<section class="recent-sessions">
+    <header>
+        <div>
+            <h3>Recent sessions</h3>
+            <p class="hint">Latest community submissions. Notes are optional so you can jot quick takeaways.</p>
+        </div>
+    </header>
+    {% if summary.recent_entries %}
+    <ul class="session-list">
+        {% for entry in summary.recent_entries %}
+        <li>
+            <div class="session-meta">
+                <span class="alias">{{ entry.alias or 'Anonymous' }}</span>
+                <span class="stat">{{ entry.correct }}/{{ entry.decisions }} correct</span>
+            </div>
+            {% if entry.notes %}
+            <p class="notes">{{ entry.notes }}</p>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="hint">Add your first run to start populating recent sessions.</p>
+    {% endif %}
+</section>
+{% endblock %}

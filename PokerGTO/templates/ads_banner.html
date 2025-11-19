@@ -1,0 +1,23 @@
+{% if ad_settings.ads_enabled %}
+<div class="ad-container">
+    <ins class="adsbygoogle"
+        style="display:block"
+        data-ad-client="{{ ad_settings.ads_client }}"
+        data-ad-slot="{{ ad_settings.ads_slot }}"
+        data-ad-format="auto"
+        data-full-width-responsive="true"></ins>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</div>
+{% else %}
+<div class="ad-placeholder">
+    <div>
+        <p><strong>Monetize your trainer.</strong> Add your Google AdSense client and slot IDs via the <code>ADSENSE_CLIENT_ID</code> and <code>ADSENSE_SLOT_ID</code> environment variables to enable live ads.</p>
+        <ul>
+            <li>Rotate training tips or premium offers when ads are disabled.</li>
+            <li>Pair with newsletter signups or coaching links for passive income.</li>
+        </ul>
+    </div>
+</div>
+{% endif %}
