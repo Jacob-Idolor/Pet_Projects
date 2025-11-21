@@ -22,10 +22,29 @@ cd PokerGTO
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python app.py
+flask --app app run --debug
 ```
 
 Visit `http://127.0.0.1:5000/` in your browser.
+
+### Local development tips
+
+* Use a virtual environment and pin dependencies with `requirements.txt` to keep your system Python clean.
+* Create a `.env` file (or export variables in your shell) for optional AdSense IDs:
+
+  ```bash
+  export ADSENSE_CLIENT_ID="ca-pub-xxxxxxxxxxxxxxxx"
+  export ADSENSE_SLOT_ID="1234567890"
+  ```
+
+* Run the lightweight unit tests before pushing changes:
+
+  ```bash
+  pytest
+  ```
+
+* Static assets for the simulated cards live in `static/cards/`; swap in branded artwork without touching Python code.
+* When changing templates, keep `static/style.css` in sync so the UI stays cohesive across pages.
 
 ## Logging Practice Sessions
 

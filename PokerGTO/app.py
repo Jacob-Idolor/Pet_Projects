@@ -17,6 +17,12 @@ METRICS_PATH = Path(__file__).parent / "data" / "practice_metrics.json"
 DEFAULT_PLAYERS = 2
 MIN_PLAYERS = 2
 MAX_PLAYERS = 9
+SUIT_META = {
+    "Hearts": {"symbol": "♥", "asset": "cards/heart.svg", "label": "Hearts"},
+    "Diamonds": {"symbol": "♦", "asset": "cards/diamond.svg", "label": "Diamonds"},
+    "Clubs": {"symbol": "♣", "asset": "cards/club.svg", "label": "Clubs"},
+    "Spades": {"symbol": "♠", "asset": "cards/spade.svg", "label": "Spades"},
+}
 
 
 def load_ranges() -> dict:
@@ -149,6 +155,7 @@ def build_simulation_context(num_players: int, error: Optional[str] = None) -> D
         "error": error,
         "min_players": MIN_PLAYERS,
         "max_players": MAX_PLAYERS,
+        "suits": SUIT_META,
     }
 
 

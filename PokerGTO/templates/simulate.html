@@ -19,8 +19,25 @@
 <ul class="hand-list">
     {% for player in players %}
     <li>
-        <span class="label">{{ player.name }}</span>
-        <span class="cards">{{ player.hand[0] }}, {{ player.hand[1] }}</span>
+        <div class="hand-meta">
+            <span class="label">{{ player.name }}</span>
+            <p class="hint">Opening hand</p>
+        </div>
+        <div class="card-hand" aria-label="{{ player.name }} hole cards">
+            {% for card in player.hand %}
+            <figure class="playing-card {{ card.suit|lower }}" aria-label="{{ card.value }} of {{ card.suit }}">
+                <div class="corner corner-top">
+                    <span class="card-value">{{ card.value }}</span>
+                    <span class="card-suit">{{ suits[card.suit].symbol }}</span>
+                </div>
+                <img class="card-icon" src="{{ url_for('static', filename=suits[card.suit].asset) }}" alt="{{ suits[card.suit].label }} icon">
+                <div class="corner corner-bottom">
+                    <span class="card-value">{{ card.value }}</span>
+                    <span class="card-suit">{{ suits[card.suit].symbol }}</span>
+                </div>
+            </figure>
+            {% endfor %}
+        </div>
     </li>
     {% endfor %}
 </ul>
