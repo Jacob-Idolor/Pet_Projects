@@ -1,0 +1,20 @@
+<div class="ad-container" role="complementary" aria-label="Ad slot">
+    {% if ad_settings.ads_enabled %}
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="{{ ad_settings.ads_client }}"
+         data-ad-slot="{{ ad_settings.ads_slot }}"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    {% else %}
+    <div class="ad-placeholder">
+        <strong>Ad placeholder</strong>
+        <p>Add your AdSense client and slot IDs via environment variables to monetize this block.</p>
+        <ul>
+            <li><code>ADSENSE_CLIENT_ID</code></li>
+            <li><code>ADSENSE_SLOT_ID</code></li>
+        </ul>
+    </div>
+    {% endif %}
+</div>

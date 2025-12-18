@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+    <div>
+        <h2>Preflop shortcuts for visual learners</h2>
+        <p>Study simplified ranges, drill quick scenarios, and track streaks without solving math at the table.</p>
+        <div class="cta">
+            <a class="button" href="{{ url_for('ranges') }}">Browse ranges</a>
+            <a class="button secondary" href="{{ url_for('simulate') }}">Deal hands</a>
+        </div>
+        <p class="hint">Offline-friendly content so you can practice on the go.</p>
+    </div>
+    <div class="card-callout">
+        <h3>What you get</h3>
+        <ul>
+            <li>Tournament-first ranges (15bb &amp; 25bb) plus a 100bb cash baseline.</li>
+            <li>One-click hand deals for 2-9 players to sanity check preflop combos.</li>
+            <li>Community metrics: share drills, accuracy, and compete on the leaderboard.</li>
+        </ul>
+    </div>
+</section>
+
+<section class="grid">
+    <article>
+        <h3>Study</h3>
+        <p>Quick-hit charts by position with notes for new players who memorize visually.</p>
+    </article>
+    <article>
+        <h3>Drill</h3>
+        <p>Run up to nine seats, see opening hands, and log how many spots you reviewed.</p>
+    </article>
+    <article>
+        <h3>Compete</h3>
+        <p>Track streaks with the metrics board. Add a name or stay anonymous—it still counts.</p>
+    </article>
+</section>
+
+<section class="ad-block">
+    <div>
+        <h3>Monetize without changing the flow</h3>
+        <p>Enable AdSense to add a responsive slot. When disabled, you can swap in your own coaching CTA.</p>
+    </div>
+    {% include 'ads_banner.html' %}
+</section>
+{% endblock %}

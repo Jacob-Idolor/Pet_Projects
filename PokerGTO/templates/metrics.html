@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h2>Community metrics</h2>
+        <p>Lightweight streak tracker. Share drills, see accuracy, and compare with other anonymous grinders.</p>
+    </div>
+    {% if submitted %}
+    <div class="alert success">Thanks for sharing your latest session!</div>
+    {% endif %}
+</section>
+
+<div class="metrics-grid">
+    <div class="stat-card">
+        <div class="label">Total sessions</div>
+        <div class="value">{{ summary.total_sessions }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Decisions logged</div>
+        <div class="value">{{ summary.total_decisions }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Correct decisions</div>
+        <div class="value">{{ summary.total_correct }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Average accuracy</div>
+        <div class="value">{{ summary.average_accuracy }}%</div>
+    </div>
+</div>
+
+<section class="leaderboard">
+    <header>
+        <div>
+            <h3>Leaderboard</h3>
+            <p class="hint">Sorted by accuracy, then total decisions.</p>
+        </div>
+    </header>
+    <div class="table">
+        <div class="table-row table-head">
+            <span>Alias</span>
+            <span>Sessions</span>
+            <span>Decisions</span>
+            <span>Accuracy</span>
+        </div>
+        {% for row in summary.leaderboard %}
+        <div class="table-row">
+            <span>{{ row.alias }}</span>
+            <span>{{ row.sessions }}</span>
+            <span>{{ row.decisions }}</span>
+            <span>{{ row.accuracy }}%</span>
+        </div>
+        {% else %}
+        <p class="hint">No entries yet. Log your first drill from the simulate page.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="recent-sessions">
+    <header>
+        <div>
+            <h3>Recent sessions</h3>
+            <p class="hint">Newest first. Notes help others spot leaks and drills.</p>
+        </div>
+    </header>
+    <ul class="session-list">
+        {% for entry in summary.recent_entries %}
+        <li>
+            <div class="session-meta">
+                <span class="alias">{{ entry.alias }}</span>
+                <span class="stat">{{ entry.correct }}/{{ entry.decisions }} correct</span>
+            </div>
+            {% if entry.notes %}
+            <p class="notes">{{ entry.notes }}</p>
+            {% else %}
+            <p class="notes hint">No notes shared.</p>
+            {% endif %}
+        </li>
+        {% else %}
+        <p class="hint">Waiting on the first drill submission.</p>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

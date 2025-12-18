@@ -1,0 +1,141 @@
+{
+  "tournament": {
+    "label": "Tournament (6-max, NLHE)",
+    "description": "Simplified preflop ranges for common stack depths. Start tight from early position and widen late positions.",
+    "stacks": [
+      {
+        "stack": "15bb shove/fold",
+        "positions": [
+          {
+            "name": "UTG / LJ",
+            "open": ["77+", "ATs+", "AQo+"],
+            "call": ["66", "A9s", "KQs"],
+            "three_bet": ["QQ+", "AKs"],
+            "notes": "Prioritize hands that play well all-in; avoid small pairs and offsuit Broadways."
+          },
+          {
+            "name": "HJ",
+            "open": ["66+", "A9s+", "AQo+", "KQs"],
+            "call": ["55", "A8s", "KJs", "QJs"],
+            "three_bet": ["JJ+", "AKs", "AQs"],
+            "notes": "Add suited connectors rarely; most play is shove/fold at this depth."
+          },
+          {
+            "name": "CO",
+            "open": ["55+", "A7s+", "ATo+", "KJs+", "QJs"],
+            "call": ["44", "A5s", "KTs", "JTs"],
+            "three_bet": ["TT+", "AK", "AQs"],
+            "notes": "You can pressure blinds with suited Broadways and mid pairs." 
+          },
+          {
+            "name": "BTN",
+            "open": ["44+", "A2s+", "A9o+", "KTo+", "QTs+", "JTs", "T9s"],
+            "call": ["33", "A5o", "K9s", "Q9s", "J9s"],
+            "three_bet": ["99+", "AQ+", "KQs"],
+            "notes": "Widen opens and resteals with suited Ax and Broadways; protect stack with value 3-bets."
+          },
+          {
+            "name": "SB",
+            "open": ["55+", "A5s+", "AJo+", "KQs", "QJs", "JTs"],
+            "call": ["44", "A2s", "KTs", "QTs", "T9s"],
+            "three_bet": ["TT+", "AQ+", "KQs"],
+            "notes": "Shove or raise/fold; avoid weak offsuit hands out of position."
+          }
+        ]
+      },
+      {
+        "stack": "25bb raise-first-in",
+        "positions": [
+          {
+            "name": "UTG / LJ",
+            "open": ["88+", "ATs+", "AQo+", "KQs"],
+            "call": ["77", "A9s", "KJs"],
+            "three_bet": ["JJ+", "AKs", "AQs"],
+            "notes": "Stay disciplined; offsuit Broadways and small pairs perform poorly."
+          },
+          {
+            "name": "HJ",
+            "open": ["77+", "A9s+", "AQo+", "KJs+", "QJs"],
+            "call": ["66", "A8s", "KTs", "JTs"],
+            "three_bet": ["TT+", "AK", "AQs"],
+            "notes": "Mix a few suited connectors and suited wheel aces as steals."
+          },
+          {
+            "name": "CO",
+            "open": ["66+", "A7s+", "ATo+", "KTo+", "QTs+", "JTs", "T9s"],
+            "call": ["55", "A5s", "K9s", "Q9s", "J9s", "T8s"],
+            "three_bet": ["99+", "AQ+", "KQs"],
+            "notes": "CO is your volume position: add suited connectors and wider Ax."
+          },
+          {
+            "name": "BTN",
+            "open": ["55+", "A2s+", "A8o+", "K9s+", "KTo+", "Q9s+", "J9s+", "T8s+"],
+            "call": ["44", "A5o", "K8s", "Q8s", "J8s", "98s"],
+            "three_bet": ["88+", "AQ+", "KQs", "A5s"],
+            "notes": "Press the blinds with suited gappers and offsuit Broadways; 3-bet value + a few suited Ax bluffs." 
+          },
+          {
+            "name": "SB",
+            "open": ["66+", "A5s+", "ATo+", "KJs+", "QJs", "JTs"],
+            "call": ["55", "A2s", "KTs", "QTs", "T9s"],
+            "three_bet": ["99+", "AQ+", "KQs"],
+            "notes": "Complete more versus limps, but isolate with playable suited hands." 
+          }
+        ]
+      }
+    ]
+  },
+  "cash": {
+    "label": "Cash (6-max, NLHE)",
+    "description": "Baseline open/defend guidance for $1/$2 live or 100bb online games.",
+    "stacks": [
+      {
+        "stack": "100bb standard",
+        "positions": [
+          {
+            "name": "UTG / LJ",
+            "open": ["99+", "ATs+", "AQo+", "KQs"],
+            "call": ["88", "A9s", "KJs"],
+            "three_bet": ["QQ+", "AKs", "AQs"],
+            "notes": "Tight value open; avoid offsuit Broadways and small suited gappers." 
+          },
+          {
+            "name": "HJ",
+            "open": ["88+", "A9s+", "AQo+", "KJs+", "QJs"],
+            "call": ["77", "A8s", "KTs", "JTs"],
+            "three_bet": ["JJ+", "AK", "AQs"],
+            "notes": "Mix suited connectors as calls versus tough blinds; 3-bet value heavy." 
+          },
+          {
+            "name": "CO",
+            "open": ["77+", "A7s+", "ATo+", "KTo+", "QTs+", "JTs", "T9s"],
+            "call": ["66", "A5s", "K9s", "Q9s", "J9s", "T8s"],
+            "three_bet": ["TT+", "AQ+", "KQs", "A5s"],
+            "notes": "Attack blinds; include suited wheel aces as light 3-bets." 
+          },
+          {
+            "name": "BTN",
+            "open": ["55+", "A2s+", "A8o+", "K9s+", "KTo+", "Q9s+", "J9s+", "T8s+", "98s"],
+            "call": ["44", "A5o", "K8s", "Q8s", "J8s", "87s"],
+            "three_bet": ["88+", "AQ+", "KQs", "A5s", "KJs"],
+            "notes": "Max pressure spot: wide opens and a polarized 3-bet range." 
+          },
+          {
+            "name": "SB vs open",
+            "open": ["n/a"],
+            "call": ["AJs+", "KQs", "JJ-77", "ATs", "KJs", "QJs", "JTs"],
+            "three_bet": ["QQ+", "AKs", "AQs", "A5s", "KQs"],
+            "notes": "Defend tightly vs big opens; mix suited Ax 3-bet bluffs versus late position." 
+          },
+          {
+            "name": "BB vs open",
+            "open": ["n/a"],
+            "call": ["Most suited Broadways", "all pairs", "A9o+", "KTo+", "QTo+", "JTo"],
+            "three_bet": ["TT+", "AK", "AQs", "KQs", "A5s"],
+            "notes": "Defend with price but avoid dominated offsuit hands versus EP."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-header">
+    <div>
+        <h2>Preflop ranges</h2>
+        <p>Simple reference charts by stack and position. Designed for players who learn by seeing patterns, not memorizing EV trees.</p>
+    </div>
+</section>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% elif not ranges %}
+<div class="alert">No range data found.</div>
+{% else %}
+<div class="range-grid">
+    {% for key, block in ranges.items() %}
+    <article class="card">
+        <h3>{{ block.label }}</h3>
+        <p class="hint">{{ block.description }}</p>
+        {% for stack in block.stacks %}
+        <div class="card" style="margin-top: 10px;">
+            <header class="page-header" style="margin-bottom: 8px;">
+                <div>
+                    <h4 style="margin: 0;">{{ stack.stack }}</h4>
+                    <p class="hint">Open / call / 3-bet suggestions.</p>
+                </div>
+            </header>
+            <div class="table">
+                <div class="table-row table-head">
+                    <span>Position</span>
+                    <span>Open</span>
+                    <span>Call</span>
+                    <span>3-bet</span>
+                </div>
+                {% for position in stack.positions %}
+                <div class="table-row">
+                    <span>{{ position.name }}</span>
+                    <span class="range-text">{{ position.open | join(', ') }}</span>
+                    <span class="range-text">{{ position.call | join(', ') }}</span>
+                    <span class="range-text">{{ position.three_bet | join(', ') }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <ul class="hint">
+                {% for position in stack.positions %}
+                <li><strong>{{ position.name }}:</strong> {{ position.notes }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </article>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
