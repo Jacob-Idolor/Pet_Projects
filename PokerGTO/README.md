@@ -106,3 +106,37 @@ http://127.0.0.1:5000/simulate?players=4
 ```
 
 Each request shuffles a new deck and displays two cards for every player.
+
+## Is Flask the right choice for web, desktop, and app stores?
+
+Flask is great for the current server-rendered web MVP and for running on a low-
+ops SaaS host (Render/Railway/Fly/Heroku). To ship the experience to the Google
+Play and Apple App Store you typically pair Flask with a cross-platform client.
+
+Recommended approach:
+
+1. Keep Flask as the backend API
+   * Serve JSON for ranges, drills, streaks, and leaderboard data.
+   * Host the API on a managed service (Render/Railway/Fly/Heroku) with a
+     persistent store for metrics.
+
+2. Build a cross-platform front-end
+   * **React Native/Expo** is a fast path to Android/iOS and can reuse logic for
+     offline caching and streak tracking. Embed web views only for lightweight
+     marketing pages, not the core drills.
+   * **Flutter** is another option if you prefer a single codebase with strong
+     offline support.
+   * For desktop/web users, you can ship the same React front-end as a PWA
+     (progressive web app) or wrap it with Capacitor/Electron if you need an
+     installable desktop build.
+
+3. Offline-friendly data model
+   * Bundle preflop range files with the mobile app and sync practice metrics
+     when online.
+   * Use the Flask API for optional updates (new ranges, leaderboards, ads) but
+     keep drills usable offline.
+
+If you want a single codebase today, start with a React (web) front-end that
+talks to the Flask JSON endpoints, then reuse that code in an Expo-managed React
+Native app for the stores. Flask stays small and hostable on a SaaS platform,
+while the client handles the multi-platform UI.
