@@ -1,0 +1,29 @@
+---
+- name: a simple playbook practice 
+  hosts: all 
+  gather_facts: false 
+  vars: 
+    ignore_users: 
+      - root
+      - -test1
+    new_user:
+     -test1
+     -test2
+     -test3
+  vars_files:
+    - files/users.yml
+  tasks:
+    - name: add users to hosts
+      when: item not in ignore_users | default(omit)
+      ansible.builtin.user:
+       name: "{{ item }}"
+       state: present
+      become: true 
+      #loop:
+      #  - test1
+     #   - test2
+      #  - test3
+        #static  
+
+      loop: "{{ users_list }}"
+      #dynamic  

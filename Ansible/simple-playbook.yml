@@ -1,0 +1,13 @@
+---
+- name: a simple playbook practice 
+  hosts: all 
+  gather_facts: false 
+  vars: 
+  vars_files:
+    - files/users.yml
+  tasks:
+    - name: add users to hosts
+      ansible.builtin.user:
+       name: "{{ new_user }}"
+       state: present
+      become: true 
