@@ -1864,28 +1864,12 @@ def main():
         st.warning("⚠️ Session expired. Refresh page.")
         return
 
-    # Pre-load api_key from session state (sidebar widget assigns it later)
-    api_key = st.session_state.get(API_KEY_STATE, _DEFAULT_ODDS_KEY)
+    # Use server-configured API key only (no user input for now)
+    api_key = _DEFAULT_ODDS_KEY
+    st.session_state[API_KEY_STATE] = api_key
 
-    # ── HEADER ──────────────────────────────────────────────────────────────
-    elapsed = int((datetime.now() - st.session_state.last_refresh).total_seconds())
-    api_status_html = ""
-    if api_key:
-        remaining = st.session_state.get("api_requests_remaining")
-        credits_text = f"{remaining} credits left" if remaining is not None else "validating…"
-        api_status_html = f"""
-        <span style='background:#0d3d2d;color:#09ab3b;border:1px solid #09ab3b;border-radius:20px;
-                     padding:3px 10px;font-size:0.75em;font-weight:700;letter-spacing:0.5px;'>
-            ● LIVE &nbsp;|&nbsp; {credits_text}
-        </span>"""
-    else:
-        api_status_html = """
-        <span style='background:#3d0d0d;color:#ff6b6b;border:1px solid #ff4b4b;border-radius:20px;
-                     padding:3px 10px;font-size:0.75em;font-weight:700;letter-spacing:0.5px;'>
-            ○ NO API KEY
-        </span>"""
-
-    st.markdown(f"""
+    # ── HEADER (minimal: brand only, no LIVE/credits/updated) ─────────────────
+    st.markdown("""
     <div class="betboard-header-row" style='background:linear-gradient(135deg,#1a1d24 0%,#0e1117 100%);
                 border-bottom:2px solid #262730;padding:12px 8px 14px;margin-bottom:4px;'>
         <div class="betboard-header-left">
@@ -1894,12 +1878,6 @@ def main():
             </div>
             <span style='background:#262730;color:#a0a0a0;border-radius:6px;
                          padding:2px 8px;font-size:0.7em;font-weight:600;'>v9.0</span>
-            {api_status_html}
-        </div>
-        <div class="betboard-header-right">
-            <span>🕐 Updated {elapsed}s ago</span>
-            <span style='color:#3d4046;'>|</span>
-            <span>{datetime.now().strftime("%b %d, %Y")}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1933,48 +1911,17 @@ def main():
 
         st.markdown("---")
 
-        # ── API Key (default from secrets/env for production; optional user override) ──
-        st.subheader("🔑 API Key")
-        api_key = st.text_input(
-            "The Odds API Key",
-            type="password",
-            value=st.session_state.get(API_KEY_STATE, _DEFAULT_ODDS_KEY),
-            help="Get free key: https://the-odds-api.com. Leave blank to use server default if set.",
-            label_visibility="collapsed",
-            placeholder="Paste API key or use default…"
-        )
-        if _DEFAULT_ODDS_KEY and (not api_key or api_key == _DEFAULT_ODDS_KEY):
-            st.caption("Using default API key (from server).")
-
-        if api_key:
-            st.session_state[API_KEY_STATE] = api_key
-            test_client = OddsAPIClient(api_key)
-            is_valid, message = test_client.test_api_key()
-            if is_valid:
-                col_r, col_u = st.columns(2)
-                with col_r:
-                    remaining = st.session_state.get("api_requests_remaining", "—")
-                    st.metric("Credits Left", remaining)
-                with col_u:
-                    used = st.session_state.get("api_requests_used", "—")
-                    st.metric("Used", used)
-                # ── Session cost tracker ──
-                session_calls = st.session_state.get("session_api_calls", 0)
-                approx_cost   = session_calls * (79 / 500)   # $79 plan = 500 calls
-                st.markdown(f"""
-                <div style='background:#1a1d24;border-radius:8px;padding:8px 12px;
-                            border:1px solid #262730;margin-top:4px;font-size:0.8em;'>
-                    <span style='color:#a0a0a0;'>This session: </span>
-                    <strong style='color:#fafafa;'>{session_calls} calls</strong>
-                    <span style='color:#a0a0a0;'> · ~</span>
-                    <strong style='color:#ffc107;'>${approx_cost:.3f}</strong>
-                </div>
-                """, unsafe_allow_html=True)
+        # ── Odds API status (server key only; no user input) ──────────────────
+        _key = st.session_state.get(API_KEY_STATE, _DEFAULT_ODDS_KEY)
+        if _key:
+            _client = OddsAPIClient(_key)
+            _valid, _msg = _client.test_api_key()
+            if _valid:
+                st.caption("✅ Odds data: Connected")
             else:
-                st.error(message)
-                st.markdown("[Get Free Key ↗](https://the-odds-api.com)")
+                st.caption("⚠️ Odds: Not configured")
         else:
-            st.caption("🔗 [Get free key at the-odds-api.com](https://the-odds-api.com)")
+            st.caption("⚠️ Odds: Not configured. Contact site owner.")
 
         st.markdown("---")
 
@@ -2112,13 +2059,11 @@ def main():
         )
         pinned_count = len(st.session_state.watchlist)
 
-        # Summary bar
-        s1, s2, s3, s4 = st.columns(4)
+        # Summary bar (no API credits shown to users)
+        s1, s2, s3 = st.columns(3)
         s1.metric("🎮 Games Today", total_games)
         s2.metric("📚 Bookmakers", total_books)
         s3.metric("📌 Watching", pinned_count)
-        remaining = st.session_state.get("api_requests_remaining", "—")
-        s4.metric("API Credits Left", remaining)
 
         st.markdown("---")
 

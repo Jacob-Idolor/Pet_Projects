@@ -37,6 +37,10 @@
 
 **Current state:** Fully functional 3,000-line Python/Streamlit app with 8 tabs, live odds from 8+ books, bet tracker, newsletter system (Resend + Brevo), feedback system, and dark mobile-responsive UI.
 
+**Access model (current):** Visitors use the site with a **server-configured API key** only. No user API key input — everyone gets the access they need from a single key you set in secrets/env. This keeps the experience simple and avoids exposing key management to end users.
+
+**Access model (future):** When you move to a paid or higher-volume tier, you can introduce a more robust token (e.g. paid The Odds API plan, optional user keys, or auth-gated features). The product and business plan are set up so you can add that layer later without changing the core value proposition.
+
 **Realistic Year 1 target:** $500-2,000/month passive income at 200-500 newsletter subscribers.
 
 ---
@@ -71,6 +75,11 @@
 | **No social proof** | No public track record, no testimonials, no user count | Easy (just needs time) |
 | **No SEO / landing page** | Streamlit apps aren't great for search engine discovery | Medium (need separate landing page) |
 | **Flat file storage** | CSV/JSON files, not a database — doesn't scale past ~5,000 subscribers | Medium |
+
+### Access & API (How Users Get In)
+
+- **Now:** One server-side Odds API key (in `.streamlit/secrets.toml` or `.env`). All visitors share it. No signup, no key field — just open the site and use it. You pay for the key (free tier or paid); users get full access.
+- **Later:** When you scale or monetize, you can switch to a paid API plan, add optional “bring your own key” for power users, or gate premium features behind auth. The current setup is intentionally simple so you can layer on a more robust token or billing when ready.
 
 ### The Brutal Truth
 
