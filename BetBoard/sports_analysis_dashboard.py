@@ -1168,7 +1168,7 @@ class MonetizationManager:
                 Ad Space · {tab_name}
             </span>
             <p style='color:#3d4046;font-size:0.7em;margin:4px 0 0;'>
-                Activate via Google AdSense — see MASTER_GUIDE.md
+                Activate via Google AdSense — see your local project guides.
             </p>
         </div>
         """, unsafe_allow_html=True)

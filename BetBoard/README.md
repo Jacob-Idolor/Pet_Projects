@@ -85,10 +85,7 @@ BetBoard can send daily pick emails to subscribers via **Resend** or **Brevo** (
 │   └── secrets.toml              # API keys (gitignored; create from secrets.toml.example)
 ├── .gitignore
 ├── CHANGELOG.md
-├── DEPLOY_CHECKLIST.md
-├── DEPLOYMENT_GUIDE.md
-├── MASTER_GUIDE.md
-└── USER_GUIDE.md
+└── (guides and business docs live in `private/` — gitignored, not pushed)
 ```
 
 ---
@@ -102,7 +99,7 @@ BetBoard can send daily pick emails to subscribers via **Resend** or **Brevo** (
 4. Add `ODDS_API_KEY` (and optional `RESEND_API_KEY`, `BREVO_API_KEY`) in Settings → Secrets so visitors get full access with no key input
 5. Done — you get a public URL
 
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for Railway, Render, and custom domain setup.
+For detailed deploy steps (Railway, Render, custom domain), see your local `private/` folder (DEPLOYMENT_GUIDE.md, DEPLOY_CHECKLIST.md).
 
 ---
 
