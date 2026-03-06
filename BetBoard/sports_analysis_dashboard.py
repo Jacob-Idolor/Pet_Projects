@@ -6,8 +6,11 @@ Features: Real-time odds, bet tracker with P&L charts, value bets, arbitrage,
 Date: March 2026
 """
 
-from dotenv import load_dotenv
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # optional: on Streamlit Cloud secrets come from st.secrets
 
 import streamlit as st
 import pandas as pd
