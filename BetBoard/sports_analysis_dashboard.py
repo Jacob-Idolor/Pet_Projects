@@ -54,7 +54,7 @@ except ImportError:
 
 st.set_page_config(
     page_title="BetBoard",
-    page_icon="�",
+    page_icon="\u2696",  # trophy
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -2712,7 +2712,7 @@ def main():
                 else:
                     st.error(f"❌ {label}: {msg}")
             else:
-                st.warning("Enter an email API key in the sidebar")
+                st.warning("Set Resend or Brevo API key in the sidebar (or in server secrets).")
 
         st.markdown("---")
 
@@ -2852,41 +2852,21 @@ def main():
 ---
 
 #### Step 3 — Deploy to Streamlit Community Cloud (public URL)
-1. Push this project to a **GitHub repo** (private is fine)
+1. Push this project to a **GitHub repo** (public for free tier)
 2. Go to **[share.streamlit.io](https://share.streamlit.io)** → Deploy
-3. Select your repo → `MISC/sports_analysis_dashboard.py`
+3. Select your repo → main file: `sports_analysis_dashboard.py`
 4. Add **Secrets** in the Streamlit Cloud settings:
    ```toml
-   RESEND_API_KEY = "re_your_key_here"
    ODDS_API_KEY   = "YOUR_ODDS_API_KEY_HERE"
+   RESEND_API_KEY = "re_your_key_here"
    NEWSLETTER_FROM = "picks@yourdomain.com"
    ```
-5. Your app gets a public URL like `https://yourname-betting.streamlit.app`
+5. Your app gets a public URL like `https://yourname-betboard.streamlit.app`
 
 ---
 
 #### Step 4 — Automate Daily Sends with GitHub Actions
-Create `.github/workflows/daily_pick.yml`:
-```yaml
-name: Daily Pick Email
-on:
-  schedule:
-    - cron: '0 13 * * *'   # 9 AM ET every day
-  workflow_dispatch:         # also allow manual trigger
-
-jobs:
-  send:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: pip install requests
-      - run: python MISC/send_daily_pick.py
-        env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-```
+Use the workflow in `.github/workflows/daily_pick.yml` (runs at 9 AM ET). Set GitHub Secrets: `ODDS_API_KEY`, `RESEND_API_KEY`. Main file: `send_daily_pick.py` at repo root.
 
 ---
 

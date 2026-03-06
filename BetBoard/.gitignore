@@ -20,6 +20,7 @@ env/
 
 # ── Streamlit: commit .streamlit/config.toml, never commit secrets ─
 .streamlit/secrets.toml
+secrets.toml
 
 # ── Private / internal (business plan, monetization, roadmap — do not push) ─
 private/
