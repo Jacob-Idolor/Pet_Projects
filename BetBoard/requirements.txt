@@ -1,6 +1,0 @@
-# BetBoard — same as requirements_sports.txt (Streamlit Cloud looks for requirements.txt)
-streamlit>=1.32.0
-requests>=2.31.0
-pandas>=2.2.0
-plotly>=5.19.0
-python-dotenv>=1.0.0
