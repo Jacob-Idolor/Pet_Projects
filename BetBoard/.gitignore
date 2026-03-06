@@ -18,9 +18,11 @@ venv/
 ENV/
 env/
 
-# ── Streamlit secrets (NEVER commit API keys) ─────────────────────
-.streamlit/
-secrets.toml
+# ── Streamlit: commit .streamlit/config.toml, never commit secrets ─
+.streamlit/secrets.toml
+
+# ── Private / internal (business plan, monetization, roadmap — do not push) ─
+private/
 
 # ── Personal data files (transfer manually, not via git) ──────────
 subscribers.csv

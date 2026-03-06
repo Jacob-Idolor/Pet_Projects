@@ -24,7 +24,7 @@ import requests
 
 load_dotenv()
 
-# Add MISC folder to path if running from repo root
+# Add project root to path when running from repo (e.g. GitHub Actions)
 sys.path.insert(0, os.path.dirname(__file__))
 
 from newsletter import (

@@ -99,12 +99,9 @@ If deployed:
 https://YOUR_USERNAME-betboard.streamlit.app
 ```
 
-### Step 2 — Enter Your API Key
+### Step 2 — Odds Are Provided by the Site
 
-1. Click the **`>`** arrow in the top-left to expand the sidebar
-2. In the **"API Configuration"** section, enter your Odds API key
-3. The key you have: `YOUR_ODDS_API_KEY_HERE`
-4. A green ✅ appears when the key is valid
+Odds data is loaded automatically. You don't need to enter an API key. Expand the sidebar (**`>`** in the top-left) to see **"Odds data: Connected"** when the site is configured.
 
 ### Step 3 — Select Your Sports
 
@@ -610,7 +607,7 @@ A: Parlays are high-risk. The house edge multiplies with each leg. Use parlays s
 A: BetBoard caches data for 10 minutes to conserve API calls. Click "Refresh" or reload the page for the latest. Odds change constantly — check 30–60 minutes before game time for the most accurate lines.
 
 **Q: What happens if I run out of API calls?**
-A: The free tier gives 500 calls/month. If you run out, the app still works but won't load new odds until next month. Use the cost tracker in the sidebar to monitor usage.
+A: The site uses a server-configured Odds API key. If the free tier (500 calls/month) is exhausted, new odds won't load until the next cycle. The operator manages this; as a visitor you just use the site.
 
 **Q: Can I use BetBoard on my phone?**
 A: Yes. The UI is responsive and works on mobile browsers. Expand the sidebar with the `>` arrow.
@@ -627,7 +624,7 @@ python -m streamlit run sports_analysis_dashboard.py
 ## Quick Start Cheat Sheet
 
 ```
-1. Open BetBoard → Enter API key in sidebar
+1. Open BetBoard → Odds load automatically (no key needed)
 2. Select NBA + NCAAB
 3. Check 📅 Today tab → Pin interesting games
 4. Check 🔬 Analysis → Value Bets → Look for Edge > 5%
@@ -645,4 +642,4 @@ python -m streamlit run sports_analysis_dashboard.py
 
 ---
 
-*See also: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for hosting setup and [MONETIZATION_PLAYBOOK.md](MONETIZATION_PLAYBOOK.md) for passive income strategies.*
+*See also: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for hosting setup.*

@@ -59,17 +59,16 @@ __pycache__/                   ← Python cache (gitignored)
 *.zip                          ← Old backups (gitignored)
 ```
 
-### Clean Up `requirements_sports.txt`
-Your production dependencies (update the file to exactly this):
+### Dependencies in `requirements_sports.txt`
+Keep these (already in the repo):
 
 ```
 streamlit>=1.32.0
 requests>=2.31.0
 pandas>=2.2.0
 plotly>=5.19.0
+python-dotenv>=1.0.0
 ```
-
-> Remove `beautifulsoup4`, `lxml`, and `selenium` — the app doesn't use them. Fewer dependencies = faster deploys and smaller attack surface.
 
 ---
 
@@ -82,31 +81,19 @@ plotly>=5.19.0
 If you haven't already:
 
 ```powershell
-# Open a NEW terminal, navigate to your MISC folder
-cd "C:\Users\jacob.idolor\OneDrive - Farmers Insurance Group\Documents\MouseyJiggler\MISC"
+cd "path\to\BetBoard"
 
-# Initialize git (skip if already done)
 git init
-
-# Stage only the files you need
-git add sports_analysis_dashboard.py
-git add newsletter.py
-git add send_daily_pick.py
-git add requirements_sports.txt
-git add .streamlit/config.toml
-git add .gitignore
-git add MASTER_GUIDE.md
-
-# Commit
+git add sports_analysis_dashboard.py newsletter.py send_daily_pick.py requirements_sports.txt config.toml .streamlit/config.toml secrets.toml.example .env.example .gitignore README.md MASTER_GUIDE.md DEPLOYMENT_GUIDE.md DEPLOY_CHECKLIST.md USER_GUIDE.md CHANGELOG.md run_sports_dashboard.bat .github/workflows/daily_pick.yml
 git commit -m "BetBoard v9.0 - Production deploy"
 ```
 
 Now create the repo on GitHub:
 
 1. Go to **[github.com/new](https://github.com/new)**
-2. **Repository name:** `betboard` (or `march-madness-picks`)
+2. **Repository name:** `betboard` (or your choice)
 3. **Visibility:** Public (required for free Streamlit Cloud)
-4. **Do NOT** initialize with README (you already have files)
+4. **Do NOT** initialize with README if you already have files
 5. Click **Create repository**
 
 Then push:
@@ -159,7 +146,7 @@ The app reads these via `st.secrets.get()` → `os.environ.get()` → session fa
 Open your public URL and check:
 
 - [ ] App loads (BetBoard header, hero screen, 8 tabs)
-- [ ] Sidebar → API key auto-populated from secrets
+- [ ] Sidebar shows "Odds data: Connected" (no user API key input)
 - [ ] Sports load (NBA, NCAAB data appears)
 - [ ] Newsletter tab → Resend/Brevo shows green checkmark
 - [ ] Feedback tab → submit a test entry
@@ -335,7 +322,7 @@ The file should be at:
 .github/workflows/daily_pick.yml
 ```
 
-If it's not in your MISC folder structure, create it at the ROOT of your GitHub repo.
+If it's not in your BetBoard folder structure, create it at the ROOT of your GitHub repo.
 
 ### Step 2 — Add GitHub Secrets
 
@@ -457,7 +444,7 @@ START: Deploy for free on Streamlit Cloud
 
 ```powershell
 # 1. Push to GitHub
-cd "C:\Users\jacob.idolor\OneDrive - Farmers Insurance Group\Documents\MouseyJiggler\MISC"
+cd "path\to\BetBoard"
 git add -A
 git commit -m "Production deploy"
 git push origin main
@@ -482,4 +469,4 @@ git push origin main
 
 ---
 
-*Next: See [MONETIZATION_PLAYBOOK.md](MONETIZATION_PLAYBOOK.md) for passive income strategies and [USER_GUIDE.md](USER_GUIDE.md) to understand every feature.*
+*Next: See [USER_GUIDE.md](USER_GUIDE.md) to understand every feature. For business and monetization strategy, use your local internal docs (not in repo).*

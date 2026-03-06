@@ -8,7 +8,7 @@
 | Guide | What It Covers |
 |-------|---------------|
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Step-by-step hosting: Streamlit Cloud, Railway, Render, custom domain, Cloudflare, GitHub Actions, security checklist |
-| [MONETIZATION_PLAYBOOK.md](MONETIZATION_PLAYBOOK.md) | Passive income strategy: affiliates, ads, premium tier, sponsorships, digital products, 90-day launch plan, revenue projections |
+| *(internal)* | Business plan, monetization playbook, and deploy actions are in `private/` (gitignored — not in repo). |
 | [USER_GUIDE.md](USER_GUIDE.md) | How every tab works, how to read odds/edge/EV, March Madness game plan, NBA/NFL strategy, the pick algorithm explained |
 
 ---
@@ -57,18 +57,18 @@ A fully functional **sports betting companion app** built with Python + Streamli
 
 ### Core Application Files (keep these)
 ```
-MISC/
-├── sports_analysis_dashboard.py   ← Main app (~3,000 lines). Run this.
+BetBoard/
+├── sports_analysis_dashboard.py   ← Main app. Run this.
 ├── newsletter.py                  ← Newsletter module (pick algo, email builder, Resend client)
 ├── send_daily_pick.py             ← Standalone script for automated daily emails (cron/GitHub Actions)
 ├── requirements_sports.txt        ← Python dependencies
 ├── run_sports_dashboard.bat       ← Double-click to run on Windows
-├── .streamlit/                    ← Streamlit config folder
-│   ├── config.toml                ← Theme / server settings
-│   └── secrets.toml               ← API keys (gitignored — never commit!)
+├── config.toml                    ← Theme / server settings
+├── .streamlit/
+│   └── secrets.toml               ← API keys (gitignored — never commit! Create from secrets.toml.example)
+├── .env.example / .env            ← Optional env vars (gitignored)
 ├── MASTER_GUIDE.md                ← This file
 ├── DEPLOYMENT_GUIDE.md            ← Hosting + deploy instructions
-├── MONETIZATION_PLAYBOOK.md       ← Passive income strategies
 └── USER_GUIDE.md                  ← How to use every feature
 ```
 
@@ -82,20 +82,11 @@ email_subscribers.csv ← Legacy subscriber file from old version
 __pycache__/          ← Python bytecode cache (auto-generated, ignore)
 ```
 
-### Can Be Deleted
-```
-Sports_Betting_Platform_COMPLETE_2026-03-03.zip   ← Old backup
-Sports_Betting_Platform_Package_2026-03-03.zip    ← Old backup
-_fix_tabs.py          ← One-time utility, no longer needed
-MarchMadness&NBA.py   ← Early prototype, superseded by main dashboard
-cheap_data_fetcher.py ← Early prototype, superseded
-```
-
-### Root folder (MouseyJiggler/)
+### Optional / Repo root
 ```
 .github/
 └── workflows/
-    └── daily_pick.yml   ← GitHub Actions: sends email every morning at 9 AM ET
+    └── daily_pick.yml   ← GitHub Actions: sends email every morning at 9 AM ET (if you use it)
 ```
 
 ---
@@ -108,24 +99,29 @@ cheap_data_fetcher.py ← Early prototype, superseded
 
 ### One-Time Setup
 ```powershell
-cd "C:\path\to\MouseyJiggler\MISC"
-pip install streamlit requests pandas plotly
+cd "path\to\BetBoard"
+pip install -r requirements_sports.txt
 ```
+
+### Configure Odds API (server only)
+Visitors do **not** enter an API key. You set it once on the server:
+
+- Create **`.streamlit/secrets.toml`** (copy from `secrets.toml.example`) and set:
+  ```toml
+  ODDS_API_KEY = "your_key_here"
+  ```
+- Or use a **`.env`** file in the project root with `ODDS_API_KEY=your_key_here`
+
+Get a free key at [the-odds-api.com](https://the-odds-api.com). The sidebar shows "Odds data: Connected" when configured.
 
 ### Start the Dashboard
 ```powershell
-cd "C:\path\to\MouseyJiggler\MISC"
-python -m streamlit run sports_analysis_dashboard.py --server.port 8517
+cd "path\to\BetBoard"
+streamlit run sports_analysis_dashboard.py --server.port 8517
 ```
 Then open: **http://localhost:8517**
 
-Or just double-click **`run_sports_dashboard.bat`** on Windows.
-
-### Enter Your API Key
-1. Open the app in browser
-2. Expand the sidebar (← arrow, top left)
-3. Paste your Odds API key: `YOUR_ODDS_API_KEY_HERE`
-4. Green checkmark = ready. NBA + NCAAB load automatically.
+Or double-click **`run_sports_dashboard.bat`** on Windows.
 
 ---
 
@@ -208,20 +204,19 @@ Revenue at this scale: $3,000–15,000+/mo from affiliates/subscriptions/sponsor
 ### Step 1 — Create a GitHub Repository
 
 ```powershell
-# From the MISC folder
-cd "C:\Users\jacob.idolor\OneDrive - Farmers Insurance Group\Documents\MouseyJiggler\MISC"
+cd "path\to\BetBoard"
 
 git init
-git add sports_analysis_dashboard.py newsletter.py send_daily_pick.py requirements_sports.txt run_sports_dashboard.bat .streamlit/ .gitignore
-git commit -m "Sports betting dashboard v9.0 - March Madness 2026"
+git add sports_analysis_dashboard.py newsletter.py send_daily_pick.py requirements_sports.txt run_sports_dashboard.bat config.toml secrets.toml.example .env.example .gitignore *.md
+git commit -m "BetBoard v9.0"
 ```
 
 Then on GitHub.com:
-1. **github.com/new** → Name: `march-madness-picks` → Public → Create
-2. Copy the repo URL (e.g. `https://github.com/yourusername/march-madness-picks.git`)
+1. **github.com/new** → Name: `betboard` (or your choice) → Public → Create
+2. Copy the repo URL (e.g. `https://github.com/yourusername/betboard.git`)
 
 ```powershell
-git remote add origin https://github.com/yourusername/march-madness-picks.git
+git remote add origin https://github.com/yourusername/betboard.git
 git branch -M main
 git push -u origin main
 ```
@@ -234,8 +229,7 @@ git push -u origin main
 4. Select your repo → Branch: `main` → Main file: `sports_analysis_dashboard.py`
 5. Click **"Deploy"** (takes ~3 minutes)
 
-Your app gets a permanent public URL:
-`https://yourusername-march-madness-picks.streamlit.app`
+Your app gets a permanent public URL (e.g. `https://yourusername-betboard.streamlit.app`). Visitors use the site with no API key input — you set keys once in Secrets.
 
 ### Step 3 — Add Secrets (API Keys)
 
@@ -293,8 +287,8 @@ BetBoard supports **two** free email providers — switch between them in the si
 
 ### Using the Newsletter Tab
 1. Open the app → **📧 Newsletter** tab
-2. Enter your Resend API key in the sidebar — watch for green checkmark
-3. Load live odds (enter Odds API key) — the Pick of the Day auto-generates
+2. Set **Resend** or **Brevo** API key in `.streamlit/secrets.toml` (or sidebar if you re-enable key input); sidebar shows connection status
+3. Odds load automatically when the server Odds API key is set — the Pick of the Day auto-generates
 4. **Preview** the email HTML before sending
 5. Add subscribers manually in the tab OR share your app URL
 6. Use **"Send test to [your email]"** first to verify it looks right
@@ -349,73 +343,66 @@ Apply to 2–3 programs. Replace the placeholder links in the sidebar with your 
 
 ### What to Transfer
 
-**Everything you need lives in two folders:**
+**Everything you need lives in the BetBoard folder:**
 ```
-MouseyJiggler/
-├── MISC/                          ← The entire app lives here
-│   ├── sports_analysis_dashboard.py
-│   ├── newsletter.py
-│   ├── send_daily_pick.py
-│   ├── requirements_sports.txt
-│   ├── run_sports_dashboard.bat
-│   ├── .streamlit/
-│   ├── subscribers.csv            ← YOUR DATA — don't forget this
-│   ├── picks_history.json         ← YOUR DATA — don't forget this
-│   └── MASTER_GUIDE.md
-└── .github/
-    └── workflows/
-        └── daily_pick.yml
+BetBoard/
+├── sports_analysis_dashboard.py
+├── newsletter.py
+├── send_daily_pick.py
+├── requirements_sports.txt
+├── run_sports_dashboard.bat
+├── config.toml
+├── .streamlit/secrets.toml        ← Create from secrets.toml.example; add ODDS_API_KEY
+├── subscribers.csv                ← YOUR DATA — back up
+├── picks_history.json             ← YOUR DATA — back up
+└── MASTER_GUIDE.md
 ```
 
 ### Option A — Transfer via GitHub (Recommended)
 Once you push to GitHub (Step 5 above), on any new computer:
 ```bash
-git clone https://github.com/yourusername/march-madness-picks.git
-cd march-madness-picks
+git clone https://github.com/yourusername/betboard.git
+cd betboard
 pip install -r requirements_sports.txt
-python -m streamlit run sports_analysis_dashboard.py --server.port 8517
+streamlit run sports_analysis_dashboard.py --server.port 8517
 ```
-Done. The app is fully running on the new machine in under 5 minutes.
+Then create `.streamlit/secrets.toml` with your `ODDS_API_KEY` (and optional Resend/Brevo keys). Done.
 
-> **Important:** `subscribers.csv` and `picks_history.json` are in `.gitignore` (personal data).
-> Copy these files manually via USB, email to yourself, or save in OneDrive/Google Drive separately.
+> **Important:** `subscribers.csv` and `picks_history.json` are in `.gitignore`. Copy them manually if you need to keep data.
 
-### Option B — Copy via OneDrive / USB
-Since you're on OneDrive now, the files are already syncing:
-1. On your personal computer: open OneDrive → navigate to `Documents/MouseyJiggler/MISC`
+### Option B — Copy folder via USB / cloud
+1. Copy the whole **BetBoard** folder to the new machine
 2. Install Python 3.11+ from python.org
-3. Run: `pip install streamlit requests pandas plotly`
-4. Run: `python -m streamlit run sports_analysis_dashboard.py`
+3. Run: `pip install -r requirements_sports.txt`
+4. Create `.streamlit/secrets.toml` with your API keys
+5. Run: `streamlit run sports_analysis_dashboard.py`
 
 ### Personal Computer Setup Checklist
 - [ ] Python 3.11+ installed (python.org)
-- [ ] VS Code installed (code.visualstudio.com) — optional but recommended
-- [ ] Run `pip install streamlit requests pandas plotly` in terminal
+- [ ] Run `pip install -r requirements_sports.txt`
+- [ ] Create `.streamlit/secrets.toml` with `ODDS_API_KEY` (and optional Resend/Brevo)
 - [ ] Copy `subscribers.csv` and `picks_history.json` if you have them
-- [ ] Test: `python -m streamlit run sports_analysis_dashboard.py --server.port 8517`
-- [ ] Open `http://localhost:8517` — enter API key — confirm data loads
+- [ ] Run: `streamlit run sports_analysis_dashboard.py --server.port 8517`
+- [ ] Open `http://localhost:8517` — sidebar should show "Odds data: Connected"
 
-### Work Computer Notes
-- Your files are in OneDrive → they sync automatically across devices if OneDrive is installed
-- The `.venv` folder does NOT need to transfer — just run `pip install` on the new machine
+### Transfer Notes
+- The `.venv` folder does NOT need to transfer — run `pip install -r requirements_sports.txt` on the new machine
 - The `__pycache__` folder does NOT need to transfer
-- The two `.zip` backup files don't need to transfer (old versions)
 
 ---
 
 ## 9. API Keys & Credentials
 
-### Keep These Safe
-| Service | Key / Value | Where to Enter |
-|---------|------------|----------------|
-| The Odds API | `YOUR_ODDS_API_KEY_HERE` | Dashboard sidebar |
-| Resend (get yours) | `re_xxxxxxxxxx` | Dashboard sidebar / Streamlit secrets |
-| Brevo (get yours) | `xkeysib-xxxxxxxxxx` | Dashboard sidebar / Streamlit secrets |
+### Server-only (no user key input)
+Visitors do not enter API keys. You set them once on the server:
 
-### Remaining Free Credits
-- **The Odds API:** Started with 500/month. ~36 used in testing. Check remaining in dashboard sidebar after loading odds.
-- **Resend:** 3,000/month. 0 used (just set up).
-- **Brevo:** 9,000/month (300/day). 0 used (just set up).
+| Service | Where to set |
+|---------|----------------|
+| The Odds API | `.streamlit/secrets.toml` or `.env` → `ODDS_API_KEY` |
+| Resend | `.streamlit/secrets.toml` or `.env` → `RESEND_API_KEY` |
+| Brevo | `.streamlit/secrets.toml` or `.env` → `BREVO_API_KEY` |
+
+Sidebar shows "Odds data: Connected" when the Odds API key is valid. Access is server-configured (one key for all visitors).
 
 ### Where Keys Live in Production
 When deployed to Streamlit Cloud, keys go in **Secrets** (never in code):
@@ -439,8 +426,8 @@ The app reads them with `st.secrets.get()` → `os.environ.get()` fallback — n
 Get-Process -Name "python" -ErrorAction SilentlyContinue | Stop-Process -Force
 
 # Then restart
-cd "path\to\MISC"
-python -m streamlit run sports_analysis_dashboard.py --server.port 8517
+cd "path\to\BetBoard"
+streamlit run sports_analysis_dashboard.py --server.port 8517
 ```
 
 ### "No module named streamlit" error
@@ -448,11 +435,9 @@ python -m streamlit run sports_analysis_dashboard.py --server.port 8517
 pip install streamlit requests pandas plotly
 ```
 
-### "Invalid API Key" in the dashboard
-- Make sure there are no spaces before/after the key
-- Test it directly: open the browser and go to:
-  `https://api.the-odds-api.com/v4/sports?apiKey=YOUR_ODDS_API_KEY_HERE`
-  If you see JSON data, the key is valid.
+### "Odds: Not configured" or no data
+- Set `ODDS_API_KEY` in `.streamlit/secrets.toml` (or `.env`). Restart the app.
+- Test the key: open `https://api.the-odds-api.com/v4/sports?apiKey=YOUR_KEY` in a browser; you should see JSON.
 
 ### No games showing up
 - The Odds API only shows games that have active odds (usually within 7 days)
@@ -471,9 +456,8 @@ pip install streamlit requests pandas plotly
 python -m streamlit run sports_analysis_dashboard.py --server.port 8520
 ```
 
-### Moving to personal computer — app won't load data
-- The `.streamlit/secrets.toml` file is gitignored — you need to re-enter the API key in the sidebar
-- Or create `.streamlit/secrets.toml` manually with your keys (see Section 9)
+### Moving to another computer — app won't load data
+- Create `.streamlit/secrets.toml` on the new machine (it's gitignored). Add `ODDS_API_KEY` and optional Resend/Brevo keys (see Section 9).
 
 ---
 

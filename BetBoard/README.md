@@ -37,17 +37,17 @@ cd betboard
 pip install -r requirements_sports.txt
 ```
 
-### 2. Add your API key
+### 2. Configure the server (one-time)
 
-```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-```
+Visitors use the site with **no API key input** — you set one key on the server and everyone gets access.
 
-Edit `.streamlit/secrets.toml` and paste your free API key from [the-odds-api.com](https://the-odds-api.com):
+Create `.streamlit/secrets.toml` (or use `.env` in the project root) and set your Odds API key:
 
 ```toml
 ODDS_API_KEY = "your_key_here"
 ```
+
+Get a free key at [the-odds-api.com](https://the-odds-api.com). Access is server-configured (one key for all visitors); no user key input.
 
 ### 3. Run
 
@@ -74,23 +74,21 @@ BetBoard can send daily pick emails to subscribers via **Resend** or **Brevo** (
 ## Project Structure
 
 ```
-├── sports_analysis_dashboard.py   # Main app (3,000+ lines)
+├── sports_analysis_dashboard.py   # Main app
 ├── newsletter.py                  # Newsletter engine + Resend client
 ├── send_daily_pick.py             # Standalone daily email script
 ├── requirements_sports.txt        # Python dependencies
+├── config.toml                    # Theme & server config
+├── secrets.toml.example          # Template for secrets (copy to .streamlit/secrets.toml)
+├── .env.example                  # Template for .env (optional; copy to .env)
 ├── .streamlit/
-│   ├── config.toml                # Theme & server config
-│   ├── secrets.toml               # Your API keys (gitignored)
-│   └── secrets.toml.example       # Template for secrets
+│   └── secrets.toml              # API keys (gitignored; create from secrets.toml.example)
 ├── .gitignore
-├── CHANGELOG.md                   # Version history
-├── ROADMAP.md                     # Improvement backlog
-├── DEPLOY_CHECKLIST.md            # Pre-deploy checklist
-├── DEPLOYMENT_GUIDE.md            # Hosting guide (Streamlit Cloud, Railway, Render)
-├── MONETIZATION_PLAYBOOK.md       # Revenue strategies
-├── BUSINESS_PLAN.md               # Business plan
-├── MASTER_GUIDE.md                # Technical reference
-└── USER_GUIDE.md                  # End-user walkthrough
+├── CHANGELOG.md
+├── DEPLOY_CHECKLIST.md
+├── DEPLOYMENT_GUIDE.md
+├── MASTER_GUIDE.md
+└── USER_GUIDE.md
 ```
 
 ---
@@ -101,7 +99,7 @@ BetBoard can send daily pick emails to subscribers via **Resend** or **Brevo** (
 1. Push this repo to GitHub
 2. Go to [share.streamlit.io](https://share.streamlit.io)
 3. Select this repo → `sports_analysis_dashboard.py`
-4. Add your API keys in Settings → Secrets
+4. Add `ODDS_API_KEY` (and optional `RESEND_API_KEY`, `BREVO_API_KEY`) in Settings → Secrets so visitors get full access with no key input
 5. Done — you get a public URL
 
 See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for Railway, Render, and custom domain setup.

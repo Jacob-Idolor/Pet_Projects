@@ -109,4 +109,4 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
-*For future improvements, see [ROADMAP.md](ROADMAP.md).*
+*For future improvements, see your local roadmap (if you keep one).*

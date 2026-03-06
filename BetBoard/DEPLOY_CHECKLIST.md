@@ -8,12 +8,8 @@
 
 - [ ] **API key is NOT in any `.md`, `.py`, or committed file** (only in `.streamlit/secrets.toml`)
 - [ ] **`.gitignore` includes:** `secrets.toml`, `subscribers.csv`, `email_subscribers.csv`, `feedback.json`, `picks_history.json`, `*.zip`
-- [ ] **Run this to double-check (PowerShell):**
-  ```powershell
-  Select-String -Path "MISC\*.md","MISC\*.py" -Pattern "3f6816" -SimpleMatch
-  # Should return 0 results
-  ```
-- [ ] **Rotate your Odds API key** — the old one was exposed. Go to [the-odds-api.com](https://the-odds-api.com) → regenerate → update `secrets.toml`
+- [ ] **No API keys in code:** Search repo for any literal key strings; keep keys only in `.streamlit/secrets.toml` or `.env`
+- [ ] **Rotate Odds API key** if it was ever exposed. Go to [the-odds-api.com](https://the-odds-api.com) → regenerate → update secrets
 - [ ] **Resend key starts with `re_`** — paste in secrets, NOT in code
 - [ ] **Brevo key starts with `xkeysib-`** — paste in secrets, NOT in code
 - [ ] Honeypot fields present on: Newsletter subscriber form ✅, Sidebar email form ✅, Feedback form ✅
@@ -41,20 +37,18 @@ For **Railway/Render**: add as environment variables (no quotes needed).
 ## 3. Files to Deploy 📁
 
 ```
-MISC/
+BetBoard/
 ├── sports_analysis_dashboard.py    ← Main app
 ├── newsletter.py                   ← Newsletter engine
 ├── send_daily_pick.py              ← GitHub Actions daily email
 ├── requirements_sports.txt         ← Dependencies
+├── config.toml                     ← Theme settings
 ├── .streamlit/
-│   ├── config.toml                 ← Theme settings
-│   └── secrets.toml                ← API keys (DO NOT commit)
-└── .github/
-    └── workflows/
-        └── daily_pick.yml          ← Automated daily email
+│   └── secrets.toml                ← API keys (DO NOT commit; create from secrets.toml.example)
+└── .github/workflows/daily_pick.yml  ← Optional: automated daily email
 ```
 
-**Do NOT deploy:** `*.csv`, `feedback.json`, `picks_history.json`, any `.md` guides
+**Do NOT commit:** `.streamlit/secrets.toml`, `.env`, `*.csv`, `feedback.json`, `picks_history.json`
 
 ---
 
@@ -66,6 +60,7 @@ MISC/
   requests>=2.31.0
   pandas>=2.2.0
   plotly>=5.19.0
+  python-dotenv>=1.0.0
   ```
 - [ ] Run locally first:
   ```powershell
@@ -104,7 +99,7 @@ MISC/
 - [ ] Sidebar email signup works with validation
 - [ ] Invalid emails get rejected (test: `notanemail`, `a@b`)
 - [ ] Honeypot blocks bot submissions
-- [ ] API credit counter shows remaining credits
+- [ ] Sidebar shows "Odds data: Connected" when API key is set
 
 ---
 
@@ -113,7 +108,7 @@ MISC/
 ### Option A — Streamlit Cloud (Recommended for launch)
 - [ ] Push to GitHub (private repo is fine)
 - [ ] Go to [share.streamlit.io](https://share.streamlit.io)
-- [ ] Select repo → `MISC/sports_analysis_dashboard.py`
+- [ ] Select repo → your `betboard` repo; main file: `sports_analysis_dashboard.py`
 - [ ] Add secrets in Settings
 - [ ] Test the public URL
 
