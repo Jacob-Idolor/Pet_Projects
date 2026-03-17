@@ -24,9 +24,12 @@ class Settings(BaseSettings):
         alias="TRADE_SIGNING_SECRET",
     )
     trade_signature_ttl_seconds: int = Field(default=300, ge=30, le=900)
+    trade_rate_limit_requests: int = Field(default=30, ge=1, le=300)
+    trade_rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600)
     allowed_hosts: list[str] = Field(
         default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
     )
+    state_db_path: Path = Path("var/state/trading.db")
     audit_log_path: Path = Path("var/audit/trades.jsonl")
     portfolio_data_path: Path = Path("var/portfolio.json")
 
@@ -39,14 +42,27 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_runtime_settings(self) -> "Settings":
+        self.assert_runtime_settings()
+        return self
+
+    def assert_runtime_settings(self) -> None:
+        self._validate_order_limits()
+        self._validate_live_trading_credentials()
+        self._validate_security_defaults()
+        self._validate_allowed_hosts()
+        self._validate_rate_limiting()
+
+    def _validate_order_limits(self) -> None:
         if self.default_order_usd > self.max_order_usd:
             raise ValueError("default_order_usd cannot exceed max_order_usd")
 
+    def _validate_live_trading_credentials(self) -> None:
         if self.use_live_trading and (
             not self.api_key.get_secret_value() or not self.api_secret.get_secret_value()
         ):
             raise ValueError("Live trading requires both ALPACA_API_KEY and ALPACA_API_SECRET")
 
+    def _validate_security_defaults(self) -> None:
         using_dev_auth_defaults = (
             self.trade_api_key.get_secret_value() == "dev-trade-key"
             or self.trade_signing_secret.get_secret_value() == "dev-signing-secret-change-me"
@@ -56,13 +72,16 @@ class Settings(BaseSettings):
                 "Non-dev environments must override TRADE_API_KEY and TRADE_SIGNING_SECRET"
             )
 
+    def _validate_allowed_hosts(self) -> None:
         if not self.allowed_hosts:
             raise ValueError("allowed_hosts cannot be empty")
 
         if self.environment != "dev" and any(host == "*" for host in self.allowed_hosts):
             raise ValueError("Wildcard allowed_hosts is not permitted outside dev")
 
-        return self
+    def _validate_rate_limiting(self) -> None:
+        if self.trade_rate_limit_requests < 1:
+            raise ValueError("trade_rate_limit_requests must be at least 1")
 
 
 @lru_cache

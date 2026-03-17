@@ -4,6 +4,7 @@ from typing import Literal
 from stock_buy_bot.audit import AuditLogger, NullAuditLogger
 from stock_buy_bot.brokers.base import BrokerClient
 from stock_buy_bot.config import Settings
+from stock_buy_bot.exceptions import AuditLogError, BrokerExecutionError, BrokerLookupError
 from stock_buy_bot.logging import BoundLogger, get_logger
 from stock_buy_bot.models import BuyRequest, OrderResult, SellRequest
 
@@ -74,20 +75,14 @@ class TradingService:
         }
 
         try:
-            if side == "buy":
-                result = self._broker.buy_market_order(
-                    symbol=symbol,
-                    usd_amount=usd_amount,
-                    client_order_id=idempotency_key,
-                )
-            else:
-                result = self._broker.sell_market_order(
-                    symbol=symbol,
-                    usd_amount=usd_amount,
-                    client_order_id=idempotency_key,
-                )
-        except Exception as exc:
-            self._audit_logger.log_event(
+            result = self._submit_order(
+                side=side,
+                symbol=symbol,
+                usd_amount=usd_amount,
+                client_order_id=idempotency_key,
+            )
+        except (BrokerExecutionError, BrokerLookupError) as exc:
+            self._safe_log_event(
                 "trade_failed",
                 {
                     **audit_context,
@@ -105,7 +100,7 @@ class TradingService:
             status=result.status,
             order_id=result.order_id,
         )
-        self._audit_logger.log_event(
+        self._safe_log_event(
             "trade_executed",
             {
                 **audit_context,
@@ -116,6 +111,26 @@ class TradingService:
         )
         return result
 
+    def _submit_order(
+        self,
+        *,
+        side: Literal["buy", "sell"],
+        symbol: str,
+        usd_amount: Decimal,
+        client_order_id: str,
+    ) -> OrderResult:
+        if side == "buy":
+            return self._broker.buy_market_order(
+                symbol=symbol,
+                usd_amount=usd_amount,
+                client_order_id=client_order_id,
+            )
+        return self._broker.sell_market_order(
+            symbol=symbol,
+            usd_amount=usd_amount,
+            client_order_id=client_order_id,
+        )
+
     def _validate_symbol(self, symbol: str) -> None:
         if symbol not in self._settings.allowed_symbols:
             raise ValueError(f"Symbol {symbol} is not allowed")
@@ -124,4 +139,14 @@ class TradingService:
         if usd_amount > self._settings.max_order_usd:
             raise ValueError(
                 f"Order amount ${usd_amount:.2f} exceeds max allowed ${self._settings.max_order_usd:.2f}"
+            )
+
+    def _safe_log_event(self, event_type: str, payload: dict[str, object]) -> None:
+        try:
+            self._audit_logger.log_event(event_type, payload)
+        except AuditLogError as exc:
+            self._logger.warning(
+                "audit_log_failed",
+                event_type=event_type,
+                error=str(exc),
             )

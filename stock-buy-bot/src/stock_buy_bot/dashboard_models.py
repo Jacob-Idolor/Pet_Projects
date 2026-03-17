@@ -26,3 +26,70 @@ class PortfolioData(BaseModel):
     base_currency: str = Field(default="USD", min_length=3, max_length=3)
     positions: list[InvestmentPosition]
     history: list[PortfolioHistoryPoint]
+
+
+class PortfolioSummary(BaseModel):
+    total_value: float
+    total_cost: float
+    total_gain: float
+    total_gain_pct: float
+    position_count: int
+
+
+class PositionSummary(BaseModel):
+    symbol: str
+    name: str
+    asset_type: AssetType
+    asset_type_label: str
+    quantity: float
+    current_price: float
+    cost_basis: float
+    current_value: float
+    cost_value: float
+    gain_value: float
+    gain_pct: float
+
+
+class AllocationPoint(BaseModel):
+    label: str
+    value: float
+    share_pct: float
+
+
+class AllocationSummary(BaseModel):
+    by_type: list[AllocationPoint]
+    by_asset: list[AllocationPoint]
+
+
+class GrowthPoint(BaseModel):
+    date: str
+    value: float
+
+
+class BotActionSummary(BaseModel):
+    event_type: str
+    symbol: str
+    side: str
+    status: str
+    idempotency_key: str
+    timestamp: str
+
+
+class BotActivityCounts(BaseModel):
+    executed: int
+    failed: int
+
+
+class BotActivitySummary(BaseModel):
+    recent_actions: list[BotActionSummary]
+    counts: BotActivityCounts
+
+
+class DashboardSummary(BaseModel):
+    portfolio_name: str
+    base_currency: str
+    summary: PortfolioSummary
+    positions: list[PositionSummary]
+    allocation: AllocationSummary
+    growth_history: list[GrowthPoint]
+    bot_activity: BotActivitySummary

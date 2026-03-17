@@ -1,7 +1,10 @@
 from pathlib import Path
+from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from starlette.requests import Request
+from starlette.responses import Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from stock_buy_bot.api.routes import router
@@ -10,6 +13,7 @@ from stock_buy_bot.dashboard.routes import router as dashboard_router
 from stock_buy_bot.logging import configure_logging
 from stock_buy_bot.middleware import security_headers_middleware
 from stock_buy_bot.services.dashboard import DashboardService
+from stock_buy_bot.state import SQLiteStateStore
 
 
 settings = get_settings()
@@ -17,7 +21,7 @@ configure_logging()
 
 
 def validate_startup_settings(config: Settings) -> None:
-    config.validate_runtime_settings()
+    config.assert_runtime_settings()
 
 
 def create_app(config: Settings) -> FastAPI:
@@ -32,7 +36,10 @@ def create_app(config: Settings) -> FastAPI:
     app_instance.add_middleware(TrustedHostMiddleware, allowed_hosts=config.allowed_hosts)
 
     @app_instance.middleware("http")
-    async def add_security_headers(request, call_next):  # type: ignore[no-untyped-def]
+    async def add_security_headers(
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         return await security_headers_middleware(request, call_next, config)
 
     app_instance.include_router(router)
@@ -46,6 +53,7 @@ def create_app(config: Settings) -> FastAPI:
     @app_instance.on_event("startup")
     def startup() -> None:
         validate_startup_settings(config)
+        SQLiteStateStore(config.state_db_path).initialize()
         DashboardService(config).ensure_seed_data()
 
     return app_instance

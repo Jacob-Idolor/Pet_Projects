@@ -1,22 +1,30 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from stock_buy_bot.audit import JsonLineAuditLogger
+from stock_buy_bot.audit import FallbackAuditLogger, JsonLineAuditLogger, SQLiteAuditLogger
 from stock_buy_bot.brokers.alpaca import AlpacaBroker, DryRunBroker
 from stock_buy_bot.config import Settings, get_settings
 from stock_buy_bot.models import BuyRequest, OrderResult, SellRequest
-from stock_buy_bot.security import AuthenticatedTradeContext, verify_trade_request
+from stock_buy_bot.security import AuthenticatedTradeContext, get_state_store, verify_trade_request
 from stock_buy_bot.services.trading import TradingService
 
 router = APIRouter()
 
 
-def get_audit_logger(settings: Settings = Depends(get_settings)) -> JsonLineAuditLogger:
-    return JsonLineAuditLogger(settings.audit_log_path)
+def get_audit_logger(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> FallbackAuditLogger:
+    state_store = get_state_store(settings)
+    return FallbackAuditLogger(
+        primary=SQLiteAuditLogger(state_store),
+        fallback=JsonLineAuditLogger(settings.audit_log_path),
+    )
 
 
 def get_trading_service(
-    settings: Settings = Depends(get_settings),
-    audit_logger: JsonLineAuditLogger = Depends(get_audit_logger),
+    settings: Annotated[Settings, Depends(get_settings)],
+    audit_logger: Annotated[FallbackAuditLogger, Depends(get_audit_logger)],
 ) -> TradingService:
     broker = (
         AlpacaBroker(
@@ -42,8 +50,8 @@ def health() -> dict[str, str]:
 @router.post("/trade/buy", response_model=OrderResult, status_code=status.HTTP_201_CREATED)
 def buy_stock(
     payload: BuyRequest,
-    auth: AuthenticatedTradeContext = Depends(verify_trade_request),
-    service: TradingService = Depends(get_trading_service),
+    auth: Annotated[AuthenticatedTradeContext, Depends(verify_trade_request)],
+    service: Annotated[TradingService, Depends(get_trading_service)],
 ) -> OrderResult:
     try:
         return service.execute_buy(
@@ -58,8 +66,8 @@ def buy_stock(
 @router.post("/trade/sell", response_model=OrderResult, status_code=status.HTTP_201_CREATED)
 def sell_stock(
     payload: SellRequest,
-    auth: AuthenticatedTradeContext = Depends(verify_trade_request),
-    service: TradingService = Depends(get_trading_service),
+    auth: Annotated[AuthenticatedTradeContext, Depends(verify_trade_request)],
+    service: Annotated[TradingService, Depends(get_trading_service)],
 ) -> OrderResult:
     try:
         return service.execute_sell(

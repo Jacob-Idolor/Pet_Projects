@@ -1,17 +1,19 @@
 from decimal import Decimal
 import uuid
+from typing import Literal
 
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from stock_buy_bot.exceptions import BrokerExecutionError, BrokerLookupError
 from stock_buy_bot.models import OrderResult
 
 
 class AlpacaBroker:
-    def __init__(self, api_key: str, api_secret: str, paper: bool = True):
+    def __init__(self, api_key: str, api_secret: str, paper: bool = True) -> None:
         try:
             from alpaca.trading.client import TradingClient
         except ImportError as exc:
-            raise RuntimeError(
+            raise BrokerExecutionError(
                 "alpaca-py is required for live broker usage. Install project dependencies first."
             ) from exc
 
@@ -54,7 +56,7 @@ class AlpacaBroker:
         symbol: str,
         usd_amount: Decimal,
         client_order_id: str,
-        side: str,
+        side: Literal["buy", "sell"],
     ) -> OrderResult:
         from alpaca.trading.enums import OrderSide, TimeInForce
         from alpaca.trading.requests import MarketOrderRequest
@@ -73,11 +75,11 @@ class AlpacaBroker:
         )
         try:
             submitted = self._client.submit_order(order_data=order)
-        except Exception:
+        except RuntimeError as exc:
             reconciled = self._get_existing_order(client_order_id=client_order_id, side=side)
             if reconciled is not None:
                 return reconciled
-            raise
+            raise BrokerExecutionError("Broker order submission failed") from exc
 
         return OrderResult(
             side=side,
@@ -89,11 +91,17 @@ class AlpacaBroker:
             message=f"{side.title()} order submitted to Alpaca",
         )
 
-    def _get_existing_order(self, client_order_id: str, side: str) -> OrderResult | None:
+    def _get_existing_order(
+        self,
+        client_order_id: str,
+        side: Literal["buy", "sell"],
+    ) -> OrderResult | None:
         try:
             existing = self._client.get_order_by_client_order_id(client_order_id)
-        except Exception:
+        except RuntimeError:
             return None
+        except AttributeError as exc:
+            raise BrokerLookupError("Broker client does not support idempotent lookup") from exc
 
         return OrderResult(
             side=side,

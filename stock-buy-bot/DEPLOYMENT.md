@@ -7,9 +7,10 @@ This guide walks through running the investment dashboard and trading bot safely
 - Responsive investment dashboard at `/dashboard`
 - Protected trade endpoints at `/trade/buy` and `/trade/sell`
 - Signed-request authentication
+- SQLite-backed replay protection and per-key request throttling
 - Trusted-host enforcement
 - Security headers enabled by default
-- Audit logging for bot activity
+- SQLite-backed audit logging for bot activity with JSONL fallback
 - Dry-run mode unless live trading is explicitly configured
 
 ## 1. Local Deployment
@@ -45,7 +46,10 @@ Minimum local `.env`:
 ENVIRONMENT=dev
 TRADE_API_KEY=dev-trade-key
 TRADE_SIGNING_SECRET=dev-signing-secret-change-me
+TRADE_RATE_LIMIT_REQUESTS=30
+TRADE_RATE_LIMIT_WINDOW_SECONDS=60
 ALLOWED_HOSTS=localhost,127.0.0.1,testserver
+STATE_DB_PATH=var/state/trading.db
 AUDIT_LOG_PATH=var/audit/trades.jsonl
 PORTFOLIO_DATA_PATH=var/portfolio.json
 ```
@@ -78,12 +82,13 @@ docker run --rm ^
   -e TRADE_API_KEY=replace-me ^
   -e TRADE_SIGNING_SECRET=replace-me-too ^
   -e ALLOWED_HOSTS=localhost,127.0.0.1 ^
+  -e STATE_DB_PATH=var/state/trading.db ^
   -e AUDIT_LOG_PATH=var/audit/trades.jsonl ^
   -e PORTFOLIO_DATA_PATH=var/portfolio.json ^
   stock-buy-bot-dashboard
 ```
 
-Mount a persistent volume if you want audit logs and portfolio seed data to survive container restarts.
+Mount a persistent volume if you want the SQLite state store, JSONL fallback log, and portfolio seed data to survive container restarts.
 
 ## 4. Secure Production Checklist
 
@@ -94,7 +99,7 @@ Before exposing this service publicly:
 3. Set `ALLOWED_HOSTS` to your real hostname(s).
 4. Keep the app behind HTTPS, ideally through a reverse proxy.
 5. Store secrets in your deployment platform's secret manager, not in git.
-6. Persist `AUDIT_LOG_PATH` to durable storage.
+6. Persist `STATE_DB_PATH` and `AUDIT_LOG_PATH` to durable storage.
 7. Keep `USE_LIVE_TRADING=false` until you verify dry-run behavior.
 8. Restrict network access so only trusted callers can reach trade endpoints.
 9. Review audit logs after every test trade.
@@ -151,9 +156,9 @@ Recommended setup:
 
 ## 7. Operational Safety Notes
 
-- The dashboard reads bot actions from the audit log, so bot activity becomes visible automatically.
+- The dashboard reads bot actions from the SQLite audit store first, with JSONL fallback if the primary store is unavailable.
 - Idempotency keys are reused as broker client order IDs to reduce duplicate trades.
-- The service is still best treated as a controlled deployment, not an internet-open retail trading product.
+- The SQLite-backed replay protection is shared across local workers on the same persisted volume, but not across multiple hosts; move to Redis or Postgres if you need cross-host coordination.
 
 ## 8. First Deployment Flow
 

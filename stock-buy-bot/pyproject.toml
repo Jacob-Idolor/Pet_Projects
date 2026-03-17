@@ -29,9 +29,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+stock_buy_bot = ["templates/*.html", "static/*.css", "static/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -45,6 +49,10 @@ python_version = "3.12"
 strict = true
 warn_unused_configs = true
 packages = ["stock_buy_bot"]
+
+[[tool.mypy.overrides]]
+module = ["alpaca.*", "structlog"]
+ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["stock_buy_bot"]

@@ -5,6 +5,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
+from stock_buy_bot.exceptions import AuditLogError
+from stock_buy_bot.state import SQLiteStateStore
+
 
 class AuditLogger(Protocol):
     def log_event(self, event_type: str, payload: dict[str, Any]) -> None:
@@ -12,7 +15,7 @@ class AuditLogger(Protocol):
 
 
 class JsonLineAuditLogger:
-    def __init__(self, path: Path):
+    def __init__(self, path: Path) -> None:
         self._path = path
         self._lock = threading.Lock()
 
@@ -25,12 +28,40 @@ class JsonLineAuditLogger:
         serialized = json.dumps(entry, sort_keys=True, separators=(",", ":"), default=str)
 
         with self._lock:
-            self._path.parent.mkdir(parents=True, exist_ok=True)
-            with self._path.open("a", encoding="utf-8") as handle:
-                handle.write(serialized)
-                handle.write("\n")
-                handle.flush()
-                os.fsync(handle.fileno())
+            try:
+                self._path.parent.mkdir(parents=True, exist_ok=True)
+                with self._path.open("a", encoding="utf-8") as handle:
+                    handle.write(serialized)
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            except OSError as exc:
+                raise AuditLogError(f"Could not write audit log to {self._path}") from exc
+
+
+class SQLiteAuditLogger:
+    def __init__(self, state_store: SQLiteStateStore) -> None:
+        self._state_store = state_store
+
+    def log_event(self, event_type: str, payload: dict[str, Any]) -> None:
+        self._state_store.append_audit_event(event_type, payload)
+
+
+class FallbackAuditLogger:
+    def __init__(self, primary: AuditLogger, fallback: AuditLogger) -> None:
+        self._primary = primary
+        self._fallback = fallback
+
+    def log_event(self, event_type: str, payload: dict[str, Any]) -> None:
+        try:
+            self._primary.log_event(event_type, payload)
+            return
+        except AuditLogError as primary_error:
+            try:
+                self._fallback.log_event(event_type, payload)
+            except AuditLogError as fallback_error:
+                raise AuditLogError("Both audit sinks failed") from fallback_error
+            raise AuditLogError("Primary audit sink failed; event was written to fallback sink") from primary_error
 
 
 class NullAuditLogger:

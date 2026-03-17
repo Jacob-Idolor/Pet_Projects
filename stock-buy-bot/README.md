@@ -21,7 +21,8 @@ Production-focused starter kit for an automated stock trading bot with buy and s
   - symbol allowlist
   - max order USD cap
 - Signed request authentication on trade routes
-- Persistent append-only audit logging
+- Shared SQLite-backed replay protection and request throttling
+- SQLite-backed audit history with JSONL fallback logging
 - Idempotency keys passed through as broker client order IDs
 - Dry-run mode when API keys are not set
 - Config driven via environment variables
@@ -78,6 +79,7 @@ curl -X POST http://localhost:8000/trade/sell \
 
 ## Production hardening next steps
 - Add rate limiting and secret rotation.
+- Add Redis or Postgres if you need shared state across multiple hosts instead of one persisted volume.
 - Add Postgres-backed audit retention and reconciliation jobs.
 - Add circuit-breakers and broker failover.
 - Add strategy engine and paper-trading backtests before live use.

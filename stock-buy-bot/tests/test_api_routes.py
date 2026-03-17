@@ -6,11 +6,12 @@ import pytest
 from fastapi import HTTPException
 
 from stock_buy_bot.api.routes import buy_stock, health, sell_stock
-from stock_buy_bot.audit import JsonLineAuditLogger
+from stock_buy_bot.audit import FallbackAuditLogger, JsonLineAuditLogger, SQLiteAuditLogger
 from stock_buy_bot.brokers.alpaca import DryRunBroker
 from stock_buy_bot.config import Settings
 from stock_buy_bot.models import BuyRequest, SellRequest
 from stock_buy_bot.security import AuthenticatedTradeContext
+from stock_buy_bot.state import SQLiteStateStore
 from stock_buy_bot.services.trading import TradingService
 
 
@@ -20,18 +21,31 @@ def make_audit_path() -> Path:
     return base_dir / f"audit-{uuid.uuid4()}.jsonl"
 
 
+def make_state_path() -> Path:
+    base_dir = Path("tests_artifacts")
+    base_dir.mkdir(exist_ok=True)
+    return base_dir / f"state-{uuid.uuid4()}.db"
+
+
 def build_trading_service() -> TradingService:
     audit_path = make_audit_path()
+    state_path = make_state_path()
     settings = Settings(
         default_order_usd=Decimal("40.00"),
         max_order_usd=Decimal("100.00"),
         allowed_symbols=["AAPL"],
         audit_log_path=audit_path,
+        state_db_path=state_path,
     )
+    state_store = SQLiteStateStore(state_path)
+    state_store.initialize()
     return TradingService(
         broker=DryRunBroker(),
         settings=settings,
-        audit_logger=JsonLineAuditLogger(settings.audit_log_path),
+        audit_logger=FallbackAuditLogger(
+            primary=SQLiteAuditLogger(state_store),
+            fallback=JsonLineAuditLogger(settings.audit_log_path),
+        ),
     )
 
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, cast
 
 try:
     import structlog
@@ -28,6 +28,9 @@ class BoundLogger:
     def info(self, event: str, **kwargs: Any) -> None:
         raise NotImplementedError
 
+    def warning(self, event: str, **kwargs: Any) -> None:
+        raise NotImplementedError
+
 
 class StdlibBoundLogger(BoundLogger):
     def __init__(self, name: str):
@@ -39,8 +42,14 @@ class StdlibBoundLogger(BoundLogger):
         else:
             self._logger.info("%s", event)
 
+    def warning(self, event: str, **kwargs: Any) -> None:
+        if kwargs:
+            self._logger.warning("%s %s", event, kwargs)
+        else:
+            self._logger.warning("%s", event)
+
 
 def get_logger(name: str) -> BoundLogger:
     if structlog is not None:
-        return structlog.get_logger(name)
+        return cast(BoundLogger, structlog.get_logger(name))
     return StdlibBoundLogger(name)

@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from fastapi import Depends, Header, HTTPException, Request, status
 
 from stock_buy_bot.config import Settings, get_settings
+from stock_buy_bot.exceptions import StateStoreError, TradeRateLimitError, TradeReplayConflictError
+from stock_buy_bot.state import SQLiteStateStore
 
 
 @dataclass(frozen=True)
@@ -14,6 +16,12 @@ class AuthenticatedTradeContext:
     idempotency_key: str
     timestamp: str
     signature: str
+
+
+def get_state_store(settings: Settings) -> SQLiteStateStore:
+    state_store = SQLiteStateStore(settings.state_db_path)
+    state_store.initialize()
+    return state_store
 
 
 def build_trade_signature(*, secret: str, timestamp: str, body: bytes) -> str:
@@ -25,6 +33,7 @@ def build_trade_signature(*, secret: str, timestamp: str, body: bytes) -> str:
 def authenticate_trade_request(
     *,
     settings: Settings,
+    state_store: SQLiteStateStore,
     body: bytes,
     trade_key: str,
     timestamp: str,
@@ -74,6 +83,30 @@ def authenticate_trade_request(
             detail="Idempotency-Key header is required",
         )
 
+    try:
+        state_store.validate_trade_request(
+            principal=trade_key,
+            idempotency_key=idempotency_key.strip(),
+            body_hash=hashlib.sha256(body).hexdigest(),
+            now=now,
+            settings=settings,
+        )
+    except TradeReplayConflictError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except TradeRateLimitError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(exc),
+        ) from exc
+    except StateStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Trade request state store is unavailable",
+        ) from exc
+
     return AuthenticatedTradeContext(
         principal=trade_key,
         idempotency_key=idempotency_key.strip(),
@@ -93,6 +126,7 @@ async def verify_trade_request(
     body = await request.body()
     return authenticate_trade_request(
         settings=settings,
+        state_store=get_state_store(settings),
         body=body,
         trade_key=trade_key,
         timestamp=timestamp,

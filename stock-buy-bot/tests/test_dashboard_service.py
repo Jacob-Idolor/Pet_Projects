@@ -3,6 +3,7 @@ from pathlib import Path
 import uuid
 
 from stock_buy_bot.config import Settings
+from stock_buy_bot.state import SQLiteStateStore
 from stock_buy_bot.services.dashboard import DashboardService
 
 
@@ -15,6 +16,7 @@ def make_workspace_path(filename: str) -> Path:
 def test_dashboard_summary_includes_portfolio_and_bot_actions() -> None:
     portfolio_path = make_workspace_path("portfolio.json")
     audit_path = make_workspace_path("audit.jsonl")
+    state_path = make_workspace_path("state.db")
 
     portfolio_path.write_text(
         json.dumps(
@@ -55,47 +57,39 @@ def test_dashboard_summary_includes_portfolio_and_bot_actions() -> None:
         ),
         encoding="utf-8",
     )
-    audit_path.write_text(
-        "\n".join(
-            [
-                json.dumps(
-                    {
-                        "event_type": "trade_executed",
-                        "symbol": "AAPL",
-                        "side": "buy",
-                        "status": "dry_run",
-                        "idempotency_key": "buy-aapl-001",
-                        "timestamp": "2026-03-17T17:00:00Z",
-                    }
-                ),
-                json.dumps(
-                    {
-                        "event_type": "trade_failed",
-                        "symbol": "BND",
-                        "side": "sell",
-                        "error": "Insufficient position",
-                        "idempotency_key": "sell-bnd-001",
-                        "timestamp": "2026-03-17T18:00:00Z",
-                    }
-                ),
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
     settings = Settings(
         portfolio_data_path=portfolio_path,
         audit_log_path=audit_path,
+        state_db_path=state_path,
+    )
+    state_store = SQLiteStateStore(state_path)
+    state_store.initialize()
+    state_store.append_audit_event(
+        "trade_executed",
+        {
+            "symbol": "AAPL",
+            "side": "buy",
+            "status": "dry_run",
+            "idempotency_key": "buy-aapl-001",
+        },
+    )
+    state_store.append_audit_event(
+        "trade_failed",
+        {
+            "symbol": "BND",
+            "side": "sell",
+            "error": "Insufficient position",
+            "idempotency_key": "sell-bnd-001",
+        },
     )
     service = DashboardService(settings=settings)
 
     summary = service.build_dashboard_summary()
 
-    assert summary["portfolio_name"] == "Integration Portfolio"
-    assert summary["summary"]["position_count"] == 3
-    assert summary["summary"]["total_value"] == 4100.0
-    assert len(summary["allocation"]["by_type"]) == 3
-    assert summary["bot_activity"]["counts"]["executed"] == 1
-    assert summary["bot_activity"]["counts"]["failed"] == 1
-    assert summary["bot_activity"]["recent_actions"][0]["symbol"] == "BND"
+    assert summary.portfolio_name == "Integration Portfolio"
+    assert summary.summary.position_count == 3
+    assert summary.summary.total_value == 4100.0
+    assert len(summary.allocation.by_type) == 3
+    assert summary.bot_activity.counts.executed == 1
+    assert summary.bot_activity.counts.failed == 1
+    assert summary.bot_activity.recent_actions[0].symbol == "BND"
