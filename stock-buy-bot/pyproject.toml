@@ -5,20 +5,22 @@ description = "Production-ready groundwork for an automated stock buy bot"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi>=0.116.0",
-  "uvicorn[standard]>=0.35.0",
-  "pydantic-settings>=2.10.0",
-  "alpaca-py>=0.42.0",
-  "tenacity>=9.1.0",
-  "structlog>=25.4.0",
+  "fastapi==0.116.0",
+  "jinja2==3.1.6",
+  "uvicorn[standard]==0.35.0",
+  "pydantic-settings==2.10.0",
+  "alpaca-py==0.42.0",
+  "tenacity==9.1.0",
+  "structlog==25.4.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8.4.0",
-  "httpx>=0.28.1",
-  "ruff>=0.13.0",
-  "mypy>=1.18.0",
+  "pytest==8.4.0",
+  "pytest-cov==6.2.1",
+  "httpx==0.28.1",
+  "ruff==0.13.0",
+  "mypy==1.18.0",
 ]
 
 [build-system]
@@ -43,3 +45,10 @@ python_version = "3.12"
 strict = true
 warn_unused_configs = true
 packages = ["stock_buy_bot"]
+
+[tool.coverage.run]
+source = ["stock_buy_bot"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

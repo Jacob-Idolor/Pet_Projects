@@ -1,30 +1,118 @@
-import structlog
+from decimal import Decimal
+from typing import Literal
 
+from stock_buy_bot.audit import AuditLogger, NullAuditLogger
 from stock_buy_bot.brokers.base import BrokerClient
 from stock_buy_bot.config import Settings
-from stock_buy_bot.models import BuyRequest, OrderResult
+from stock_buy_bot.logging import BoundLogger, get_logger
+from stock_buy_bot.models import BuyRequest, OrderResult, SellRequest
 
 
 class TradingService:
-    def __init__(self, broker: BrokerClient, settings: Settings):
+    def __init__(
+        self,
+        broker: BrokerClient,
+        settings: Settings,
+        audit_logger: AuditLogger | None = None,
+    ):
         self._broker = broker
         self._settings = settings
-        self._logger = structlog.get_logger(__name__)
+        self._audit_logger = audit_logger or NullAuditLogger()
+        self._logger: BoundLogger = get_logger(__name__)
 
-    def execute_buy(self, req: BuyRequest) -> OrderResult:
-        symbol = req.symbol.upper().strip()
-        usd_amount = req.usd_amount or self._settings.default_order_usd
+    def execute_buy(
+        self,
+        req: BuyRequest,
+        *,
+        idempotency_key: str,
+        principal: str,
+    ) -> OrderResult:
+        return self._execute_trade(
+            symbol=req.symbol,
+            usd_amount=req.usd_amount,
+            side="buy",
+            idempotency_key=idempotency_key,
+            principal=principal,
+        )
+
+    def execute_sell(
+        self,
+        req: SellRequest,
+        *,
+        idempotency_key: str,
+        principal: str,
+    ) -> OrderResult:
+        return self._execute_trade(
+            symbol=req.symbol,
+            usd_amount=req.usd_amount,
+            side="sell",
+            idempotency_key=idempotency_key,
+            principal=principal,
+        )
+
+    def _execute_trade(
+        self,
+        symbol: str,
+        usd_amount: Decimal | None,
+        side: Literal["buy", "sell"],
+        idempotency_key: str,
+        principal: str,
+    ) -> OrderResult:
+        symbol = symbol.upper().strip()
+        usd_amount = usd_amount or self._settings.default_order_usd
 
         self._validate_symbol(symbol)
         self._validate_amount(usd_amount)
 
-        result = self._broker.buy_market_order(symbol=symbol, usd_amount=usd_amount)
+        audit_context = {
+            "environment": self._settings.environment,
+            "idempotency_key": idempotency_key,
+            "principal": principal,
+            "side": side,
+            "symbol": symbol,
+            "usd_amount": str(usd_amount),
+        }
+
+        try:
+            if side == "buy":
+                result = self._broker.buy_market_order(
+                    symbol=symbol,
+                    usd_amount=usd_amount,
+                    client_order_id=idempotency_key,
+                )
+            else:
+                result = self._broker.sell_market_order(
+                    symbol=symbol,
+                    usd_amount=usd_amount,
+                    client_order_id=idempotency_key,
+                )
+        except Exception as exc:
+            self._audit_logger.log_event(
+                "trade_failed",
+                {
+                    **audit_context,
+                    "error": str(exc),
+                },
+            )
+            raise
+
         self._logger.info(
-            "buy_order_executed",
+            "trade_order_executed",
+            client_order_id=result.client_order_id,
+            side=result.side,
             symbol=result.symbol,
             usd_amount=result.usd_amount,
             status=result.status,
             order_id=result.order_id,
+        )
+        self._audit_logger.log_event(
+            "trade_executed",
+            {
+                **audit_context,
+                "broker_order_id": result.order_id,
+                "client_order_id": result.client_order_id,
+                "status": result.status,
+            },
         )
         return result
 
@@ -32,7 +120,7 @@ class TradingService:
         if symbol not in self._settings.allowed_symbols:
             raise ValueError(f"Symbol {symbol} is not allowed")
 
-    def _validate_amount(self, usd_amount: float) -> None:
+    def _validate_amount(self, usd_amount: Decimal) -> None:
         if usd_amount > self._settings.max_order_usd:
             raise ValueError(
                 f"Order amount ${usd_amount:.2f} exceeds max allowed ${self._settings.max_order_usd:.2f}"
