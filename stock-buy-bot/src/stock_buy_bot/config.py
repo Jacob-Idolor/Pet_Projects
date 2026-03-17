@@ -3,7 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,8 +24,18 @@ class Settings(BaseSettings):
         alias="TRADE_SIGNING_SECRET",
     )
     trade_signature_ttl_seconds: int = Field(default=300, ge=30, le=900)
+    allowed_hosts: list[str] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
+    )
     audit_log_path: Path = Path("var/audit/trades.jsonl")
     portfolio_data_path: Path = Path("var/portfolio.json")
+
+    @field_validator("allowed_hosts", mode="before")
+    @classmethod
+    def parse_allowed_hosts(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [host.strip() for host in value.split(",") if host.strip()]
+        return value
 
     @model_validator(mode="after")
     def validate_runtime_settings(self) -> "Settings":
@@ -45,6 +55,12 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Non-dev environments must override TRADE_API_KEY and TRADE_SIGNING_SECRET"
             )
+
+        if not self.allowed_hosts:
+            raise ValueError("allowed_hosts cannot be empty")
+
+        if self.environment != "dev" and any(host == "*" for host in self.allowed_hosts):
+            raise ValueError("Wildcard allowed_hosts is not permitted outside dev")
 
         return self
 

@@ -40,6 +40,8 @@ python -m pytest tests
 
 Open [http://localhost:8000/dashboard](http://localhost:8000/dashboard) to view the investment dashboard.
 
+Deployment guide: [DEPLOYMENT.md](/E:/Pet_Projects/Pet_Projects/stock-buy-bot/DEPLOYMENT.md)
+
 ## API example
 ```bash
 python - <<'PY'

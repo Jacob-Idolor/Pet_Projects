@@ -1,6 +1,11 @@
 const state = {
-  data: window.__DASHBOARD_DATA__ || null,
+  data: null,
 };
+
+const bootstrapNode = document.getElementById("dashboard-data");
+if (bootstrapNode && bootstrapNode.textContent) {
+  state.data = JSON.parse(bootstrapNode.textContent);
+}
 
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
