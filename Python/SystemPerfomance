@@ -1,0 +1,634 @@
+# mouseygui.py
+# Professional Activity Simulator - Keep your system and Teams status active
+# Production-ready with custom settings and robust controls
+# Windows 10/11 compatible.
+
+import tkinter as tk
+from tkinter import messagebox
+import tkinter.ttk as ttk
+import subprocess
+import os
+import signal
+import threading
+import time
+import json
+import random
+from datetime import datetime, timedelta
+import pytz
+import random
+
+class ActivitySimulator:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("System Performance Monitor")
+        self.root.geometry("400x280")
+        self.root.resizable(True, True)
+        
+        # Make window more discreet
+        self.root.attributes('-topmost', False)  # Don't stay on top
+        self.root.iconify()  # Start minimized
+        self.root.after(1000, self.root.deiconify)  # Show after 1 second
+        
+        # Application state
+        self.processes = {}
+        self.output_texts = {}
+        self.user_active = False
+        self.last_user_activity = time.time()
+        self.manual_paused = False
+        self.auto_mode = True
+        self.last_notification = ""
+        
+        # Load settings
+        self.settings = self.load_settings()
+        
+        # Create GUI (compact version)
+        self.setup_compact_gui()
+        self.setup_activity_monitoring()
+        
+        # Start auto management
+        self.auto_manage_scripts()
+        
+        # Auto-minimize after startup
+        self.root.after(3000, self.auto_minimize)
+        
+        # Bind window state changes and hotkeys
+        self.root.bind('<Unmap>', self.on_window_minimize)
+        self.root.bind('<Map>', self.on_window_restore)
+        self.root.bind('<Control-h>', lambda e: self.root.iconify())  # Ctrl+H to hide
+        self.root.bind('<F12>', lambda e: self.toggle_window_visibility())  # F12 to toggle
+        
+    def load_settings(self):
+        """Load settings from config file or use defaults"""
+        default_settings = {
+            "work_start_hour": 8,
+            "work_start_minute": 30,
+            "work_end_hour": 16,
+            "work_end_minute": 30,
+            "idle_timeout": 10,
+            "mouse_interval": 30,
+            "keypress_interval": 150,
+            "timezone": "US/Pacific",
+            "keys_to_press": ["Shift"],
+            "auto_start": True,
+            "notifications": False,  # Disabled by default for discretion
+            "debug_mode": False,     # No output windows by default
+            "stealth_mode": True     # Extra discreet behavior
+        }
+        
+        try:
+            if os.path.exists("activity_settings.json"):
+                with open("activity_settings.json", "r") as f:
+                    settings = json.load(f)
+                    # Merge with defaults for new settings
+                    for key, value in default_settings.items():
+                        if key not in settings:
+                            settings[key] = value
+                    return settings
+        except Exception:
+            pass
+        return default_settings
+    
+    def save_settings(self):
+        """Save current settings to config file"""
+        try:
+            with open("activity_settings.json", "w") as f:
+                json.dump(self.settings, f, indent=2)
+        except Exception as e:
+            self.show_notification(f"Error saving settings: {e}", "error")
+
+    def auto_minimize(self):
+        """Auto-minimize window after startup"""
+        if self.settings.get("stealth_mode", True):
+            # In stealth mode, minimize more aggressively
+            self.root.iconify()
+        elif self.auto_mode and self.is_within_work_hours():
+            self.root.iconify()
+    
+    def on_window_minimize(self, event=None):
+        """Handle window minimize event"""
+        # Window is minimized, make it even more discreet
+        pass
+    
+    def on_window_restore(self, event=None):
+        """Handle window restore event"""
+        # Window is restored
+        pass
+    
+    def toggle_window_visibility(self):
+        """Toggle window between minimized and restored"""
+        if self.root.state() == 'iconic':
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+        else:
+            self.root.iconify()
+
+    def setup_compact_gui(self):
+        """Setup a compact, discreet GUI interface (optimized, single layout)"""
+        # Create menu bar
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Settings", command=self.show_settings)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.on_close)
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self.show_about)
+
+        main_frame = ttk.Frame(self.root, padding="8")
+        main_frame.grid(row=0, column=0, sticky="nsew")
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        main_frame.grid_columnconfigure(3, weight=1)
+
+        # Status variables
+        self.status_vars = {
+            'mouse': tk.StringVar(value='Off'),
+            'key': tk.StringVar(value='Off'),
+            'overall': tk.StringVar(value='Ready')
+        }
+
+        # Title
+        title_label = ttk.Label(main_frame, text="System Performance Monitor", font=("Arial", 14, "bold"))
+        title_label.grid(row=0, column=0, columnspan=4, pady=(0, 10))
+
+        # Status bar
+        self.status_bar = ttk.Label(self.root, text="Ready", relief=tk.SUNKEN, anchor=tk.W)
+        self.status_bar.grid(row=1, column=0, sticky="ew")
+
+        # Status frame
+        status_frame = ttk.LabelFrame(main_frame, text="System Status", padding="6")
+        status_frame.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(0, 8))
+        ttk.Label(status_frame, text="Status:").grid(row=0, column=0, sticky=tk.W)
+        status_label = ttk.Label(status_frame, textvariable=self.status_vars['overall'], font=("Arial", 10, "bold"))
+        status_label.grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
+        self.auto_mode_var = tk.BooleanVar(value=self.auto_mode)
+        auto_check = ttk.Checkbutton(status_frame, text="Auto Optimization", variable=self.auto_mode_var, command=self.toggle_auto_mode)
+        auto_check.grid(row=0, column=2, padx=(20, 0))
+
+        # Control buttons
+        control_frame = ttk.Frame(main_frame)
+        control_frame.grid(row=2, column=0, columnspan=4, pady=(0, 8))
+        ttk.Button(control_frame, text="Start", width=10, command=self.start_all_scripts).grid(row=0, column=0, padx=2)
+        ttk.Button(control_frame, text="Pause", width=10, command=self.pause_all_scripts).grid(row=0, column=1, padx=2)
+        ttk.Button(control_frame, text="Stop", width=10, command=self.stop_all_scripts).grid(row=0, column=2, padx=2)
+
+        # Modules status
+        modules_frame = ttk.LabelFrame(main_frame, text="Modules", padding="4")
+        modules_frame.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(0, 8))
+        ttk.Label(modules_frame, text="Cursor:", font=("Arial", 8)).grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(modules_frame, textvariable=self.status_vars['mouse'], font=("Arial", 8)).grid(row=0, column=1, padx=(5, 15), sticky=tk.W)
+        ttk.Label(modules_frame, text="Input:", font=("Arial", 8)).grid(row=0, column=2, sticky=tk.W)
+        ttk.Label(modules_frame, textvariable=self.status_vars['key'], font=("Arial", 8)).grid(row=0, column=3, padx=(5, 0), sticky=tk.W)
+
+        # Quick access
+        quick_frame = ttk.Frame(main_frame)
+        quick_frame.grid(row=4, column=0, columnspan=4, pady=(0, 5))
+        ttk.Button(quick_frame, text="Settings", width=10, command=self.show_settings).grid(row=0, column=0, padx=2)
+        ttk.Button(quick_frame, text="Hide", width=10, command=self.root.iconify).grid(row=0, column=1, padx=2)
+        ttk.Button(quick_frame, text="Logs", width=10, command=self.show_logs).grid(row=0, column=2, padx=2)
+
+        # Info label
+        info_text = ("Auto Optimization: System automatically manages performance during work hours.\n" "Manual Mode: Full manual control over system optimization modules.")
+        ttk.Label(main_frame, text=info_text, foreground="blue", justify=tk.CENTER).grid(row=5, column=0, columnspan=4, pady=8)
+
+        # Configure grid weights for responsive design
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        main_frame.grid_columnconfigure(3, weight=1)
+    
+    def setup_activity_monitoring(self):
+        """Setup user activity monitoring"""
+        def on_user_activity(event=None):
+            self.last_user_activity = time.time()
+            if not self.manual_paused and self.auto_mode:
+                self.update_status("User Active")
+        
+        self.root.bind_all('<Key>', on_user_activity)
+        self.root.bind_all('<Motion>', on_user_activity)
+        self.root.bind_all('<Button>', on_user_activity)
+    
+    def is_within_work_hours(self):
+        """Check if current time is within configured work hours"""
+        tz = pytz.timezone(self.settings["timezone"])
+        now = datetime.now(tz)
+        start = now.replace(hour=self.settings["work_start_hour"], 
+                           minute=self.settings["work_start_minute"], 
+                           second=0, microsecond=0)
+        end = now.replace(hour=self.settings["work_end_hour"], 
+                         minute=self.settings["work_end_minute"], 
+                         second=0, microsecond=0)
+        return start <= now <= end
+    
+    def update_status(self, message):
+        """Update the overall status display"""
+        self.status_vars['overall'].set(message)
+    
+    def show_notification(self, message, msg_type="info"):
+        """Show notification if enabled in settings (more discreet)"""
+        if not self.settings.get("notifications", True):
+            return
+        if message == self.last_notification:
+            return  # Avoid duplicate notifications
+        self.last_notification = message
+        
+        # Only show critical errors, suppress info messages for discretion
+        if msg_type == "error":
+            messagebox.showerror("System Error", message)
+        elif msg_type == "warning":
+            messagebox.showwarning("System Warning", message)
+        # Skip info messages for better discretion
+    
+    def start_script(self, name, script):
+        """Start a specific script"""
+        if not self.auto_mode and not self.is_within_work_hours():
+            self.show_notification("Scripts can only be started during work hours in auto mode")
+            return
+            
+        if self.manual_paused:
+            self.show_notification("Cannot start scripts while manually paused")
+            return
+            
+        if name in self.processes and self.processes[name].poll() is None:
+            self.show_notification(f"{name.capitalize()} script is already running")
+            return
+        
+        # Check if script files exist
+        if not os.path.exists(script):
+            self.show_notification(f"Script file '{script}' not found", "error")
+            return
+        
+        try:
+            # Start the process
+            self.processes[name] = subprocess.Popen(
+                ["python", script],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            
+            self.status_vars[name].set('On')
+            self.update_status(f"{name.capitalize()} active")
+            
+            # Only show output window in debug mode (disabled by default)
+            if self.settings.get("debug_mode", False):
+                self.show_output_window(name)
+            
+        except FileNotFoundError:
+            self.show_notification("Python not found. Please ensure Python is installed and in PATH", "error")
+        except Exception as e:
+            self.show_notification(f"Failed to start {name} script: {e}", "error")
+    
+    def stop_script(self, name):
+        """Stop a specific script"""
+        if name in self.processes and self.processes[name].poll() is None:
+            try:
+                self.processes[name].terminate()
+                self.processes[name].wait(timeout=5)
+                self.status_vars[name].set('Off')
+                self.update_status(f"{name.capitalize()} stopped")
+            except subprocess.TimeoutExpired:
+                self.processes[name].kill()
+                self.status_vars[name].set('Off')
+                self.update_status(f"{name.capitalize()} stopped")
+            except Exception as e:
+                self.show_notification(f"Error stopping {name} script: {e}", "error")
+    
+    def start_all_scripts(self):
+        """Start all optimization modules"""
+        self.start_script('mouse', 'Mousey.py')
+        self.start_script('key', 'mousey2.py')
+    
+    def pause_all_scripts(self):
+        """Pause all optimization modules (manual pause)"""
+        self.manual_paused = True
+        for name in list(self.processes.keys()):
+            self.stop_script(name)
+        self.update_status("Paused")
+    
+    def stop_all_scripts(self):
+        """Stop all optimization modules"""
+        self.manual_paused = False
+        for name in list(self.processes.keys()):
+            self.stop_script(name)
+        self.update_status("Stopped")
+    
+    def toggle_auto_mode(self):
+        """Toggle between auto and manual mode"""
+        self.auto_mode = self.auto_mode_var.get()
+        if self.auto_mode:
+            self.manual_paused = False
+            self.update_status("Auto On")
+        else:
+            self.update_status("Manual")
+    
+    def show_output_window(self, name):
+        """Show output window for a script"""
+        if name in self.output_texts:
+            try:
+                self.output_texts[name].tkraise()
+                return
+            except:
+                pass
+        
+        output_win = tk.Toplevel(self.root)
+        output_win.title(f"{name.capitalize()} Output")
+        output_win.geometry("600x400")
+        
+        # Create text widget with scrollbar
+        text_frame = ttk.Frame(output_win)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        output_text = tk.Text(text_frame, wrap=tk.WORD, state='disabled')
+        scrollbar = ttk.Scrollbar(text_frame, orient=tk.VERTICAL, command=output_text.yview)
+        output_text.configure(yscrollcommand=scrollbar.set)
+        
+        output_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.output_texts[name] = output_text
+        
+        # Start reading output in a separate thread
+        def read_output():
+            try:
+                if name in self.processes:
+                    process = self.processes[name]
+                    for line in iter(process.stdout.readline, ''):
+                        if not line:
+                            break
+                        self.root.after(0, lambda l=line: self.append_output(name, l))
+            except Exception as e:
+                self.root.after(0, lambda: self.show_notification(f"Output error: {e}", "error"))
+        
+        threading.Thread(target=read_output, daemon=True).start()
+    
+    def append_output(self, name, text):
+        """Append text to output window"""
+        if name in self.output_texts:
+            try:
+                output_text = self.output_texts[name]
+                output_text.configure(state='normal')
+                output_text.insert(tk.END, text)
+                output_text.see(tk.END)
+                output_text.configure(state='disabled')
+            except:
+                pass
+
+    
+    def auto_manage_scripts(self):
+        """Automatically manage scripts 24/7, with random stop/sleep at end of work hours"""
+        if not self.auto_mode:
+            self.root.after(1000, self.auto_manage_scripts)
+            return
+        
+        running = any(proc.poll() is None for proc in self.processes.values())
+        idle_time = time.time() - self.last_user_activity
+        now = datetime.now(pytz.timezone(self.settings["timezone"]))
+        end_hour = self.settings["work_end_hour"]
+        end_minute = self.settings["work_end_minute"]
+        end_time = now.replace(hour=end_hour, minute=end_minute, second=0, microsecond=0)
+        random_sleep_window = timedelta(minutes=15)
+        
+        # Check if we're in the stop window (e.g., 4:30pm - 4:45pm)
+        if now >= end_time and now < end_time + random_sleep_window:
+            if not hasattr(self, "_random_sleep_scheduled"):
+                # Schedule random sleep only once per day
+                offset = random.randint(0, 15 * 60)  # 0-15 minutes in seconds
+                self._random_sleep_scheduled = True
+                self.root.after(offset * 1000, self._stop_and_sleep)
+                self.update_status(f"Sleep scheduled in {offset//60} min")
+        elif now >= end_time + random_sleep_window:
+            # After the window, ensure scripts are stopped (already slept)
+            if running:
+                for name in list(self.processes.keys()):
+                    self.stop_script(name)
+                self.update_status("Stopped for today")
+            self.user_active = False
+        else:
+            # Reset the sleep schedule flag when a new day starts (before end time)
+            if hasattr(self, "_random_sleep_scheduled"):
+                self._random_sleep_scheduled = False
+            
+            # Run 24/7 logic - ignore work hours, just check user activity
+            if self.manual_paused:
+                if running:
+                    for name in list(self.processes.keys()):
+                        self.stop_script(name)
+                self.update_status("Paused")
+            elif idle_time < self.settings["idle_timeout"]:
+                # User is active, pause scripts
+                if running and not self.user_active:
+                    for name in list(self.processes.keys()):
+                        self.stop_script(name)
+                    self.update_status("User Active")
+                self.user_active = True
+            else:
+                # User is idle, run scripts 24/7
+                if not running and self.settings["auto_start"]:
+                    self.start_script('mouse', 'Mousey.py')
+                    self.start_script('key', 'mousey2.py')
+                    self.update_status("Active 24/7")
+                elif running:
+                    self.update_status("Running")
+                self.user_active = False
+        
+        # Schedule next check
+        self.root.after(1000, self.auto_manage_scripts)
+    
+    def _stop_and_sleep(self):
+        """Stop all scripts and put computer to sleep"""
+        for name in list(self.processes.keys()):
+            self.stop_script(name)
+        self.update_status("Sleeping now")
+        try:
+            # Windows sleep command
+            subprocess.run(["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"], shell=True)
+        except Exception as e:
+            self.show_notification(f"Failed to sleep: {e}", "error")
+    
+    def show_settings(self):
+        """Show settings dialog"""
+        settings_win = tk.Toplevel(self.root)
+        settings_win.title("Settings")
+        settings_win.geometry("400x500")
+        settings_win.resizable(False, False)
+        
+        notebook = ttk.Notebook(settings_win)
+        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Work Hours Tab
+        hours_frame = ttk.Frame(notebook)
+        notebook.add(hours_frame, text="Work Hours")
+        
+        ttk.Label(hours_frame, text="Start Time:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        start_hour = tk.IntVar(value=self.settings["work_start_hour"])
+        start_minute = tk.IntVar(value=self.settings["work_start_minute"])
+        
+        ttk.Spinbox(hours_frame, from_=0, to=23, textvariable=start_hour, width=5).grid(row=0, column=1, padx=5)
+        ttk.Label(hours_frame, text=":").grid(row=0, column=2)
+        ttk.Spinbox(hours_frame, from_=0, to=59, textvariable=start_minute, width=5).grid(row=0, column=3, padx=5)
+        
+        ttk.Label(hours_frame, text="End Time:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
+        end_hour = tk.IntVar(value=self.settings["work_end_hour"])
+        end_minute = tk.IntVar(value=self.settings["work_end_minute"])
+        
+        ttk.Spinbox(hours_frame, from_=0, to=23, textvariable=end_hour, width=5).grid(row=1, column=1, padx=5)
+        ttk.Label(hours_frame, text=":").grid(row=1, column=2)
+        ttk.Spinbox(hours_frame, from_=0, to=59, textvariable=end_minute, width=5).grid(row=1, column=3, padx=5)
+        
+        # Behavior Tab
+        behavior_frame = ttk.Frame(notebook)
+        notebook.add(behavior_frame, text="Behavior")
+        
+        ttk.Label(behavior_frame, text="Idle Timeout (seconds):").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        idle_timeout = tk.IntVar(value=self.settings["idle_timeout"])
+        ttk.Spinbox(behavior_frame, from_=5, to=300, textvariable=idle_timeout, width=10).grid(row=0, column=1, padx=5, pady=5)
+        
+        auto_start = tk.BooleanVar(value=self.settings["auto_start"])
+        ttk.Checkbutton(behavior_frame, text="Auto-start scripts during work hours", 
+                       variable=auto_start).grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=5)
+        
+        notifications = tk.BooleanVar(value=self.settings["notifications"])
+        ttk.Checkbutton(behavior_frame, text="Show notifications", 
+                       variable=notifications).grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=5, pady=5)
+        
+        def save_settings():
+            self.settings.update({
+                "work_start_hour": start_hour.get(),
+                "work_start_minute": start_minute.get(),
+                "work_end_hour": end_hour.get(),
+                "work_end_minute": end_minute.get(),
+                "idle_timeout": idle_timeout.get(),
+                "auto_start": auto_start.get(),
+                "notifications": notifications.get()
+            })
+            self.save_settings()
+            settings_win.destroy()
+            self.show_notification("Settings saved successfully")
+        
+        # Buttons
+        button_frame = ttk.Frame(settings_win)
+        button_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        ttk.Button(button_frame, text="Save", command=save_settings).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(button_frame, text="Cancel", command=settings_win.destroy).pack(side=tk.RIGHT)
+    
+    def show_key_selector(self):
+        """Show input configuration dialog"""
+        key_win = tk.Toplevel(self.root)
+        key_win.title("Configure Input Settings")
+        key_win.geometry("400x300")
+        
+        ttk.Label(key_win, text="Select optimization inputs (comma separated):").pack(pady=10)
+        
+        entry = ttk.Entry(key_win, width=50)
+        entry.pack(pady=5)
+        entry.insert(0, ",".join(self.settings["keys_to_press"]))
+        
+        ttk.Label(key_win, text="Available keys: Shift, Ctrl, Alt, A-Z").pack(pady=5)
+        
+        def save_keys():
+            keys = [k.strip() for k in entry.get().split(",") if k.strip()]
+            self.settings["keys_to_press"] = keys
+            self.save_settings()
+            # Also save to the old format for compatibility
+            try:
+                with open("keypress_keys.txt", "w") as f:
+                    f.write(",".join(keys))
+            except:
+                pass
+            key_win.destroy()
+            self.show_notification("Input settings saved successfully")
+        
+        ttk.Button(key_win, text="Save", command=save_keys).pack(pady=10)
+    
+    def show_logs(self):
+        """Show system activity logs"""
+        log_win = tk.Toplevel(self.root)
+        log_win.title("System Activity Logs")
+        log_win.geometry("600x400")
+        
+        # Simple log display - you could enhance this to show actual log files
+        text_area = tk.Text(log_win, wrap=tk.WORD)
+        scrollbar = ttk.Scrollbar(log_win, orient=tk.VERTICAL, command=text_area.yview)
+        text_area.configure(yscrollcommand=scrollbar.set)
+        
+        text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Show current status and recent activity
+        log_text = f"""System Performance Monitor - Activity Log
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Current Status:
+- Auto Optimization: {'Enabled' if self.auto_mode else 'Disabled'}
+- Manual Pause: {'Yes' if self.manual_paused else 'No'}
+- Within Work Hours: {'Yes' if self.is_within_work_hours() else 'No'}
+- User Active: {'Yes' if self.user_active else 'No'}
+
+Performance Modules:
+"""
+        for name, process in self.processes.items():
+            status = "Running" if process.poll() is None else "Stopped"
+            log_text += f"- {name.capitalize()}: {status}\n"
+        
+        log_text += f"""
+Configuration:
+- Work Hours: {self.settings['work_start_hour']:02d}:{self.settings['work_start_minute']:02d} - {self.settings['work_end_hour']:02d}:{self.settings['work_end_minute']:02d}
+- Idle Timeout: {self.settings['idle_timeout']} seconds
+- Auto Start: {'Yes' if self.settings['auto_start'] else 'No'}
+- Notifications: {'Yes' if self.settings['notifications'] else 'No'}
+- Optimization Inputs: {', '.join(self.settings['keys_to_press'])}
+"""
+        
+        text_area.insert(tk.END, log_text)
+        text_area.config(state='disabled')
+    
+    def show_about(self):
+        """Show about dialog"""
+        about_text = """System Performance Monitor v2.0
+
+A professional productivity tool for optimizing system performance 
+and maintaining optimal responsiveness during work hours.
+
+Features:
+• Automated cursor optimization
+• Customizable input optimization
+• Work hours scheduling
+• User activity detection
+• Manual override controls
+• Comprehensive configuration
+
+Designed for maintaining peak system performance.
+"""
+        messagebox.showinfo("About", about_text)
+    
+    def on_close(self):
+        """Handle application closing"""
+        # Stop all scripts
+        for name in list(self.processes.keys()):
+            self.stop_script(name)
+        
+        # Save settings
+        self.save_settings()
+        
+        # Destroy the application
+        self.root.destroy()
+    
+    def run(self):
+        """Start the application"""
+        # Set up window close protocol
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        # Start the main loop
+        self.root.mainloop()
+
+
+# Create and run the application
+if __name__ == "__main__":
+    app = ActivitySimulator()
+    app.run()
