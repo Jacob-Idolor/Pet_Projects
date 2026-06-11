@@ -1,7 +1,9 @@
 import json
 from collections import Counter, deque
 from decimal import Decimal
+from typing import Literal
 
+from stock_buy_bot.brokers.base import BrokerClient
 from stock_buy_bot.config import Settings
 from stock_buy_bot.dashboard_models import (
     AssetType,
@@ -10,6 +12,7 @@ from stock_buy_bot.dashboard_models import (
     BotActionSummary,
     BotActivityCounts,
     BotActivitySummary,
+    BrokerPortfolioSnapshot,
     DashboardSummary,
     GrowthPoint,
     InvestmentPosition,
@@ -18,8 +21,8 @@ from stock_buy_bot.dashboard_models import (
     PortfolioSummary,
     PositionSummary,
 )
-from stock_buy_bot.exceptions import StateStoreError
-from stock_buy_bot.state import SQLiteStateStore
+from stock_buy_bot.exceptions import BrokerExecutionError, BrokerLookupError, StateStoreError
+from stock_buy_bot.state import build_state_store
 
 
 DEFAULT_PORTFOLIO_DATA = {
@@ -71,11 +74,12 @@ def _asset_type_label(asset_type: AssetType) -> str:
 
 
 class DashboardService:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, broker: BrokerClient | None = None):
         self._settings = settings
+        self._broker = broker
         self._portfolio_path = settings.portfolio_data_path
         self._audit_path = settings.audit_log_path
-        self._state_store = SQLiteStateStore(settings.state_db_path)
+        self._state_store = build_state_store(settings)
 
     def ensure_seed_data(self) -> None:
         if self._portfolio_path.exists():
@@ -88,7 +92,7 @@ class DashboardService:
         )
 
     def build_dashboard_summary(self) -> DashboardSummary:
-        portfolio = self._load_portfolio()
+        portfolio, portfolio_source = self._load_portfolio()
         positions = [self._build_position_summary(position) for position in portfolio.positions]
 
         total_value = sum(
@@ -112,6 +116,7 @@ class DashboardService:
         return DashboardSummary(
             portfolio_name=portfolio.portfolio_name,
             base_currency=portfolio.base_currency,
+            portfolio_source=portfolio_source,
             summary=PortfolioSummary(
                 total_value=_decimal_to_float(total_value),
                 total_cost=_decimal_to_float(total_cost),
@@ -131,10 +136,41 @@ class DashboardService:
             ),
         )
 
-    def _load_portfolio(self) -> PortfolioData:
+    def _load_portfolio(self) -> tuple[PortfolioData, Literal["seed_file", "broker"]]:
+        broker_portfolio = self._load_broker_portfolio()
+        if broker_portfolio is not None:
+            history = self._load_portfolio_history()
+            return (
+                PortfolioData(
+                    portfolio_name=broker_portfolio.portfolio_name,
+                    base_currency=broker_portfolio.base_currency,
+                    positions=broker_portfolio.positions,
+                    history=history,
+                ),
+                "broker",
+            )
+
+        return (self._load_seed_portfolio(), "seed_file")
+
+    def _load_seed_portfolio(self) -> PortfolioData:
         self.ensure_seed_data()
         raw_data = json.loads(self._portfolio_path.read_text(encoding="utf-8"))
         return PortfolioData.model_validate(raw_data)
+
+    def _load_portfolio_history(self) -> list[PortfolioHistoryPoint]:
+        self.ensure_seed_data()
+        raw_data = json.loads(self._portfolio_path.read_text(encoding="utf-8"))
+        return PortfolioData.model_validate(raw_data).history
+
+    def _load_broker_portfolio(self) -> BrokerPortfolioSnapshot | None:
+        if not self._settings.dashboard_use_broker_data or self._broker is None:
+            return None
+        if not self._settings.api_key.get_secret_value() or not self._settings.api_secret.get_secret_value():
+            return None
+        try:
+            return self._broker.get_portfolio_snapshot()
+        except (BrokerExecutionError, BrokerLookupError):
+            return None
 
     def _build_position_summary(self, position: InvestmentPosition) -> PositionSummary:
         current_value = position.quantity * position.current_price

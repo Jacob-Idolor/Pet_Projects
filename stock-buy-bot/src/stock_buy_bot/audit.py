@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from stock_buy_bot.exceptions import AuditLogError
-from stock_buy_bot.state import SQLiteStateStore
+from stock_buy_bot.metrics import record_audit_sink_failure
+from stock_buy_bot.state import StateStore
 
 
 class AuditLogger(Protocol):
@@ -39,12 +40,15 @@ class JsonLineAuditLogger:
                 raise AuditLogError(f"Could not write audit log to {self._path}") from exc
 
 
-class SQLiteAuditLogger:
-    def __init__(self, state_store: SQLiteStateStore) -> None:
+class DatabaseAuditLogger:
+    def __init__(self, state_store: StateStore) -> None:
         self._state_store = state_store
 
     def log_event(self, event_type: str, payload: dict[str, Any]) -> None:
         self._state_store.append_audit_event(event_type, payload)
+
+
+SQLiteAuditLogger = DatabaseAuditLogger
 
 
 class FallbackAuditLogger:
@@ -57,9 +61,11 @@ class FallbackAuditLogger:
             self._primary.log_event(event_type, payload)
             return
         except AuditLogError as primary_error:
+            record_audit_sink_failure(sink="primary")
             try:
                 self._fallback.log_event(event_type, payload)
             except AuditLogError as fallback_error:
+                record_audit_sink_failure(sink="fallback")
                 raise AuditLogError("Both audit sinks failed") from fallback_error
             raise AuditLogError("Primary audit sink failed; event was written to fallback sink") from primary_error
 

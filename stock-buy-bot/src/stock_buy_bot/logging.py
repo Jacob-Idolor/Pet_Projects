@@ -1,6 +1,8 @@
 import logging
 from typing import Any, cast
 
+structlog: Any
+
 try:
     import structlog
 except ImportError:

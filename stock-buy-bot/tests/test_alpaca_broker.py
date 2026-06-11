@@ -36,7 +36,7 @@ class FakeTradingClient:
             status="accepted",
         )
 
-    def get_order_by_client_order_id(self, client_order_id: str) -> FakeSubmittedOrder:
+    def get_order_by_client_id(self, client_order_id: str) -> FakeSubmittedOrder:
         del client_order_id
         if self.__class__.existing_order is None:
             raise RuntimeError("not found")

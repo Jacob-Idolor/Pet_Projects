@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import Protocol
 
+from stock_buy_bot.dashboard_models import BrokerPortfolioSnapshot
 from stock_buy_bot.models import OrderResult
 
 
@@ -20,3 +21,6 @@ class BrokerClient(Protocol):
         client_order_id: str,
     ) -> OrderResult:
         """Place a notional market sell order."""
+
+    def get_portfolio_snapshot(self) -> BrokerPortfolioSnapshot | None:
+        """Return current portfolio data when supported."""

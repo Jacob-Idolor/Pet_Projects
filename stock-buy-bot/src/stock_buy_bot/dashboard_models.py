@@ -28,6 +28,14 @@ class PortfolioData(BaseModel):
     history: list[PortfolioHistoryPoint]
 
 
+class BrokerPortfolioSnapshot(BaseModel):
+    portfolio_name: str = Field(min_length=1, max_length=120)
+    base_currency: str = Field(default="USD", min_length=3, max_length=3)
+    positions: list[InvestmentPosition]
+    total_value: Decimal | None = None
+    cash_balance: Decimal | None = None
+
+
 class PortfolioSummary(BaseModel):
     total_value: float
     total_cost: float
@@ -88,6 +96,7 @@ class BotActivitySummary(BaseModel):
 class DashboardSummary(BaseModel):
     portfolio_name: str
     base_currency: str
+    portfolio_source: Literal["seed_file", "broker"]
     summary: PortfolioSummary
     positions: list[PositionSummary]
     allocation: AllocationSummary

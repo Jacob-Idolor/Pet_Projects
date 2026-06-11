@@ -1,9 +1,29 @@
 import json
-import sqlite3
-from contextlib import closing
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
+from typing import Protocol
+
+from sqlalchemy import (
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    PrimaryKeyConstraint,
+    String,
+    Table,
+    Text,
+    create_engine,
+    delete,
+    func,
+    insert,
+    select,
+    update,
+)
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.pool import NullPool
 
 from stock_buy_bot.config import Settings
 from stock_buy_bot.exceptions import (
@@ -14,6 +34,37 @@ from stock_buy_bot.exceptions import (
 )
 
 
+metadata = MetaData()
+
+trade_replay_keys = Table(
+    "trade_replay_keys",
+    metadata,
+    Column("principal", String, nullable=False),
+    Column("idempotency_key", String, nullable=False),
+    Column("body_hash", String, nullable=False),
+    Column("created_at", Float, nullable=False),
+    Column("last_seen_at", Float, nullable=False),
+    PrimaryKeyConstraint("principal", "idempotency_key"),
+)
+
+trade_rate_limit_events = Table(
+    "trade_rate_limit_events",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("principal", String, nullable=False, index=True),
+    Column("created_at", Float, nullable=False, index=True),
+)
+
+audit_events = Table(
+    "audit_events",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("timestamp", String, nullable=False, index=True),
+    Column("event_type", String, nullable=False),
+    Column("payload_json", Text, nullable=False),
+)
+
+
 @dataclass(frozen=True)
 class AuditEventRecord:
     timestamp: str
@@ -21,60 +72,40 @@ class AuditEventRecord:
     payload: dict[str, object]
 
 
-class SQLiteStateStore:
-    def __init__(self, path: Path):
-        self._path = path
+class StateStore(Protocol):
+    def initialize(self) -> None:
+        """Create storage resources if they do not exist."""
+
+    def validate_trade_request(
+        self,
+        *,
+        principal: str,
+        idempotency_key: str,
+        body_hash: str,
+        now: datetime,
+        settings: Settings,
+    ) -> None:
+        """Validate idempotency and rate limits."""
+
+    def append_audit_event(self, event_type: str, payload: dict[str, object]) -> AuditEventRecord:
+        """Persist an audit event."""
+
+    def list_recent_audit_events(self, *, limit: int) -> list[AuditEventRecord]:
+        """Return recent audit events newest-first."""
+
+
+class DatabaseStateStore:
+    def __init__(self, database_url: str) -> None:
+        self._database_url = database_url
+        self._engine: Engine = create_engine(database_url, future=True, poolclass=NullPool)
 
     def initialize(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            with closing(self._connect()) as connection:
-                connection.execute("PRAGMA journal_mode=WAL")
-                connection.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS trade_replay_keys (
-                        principal TEXT NOT NULL,
-                        idempotency_key TEXT NOT NULL,
-                        body_hash TEXT NOT NULL,
-                        created_at REAL NOT NULL,
-                        last_seen_at REAL NOT NULL,
-                        PRIMARY KEY (principal, idempotency_key)
-                    )
-                    """
-                )
-                connection.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS trade_rate_limit_events (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        principal TEXT NOT NULL,
-                        created_at REAL NOT NULL
-                    )
-                    """
-                )
-                connection.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS audit_events (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        timestamp TEXT NOT NULL,
-                        event_type TEXT NOT NULL,
-                        payload_json TEXT NOT NULL
-                    )
-                    """
-                )
-                connection.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_trade_rate_limit_events_principal_created_at
-                    ON trade_rate_limit_events (principal, created_at)
-                    """
-                )
-                connection.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_audit_events_timestamp
-                    ON audit_events (timestamp DESC, id DESC)
-                    """
-                )
-        except sqlite3.Error as exc:
-            raise StateStoreError(f"Could not initialize SQLite state store at {self._path}") from exc
+            metadata.create_all(self._engine)
+        except SQLAlchemyError as exc:
+            raise StateStoreError(
+                f"Could not initialize database state store at {self._database_url}"
+            ) from exc
 
     def validate_trade_request(
         self,
@@ -90,23 +121,21 @@ class SQLiteStateStore:
         replay_cutoff = now_ts - float(settings.trade_signature_ttl_seconds)
 
         try:
-            with closing(self._connect()) as connection:
+            with self._engine.begin() as connection:
                 connection.execute(
-                    "DELETE FROM trade_rate_limit_events WHERE created_at < ?",
-                    (rate_cutoff,),
+                    delete(trade_rate_limit_events).where(
+                        trade_rate_limit_events.c.created_at < rate_cutoff
+                    )
                 )
                 connection.execute(
-                    "DELETE FROM trade_replay_keys WHERE last_seen_at < ?",
-                    (replay_cutoff,),
+                    delete(trade_replay_keys).where(trade_replay_keys.c.last_seen_at < replay_cutoff)
                 )
                 existing = connection.execute(
-                    """
-                    SELECT body_hash
-                    FROM trade_replay_keys
-                    WHERE principal = ? AND idempotency_key = ?
-                    """,
-                    (principal, idempotency_key),
-                ).fetchone()
+                    select(trade_replay_keys.c.body_hash).where(
+                        trade_replay_keys.c.principal == principal,
+                        trade_replay_keys.c.idempotency_key == idempotency_key,
+                    )
+                ).mappings().first()
 
                 if existing is not None:
                     if existing["body_hash"] != body_hash:
@@ -114,88 +143,80 @@ class SQLiteStateStore:
                             "Idempotency-Key was already used with a different request body"
                         )
                     connection.execute(
-                        """
-                        UPDATE trade_replay_keys
-                        SET last_seen_at = ?
-                        WHERE principal = ? AND idempotency_key = ?
-                        """,
-                        (now_ts, principal, idempotency_key),
+                        update(trade_replay_keys)
+                        .where(
+                            trade_replay_keys.c.principal == principal,
+                            trade_replay_keys.c.idempotency_key == idempotency_key,
+                        )
+                        .values(last_seen_at=now_ts)
                     )
                     return
 
                 recent_count = connection.execute(
-                    """
-                    SELECT COUNT(*)
-                    FROM trade_rate_limit_events
-                    WHERE principal = ? AND created_at >= ?
-                    """,
-                    (principal, rate_cutoff),
-                ).fetchone()[0]
+                    select(func.count())
+                    .select_from(trade_rate_limit_events)
+                    .where(
+                        trade_rate_limit_events.c.principal == principal,
+                        trade_rate_limit_events.c.created_at >= rate_cutoff,
+                    )
+                ).scalar_one()
                 if recent_count >= settings.trade_rate_limit_requests:
                     raise TradeRateLimitError("Trade rate limit exceeded")
 
                 connection.execute(
-                    """
-                    INSERT INTO trade_rate_limit_events (principal, created_at)
-                    VALUES (?, ?)
-                    """,
-                    (principal, now_ts),
+                    insert(trade_rate_limit_events).values(
+                        principal=principal,
+                        created_at=now_ts,
+                    )
                 )
                 connection.execute(
-                    """
-                    INSERT INTO trade_replay_keys (
-                        principal,
-                        idempotency_key,
-                        body_hash,
-                        created_at,
-                        last_seen_at
+                    insert(trade_replay_keys).values(
+                        principal=principal,
+                        idempotency_key=idempotency_key,
+                        body_hash=body_hash,
+                        created_at=now_ts,
+                        last_seen_at=now_ts,
                     )
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (principal, idempotency_key, body_hash, now_ts, now_ts),
                 )
         except (TradeRateLimitError, TradeReplayConflictError):
             raise
-        except sqlite3.Error as exc:
+        except SQLAlchemyError as exc:
             raise StateStoreError("Could not validate shared trade request state") from exc
 
     def append_audit_event(self, event_type: str, payload: dict[str, object]) -> AuditEventRecord:
         timestamp = datetime.now(UTC).isoformat()
         payload_json = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
         try:
-            with closing(self._connect()) as connection:
+            with self._engine.begin() as connection:
                 connection.execute(
-                    """
-                    INSERT INTO audit_events (timestamp, event_type, payload_json)
-                    VALUES (?, ?, ?)
-                    """,
-                    (timestamp, event_type, payload_json),
+                    insert(audit_events).values(
+                        timestamp=timestamp,
+                        event_type=event_type,
+                        payload_json=payload_json,
+                    )
                 )
-        except sqlite3.Error as exc:
-            raise AuditLogError("Could not persist audit event to SQLite") from exc
-        return AuditEventRecord(
-            timestamp=timestamp,
-            event_type=event_type,
-            payload=payload,
-        )
+        except SQLAlchemyError as exc:
+            raise AuditLogError("Could not persist audit event to the shared store") from exc
+        return AuditEventRecord(timestamp=timestamp, event_type=event_type, payload=payload)
 
     def list_recent_audit_events(self, *, limit: int) -> list[AuditEventRecord]:
         try:
-            with closing(self._connect()) as connection:
+            with self._engine.connect() as connection:
                 rows = connection.execute(
-                    """
-                    SELECT timestamp, event_type, payload_json
-                    FROM audit_events
-                    ORDER BY id DESC
-                    LIMIT ?
-                    """,
-                    (limit,),
-                ).fetchall()
-        except sqlite3.Error as exc:
-            raise StateStoreError("Could not load audit events from SQLite") from exc
+                    select(
+                        audit_events.c.timestamp,
+                        audit_events.c.event_type,
+                        audit_events.c.payload_json,
+                    )
+                    .order_by(audit_events.c.id.desc())
+                    .limit(limit)
+                ).mappings()
+                records = rows.all()
+        except SQLAlchemyError as exc:
+            raise StateStoreError("Could not load audit events from the shared store") from exc
 
         events: list[AuditEventRecord] = []
-        for row in rows:
+        for row in records:
             try:
                 payload = json.loads(row["payload_json"])
             except json.JSONDecodeError:
@@ -203,14 +224,36 @@ class SQLiteStateStore:
             if isinstance(payload, dict):
                 events.append(
                     AuditEventRecord(
-                        timestamp=row["timestamp"],
-                        event_type=row["event_type"],
+                        timestamp=str(row["timestamp"]),
+                        event_type=str(row["event_type"]),
                         payload=payload,
                     )
                 )
         return events
 
-    def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self._path, timeout=10.0, isolation_level=None)
-        connection.row_factory = sqlite3.Row
-        return connection
+
+class SQLiteStateStore(DatabaseStateStore):
+    def __init__(self, path: Path) -> None:
+        self._path = path
+        super().__init__(sqlite_database_url(path))
+
+
+def sqlite_database_url(path: Path) -> str:
+    return f"sqlite+pysqlite:///{path}"
+
+
+def resolve_state_database_url(settings: Settings) -> str:
+    if settings.state_database_url:
+        return settings.state_database_url
+    return sqlite_database_url(settings.state_db_path)
+
+
+@lru_cache(maxsize=8)
+def get_state_store_from_url(database_url: str) -> DatabaseStateStore:
+    state_store = DatabaseStateStore(database_url)
+    state_store.initialize()
+    return state_store
+
+
+def build_state_store(settings: Settings) -> DatabaseStateStore:
+    return get_state_store_from_url(resolve_state_database_url(settings))

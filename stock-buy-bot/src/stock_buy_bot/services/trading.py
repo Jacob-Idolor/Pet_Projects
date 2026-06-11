@@ -6,6 +6,7 @@ from stock_buy_bot.brokers.base import BrokerClient
 from stock_buy_bot.config import Settings
 from stock_buy_bot.exceptions import AuditLogError, BrokerExecutionError, BrokerLookupError
 from stock_buy_bot.logging import BoundLogger, get_logger
+from stock_buy_bot.metrics import record_trade_result
 from stock_buy_bot.models import BuyRequest, OrderResult, SellRequest
 
 
@@ -82,6 +83,7 @@ class TradingService:
                 client_order_id=idempotency_key,
             )
         except (BrokerExecutionError, BrokerLookupError) as exc:
+            record_trade_result(side=side, result="failed")
             self._safe_log_event(
                 "trade_failed",
                 {
@@ -109,6 +111,7 @@ class TradingService:
                 "status": result.status,
             },
         )
+        record_trade_result(side=side, result=result.status)
         return result
 
     def _submit_order(

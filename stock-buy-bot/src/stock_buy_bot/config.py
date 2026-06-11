@@ -29,9 +29,12 @@ class Settings(BaseSettings):
     allowed_hosts: list[str] = Field(
         default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
     )
+    state_database_url: str | None = None
     state_db_path: Path = Path("var/state/trading.db")
     audit_log_path: Path = Path("var/audit/trades.jsonl")
     portfolio_data_path: Path = Path("var/portfolio.json")
+    dashboard_use_broker_data: bool = True
+    metrics_enabled: bool = True
 
     @field_validator("allowed_hosts", mode="before")
     @classmethod

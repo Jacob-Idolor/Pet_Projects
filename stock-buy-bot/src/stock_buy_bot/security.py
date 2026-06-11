@@ -7,7 +7,7 @@ from fastapi import Depends, Header, HTTPException, Request, status
 
 from stock_buy_bot.config import Settings, get_settings
 from stock_buy_bot.exceptions import StateStoreError, TradeRateLimitError, TradeReplayConflictError
-from stock_buy_bot.state import SQLiteStateStore
+from stock_buy_bot.state import StateStore, build_state_store
 
 
 @dataclass(frozen=True)
@@ -18,10 +18,8 @@ class AuthenticatedTradeContext:
     signature: str
 
 
-def get_state_store(settings: Settings) -> SQLiteStateStore:
-    state_store = SQLiteStateStore(settings.state_db_path)
-    state_store.initialize()
-    return state_store
+def get_state_store(settings: Settings) -> StateStore:
+    return build_state_store(settings)
 
 
 def build_trade_signature(*, secret: str, timestamp: str, body: bytes) -> str:
@@ -33,7 +31,7 @@ def build_trade_signature(*, secret: str, timestamp: str, body: bytes) -> str:
 def authenticate_trade_request(
     *,
     settings: Settings,
-    state_store: SQLiteStateStore,
+    state_store: StateStore,
     body: bytes,
     trade_key: str,
     timestamp: str,

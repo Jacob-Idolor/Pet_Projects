@@ -15,18 +15,22 @@ Production-focused starter kit for an automated stock trading bot with buy and s
 - `/health` endpoint for service monitoring
 - `/dashboard` investment tracking dashboard with portfolio performance, allocation, growth, and bot activity
 - `/api/dashboard/summary` live dashboard data endpoint
+- `/metrics` Prometheus-style metrics endpoint
 - `/trade/buy` endpoint for market buy requests
 - `/trade/sell` endpoint for market sell requests
 - Risk guardrails:
   - symbol allowlist
   - max order USD cap
 - Signed request authentication on trade routes
-- Shared SQLite-backed replay protection and request throttling
-- SQLite-backed audit history with JSONL fallback logging
+- Shared database-backed replay protection and request throttling
+- Database-backed audit history with JSONL fallback logging
 - Idempotency keys passed through as broker client order IDs
 - Dry-run mode when API keys are not set
 - Config driven via environment variables
 - Stocks, bonds, and mutual fund tracking with responsive charts
+- Optional broker-backed dashboard positions using Alpaca account data
+- Docker Compose stack with Postgres
+- Pre-commit hooks for Ruff, MyPy, and pytest
 
 ## Quickstart
 ```bash
@@ -35,11 +39,13 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 copy .env.example .env  # macOS/Linux: cp .env.example .env
+pre-commit install
 uvicorn --app-dir src stock_buy_bot.main:app --reload
 python -m pytest tests
 ```
 
 Open [http://localhost:8000/dashboard](http://localhost:8000/dashboard) to view the investment dashboard.
+Open [http://localhost:8000/metrics](http://localhost:8000/metrics) to view Prometheus metrics.
 
 Deployment guide: [DEPLOYMENT.md](/E:/Pet_Projects/Pet_Projects/stock-buy-bot/DEPLOYMENT.md)
 
@@ -78,8 +84,8 @@ curl -X POST http://localhost:8000/trade/sell \
 ```
 
 ## Production hardening next steps
-- Add rate limiting and secret rotation.
-- Add Redis or Postgres if you need shared state across multiple hosts instead of one persisted volume.
-- Add Postgres-backed audit retention and reconciliation jobs.
+- Add secret rotation and network-level access controls for trade callers.
+- Add Redis if you need lower-latency shared coordination than the current SQL-backed state store.
+- Add Postgres-backed audit retention and reconciliation jobs if you want long-term reporting beyond the app store.
 - Add circuit-breakers and broker failover.
 - Add strategy engine and paper-trading backtests before live use.

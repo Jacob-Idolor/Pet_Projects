@@ -4,6 +4,7 @@ from typing import Literal
 
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from stock_buy_bot.dashboard_models import BrokerPortfolioSnapshot, InvestmentPosition
 from stock_buy_bot.exceptions import BrokerExecutionError, BrokerLookupError
 from stock_buy_bot.models import OrderResult
 
@@ -80,6 +81,8 @@ class AlpacaBroker:
             if reconciled is not None:
                 return reconciled
             raise BrokerExecutionError("Broker order submission failed") from exc
+        if isinstance(submitted, dict):
+            raise BrokerExecutionError("Broker order submission returned an unexpected payload")
 
         return OrderResult(
             side=side,
@@ -97,11 +100,13 @@ class AlpacaBroker:
         side: Literal["buy", "sell"],
     ) -> OrderResult | None:
         try:
-            existing = self._client.get_order_by_client_order_id(client_order_id)
+            existing = self._client.get_order_by_client_id(client_order_id)
         except RuntimeError:
             return None
         except AttributeError as exc:
             raise BrokerLookupError("Broker client does not support idempotent lookup") from exc
+        if isinstance(existing, dict):
+            return None
 
         return OrderResult(
             side=side,
@@ -112,6 +117,53 @@ class AlpacaBroker:
             client_order_id=client_order_id,
             message="Order reconciled using existing client_order_id",
         )
+
+    def get_portfolio_snapshot(self) -> BrokerPortfolioSnapshot | None:
+        try:
+            account_payload = self._client.get_account()
+            positions_payload = self._client.get_all_positions()
+        except RuntimeError as exc:
+            raise BrokerExecutionError("Broker portfolio lookup failed") from exc
+        except AttributeError as exc:
+            raise BrokerLookupError("Broker client does not support portfolio lookup") from exc
+        if isinstance(account_payload, dict):
+            raise BrokerExecutionError("Broker account lookup returned an unexpected payload")
+        if isinstance(positions_payload, dict):
+            raise BrokerExecutionError("Broker positions lookup returned an unexpected payload")
+
+        account = account_payload
+        positions = positions_payload
+
+        portfolio_positions = [
+            InvestmentPosition(
+                symbol=str(position.symbol).upper(),
+                name=str(position.symbol).upper(),
+                asset_type=self._map_asset_type(
+                    asset_class=str(getattr(position, "asset_class", "stock")),
+                    symbol=str(position.symbol).upper(),
+                ),
+                quantity=Decimal(str(position.qty)),
+                current_price=Decimal(str(position.current_price)),
+                cost_basis=Decimal(str(position.avg_entry_price)),
+            )
+            for position in positions
+        ]
+
+        return BrokerPortfolioSnapshot(
+            portfolio_name="Alpaca Portfolio",
+            base_currency="USD",
+            positions=portfolio_positions,
+            total_value=Decimal(str(getattr(account, "portfolio_value", "0"))),
+            cash_balance=Decimal(str(getattr(account, "cash", "0"))),
+        )
+
+    def _map_asset_type(self, *, asset_class: str, symbol: str) -> Literal["stock", "bond", "mutual_fund"]:
+        normalized_asset_class = asset_class.lower()
+        if "bond" in normalized_asset_class or symbol in {"BND", "AGG", "TLT", "IEF"}:
+            return "bond"
+        if symbol.endswith("X"):
+            return "mutual_fund"
+        return "stock"
 
 
 class DryRunBroker:
@@ -146,3 +198,6 @@ class DryRunBroker:
             client_order_id=client_order_id,
             message="Dry run mode; no live order submitted",
         )
+
+    def get_portfolio_snapshot(self) -> BrokerPortfolioSnapshot | None:
+        return None
