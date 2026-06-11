@@ -2,6 +2,8 @@
 
 A portfolio of projects I build, ship, and run. The goal of this repo is simple: everything here should be **deployable** — clear setup steps, reproducible environments, and (where it makes sense) containers, CI, and live demos.
 
+This repo is also a **build-in-the-open journal**. Alongside the code, I document what I'm learning, what worked, and what didn't — so if you've found your way here, feel free to follow along, borrow ideas, or open an issue to chat.
+
 ## Tracks
 
 | Track | Folder | What goes here |
@@ -10,6 +12,7 @@ A portfolio of projects I build, ship, and run. The goal of this repo is simple:
 | ♠️ Poker | [`poker/`](poker/) | Tools to practice and sharpen my poker skills (trainers, solvers, drills) |
 | 📊 Dynatrace | [`dynatrace/`](dynatrace/) | Dashboards, scripts, workflows, and everything I learn about Dynatrace |
 | ☸️ Kubernetes | [`kubernetes/`](kubernetes/) | My Kubernetes learning journey — manifests, clusters, experiments, notes |
+| 📈 Stocks | [`stocks/`](stocks/) | Trading tools — TradingView Pine Scripts, research, screeners, and bots |
 
 ## Deployability standards
 
