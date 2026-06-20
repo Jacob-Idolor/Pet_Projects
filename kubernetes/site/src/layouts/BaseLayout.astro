@@ -1,0 +1,47 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Free Kubernetes, Docker, and DevOps practice labs. Learn locally — no cloud cluster required." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title} | K8s Practice Lab</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="logo" href="/">☸ K8s Practice Lab</a>
+        <nav>
+          <a href="/learn/">Learn</a>
+          <a href="/labs/">Labs</a>
+          <a href="/about/">About</a>
+          <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          Open learning project — real cluster practice runs on <strong>your laptop</strong> (kind/Docker).
+          <a href="/privacy/">Privacy</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  @import "../styles/global.css";
+</style>

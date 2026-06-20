@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const repoBase = "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes";
+const tracks = [
+  { title: "Docker fundamentals", level: "L1", href: `${repoBase}/curriculum/01-docker-fundamentals.md` },
+  { title: "Kubernetes basics", level: "L1–L2", href: `${repoBase}/curriculum/02-kubernetes-basics.md` },
+  { title: "Intermediate K8s", level: "L2–L3", href: `${repoBase}/curriculum/03-intermediate.md` },
+  { title: "Advanced K8s", level: "L3", href: `${repoBase}/curriculum/04-advanced.md` },
+  { title: "OpenShift", level: "L4", href: `${repoBase}/curriculum/05-openshift.md` },
+  { title: "Observability", level: "L5", href: `${repoBase}/curriculum/06-observability.md` },
+];
+---
+
+<BaseLayout title="Learn" description="Curriculum from Docker to observability — free and open source.">
+  <section class="hero container prose">
+    <h1>Learn</h1>
+    <p class="lead">
+      Read the concept guides on GitHub, then do the matching lab locally. Command drills build muscle memory.
+    </p>
+
+    <h2>Curriculum</h2>
+    <div class="card-grid">
+      {tracks.map((t) => (
+        <article class="card">
+          <span class="badge">{t.level}</span>
+          <h3>{t.title}</h3>
+          <p><a href={t.href}>Read guide →</a></p>
+        </article>
+      ))}
+    </div>
+
+    <h2>Daily drills</h2>
+    <ul>
+      <li><a href={`${repoBase}/drills/docker-commands.md`}>Docker commands</a></li>
+      <li><a href={`${repoBase}/drills/kubectl-commands.md`}>kubectl commands</a></li>
+      <li><a href={`${repoBase}/drills/oc-commands.md`}>OpenShift (oc) commands</a></li>
+      <li><a href={`${repoBase}/drills/troubleshooting-scenarios.md`}>Troubleshooting scenarios</a></li>
+    </ul>
+  </section>
+</BaseLayout>

@@ -1,0 +1,33 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="About">
+  <section class="hero container prose">
+    <h1>About this project</h1>
+    <p class="lead">
+      A free, open-source Kubernetes and DevOps practice lab — built in public as part of
+      <a href="https://github.com/Jacob-Idolor/Pet_Projects">Pet Projects</a>.
+    </p>
+
+    <h2>Philosophy</h2>
+    <ul>
+      <li><strong>Local-first</strong> — real clusters on your laptop, not expensive shared sandboxes</li>
+      <li><strong>Deployable mindset</strong> — every skill ties to production patterns</li>
+      <li><strong>Open</strong> — fork it, host your own copy, contribute labs and fixes</li>
+    </ul>
+
+    <h2>Fork & host your own</h2>
+    <p>
+      The static site deploys to S3 + CloudFront for roughly <strong>$1–5/month</strong>.
+      See the <a href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/infra">infra folder</a>
+      for Terraform with cost safeguards (no EKS/EC2).
+    </p>
+
+    <h2>Contribute</h2>
+    <p>
+      Issues and PRs welcome — new labs, typo fixes, better break/fix scenarios.
+      See <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/CONTRIBUTING.md">CONTRIBUTING.md</a>.
+    </p>
+  </section>
+</BaseLayout>

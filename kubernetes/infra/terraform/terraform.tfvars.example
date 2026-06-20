@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and edit before terraform apply.
+# Bucket names must be globally unique across all AWS accounts.
+
+aws_region       = "us-east-1"
+project_name     = "k8s-practice"
+site_bucket_name = "YOUR-UNIQUE-BUCKET-NAME-here"
+
+# Cheapest path: CloudFront URL only (no Route53 charges)
+enable_custom_domain = false
+
+# Optional — enables Route53 + ACM (extra ~$1-2/mo + domain cost)
+# enable_custom_domain = true
+# domain_name          = "learn.yourdomain.com"
+# route53_zone_id      = "Z1234567890ABC"
+
+# Budget email alerts (disable if terraform apply fails on permissions)
+enable_budget      = true
+budget_alert_email = "you@example.com"
+monthly_budget_usd = 5
+
+# Cheapest CloudFront edge locations
+cloudfront_price_class = "PriceClass_100"

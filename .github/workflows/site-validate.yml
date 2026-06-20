@@ -1,0 +1,39 @@
+name: Site validate
+
+on:
+  pull_request:
+    paths:
+      - "kubernetes/site/**"
+      - "kubernetes/infra/**"
+  push:
+    branches: [main]
+    paths:
+      - "kubernetes/site/**"
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kubernetes/site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm run build
+
+  terraform-validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kubernetes/infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - run: terraform fmt -check

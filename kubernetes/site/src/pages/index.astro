@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Home">
+  <section class="hero container">
+    <span class="badge">Free · Open source · Local-first</span>
+    <h1>Practice Kubernetes like a DevOps engineer</h1>
+    <p class="lead">
+      Structured labs, command drills, and troubleshooting scenarios — from Docker basics to
+      observability. Run real workloads on your machine. No shared cloud clusters. No surprise bills.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/labs/">Start Lab 01</a>
+      <a class="btn btn-secondary" href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes">View on GitHub</a>
+    </div>
+  </section>
+
+  <section class="container card-grid">
+    <article class="card">
+      <h3>🐳 Docker foundations</h3>
+      <p>Build images, debug containers, multi-stage Dockerfiles — before you touch kubectl.</p>
+    </article>
+    <article class="card">
+      <h3>☸ 8 hands-on labs</h3>
+      <p>Pods → Deployments → Services → Ingress → Storage → RBAC → Helm → monitoring.</p>
+    </article>
+    <article class="card">
+      <h3>🔧 Break/fix drills</h3>
+      <p>Intentionally broken YAML. Practice CrashLoopBackOff, missing endpoints, and more.</p>
+    </article>
+    <article class="card">
+      <h3>📊 Observability</h3>
+      <p>Prometheus, Grafana, runbooks — skills that transfer to Dynatrace and SRE work.</p>
+    </article>
+  </section>
+
+  <section class="container">
+    <div class="callout">
+      <p>
+        <strong>Local only:</strong> Lab manifests apply to <em>your</em> kind/minikube cluster — never a paid multi-tenant cloud lab.
+        This site is static content; your AWS bill stays ~$1–5/mo if you host it yourself.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

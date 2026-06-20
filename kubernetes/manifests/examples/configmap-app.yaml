@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_MODE: development
+  app.conf: |
+    log_level=info
+    server_name=practice
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+stringData:
+  API_TOKEN: practice-token-not-for-production
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-demo
+  template:
+    metadata:
+      labels:
+        app: config-demo
+    spec:
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c", "echo Config: && cat /config/app.conf && echo TOKEN=$API_TOKEN && sleep 3600"]
+          env:
+            - name: APP_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: APP_MODE
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: API_TOKEN
+          volumeMounts:
+            - name: config-vol
+              mountPath: /config
+      volumes:
+        - name: config-vol
+          configMap:
+            name: app-config
+            items:
+              - key: app.conf
+                path: app.conf

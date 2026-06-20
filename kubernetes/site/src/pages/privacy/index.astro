@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Privacy">
+  <section class="hero container prose">
+    <h1>Privacy</h1>
+    <p>This is a static website. We do not run application servers or user accounts on this site.</p>
+
+    <h2>What we collect</h2>
+    <ul>
+      <li><strong>Hosting logs</strong> — AWS CloudFront may log IP address, browser, and pages requested (standard CDN access logs).</li>
+      <li><strong>Analytics / ads</strong> — If enabled, third-party services (e.g. Google AdSense) may use cookies per their policies. Update this page before enabling ads.</li>
+    </ul>
+
+    <h2>What we do not collect</h2>
+    <ul>
+      <li>Kubernetes credentials or cloud account access</li>
+      <li>Lab progress (tracking is local in your clone of the repo)</li>
+    </ul>
+
+    <h2>Contact</h2>
+    <p>Open a GitHub issue on the repository for questions or data requests.</p>
+  </section>
+</BaseLayout>
