@@ -10,7 +10,10 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
+  profile = var.aws_profile
+
+  allowed_account_ids = length(var.allowed_account_ids) > 0 ? var.allowed_account_ids : null
 
   default_tags {
     tags = {
@@ -18,14 +21,18 @@ provider "aws" {
       ManagedBy   = "terraform"
       Environment = "production"
       CostCenter  = "static-site-only"
+      Stack       = "s3-cloudfront-static-site"
     }
   }
 }
 
 # CloudFront certificates must live in us-east-1
 provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
+  alias   = "us_east_1"
+  region  = "us-east-1"
+  profile = var.aws_profile
+
+  allowed_account_ids = length(var.allowed_account_ids) > 0 ? var.allowed_account_ids : null
 
   default_tags {
     tags = {
@@ -33,6 +40,7 @@ provider "aws" {
       ManagedBy   = "terraform"
       Environment = "production"
       CostCenter  = "static-site-only"
+      Stack       = "s3-cloudfront-static-site"
     }
   }
 }

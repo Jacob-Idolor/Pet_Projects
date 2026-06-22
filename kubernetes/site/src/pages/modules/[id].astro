@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import KubectlTerminal from "../../components/KubectlTerminal.astro";
+import Quiz from "../../components/Quiz.astro";
+import AdSlot from "../../components/AdSlot.astro";
+import { modules, getModule } from "../../data/modules";
+
+export function getStaticPaths() {
+  return modules.map((m) => ({ params: { id: m.id } }));
+}
+
+const { id } = Astro.params;
+const mod = getModule(id!);
+if (!mod) throw new Error(`Module not found: ${id}`);
+const prev = modules.find((m) => m.order === mod.order - 1);
+const next = modules.find((m) => m.order === mod.order + 1);
+---
+
+<BaseLayout title={mod.title} description={mod.subtitle}>
+  <section class="hero container prose">
+    <span class="badge">Module {mod.order} · {mod.time}</span>
+    <h1>{mod.title}</h1>
+    <p class="lead">{mod.subtitle}</p>
+  </section>
+
+  <section class="container prose">
+    {mod.sections.map((s) => (
+      <div>
+        <h2>{s.heading}</h2>
+        <p set:html={s.body} />
+      </div>
+    ))}
+
+    <AdSlot slot={`module-${mod.id}-mid`} />
+
+    <h2>Practice goal</h2>
+    <p>{mod.practiceGoal}</p>
+  </section>
+
+  <section class="container">
+    <KubectlTerminal cluster={mod.cluster} height="360px" />
+  </section>
+
+  <section class="container prose">
+    <h2>Check your understanding</h2>
+    <Quiz questions={mod.quiz} moduleId={mod.id} />
+
+    <nav class="module-nav">
+      {prev ? <a href={`/modules/${prev.id}.html`}>← {prev.title}</a> : <span />}
+      {next ? <a href={`/modules/${next.id}.html`}>{next.title} →</a> : <a href="/practice.html">Practice →</a>}
+    </nav>
+  </section>
+</BaseLayout>
+
+<style>
+  .module-nav {
+    display: flex;
+    justify-content: space-between;
+    margin: 3rem 0 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+</style>

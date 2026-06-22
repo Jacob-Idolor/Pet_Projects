@@ -2,53 +2,88 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "StaticSiteDeploy",
+      "Sid": "WhoAmI",
+      "Effect": "Allow",
+      "Action": "sts:GetCallerIdentity",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowListBucketsForTerraform",
       "Effect": "Allow",
       "Action": [
-        "s3:ListBucket",
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:GetBucketLocation",
-        "cloudfront:CreateInvalidation",
-        "cloudfront:GetInvalidation",
-        "cloudfront:ListInvalidations",
-        "cloudfront:GetDistribution",
-        "cloudfront:ListDistributions",
-        "sts:GetCallerIdentity"
+        "s3:ListAllMyBuckets",
+        "s3:GetAccountPublicAccessBlock"
       ],
       "Resource": "*"
     },
     {
-      "Sid": "TerraformStateOptional",
+      "Sid": "AllowS3PetProjectsPrefixOnly",
       "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "dynamodb:GetItem",
-        "dynamodb:PutItem",
-        "dynamodb:DeleteItem"
-      ],
+      "Action": "s3:*",
       "Resource": [
-        "arn:aws:s3:::YOUR-TF-STATE-BUCKET/*",
-        "arn:aws:dynamodb:us-east-1:YOUR-ACCOUNT-ID:table/terraform-locks"
+        "arn:aws:s3:::pet-projects-*",
+        "arn:aws:s3:::pet-projects-*/*"
       ]
     },
     {
-      "Sid": "DenyExpensiveServices",
+      "Sid": "AllowCloudFrontStaticSiteManagement",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateDistribution",
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:UpdateDistribution",
+        "cloudfront:DeleteDistribution",
+        "cloudfront:ListDistributions",
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation",
+        "cloudfront:ListInvalidations",
+        "cloudfront:CreateOriginAccessControl",
+        "cloudfront:GetOriginAccessControl",
+        "cloudfront:GetOriginAccessControlConfig",
+        "cloudfront:UpdateOriginAccessControl",
+        "cloudfront:DeleteOriginAccessControl",
+        "cloudfront:ListOriginAccessControls",
+        "cloudfront:ListCachePolicies",
+        "cloudfront:GetCachePolicy",
+        "cloudfront:TagResource",
+        "cloudfront:UntagResource",
+        "cloudfront:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowBudgetAlertManagementOptional",
+      "Effect": "Allow",
+      "Action": [
+        "budgets:CreateBudget",
+        "budgets:ModifyBudget",
+        "budgets:DeleteBudget",
+        "budgets:ViewBudget",
+        "budgets:TagResource",
+        "budgets:UntagResource",
+        "budgets:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyExpensiveOrOutOfScopeServices",
       "Effect": "Deny",
       "Action": [
         "eks:*",
+        "ecs:*",
+        "rds:*",
+        "lambda:*",
         "ec2:RunInstances",
         "ec2:Create*",
-        "rds:*",
-        "ecs:CreateCluster",
-        "lambda:CreateFunction",
+        "ec2:StartInstances",
+        "ec2:CreateNatGateway",
+        "ec2:CreateVolume",
+        "elasticloadbalancing:*",
         "elasticache:*",
         "redshift:*",
         "sagemaker:*",
-        "emr:*"
+        "apigateway:*"
       ],
       "Resource": "*"
     }

@@ -1,45 +1,51 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import AdSlot from "../components/AdSlot.astro";
 ---
 
 <BaseLayout title="Home">
   <section class="hero container">
-    <span class="badge">Free · Open source · Local-first</span>
-    <h1>Practice Kubernetes like a DevOps engineer</h1>
+    <span class="badge">Free · Browser-based · No install</span>
+    <h1>Learn Kubernetes in your browser</h1>
     <p class="lead">
-      Structured labs, command drills, and troubleshooting scenarios — from Docker basics to
-      observability. Run real workloads on your machine. No shared cloud clusters. No surprise bills.
+      Interactive modules, simulated kubectl, and quizzes — understand containers and Kubernetes
+      fundamentals before you ever touch a real cluster. Built to share, built to scale with you.
     </p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="/labs/">Start Lab 01</a>
-      <a class="btn btn-secondary" href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes">View on GitHub</a>
+      <a class="btn btn-primary" href="/learn.html">Start learning</a>
+      <a class="btn btn-secondary" href="/practice.html">Open kubectl simulator</a>
     </div>
+  </section>
+
+  <section class="container">
+    <AdSlot slot="home-top" />
   </section>
 
   <section class="container card-grid">
     <article class="card">
-      <h3>🐳 Docker foundations</h3>
-      <p>Build images, debug containers, multi-stage Dockerfiles — before you touch kubectl.</p>
+      <h3>📖 7 modules</h3>
+      <p>Containers → Pods → Deployments → Config → Networking → Storage → Production patterns.</p>
     </article>
     <article class="card">
-      <h3>☸ 8 hands-on labs</h3>
-      <p>Pods → Deployments → Services → Ingress → Storage → RBAC → Helm → monitoring.</p>
+      <h3>💻 Simulated kubectl</h3>
+      <p>Practice get, describe, logs, endpoints — scenarios like CrashLoopBackOff and broken Services.</p>
     </article>
     <article class="card">
-      <h3>🔧 Break/fix drills</h3>
-      <p>Intentionally broken YAML. Practice CrashLoopBackOff, missing endpoints, and more.</p>
+      <h3>✅ Quizzes</h3>
+      <p>Check understanding after each module. Progress saved in your browser.</p>
     </article>
     <article class="card">
-      <h3>📊 Observability</h3>
-      <p>Prometheus, Grafana, runbooks — skills that transfer to Dynatrace and SRE work.</p>
+      <h3>☁️ Host on AWS</h3>
+      <p>Static site on S3 + CloudFront (~$1–5/mo). No EKS. No cloud clusters for learners.</p>
     </article>
   </section>
 
   <section class="container">
     <div class="callout">
       <p>
-        <strong>Local only:</strong> Lab manifests apply to <em>your</em> kind/minikube cluster — never a paid multi-tenant cloud lab.
-        This site is static content; your AWS bill stays ~$1–5/mo if you host it yourself.
+        <strong>How this works:</strong> You learn concepts and commands here first.
+        When you're ready to deploy professionally, you'll know <em>why</em> each kubectl command matters —
+        then practice on a real local cluster optional.
       </p>
     </div>
   </section>

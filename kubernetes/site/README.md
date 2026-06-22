@@ -1,6 +1,6 @@
-# Static site — public learning platform
+# Static learning site
 
-Source for the hosted site (S3 + CloudFront). **No Kubernetes runs in AWS.**
+**The product.** Browser-based Kubernetes learning — modules, simulated kubectl, quizzes. Deploys to S3 + CloudFront.
 
 ## Local preview
 
@@ -12,22 +12,26 @@ npm run dev
 
 Open http://localhost:4321
 
-## Deploy (after AWS infra is created)
+## Deploy to AWS
 
 ```powershell
-npm run build
-cd ../infra
+cd kubernetes/infra/terraform
+# terraform apply (after tfvars configured)
+
+cd ..
 .\deploy-site.ps1 -Profile pet-projects
 ```
 
-See [infra/README.md](../infra/README.md) for one-time Terraform setup. Deploy is **manual** — nothing auto-runs on git push unless you enable it.
+## Features
 
-## Content
+- `/learn.html` — module index
+- `/modules/*.html` — lessons + quiz + terminal per topic
+- `/practice.html` — kubectl simulator + missions
+- `/practice-broken.html` — empty endpoints scenario
+- `/practice-crash.html` — CrashLoopBackOff scenario
+- Ad placeholders in `src/components/AdSlot.astro`
+- AdSense script slot in `BaseLayout.astro` (commented until approval)
 
-| Path | Purpose |
-|------|---------|
-| `src/pages/` | Site pages (home, labs, learn, about) |
-| `src/content/` | Markdown articles (optional, grows over time) |
-| `public/` | Static assets |
+## Cost
 
-Lab YAML and real `kubectl` practice stay in the repo root folders — marked **local only**.
+Static files only → **~$1–5/mo** at low traffic. No backend, no database, no Kubernetes in AWS.

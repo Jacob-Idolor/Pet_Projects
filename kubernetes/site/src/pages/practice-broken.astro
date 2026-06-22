@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import KubectlTerminal from "../components/KubectlTerminal.astro";
+---
+
+<BaseLayout title="Practice — Broken endpoints">
+  <section class="hero container prose">
+    <h1>Scenario: empty endpoints</h1>
+    <p class="lead">The Service selector doesn't match Pod labels. Find the mismatch with <code>kubectl get endpoints</code> and <code>kubectl describe</code>.</p>
+  </section>
+  <section class="container">
+    <KubectlTerminal cluster="broken" height="380px" />
+  </section>
+</BaseLayout>

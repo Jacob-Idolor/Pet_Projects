@@ -4,7 +4,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "Free Kubernetes, Docker, and DevOps practice labs. Learn locally — no cloud cluster required." } = Astro.props;
+const { title, description = "Learn Kubernetes and containers in your browser — simulated practice, no install required." } = Astro.props;
 ---
 
 <!doctype html>
@@ -15,16 +15,18 @@ const { title, description = "Free Kubernetes, Docker, and DevOps practice labs.
     <meta name="description" content={description} />
     <title>{title} | K8s Practice Lab</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Google AdSense: paste your script after approval -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script> -->
   </head>
   <body>
     <header class="site-header">
       <div class="container">
         <a class="logo" href="/">☸ K8s Practice Lab</a>
         <nav>
-          <a href="/learn/">Learn</a>
-          <a href="/labs/">Labs</a>
-          <a href="/about/">About</a>
-          <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
+          <a href="/learn.html">Learn</a>
+          <a href="/practice.html">Practice</a>
+          <a href="/progress.html">Progress</a>
+          <a href="/about.html">About</a>
         </nav>
       </div>
     </header>
@@ -34,8 +36,9 @@ const { title, description = "Free Kubernetes, Docker, and DevOps practice labs.
     <footer class="site-footer">
       <div class="container">
         <p>
-          Open learning project — real cluster practice runs on <strong>your laptop</strong> (kind/Docker).
-          <a href="/privacy/">Privacy</a>
+          Browser-based Kubernetes learning — simulated practice, no downloads required.
+          <a href="/privacy.html">Privacy</a> ·
+          <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
       </div>
     </footer>

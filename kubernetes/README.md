@@ -1,83 +1,47 @@
-# ☸️ Kubernetes & DevOps Practice Lab
+# ☸ Kubernetes Learning Platform
 
-Hands-on training for containers, Kubernetes, OpenShift, and observability — built to **level up your DevOps skills** and eventually support a **low-cost hosted learning site** (content + ads + digital products), without running real clusters in AWS.
+**Browser-based** Kubernetes and container fundamentals — learn concepts, practice simulated `kubectl`, pass quizzes. Host on AWS CloudFront (~$1–5/mo). No downloads. No cloud clusters for learners.
 
-> **Platform model:** Practice for real on your laptop (kind). Publish lab content as a static website on AWS (~$3–8/mo). Earn passively via AdSense, affiliates, and digital products. See [PLATFORM.md](PLATFORM.md) and [infra/README.md](infra/README.md).
+## For learners (zero install)
 
-## Quick start
+1. Open the site (local: `cd site && npm run dev`)
+2. **[Learn](site/)** → 7 modules with lessons + quizzes
+3. **[Practice](site/)** → simulated kubectl terminal + debug scenarios
+4. Progress saves in your browser automatically
 
-1. **Set up a local cluster** → [SETUP.md](SETUP.md)
-2. **Pick your level** → [curriculum/00-overview.md](curriculum/00-overview.md)
-3. **Do a lab** → [labs/](labs/)
-4. **Drill commands** → [drills/](drills/)
-5. **Track progress** → [PROGRESS.md](PROGRESS.md)
+## For you (hosting)
 
-## What you'll practice
+1. `cd kubernetes/infra/terraform` → `terraform apply`
+2. `cd ../..` → `infra/deploy-site.ps1 -Profile pet-projects`
+3. Share CloudFront URL
+4. Add Google AdSense script in `site/src/layouts/BaseLayout.astro` after approval
 
-| Area | Folder | Skills |
-|------|--------|--------|
-| Docker | [docker/](docker/) | Images, containers, Dockerfile, compose, debugging |
-| Kubernetes | [labs/](labs/) + [manifests/](manifests/) | Pods → Deployments → Services → Ingress → Storage → RBAC |
-| OpenShift | [openshift/](openshift/) | `oc` CLI, Routes, Projects, SCCs, templates |
-| Observability | [observability/](observability/) | Metrics, logs, traces, alerts, dashboards |
-| Command drills | [drills/](drills/) | Speed + muscle memory for `docker`, `kubectl`, `oc` |
-| Troubleshooting | [drills/troubleshooting-scenarios.md](drills/troubleshooting-scenarios.md) | Realistic break/fix scenarios |
+See [PLATFORM.md](PLATFORM.md) and [infra/README.md](infra/README.md).
 
-## Curriculum levels
+## What's in this folder
 
-| Level | Focus | Start here |
-|-------|-------|------------|
-| **L1 — Foundations** | Docker + first cluster + Pods/Deployments | [Lab 01](labs/lab-01-first-pod/) |
-| **L2 — Core K8s** | Services, ConfigMaps, Secrets, Ingress | [Lab 02](labs/lab-02-deployments-services/) |
-| **L3 — Production patterns** | Storage, RBAC, Helm, resource limits | [Lab 05](labs/lab-05-storage/) |
-| **L4 — Platform & OpenShift** | `oc`, Routes, Projects, platform ops | [OpenShift guide](openshift/README.md) |
-| **L5 — Observability** | Prometheus, Grafana, logging, alerting | [Lab 08](observability/lab-prometheus-grafana/) |
+| Path | Purpose |
+|------|---------|
+| **`site/`** | **The product** — Astro static site with simulator, modules, ads |
+| `infra/` | S3 + CloudFront Terraform (~$1–5/mo) |
+| `labs/`, `drills/`, `curriculum/` | Source material / optional real-cluster depth |
+| `manifests/`, `scripts/` | Optional: real local practice later (not required for learners) |
 
-Full syllabus: [curriculum/00-overview.md](curriculum/00-overview.md)
+## Cost model
 
-## Repo layout
+| Item | Cost |
+|------|------|
+| S3 + CloudFront | ~$1–5/mo |
+| EKS / EC2 / Lambda | **$0** — not used |
+| Learner installs | **$0** — browser only |
 
-```
-kubernetes/
-  PLATFORM.md           # Architecture, costs, monetization, safeguards
-  CONTRIBUTING.md       # How others fork, contribute, and self-host
-  SETUP.md              # Local cluster setup (kind, minikube, Docker Desktop, CRC)
-  PROGRESS.md           # Your checklist — mark labs and drills complete
-  infra/                # Terraform (S3 + CloudFront only) + deploy script
-  site/                 # Astro static site → build & deploy to S3
-  curriculum/           # Concept guides by topic and level
-  labs/                 # Step-by-step hands-on exercises (local cluster only)
-  drills/               # Command practice + troubleshooting scenarios
-  manifests/            # LOCAL ONLY YAML — see manifests/LOCAL-ONLY.md
-  docker/               # Container fundamentals before/alongside k8s
-  openshift/            # OpenShift-specific practice
-  observability/        # Monitoring & observability labs
-  scripts/              # Local kind bootstrap only
-```
+## Monetization
 
-## Daily practice routine (30–45 min)
+1. Publish useful content (modules + practice scenarios)
+2. Grow traffic (SEO, share, build in public)
+3. Google AdSense (after ~15 pages + privacy policy)
+4. Optional: affiliate resources page, PDF cheat sheet
 
-1. **5 min** — Pick 5 commands from a drill sheet; run them without looking.
-2. **20 min** — Work through one lab step or one troubleshooting scenario.
-3. **10 min** — Write one thing you learned in [notes/](notes/) (create as you go).
+## Optional: real cluster later
 
-## Certification alignment (optional)
-
-This lab covers topics found in:
-
-- **CKA** (Certified Kubernetes Administrator) — cluster ops, troubleshooting, networking, storage
-- **CKAD** (Certified Kubernetes Application Developer) — workloads, config, observability basics
-- **EX180 / EX280** (Red Hat OpenShift) — containers, `oc`, platform deployment
-
-You don't need to sit an exam to benefit — the labs map to real on-the-job skills.
-
-## End goal
-
-Deploy something from another track (`games/`, `poker/`, `stocks/`) to your cluster with:
-
-- Dockerfile + health checks
-- Kubernetes manifests or Helm chart
-- Metrics and logs wired to an observability stack
-- Documented runbook in the project's README
-
-That is a complete **deployable + observable** story for your portfolio.
+When you're ready to deploy professionally, use `scripts/setup-kind.ps1` and `labs/` for real hands-on. The website teaches the **why** first; kind teaches the **real feel**.

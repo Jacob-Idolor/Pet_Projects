@@ -1,22 +1,27 @@
 # Copy to terraform.tfvars and edit before terraform apply.
-# Bucket names must be globally unique across all AWS accounts.
+# NEVER commit terraform.tfvars (contains email / account hints).
 
-aws_region       = "us-east-1"
+aws_profile  = "pet-projects"
+aws_region   = "us-west-2"
+
 project_name     = "k8s-practice"
-site_bucket_name = "YOUR-UNIQUE-BUCKET-NAME-here"
+
+# REQUIRED: must match IAM policy prefix (pet-projects-*)
+required_bucket_prefix = "pet-projects-"
+site_bucket_name       = "pet-projects-jacob-k8s-lab"
+
+# REQUIRED: lock Terraform to YOUR account
+# Get ID: aws sts get-caller-identity --profile pet-projects
+allowed_account_ids = ["123456789012"]
 
 # Cheapest path: CloudFront URL only (no Route53 charges)
 enable_custom_domain = false
 
-# Optional — enables Route53 + ACM (extra ~$1-2/mo + domain cost)
-# enable_custom_domain = true
-# domain_name          = "learn.yourdomain.com"
-# route53_zone_id      = "Z1234567890ABC"
+# Budget email alerts (set enable_budget = false if apply fails on permissions)
+enable_budget        = true
+budget_alert_email   = "you@example.com"
+monthly_budget_usd   = 5
+max_monthly_budget_usd = 25
 
-# Budget email alerts (disable if terraform apply fails on permissions)
-enable_budget      = true
-budget_alert_email = "you@example.com"
-monthly_budget_usd = 5
-
-# Cheapest CloudFront edge locations
+# Cost safeguards (prevent_destroy is hardcoded true in main.tf)
 cloudfront_price_class = "PriceClass_100"

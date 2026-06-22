@@ -4,30 +4,30 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
 <BaseLayout title="About">
   <section class="hero container prose">
-    <h1>About this project</h1>
+    <h1>About K8s Practice Lab</h1>
     <p class="lead">
-      A free, open-source Kubernetes and DevOps practice lab — built in public as part of
-      <a href="https://github.com/Jacob-Idolor/Pet_Projects">Pet Projects</a>.
+      A free learning platform for <strong>containers and Kubernetes fundamentals</strong> —
+      entirely in your browser. No installs. No cloud cluster required.
     </p>
 
-    <h2>Philosophy</h2>
+    <h2>How it works</h2>
     <ul>
-      <li><strong>Local-first</strong> — real clusters on your laptop, not expensive shared sandboxes</li>
-      <li><strong>Deployable mindset</strong> — every skill ties to production patterns</li>
-      <li><strong>Open</strong> — fork it, host your own copy, contribute labs and fixes</li>
+      <li><strong>Learn</strong> — 7 modules from Docker concepts to production patterns</li>
+      <li><strong>Practice</strong> — simulated kubectl with realistic cluster states</li>
+      <li><strong>Quiz</strong> — check understanding after each module</li>
+      <li><strong>Progress</strong> — saved locally in your browser</li>
     </ul>
 
-    <h2>Fork & host your own</h2>
+    <h2>Simulation vs real clusters</h2>
     <p>
-      The static site deploys to S3 + CloudFront for roughly <strong>$1–5/month</strong>.
-      See the <a href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/infra">infra folder</a>
-      for Terraform with cost safeguards (no EKS/EC2).
+      This site teaches you <em>what</em> commands do and <em>why</em> — so when you deploy to a real
+      cluster (locally or in the cloud), you already understand Pods, Deployments, Services, and debugging.
     </p>
 
-    <h2>Contribute</h2>
+    <h2>Built in public</h2>
     <p>
-      Issues and PRs welcome — new labs, typo fixes, better break/fix scenarios.
-      See <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/CONTRIBUTING.md">CONTRIBUTING.md</a>.
+      Open source on <a href="https://github.com/Jacob-Idolor/Pet_Projects">GitHub</a>.
+      Fork it, host your own copy on AWS (~$1–5/mo), improve it, share it.
     </p>
   </section>
 </BaseLayout>

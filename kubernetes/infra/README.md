@@ -6,6 +6,39 @@ Low-cost hosting for the public learning site. This stack **cannot** create EKS,
 
 ---
 
+## Safeguards built into Terraform
+
+| Safeguard | What it does |
+|-----------|----------------|
+| `allowed_account_ids` | Refuses apply if AWS CLI is logged into the wrong account |
+| `required_bucket_prefix` | Bucket must start with `pet-projects-` (matches IAM) |
+| `check` blocks | Fail plan/apply on bad domain config, region, budget typos |
+| `PriceClass_100` only | Cheapest CloudFront edges — validation blocks expensive classes |
+| `prevent_destroy` | S3 + CloudFront hardcoded `true` in `main.tf` — edit file to `false` before destroy |
+| No WAF / Lambda@Edge | Not in this stack — avoids paid extras |
+| S3 public access block | Bucket never public; CloudFront OAC only |
+| Budget alerts | 50%, 80% forecast, 100% actual (optional) |
+
+After pulling updates, edit `terraform.tfvars`:
+
+```hcl
+allowed_account_ids    = ["YOUR_ACCOUNT_ID"]
+required_bucket_prefix = "pet-projects-"
+site_bucket_name       = "pet-projects-yourname-k8s-lab"
+cloudfront_price_class = "PriceClass_100"
+```
+
+Then:
+
+```powershell
+terraform plan   # must pass all checks before apply
+terraform apply
+```
+
+To tear down later: edit `main.tf` and set `prevent_destroy = false` on the S3 bucket and CloudFront distribution, then `terraform apply` and `terraform destroy`.
+
+---
+
 ## Before you run anything
 
 1. Create a **billing budget** in AWS Console → Billing → Budgets → **$5/month** with email alerts.

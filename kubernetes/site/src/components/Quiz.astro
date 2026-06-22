@@ -1,0 +1,91 @@
+---
+import type { QuizQ } from "../data/modules";
+
+interface Props {
+  questions: QuizQ[];
+  moduleId: string;
+}
+
+const { questions, moduleId } = Astro.props;
+---
+
+<div class="quiz" data-quiz data-module={moduleId} data-answers={JSON.stringify(questions)}>
+  {questions.map((q, qi) => (
+    <fieldset class="quiz-item" data-q={qi}>
+      <legend>{qi + 1}. {q.question}</legend>
+      {q.options.map((opt, oi) => (
+        <label class="quiz-option">
+          <input type="radio" name={`q-${moduleId}-${qi}`} value={oi} />
+          {opt}
+        </label>
+      ))}
+      <p class="quiz-feedback" hidden data-feedback></p>
+    </fieldset>
+  ))}
+  <button type="button" class="btn btn-primary" data-check>Check answers</button>
+  <p class="quiz-score" data-score hidden></p>
+</div>
+
+<script>
+  document.querySelectorAll("[data-quiz]").forEach((root) => {
+    const moduleId = (root as HTMLElement).dataset.module!;
+    const key = `k8s-quiz-${moduleId}`;
+    const btn = root.querySelector("[data-check]") as HTMLButtonElement;
+    const scoreEl = root.querySelector("[data-score]") as HTMLElement;
+
+    btn.addEventListener("click", () => {
+      const items = root.querySelectorAll(".quiz-item");
+      let correct = 0;
+      items.forEach((item) => {
+        const qi = Number((item as HTMLElement).dataset.q);
+        const selected = item.querySelector("input:checked") as HTMLInputElement | null;
+        const feedback = item.querySelector("[data-feedback]") as HTMLElement;
+        feedback.hidden = false;
+        if (!selected) {
+          feedback.textContent = "Pick an answer.";
+          feedback.className = "quiz-feedback wrong";
+          return;
+        }
+        const questions = JSON.parse(root.getAttribute("data-answers") || "[]");
+        const q = questions[qi];
+        if (Number(selected.value) === q.correct) {
+          correct++;
+          feedback.textContent = `✓ ${q.explain}`;
+          feedback.className = "quiz-feedback right";
+        } else {
+          feedback.textContent = `✗ ${q.explain}`;
+          feedback.className = "quiz-feedback wrong";
+        }
+      });
+      scoreEl.hidden = false;
+      scoreEl.textContent = `Score: ${correct} / ${items.length}`;
+      if (correct === items.length) {
+        localStorage.setItem(key, "passed");
+        scoreEl.textContent += " — saved to your progress!";
+      }
+    });
+  });
+</script>
+
+<style>
+  .quiz { margin: 2rem 0; }
+  .quiz-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    background: var(--surface);
+  }
+  .quiz-item legend { font-weight: 600; margin-bottom: 0.75rem; }
+  .quiz-option {
+    display: block;
+    padding: 0.4rem 0;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .quiz-option:hover { color: var(--accent); }
+  .quiz-feedback { margin-top: 0.75rem; font-size: 0.9rem; }
+  .quiz-feedback.right { color: var(--success); }
+  .quiz-feedback.wrong { color: #f87171; }
+  .quiz-score { margin-top: 1rem; font-weight: 600; }
+</style>

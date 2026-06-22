@@ -1,18 +1,47 @@
 variable "aws_region" {
   description = "Primary AWS region for S3 bucket"
   type        = string
-  default     = "us-east-1"
+  default     = "us-west-2"
+}
+
+variable "aws_profile" {
+  description = "AWS CLI profile name (must match aws configure --profile ...)"
+  type        = string
+  default     = "pet-projects"
+}
+
+variable "allowed_regions" {
+  description = "Regions Terraform is allowed to use (safeguard against wrong-region deploys)"
+  type        = list(string)
+  default     = ["us-east-1", "us-west-2"]
+}
+
+variable "allowed_account_ids" {
+  description = "REQUIRED for production safety: your AWS account ID(s). Refuses apply if CLI credentials are for a different account."
+  type        = list(string)
+  default     = []
 }
 
 variable "project_name" {
   description = "Prefix for resource names"
   type        = string
   default     = "k8s-practice"
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.project_name))
+    error_message = "project_name must be lowercase letters, numbers, and hyphens only."
+  }
 }
 
 variable "site_bucket_name" {
-  description = "Globally unique S3 bucket name for static site"
+  description = "Globally unique S3 bucket name for static site (must match required_bucket_prefix)"
   type        = string
+}
+
+variable "required_bucket_prefix" {
+  description = "Bucket name prefix — must match IAM policy (e.g. pet-projects-)"
+  type        = string
+  default     = "pet-projects-"
 }
 
 variable "enable_custom_domain" {
@@ -39,10 +68,17 @@ variable "monthly_budget_usd" {
   default     = 5
 }
 
+variable "max_monthly_budget_usd" {
+  description = "Upper cap for budget alert variable (safeguard against typos like 5000)"
+  type        = number
+  default     = 25
+}
+
 variable "budget_alert_email" {
   description = "Email for budget alerts. Required for budget resource."
   type        = string
   default     = ""
+  sensitive   = true
 }
 
 variable "enable_budget" {
@@ -52,12 +88,18 @@ variable "enable_budget" {
 }
 
 variable "cloudfront_price_class" {
-  description = "PriceClass_100 = US/EU only (cheapest). PriceClass_All = global."
+  description = "PriceClass_100 = US/EU only (cheapest). PriceClass_All = global (costs more)."
   type        = string
   default     = "PriceClass_100"
 
   validation {
-    condition     = contains(["PriceClass_100", "PriceClass_200", "PriceClass_All"], var.cloudfront_price_class)
-    error_message = "Use PriceClass_100, PriceClass_200, or PriceClass_All."
+    condition     = var.cloudfront_price_class == "PriceClass_100"
+    error_message = "This project only allows PriceClass_100 (cheapest). Remove this validation deliberately if you need global edges."
   }
+}
+
+variable "enable_prevent_destroy" {
+  description = "Documentation flag only — actual prevent_destroy is hardcoded true in main.tf (Terraform requires a literal). Set false here to remind yourself you edited main.tf before destroy."
+  type        = bool
+  default     = true
 }

@@ -1,0 +1,34 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Your progress">
+  <section class="hero container prose">
+    <h1>Your progress</h1>
+    <p class="lead">Saved in your browser — no account required.</p>
+    <ul id="progress-list" data-progress>
+      <li>Loading…</li>
+    </ul>
+    <p class="muted">Clear browser data resets progress.</p>
+  </section>
+</BaseLayout>
+
+<script>
+  const modules = ["containers", "pods", "deployments", "config", "networking", "storage", "production"];
+  const list = document.querySelector("[data-progress]")!;
+  const missions = JSON.parse(localStorage.getItem("k8s-missions") || "[]");
+  const items: string[] = [];
+
+  modules.forEach((id) => {
+    const quiz = localStorage.getItem(`k8s-quiz-${id}`) === "passed" ? "✓" : "○";
+    items.push(`${quiz} Module: ${id}`);
+  });
+
+  items.push("", `Missions completed: ${missions.length}`);
+  list.innerHTML = items.map((i) => (i ? `<li>${i}</li>` : "<li><br></li>")).join("");
+</script>
+
+<style>
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  #progress-list { line-height: 1.8; }
+</style>

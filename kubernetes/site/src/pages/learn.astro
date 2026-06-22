@@ -1,0 +1,39 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AdSlot from "../components/AdSlot.astro";
+import { modules } from "../data/modules";
+---
+
+<BaseLayout title="Learn" description="Free Kubernetes and container fundamentals — interactive modules in your browser.">
+  <section class="hero container prose">
+    <h1>Learn Kubernetes fundamentals</h1>
+    <p class="lead">
+      Seven modules from containers to production patterns. Read, quiz yourself, and practice
+      <strong>simulated kubectl</strong> — all in the browser. Nothing to install.
+    </p>
+  </section>
+
+  <section class="container">
+    <AdSlot slot="learn-top" />
+  </section>
+
+  <section class="container card-grid">
+    {modules.map((m) => (
+      <article class="card">
+        <span class="badge">Module {m.order} · {m.time}</span>
+        <h3>{m.title}</h3>
+        <p>{m.subtitle}</p>
+        <p><a class="btn btn-primary" href={`/modules/${m.id}.html`}>Start module →</a></p>
+      </article>
+    ))}
+  </section>
+
+  <section class="container prose">
+    <div class="callout">
+      <p>
+        Progress (quizzes + missions) saves in your browser via localStorage.
+        Deploy this site to CloudFront to share it publicly — ~$1–5/month on AWS.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

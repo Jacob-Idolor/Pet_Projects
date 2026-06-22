@@ -1,5 +1,33 @@
+# Static site stack ONLY — S3 + CloudFront (+ optional Route53/ACM/budget).
+# Safeguard checks: safeguards.tf | Run: terraform plan before every apply.
+
 resource "aws_s3_bucket" "site" {
   bucket = var.site_bucket_name
+
+  lifecycle {
+    prevent_destroy = false
+    # AWS provider v4+ moved these to separate resources — ignore legacy inline
+    # attributes so Terraform does not try to replace the bucket on migration.
+    ignore_changes = [
+      cors_rule,
+      grant,
+      lifecycle_rule,
+      logging,
+      object_lock_configuration,
+      replication_configuration,
+      server_side_encryption_configuration,
+      versioning,
+      website,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "site" {
+  bucket = aws_s3_bucket.site.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
@@ -9,6 +37,8 @@ resource "aws_s3_bucket_public_access_block" "site" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+
+  depends_on = [aws_s3_bucket_ownership_controls.site]
 }
 
 resource "aws_s3_bucket_versioning" "site" {
@@ -17,6 +47,8 @@ resource "aws_s3_bucket_versioning" "site" {
   versioning_configuration {
     status = "Disabled"
   }
+
+  depends_on = [aws_s3_bucket_ownership_controls.site]
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
@@ -25,6 +57,22 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "site" {
+  bucket = aws_s3_bucket.site.id
+
+  rule {
+    id     = "abort-incomplete-uploads"
+    status = "Enabled"
+
+    filter {}
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
     }
   }
 }
@@ -39,9 +87,14 @@ resource "aws_cloudfront_origin_access_control" "site" {
 resource "aws_cloudfront_distribution" "site" {
   enabled             = true
   is_ipv6_enabled     = true
-  comment             = "${var.project_name} static learning site"
+  comment             = "${var.project_name} static learning site (no compute)"
   default_root_object = "index.html"
   price_class         = var.cloudfront_price_class
+  http_version        = "http2and3"
+  wait_for_deployment = true
+
+  # No WAF (paid), no CloudFront Functions (denied in IAM), no Lambda@Edge
+  web_acl_id = null
 
   origin {
     domain_name              = aws_s3_bucket.site.bucket_regional_domain_name
@@ -78,6 +131,10 @@ resource "aws_cloudfront_distribution" "site" {
   }
 
   aliases = var.enable_custom_domain ? [var.domain_name] : []
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 resource "aws_s3_bucket_policy" "site" {
@@ -87,7 +144,7 @@ resource "aws_s3_bucket_policy" "site" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowCloudFrontServicePrincipal"
+        Sid       = "AllowCloudFrontServicePrincipalReadOnly"
         Effect    = "Allow"
         Principal = { Service = "cloudfront.amazonaws.com" }
         Action    = "s3:GetObject"
@@ -100,6 +157,8 @@ resource "aws_s3_bucket_policy" "site" {
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket_public_access_block.site]
 }
 
 # Optional custom domain — extra cost (Route53 + domain registration)
@@ -109,6 +168,10 @@ resource "aws_acm_certificate" "site" {
   provider          = aws.us_east_1
   domain_name       = var.domain_name
   validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_route53_record" "cert_validation" {
@@ -149,7 +212,6 @@ resource "aws_route53_record" "site" {
   }
 }
 
-# Budget alert — fails if IAM lacks billing permissions; set enable_budget = false
 resource "aws_budgets_budget" "monthly" {
   count = var.enable_budget && var.budget_alert_email != "" ? 1 : 0
 
@@ -158,6 +220,14 @@ resource "aws_budgets_budget" "monthly" {
   limit_amount = tostring(var.monthly_budget_usd)
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 50
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
 
   notification {
     comparison_operator        = "GREATER_THAN"
@@ -173,5 +243,9 @@ resource "aws_budgets_budget" "monthly" {
     threshold_type             = "PERCENTAGE"
     notification_type          = "ACTUAL"
     subscriber_email_addresses = [var.budget_alert_email]
+  }
+
+  lifecycle {
+    prevent_destroy = false
   }
 }

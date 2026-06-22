@@ -1,0 +1,31 @@
+---
+interface Props {
+  slot?: string;
+  label?: string;
+}
+
+const { slot = "placeholder", label = "Advertisement" } = Astro.props;
+---
+
+<!-- Enable after Google AdSense approval — replace with your ad unit script -->
+<div class="ad-slot" data-ad-slot={slot} aria-label={label}>
+  <span class="ad-label">{label}</span>
+</div>
+
+<style>
+  .ad-slot {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    text-align: center;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ad-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>
