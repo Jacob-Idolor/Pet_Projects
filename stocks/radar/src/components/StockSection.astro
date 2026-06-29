@@ -1,0 +1,35 @@
+---
+import type { StockCategory } from "../data/watchlist";
+import { categoryLabels, stocksByCategory } from "../data/watchlist";
+import StockCard from "./StockCard.astro";
+
+interface Props {
+  category: StockCategory;
+}
+
+const { category } = Astro.props;
+const info = categoryLabels[category];
+const items = stocksByCategory(category);
+---
+
+<section class="section" id={category}>
+  <div class="section-header">
+    <span class="section-icon">{info.icon}</span>
+    <div>
+      <h2>{info.title}</h2>
+      <p>{info.description}</p>
+    </div>
+  </div>
+
+  {
+    items.length > 0 ? (
+      <div class="stock-grid">
+        {items.map((stock) => (
+          <StockCard stock={stock} />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-holdings">No tickers here yet — add some in <code>src/data/watchlist.ts</code>.</p>
+    )
+  }
+</section>

@@ -29,7 +29,8 @@ Every project in this repo aims to meet this bar:
 
 | Project | Track | Status | Deployed |
 |---------|-------|--------|----------|
-| _Coming soon_ | — | — | — |
+| [Stocks Radar](stocks/radar/) | 📈 Stocks | Active | Local / static |
+| [K8s Practice Lab](kubernetes/site/) | ☸️ Kubernetes | Active | S3 + CloudFront |
 
 > Previous projects (BallStats, stock-buy-bot, PokerGTO, and more) are preserved in git history — see the [`pre-reset-archive`](../../tree/pre-reset-archive) tag.
 
