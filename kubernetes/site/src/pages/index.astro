@@ -8,7 +8,11 @@ import { labs, filters } from "../data/lab-hub";
   <section class="hero container hub-hero">
     <h1>Lab Hub</h1>
     <p class="lead">Pick a lab and start practicing. Everything lives here — browser simulators, modules, debug scenarios, and local cluster guides.</p>
-    <p class="hub-stats">{labs.length} labs · Browser or local · Progress saved automatically</p>
+    <p class="hub-stats" id="hub-stats">{labs.length} labs · Browser or local · <a href="/progress.html">Track progress</a></p>
+    <div class="hub-progress" id="hub-progress" hidden>
+      <div class="hub-progress-bar"><div class="hub-progress-fill" id="hub-progress-fill"></div></div>
+      <span class="hub-progress-text" id="hub-progress-text"></span>
+    </div>
   </section>
 
   <section class="container">
@@ -37,16 +41,44 @@ import { labs, filters } from "../data/lab-hub";
       <p>
         <strong>Local setup:</strong> Browser labs need no install. For local cluster labs run
         <code>make docker-lab</code> or <code>make local-lab</code> from the repo.
-        Track progress on <a href="/progress.html">Progress</a>.
+        Track progress on <a href="/progress.html">Tracker</a>.
       </p>
     </div>
   </section>
 </BaseLayout>
 
 <script>
+  import { loadProgress, isComplete, syncAutoCompletions, saveProgress } from "../lib/progress-store";
+
   const buttons = document.querySelectorAll(".filter-btn");
   const cards = document.querySelectorAll(".lab-card");
   const emptyMsg = document.getElementById("empty-msg")!;
+
+  let progress = syncAutoCompletions(loadProgress());
+  saveProgress(progress);
+
+  const totalLabs = cards.length;
+  const doneLabs = [...cards].filter((c) => isComplete(progress, (c as HTMLElement).dataset.labId!)).length;
+  const pct = totalLabs ? Math.round((doneLabs / totalLabs) * 100) : 0;
+
+  const hubProgress = document.getElementById("hub-progress")!;
+  hubProgress.hidden = false;
+  document.getElementById("hub-progress-fill")!.style.width = `${pct}%`;
+  document.getElementById("hub-progress-text")!.textContent = `${doneLabs} / ${totalLabs} labs complete (${pct}%)`;
+
+  cards.forEach((card) => {
+    const id = (card as HTMLElement).dataset.labId!;
+    if (isComplete(progress, id)) {
+      card.classList.add("task-complete");
+      const badges = card.querySelector(".lab-badges");
+      if (badges && !badges.querySelector(".complete-badge")) {
+        const span = document.createElement("span");
+        span.className = "complete-badge";
+        span.textContent = "✓ Done";
+        badges.prepend(span);
+      }
+    }
+  });
 
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -125,6 +157,31 @@ import { labs, filters } from "../data/lab-hub";
     text-align: center;
     color: var(--muted);
     padding: 2rem;
+  }
+  .hub-stats a {
+    color: var(--accent);
+  }
+  .hub-progress {
+    max-width: 320px;
+    margin: 1rem auto 0;
+    text-align: center;
+  }
+  .hub-progress-bar {
+    height: 6px;
+    background: #0a0e12;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.35rem;
+  }
+  .hub-progress-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .hub-progress-text {
+    font-size: 0.8rem;
+    color: var(--muted);
   }
   .hub-footer {
     padding-bottom: 3rem;

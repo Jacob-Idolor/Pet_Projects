@@ -9,7 +9,7 @@ const { lab } = Astro.props;
 const isExternal = lab.href.startsWith("http");
 ---
 
-<article class="lab-card" data-category={lab.category}>
+<article class="lab-card" data-category={lab.category} data-lab-id={lab.id}>
   <div class="lab-card-top">
     <span class="lab-icon">{lab.icon}</span>
     <div class="lab-badges">
@@ -90,6 +90,14 @@ const isExternal = lab.href.startsWith("http");
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     color: var(--success);
+  }
+  .lab-card.task-complete {
+    border-color: rgba(34, 197, 94, 0.4);
+  }
+  .lab-card.task-complete .lab-start {
+    background: var(--surface);
+    color: var(--success);
+    border: 1px solid rgba(34, 197, 94, 0.4);
   }
   .lab-start {
     margin-top: 0.5rem;

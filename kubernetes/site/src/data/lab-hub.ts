@@ -145,6 +145,7 @@ export const labs: LabEntry[] = [
     time: "∞",
     href: "/practice.html",
     icon: "💻",
+    difficulty: "beginner",
   },
   // Troubleshoot — browser
   {
