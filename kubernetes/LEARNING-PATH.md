@@ -42,6 +42,17 @@ Run the site locally: `make site-dev` → http://localhost:4321
 4. **Repeat drills** — `drills/kubectl-commands.md` until commands are automatic.
 5. **Export your progress** — Tracker → Export backup so you don't lose checkmarks.
 
+## Completion certificate
+
+When you finish **all 24 core labs** (mark them in Tracker), unlock:
+
+- **Printable PDF certificate** — `/certificate.html` → Download PDF (Print)
+- **Credential ID** — unique ID based on your completed tasks
+- **LinkedIn copy-paste** — certification description, post text, and suggested skills
+- **JSON proof export** — backup file listing everything you completed
+
+Full program (33 tasks including advanced challenges) earns a **Distinction** line on the certificate.
+
 ## When you're stuck
 
 | Symptom | First command |

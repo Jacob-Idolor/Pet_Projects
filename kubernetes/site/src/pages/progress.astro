@@ -71,6 +71,9 @@ import {
         <strong>Tip:</strong> Quizzes and simulator missions auto-check when you complete them in the browser.
         Local cluster labs — mark done manually when you finish the README steps.
       </p>
+      <p id="cert-link-wrap" hidden>
+        🎓 Core labs complete — <a href="/certificate.html">Get your certificate &amp; LinkedIn text →</a>
+      </p>
     </div>
   </section>
 </BaseLayout>
@@ -89,6 +92,7 @@ import {
     countByCategory,
     emptyProgress,
   } from "../lib/progress-store";
+  import { getCertificateStatus } from "../lib/certificate";
 
   const trackables = JSON.parse(trackablesJson);
   const categoryLabels = JSON.parse(categoryLabelsJson);
@@ -145,6 +149,12 @@ import {
       document.getElementById("next-up-text")!.innerHTML = `Try <a href="${next.href}"${isExt ? ' target="_blank" rel="noopener"' : ""}><strong>${next.title}</strong></a> (${difficultyLabels[next.difficulty]}) — ${next.description}`;
     } else {
       nextUp.hidden = true;
+      document.getElementById("cert-link-wrap")!.hidden = false;
+    }
+
+    const certStatus = getCertificateStatus(progress, trackables);
+    if (certStatus.eligible) {
+      document.getElementById("cert-link-wrap")!.hidden = false;
     }
   }
 
