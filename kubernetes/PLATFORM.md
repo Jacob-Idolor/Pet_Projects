@@ -2,53 +2,56 @@
 
 ## What this is
 
-A **browser-based Kubernetes learning site** hosted on AWS S3 + CloudFront:
+A **Kubernetes learning lab** with two complementary modes:
 
-- 7 interactive modules (concepts + quizzes)
-- Simulated `kubectl` terminal (no real cluster)
-- Debug scenarios (CrashLoopBackOff, broken endpoints)
-- Ad-ready layout for Google AdSense
-- **~$1–5/month** AWS cost — no EKS, no EC2, no learner downloads
+1. **Browser lab** (`site/`) — modules, quizzes, simulated kubectl, debug scenarios
+2. **Local lab** (`scripts/` + `labs/`) — real kind cluster on localhost for hands-on practice
+3. **AWS hosting** (`infra/`) — optional S3 + CloudFront to publish the site (~$1–5/mo)
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     YOUR LEARNING FLOW                       │
+├─────────────────────────────────────────────────────────────┤
+│  site/ (browser)     scripts/ + labs/ (localhost)           │
+│  ┌──────────────┐    ┌──────────────┐                        │
+│  │ 7 modules    │    │ kind cluster │                        │
+│  │ quizzes      │───▶│ real kubectl │                        │
+│  │ kubectl sim  │    │ YAML labs    │                        │
+│  └──────────────┘    └──────────────┘                        │
+│         │                    │                               │
+│         └────────┬───────────┘                               │
+│                  ▼                                           │
+│         manifests/ + drills/ + curriculum/                   │
+└─────────────────────────────────────────────────────────────┘
+                          │
+              optional: infra/terraform
+                          ▼
+              S3 + CloudFront (public URL)
+```
 
 ## What learners do
 
-1. Visit your CloudFront URL
-2. Read a module
-3. Practice commands in the simulator
-4. Pass the quiz
-5. Repeat — progress saved in browser localStorage
-
-## What learners do NOT need
-
-- Docker, kind, kubectl installed
-- AWS account
-- Git clone
-- Paid cloud Kubernetes
-
-## Your path to professional deploys
-
 | Stage | Where | Goal |
 |-------|-------|------|
-| 1 | **This website** | Understand concepts + commands |
-| 2 | Optional `labs/` + kind | Real cluster muscle memory |
-| 3 | Your apps + Terraform | Professional deployment |
+| 1 | **Browser site** | Concepts, commands, quizzes — no install |
+| 2 | **Local kind** | Real cluster muscle memory |
+| 3 | **Your apps** | Deploy professionally with confidence |
 
-## Monetization
-
-1. Content first (modules, scenarios, SEO)
-2. Deploy to CloudFront
-3. Apply for AdSense after traffic
-4. Affiliates / PDF products later
-
-**Do not** pay for Google Ads until you have conversion data.
-
-## AWS stack (only this)
+## AWS stack (hosting only)
 
 - S3 (private) + CloudFront OAC
 - Optional Route 53 custom domain
-- Optional $5 budget alert
-- **Nothing else**
+- Optional budget alert ($5)
+- **No EKS** — local kind is the practice cluster
 
-## Sharing
+## Entry points
 
-Fork → own AWS account → own ~$1–5/mo bill. See [CONTRIBUTING.md](CONTRIBUTING.md).
+```bash
+make site-dev      # browser @ :4321
+make local-lab     # kind + instructions
+make aws-deploy    # publish site
+```
+
+See [QUICKSTART.md](QUICKSTART.md).

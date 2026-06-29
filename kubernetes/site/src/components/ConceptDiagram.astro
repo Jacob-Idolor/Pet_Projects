@@ -1,0 +1,138 @@
+---
+// Visual learning aids — inline SVG, no dependencies
+---
+
+<section class="diagram-section">
+  <h3>Kubernetes object model</h3>
+  <p class="diagram-caption">How the pieces connect — click through modules to practice each layer.</p>
+  <svg viewBox="0 0 720 280" class="k8s-diagram" role="img" aria-label="Kubernetes object hierarchy">
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6" />
+      </marker>
+    </defs>
+    <!-- Deployment -->
+    <rect x="20" y="20" width="140" height="56" rx="8" class="box box-accent" />
+    <text x="90" y="44" text-anchor="middle" class="label">Deployment</text>
+    <text x="90" y="62" text-anchor="middle" class="sublabel">desired state</text>
+    <!-- ReplicaSet -->
+    <rect x="200" y="20" width="140" height="56" rx="8" class="box" />
+    <text x="270" y="44" text-anchor="middle" class="label">ReplicaSet</text>
+    <text x="270" y="62" text-anchor="middle" class="sublabel">keeps N pods</text>
+    <!-- Pods -->
+    <rect x="380" y="10" width="100" height="40" rx="6" class="box box-pod" />
+    <text x="430" y="35" text-anchor="middle" class="label-sm">Pod</text>
+    <rect x="380" y="56" width="100" height="40" rx="6" class="box box-pod" />
+    <text x="430" y="81" text-anchor="middle" class="label-sm">Pod</text>
+    <rect x="380" y="102" width="100" height="40" rx="6" class="box box-pod" />
+    <text x="430" y="127" text-anchor="middle" class="label-sm">Pod</text>
+    <!-- Container inside pod -->
+    <rect x="520" y="56" width="180" height="40" rx="6" class="box box-container" />
+    <text x="610" y="81" text-anchor="middle" class="label-sm">Container (from Image)</text>
+    <!-- Service -->
+    <rect x="200" y="180" width="160" height="56" rx="8" class="box box-service" />
+    <text x="280" y="204" text-anchor="middle" class="label">Service</text>
+    <text x="280" y="222" text-anchor="middle" class="sublabel">stable network endpoint</text>
+    <!-- Ingress -->
+    <rect x="20" y="180" width="140" height="56" rx="8" class="box" />
+    <text x="90" y="204" text-anchor="middle" class="label">Ingress</text>
+    <text x="90" y="222" text-anchor="middle" class="sublabel">HTTP routing</text>
+    <!-- Arrows -->
+    <line x1="160" y1="48" x2="198" y2="48" class="arrow" marker-end="url(#arrow)" />
+    <line x1="340" y1="48" x2="378" y2="48" class="arrow" marker-end="url(#arrow)" />
+    <line x1="480" y1="76" x2="518" y2="76" class="arrow" marker-end="url(#arrow)" />
+    <line x1="430" y1="142" x2="430" y2="168" class="arrow" marker-end="url(#arrow)" />
+    <line x1="430" y1="168" x2="280" y2="178" class="arrow" marker-end="url(#arrow)" />
+    <line x1="160" y1="208" x2="198" y2="208" class="arrow" marker-end="url(#arrow)" />
+    <!-- Labels -->
+    <text x="360" y="170" class="hint">selector labels</text>
+  </svg>
+</section>
+
+<section class="diagram-section">
+  <h3>Two ways to practice</h3>
+  <p class="diagram-caption">Use both: learn concepts in the browser, then run real commands on localhost.</p>
+  <div class="path-grid">
+    <article class="path-card path-browser">
+      <span class="path-icon">🌐</span>
+      <h4>Browser lab</h4>
+      <p>Modules, quizzes, simulated kubectl. Zero install.</p>
+      <code>make site-dev</code>
+    </article>
+    <article class="path-card path-local">
+      <span class="path-icon">💻</span>
+      <h4>Local cluster</h4>
+      <p>Real kind cluster on your machine. Hands-on labs.</p>
+      <code>make local-lab</code>
+    </article>
+    <article class="path-card path-aws">
+      <span class="path-icon">☁️</span>
+      <h4>AWS hosting</h4>
+      <p>Publish the learning site. S3 + CloudFront only.</p>
+      <code>make aws-deploy</code>
+    </article>
+  </div>
+</section>
+
+<style>
+  .diagram-section {
+    margin: 2.5rem 0;
+  }
+  .diagram-section h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.15rem;
+  }
+  .diagram-caption {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 1rem;
+  }
+  .k8s-diagram {
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.5rem;
+  }
+  .box {
+    fill: #1a2332;
+    stroke: var(--border);
+    stroke-width: 1.5;
+  }
+  .box-accent { stroke: var(--accent); }
+  .box-pod { fill: #152a1f; stroke: #22c55e; }
+  .box-container { fill: #1f2a3d; stroke: #8b9bb4; }
+  .box-service { fill: #1a2540; stroke: #3b82f6; }
+  .label { fill: var(--text); font-size: 13px; font-weight: 600; font-family: "DM Sans", sans-serif; }
+  .label-sm { fill: var(--text); font-size: 11px; font-family: "DM Sans", sans-serif; }
+  .sublabel { fill: var(--muted); font-size: 10px; font-family: "DM Sans", sans-serif; }
+  .hint { fill: var(--muted); font-size: 10px; font-family: "DM Sans", sans-serif; }
+  .arrow { stroke: #3b82f6; stroke-width: 1.5; fill: none; }
+  .path-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .path-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .path-browser { border-top: 3px solid var(--success); }
+  .path-local { border-top: 3px solid var(--accent); }
+  .path-aws { border-top: 3px solid var(--warn); }
+  .path-icon { font-size: 1.5rem; }
+  .path-card h4 { margin: 0.5rem 0 0.35rem; }
+  .path-card p { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.9rem; }
+  .path-card code {
+    display: block;
+    background: #0a0e12;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--success);
+  }
+</style>

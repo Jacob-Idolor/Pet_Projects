@@ -1,19 +1,21 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
+import ConceptDiagram from "../components/ConceptDiagram.astro";
 ---
 
 <BaseLayout title="Home">
   <section class="hero container">
-    <span class="badge">Free · Browser-based · No install</span>
-    <h1>Learn Kubernetes in your browser</h1>
+    <span class="badge">Learn · Practice · Deploy</span>
+    <h1>Your Kubernetes learning lab</h1>
     <p class="lead">
-      Interactive modules, simulated kubectl, and quizzes — understand containers and Kubernetes
-      fundamentals before you ever touch a real cluster. Built to share, built to scale with you.
+      Interactive modules and a kubectl simulator in the browser — plus a real local cluster
+      when you're ready. Host the site on AWS for ~$1–5/mo. Everything in one repo.
     </p>
     <div class="cta-row">
       <a class="btn btn-primary" href="/learn.html">Start learning</a>
-      <a class="btn btn-secondary" href="/practice.html">Open kubectl simulator</a>
+      <a class="btn btn-secondary" href="/practice.html">kubectl simulator</a>
+      <a class="btn btn-secondary" href="/get-started.html">Get started</a>
     </div>
   </section>
 
@@ -21,31 +23,35 @@ import AdSlot from "../components/AdSlot.astro";
     <AdSlot slot="home-top" />
   </section>
 
+  <section class="container">
+    <ConceptDiagram />
+  </section>
+
   <section class="container card-grid">
     <article class="card">
       <h3>📖 7 modules</h3>
-      <p>Containers → Pods → Deployments → Config → Networking → Storage → Production patterns.</p>
+      <p>Containers → Pods → Deployments → Config → Networking → Storage → Production.</p>
     </article>
     <article class="card">
       <h3>💻 Simulated kubectl</h3>
-      <p>Practice get, describe, logs, endpoints — scenarios like CrashLoopBackOff and broken Services.</p>
+      <p>Practice get, describe, logs, endpoints — CrashLoopBackOff and broken Services.</p>
     </article>
     <article class="card">
-      <h3>✅ Quizzes</h3>
-      <p>Check understanding after each module. Progress saved in your browser.</p>
+      <h3>🖥️ Local cluster</h3>
+      <p>kind on localhost. Seven guided labs with real YAML and debugging scenarios.</p>
     </article>
     <article class="card">
-      <h3>☁️ Host on AWS</h3>
-      <p>Static site on S3 + CloudFront (~$1–5/mo). No EKS. No cloud clusters for learners.</p>
+      <h3>☁️ AWS hosting</h3>
+      <p>Terraform for S3 + CloudFront. Publish the site — no EKS bill.</p>
     </article>
   </section>
 
   <section class="container">
     <div class="callout">
       <p>
-        <strong>How this works:</strong> You learn concepts and commands here first.
-        When you're ready to deploy professionally, you'll know <em>why</em> each kubectl command matters —
-        then practice on a real local cluster optional.
+        <strong>Recommended flow:</strong> Learn in the browser → quiz yourself → run
+        <code>make local-lab</code> in the repo for real hands-on → break and fix scenarios in
+        <code>manifests/broken/</code>.
       </p>
     </div>
   </section>

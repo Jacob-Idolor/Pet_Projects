@@ -1,5 +1,8 @@
 # Local environment setup
 
+Use this when you want **real kubectl practice** on your machine.
+For browser-only learning, run `make site-dev` instead — no cluster needed.
+
 Pick **one** cluster option. You only need one running to start Lab 01.
 
 ## Prerequisites
@@ -25,13 +28,25 @@ helm version
 
 ## Option A — kind (recommended for this repo)
 
-Best for repeatable labs and CI-like practice. Scripts live in [scripts/](scripts/).
+Best for repeatable labs and CI-like practice. One command from repo root:
+
+```bash
+cd kubernetes
+make local-lab
+```
+
+Or run scripts directly:
 
 ```powershell
+# Windows
 cd kubernetes/scripts
 .\setup-kind.ps1
-kubectl cluster-info
-kubectl get nodes
+```
+
+```bash
+# Linux / macOS
+cd kubernetes/scripts
+./setup-kind.sh
 ```
 
 Teardown when done:

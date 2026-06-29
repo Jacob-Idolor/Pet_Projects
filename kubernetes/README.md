@@ -1,47 +1,103 @@
-# ☸ Kubernetes Learning Platform
+# ☸ Kubernetes Learning Lab
 
-**Browser-based** Kubernetes and container fundamentals — learn concepts, practice simulated `kubectl`, pass quizzes. Host on AWS CloudFront (~$1–5/mo). No downloads. No cloud clusters for learners.
+A **dual-path** practice environment for containers and Kubernetes:
 
-## For learners (zero install)
+| Path | What | When |
+|------|------|------|
+| **Browser** | Interactive site — modules, quizzes, simulated kubectl | Learn concepts anywhere, zero install |
+| **Localhost** | kind cluster + hands-on labs + real manifests | Build muscle memory with real `kubectl` |
+| **AWS** | Terraform → S3 + CloudFront (~$1–5/mo) | Share the learning site publicly |
 
-1. Open the site (local: `cd site && npm run dev`)
-2. **[Learn](site/)** → 7 modules with lessons + quizzes
-3. **[Practice](site/)** → simulated kubectl terminal + debug scenarios
-4. Progress saves in your browser automatically
+Start here: **[QUICKSTART.md](QUICKSTART.md)**
 
-## For you (hosting)
+---
 
-1. `cd kubernetes/infra/terraform` → `terraform apply`
-2. `cd ../..` → `infra/deploy-site.ps1 -Profile pet-projects`
-3. Share CloudFront URL
-4. Add Google AdSense script in `site/src/layouts/BaseLayout.astro` after approval
+## Fast commands
 
-See [PLATFORM.md](PLATFORM.md) and [infra/README.md](infra/README.md).
+```bash
+cd kubernetes
 
-## What's in this folder
+make help          # all targets
+make site-dev      # browser learning @ localhost:4321
+make local-lab     # kind cluster + Lab 01 instructions
+make aws-deploy    # build site → S3 (after terraform apply)
+```
 
-| Path | Purpose |
-|------|---------|
-| **`site/`** | **The product** — Astro static site with simulator, modules, ads |
-| `infra/` | S3 + CloudFront Terraform (~$1–5/mo) |
-| `labs/`, `drills/`, `curriculum/` | Source material / optional real-cluster depth |
-| `manifests/`, `scripts/` | Optional: real local practice later (not required for learners) |
+---
 
-## Cost model
+## Repository layout
+
+```
+kubernetes/
+├── site/              # Learning website (Astro) — the main UI
+├── scripts/           # Local cluster: kind setup, teardown, bootstrap
+├── labs/              # 7+ guided labs (real cluster required)
+├── manifests/         # Example YAML + broken debug scenarios
+├── drills/            # kubectl / docker command practice sheets
+├── curriculum/        # Concept deep-dives (reading)
+├── docker/            # Sample app to build and containerize
+├── infra/
+│   ├── terraform/     # AWS: S3 + CloudFront (site hosting only)
+│   └── deploy-site.*  # Build + sync site to AWS
+├── observability/     # Prometheus/Grafana lab
+├── openshift/         # Optional OpenShift (CRC) notes
+├── Makefile           # One entry point for all paths
+├── SETUP.md           # Local cluster options (kind, minikube, etc.)
+└── PROGRESS.md        # Your learning checklist
+```
+
+---
+
+## Learning loop
+
+1. **Browser** — Read a module, pass the quiz, practice in the kubectl simulator
+2. **Local** — Run the same ideas on a kind cluster (`labs/lab-01` onward)
+3. **Break things** — Debug `manifests/broken/` scenarios (CrashLoop, ImagePull, no endpoints)
+4. **Drills** — Repeat commands from `drills/` until they stick
+5. **Optional** — Deploy the site to AWS so you can access it from anywhere
+
+---
+
+## Local cluster
+
+**Recommended:** kind via `make local-lab`
+
+```bash
+make check-tools     # docker + kubectl + kind
+make local-up        # create cluster "practice"
+make local-down      # teardown
+```
+
+Alternatives: Docker Desktop Kubernetes, minikube, OpenShift Local — see [SETUP.md](SETUP.md).
+
+---
+
+## AWS hosting
+
+Terraform provisions **only** static site infrastructure (no EKS, no EC2):
+
+```bash
+cd infra/terraform
+cp terraform.tfvars.example terraform.tfvars   # edit account + bucket
+terraform init && terraform plan && terraform apply
+cd ../.. && make aws-deploy
+```
+
+Safeguards, IAM policy, teardown: [infra/README.md](infra/README.md).
+
+---
+
+## What's free vs what costs money
 
 | Item | Cost |
 |------|------|
-| S3 + CloudFront | ~$1–5/mo |
-| EKS / EC2 / Lambda | **$0** — not used |
-| Learner installs | **$0** — browser only |
+| Browser site locally | **$0** |
+| kind cluster on your laptop | **$0** |
+| AWS S3 + CloudFront (optional) | **~$1–5/mo** |
+| EKS / managed K8s on AWS | **Not included** — use local kind for practice |
 
-## Monetization
+---
 
-1. Publish useful content (modules + practice scenarios)
-2. Grow traffic (SEO, share, build in public)
-3. Google AdSense (after ~15 pages + privacy policy)
-4. Optional: affiliate resources page, PDF cheat sheet
+## Contributing
 
-## Optional: real cluster later
-
-When you're ready to deploy professionally, use `scripts/setup-kind.ps1` and `labs/` for real hands-on. The website teaches the **why** first; kind teaches the **real feel**.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Fork → own AWS account → own hosting bill if you publish the site.
