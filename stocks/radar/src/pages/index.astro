@@ -1,19 +1,23 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import LiveStatus from "../components/LiveStatus.astro";
 import HoldingsUpload from "../components/HoldingsUpload.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import { meta, stocks } from "../data/watchlist";
 
 const symbols = [...new Set(stocks.map((s) => s.symbol))];
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title={meta.groupName}>
+  <LiveStatus />
+
   <section class="hero container">
     <h1>{meta.groupName}</h1>
     <p class="tagline">{meta.tagline}</p>
     <div class="hero-stats">
       <span class="stat-pill"><strong>{stocks.length}</strong> tickers tracked</span>
-      <span class="stat-pill">Updated {meta.lastUpdated}</span>
+      <span class="stat-pill">List updated {meta.lastUpdated}</span>
     </div>
   </section>
 
@@ -23,7 +27,8 @@ const symbols = [...new Set(stocks.map((s) => s.symbol))];
   </div>
 </BaseLayout>
 
-<script define:vars={{ symbols }}>
+<script define:vars={{ symbols, base }}>
+  /** Fallback: direct Yahoo fetch when quotes.json is missing (local dev) or stale */
   async function fetchOne(symbol) {
     try {
       const res = await fetch(
@@ -45,7 +50,6 @@ const symbols = [...new Set(stocks.map((s) => s.symbol))];
 
   async function fetchQuotesBatched(symbolList) {
     if (!symbolList.length) return;
-
     const quotes = {};
     const chunkSize = 12;
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -69,6 +73,30 @@ const symbols = [...new Set(stocks.map((s) => s.symbol))];
     }
   }
 
-  fetchQuotesBatched(symbols);
-  setInterval(() => fetchQuotesBatched(symbols), 120_000);
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(async () => {
+      try {
+        const res = await fetch(`${base}quotes.json`, { cache: "no-store" });
+        const data = await res.json();
+        if (!data.quotes || Object.keys(data.quotes).length === 0) {
+          fetchQuotesBatched(symbols);
+        }
+      } catch {
+        fetchQuotesBatched(symbols);
+      }
+    }, 3000);
+  });
+
+  document.addEventListener("radar:stale-quotes", () => {
+    if (isUsMarketOpen()) fetchQuotesBatched(symbols);
+  });
+
+  function isUsMarketOpen() {
+    const now = new Date();
+    const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    const day = et.getDay();
+    if (day === 0 || day === 6) return false;
+    const mins = et.getHours() * 60 + et.getMinutes();
+    return mins >= 9 * 60 + 30 && mins < 16 * 60;
+  }
 </script>

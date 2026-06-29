@@ -29,7 +29,7 @@ Every project in this repo aims to meet this bar:
 
 | Project | Track | Status | Deployed |
 |---------|-------|--------|----------|
-| [Stocks Radar](stocks/radar/) | 📈 Stocks | Active | Local / static |
+| [Stocks Radar](stocks/radar/) | 📈 Stocks | Active | [GitHub Pages](https://jacob-idolor.github.io/Pet_Projects/stocks-radar/) (after setup) |
 | [K8s Practice Lab](kubernetes/site/) | ☸️ Kubernetes | Active | S3 + CloudFront |
 
 > Previous projects (BallStats, stock-buy-bot, PokerGTO, and more) are preserved in git history — see the [`pre-reset-archive`](../../tree/pre-reset-archive) tag.

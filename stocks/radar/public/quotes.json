@@ -1,0 +1,50 @@
+{
+  "updatedAt": "2026-06-29T22:22:23.826Z",
+  "marketTime": "US/Eastern",
+  "count": 7,
+  "total": 7,
+  "quotes": {
+    "NVDA": {
+      "price": 194.97,
+      "changePct": null,
+      "prevClose": 192.53,
+      "currency": "USD"
+    },
+    "AAPL": {
+      "price": 281.74,
+      "changePct": null,
+      "prevClose": 283.78,
+      "currency": "USD"
+    },
+    "PLTR": {
+      "price": 115.7,
+      "changePct": null,
+      "prevClose": 112.93,
+      "currency": "USD"
+    },
+    "COST": {
+      "price": 946.68,
+      "changePct": null,
+      "prevClose": 952.54,
+      "currency": "USD"
+    },
+    "AMD": {
+      "price": 539.49,
+      "changePct": null,
+      "prevClose": 521.58,
+      "currency": "USD"
+    },
+    "V": {
+      "price": 341.65,
+      "changePct": null,
+      "prevClose": 336.23,
+      "currency": "USD"
+    },
+    "TSLA": {
+      "price": 411.84,
+      "changePct": null,
+      "prevClose": 379.71,
+      "currency": "USD"
+    }
+  }
+}

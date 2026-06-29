@@ -1,0 +1,89 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<div class="live-status" id="live-status" role="status" aria-live="polite">
+  <span class="live-dot" id="live-dot" aria-hidden="true"></span>
+  <span id="live-status-text">Loading prices…</span>
+</div>
+
+<script define:vars={{ base }}>
+  const REFRESH_MS = 60_000;
+  let lastUpdated = null;
+  let timer = null;
+  let countdown = null;
+
+  function isUsMarketOpen() {
+    const now = new Date();
+    const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    const day = et.getDay();
+    if (day === 0 || day === 6) return false;
+    const mins = et.getHours() * 60 + et.getMinutes();
+    return mins >= 9 * 60 + 30 && mins < 16 * 60;
+  }
+
+  function formatAgo(iso) {
+    if (!iso) return "unknown";
+    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (sec < 60) return "just now";
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+    return `${Math.floor(sec / 3600)}h ago`;
+  }
+
+  function setStatus(text, live = true) {
+    const el = document.getElementById("live-status-text");
+    const dot = document.getElementById("live-dot");
+    if (el) el.textContent = text;
+    if (dot) {
+      dot.classList.toggle("paused", !live);
+      dot.classList.toggle("live", live);
+    }
+  }
+
+  async function loadQuotes() {
+    try {
+      const res = await fetch(`${base}quotes.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("not found");
+      const data = await res.json();
+      lastUpdated = data.updatedAt;
+
+      if (data.quotes && Object.keys(data.quotes).length) {
+        document.dispatchEvent(new CustomEvent("radar:quotes", { detail: data.quotes }));
+      }
+
+      const market = isUsMarketOpen() ? "Market open" : "Market closed";
+      const coverage = data.count != null && data.total != null
+        ? `${data.count}/${data.total} quotes`
+        : "quotes loaded";
+      setStatus(`${market} · ${coverage} · updated ${formatAgo(lastUpdated)} · refreshes every 60s`);
+      const ageMs = Date.now() - new Date(lastUpdated).getTime();
+      if (ageMs > 10 * 60 * 1000) {
+        document.dispatchEvent(new CustomEvent("radar:stale-quotes"));
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function refresh() {
+    const ok = await loadQuotes();
+    if (!ok) {
+      setStatus("Live feed unavailable — using cached / manual prices", false);
+    }
+  }
+
+  function startLoop() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      if (document.hidden) return;
+      refresh();
+    }, REFRESH_MS);
+  }
+
+  refresh().then(() => startLoop());
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refresh();
+  });
+</script>

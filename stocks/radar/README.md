@@ -10,7 +10,7 @@ A single-page watchlist for you and your friends — built to handle **100+ tick
 - **Holistic overview** — total counts, how many are at target, within 5%/10% of entry
 - **Closest to entry** — quick chips for the tickers nearest your price targets
 - **Bulk CSV import** — paste or import hundreds of tickers at once
-- **Live-ish quotes** — batched Yahoo Finance requests (falls back to manual prices)
+- **Live-ish quotes** — server-fetched `quotes.json` on deploy + auto-refresh every 60s in the browser
 - **Holdings screenshots** — drag-and-drop broker screenshots; stored locally in IndexedDB
 
 ## Quick start
@@ -18,10 +18,44 @@ A single-page watchlist for you and your friends — built to handle **100+ tick
 ```bash
 cd stocks/radar
 npm install
+npm run update-quotes   # optional — refresh prices locally
 npm run dev
 ```
 
 Open [http://localhost:4321](http://localhost:4321).
+
+## Go live (automatic updates)
+
+The site can run on **GitHub Pages** with prices that refresh on their own — no manual rebuild needed.
+
+### One-time setup
+
+1. Merge this to `main`
+2. In GitHub → **Settings → Pages** → Source: **GitHub Actions**
+3. The workflow `Stocks Radar — live deploy` handles the rest
+
+### What stays automatic
+
+| What | How often |
+|------|-----------|
+| **Price quotes** | Fetched before every deploy; page polls `quotes.json` every **60s** |
+| **Scheduled redeploy** | Weekdays, every **15 min** (refreshes quotes + republishes) |
+| **On git push** | Any change under `stocks/radar/` triggers a fresh deploy |
+
+**Live URL (after setup):**  
+https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
+
+Share that link with your group — bookmark it on your phones. When anyone pushes watchlist changes to `main`, everyone gets them on the next deploy.
+
+### Manual refresh
+
+GitHub → **Actions** → **Stocks Radar — live deploy** → **Run workflow**
+
+Or locally:
+
+```bash
+npm run update-quotes && npm run build
+```
 
 ## Adding 100+ tickers
 
@@ -86,11 +120,14 @@ Edit `src/data/watchlist.json` — same fields as before, just easier to bulk-ge
 ## Build & deploy
 
 ```bash
-npm run build
+npm run update-quotes   # refresh public/quotes.json
+npm run build           # runs update-quotes automatically (prebuild)
 npm run preview
 ```
 
-Static output → S3, Netlify, Vercel, GitHub Pages, etc.
+**GitHub Pages (recommended):** enable Pages → GitHub Actions source. See [Go live](#go-live-automatic-updates) above.
+
+Also works on S3 + CloudFront, Netlify, or Vercel — set `STOCKS_RADAR_BASE` if not hosting at domain root.
 
 ## Project layout
 
