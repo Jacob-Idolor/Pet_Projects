@@ -1,38 +1,60 @@
 {
   "meta": {
     "groupName": "The Radar",
-    "tagline": "Everything on our radar — owned, waiting on entry, and long-term watches.",
+    "tagline": "Top exposures, entry targets, and the long-term watchlist.",
     "lastUpdated": "2026-06-29"
   },
   "stocks": [
     {
-      "id": "nvda-owned",
-      "symbol": "NVDA",
-      "name": "NVIDIA",
+      "id": "smh-owned",
+      "symbol": "SMH",
+      "name": "VanEck Semiconductor ETF",
       "category": "owned",
-      "lastPrice": 135.5,
-      "targetPrice": 180,
-      "targetNote": "Trim 25% above $175",
-      "thesis": "AI infra leader — holding through next earnings.",
+      "thesis": "Top exposure — broad semiconductor basket, core chip cycle play.",
       "addedBy": "J",
       "holder": "J"
     },
     {
-      "id": "aapl-owned",
-      "symbol": "AAPL",
-      "name": "Apple",
+      "id": "nbis-owned",
+      "symbol": "NBIS",
+      "name": "Nebius Group",
       "category": "owned",
-      "lastPrice": 198.2,
-      "thesis": "Core compounder — services mix keeps improving.",
-      "addedBy": "M",
-      "holder": "M"
+      "thesis": "Favorite investment for the next few years — highest conviction name on the list.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "sivef-owned",
+      "symbol": "SIVEF",
+      "name": "Sivers Semiconductors",
+      "category": "owned",
+      "thesis": "High upside photonics exposure — speculative, not highest quality but big swing potential.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "meta-owned",
+      "symbol": "META",
+      "name": "Meta Platforms",
+      "category": "owned",
+      "thesis": "Highest upside in Mag 7 outside NVDA — AI + ads + efficiency story.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "aaoi-owned",
+      "symbol": "AAOI",
+      "name": "Applied Optoelectronics",
+      "category": "owned",
+      "thesis": "High upside photonics exposure — optical/datacenter connectivity bet alongside SIVEF.",
+      "addedBy": "J",
+      "holder": "J"
     },
     {
       "id": "pltr-targets",
       "symbol": "PLTR",
       "name": "Palantir",
       "category": "targets",
-      "lastPrice": 24.8,
       "targetPrice": 18,
       "targetNote": "Starter if it pulls back to $18–19",
       "thesis": "Like the story, want a better entry.",
@@ -43,10 +65,17 @@
       "symbol": "COST",
       "name": "Costco",
       "category": "targets",
-      "lastPrice": 892.0,
       "targetPrice": 820,
       "targetNote": "Buy zone on a 5–8% dip",
       "thesis": "Quality compounder — patience for a sale.",
+      "addedBy": "J"
+    },
+    {
+      "id": "nvda-watching",
+      "symbol": "NVDA",
+      "name": "NVIDIA",
+      "category": "watching",
+      "thesis": "Mag 7 benchmark — compare everything else against this AI infra leader.",
       "addedBy": "J"
     },
     {
@@ -54,31 +83,10 @@
       "symbol": "AMD",
       "name": "Advanced Micro Devices",
       "category": "watching",
-      "lastPrice": 162.4,
       "targetPrice": 200,
       "targetNote": "Re-evaluate if MI300 share gains accelerate",
-      "thesis": "GPU/CPU competition with NVDA.",
+      "thesis": "GPU/CPU competition with NVDA — watching data-center wins.",
       "addedBy": "M"
-    },
-    {
-      "id": "v-watching",
-      "symbol": "V",
-      "name": "Visa",
-      "category": "watching",
-      "lastPrice": 278.6,
-      "thesis": "Payments toll road — long-term hold candidate.",
-      "addedBy": "K"
-    },
-    {
-      "id": "tsla-watching",
-      "symbol": "TSLA",
-      "name": "Tesla",
-      "category": "watching",
-      "lastPrice": 248.5,
-      "targetPrice": 200,
-      "targetNote": "Interesting again sub-$200",
-      "thesis": "Volatility play — only on a deep pullback.",
-      "addedBy": "J"
     }
   ]
 }

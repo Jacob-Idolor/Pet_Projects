@@ -1,19 +1,37 @@
 {
-  "updatedAt": "2026-06-29T22:22:23.826Z",
+  "updatedAt": "2026-06-29T22:28:11.719Z",
   "marketTime": "US/Eastern",
-  "count": 7,
-  "total": 7,
+  "count": 9,
+  "total": 9,
   "quotes": {
-    "NVDA": {
-      "price": 194.97,
+    "SMH": {
+      "price": 631.98,
       "changePct": null,
-      "prevClose": 192.53,
+      "prevClose": 611.61,
       "currency": "USD"
     },
-    "AAPL": {
-      "price": 281.74,
+    "NBIS": {
+      "price": 261.15,
       "changePct": null,
-      "prevClose": 283.78,
+      "prevClose": 240.3,
+      "currency": "USD"
+    },
+    "SIVEF": {
+      "price": 7.15,
+      "changePct": null,
+      "prevClose": 6.76,
+      "currency": "USD"
+    },
+    "META": {
+      "price": 562.6,
+      "changePct": null,
+      "prevClose": 550.25,
+      "currency": "USD"
+    },
+    "AAOI": {
+      "price": 150.1,
+      "changePct": null,
+      "prevClose": 135.69,
       "currency": "USD"
     },
     "PLTR": {
@@ -28,22 +46,16 @@
       "prevClose": 952.54,
       "currency": "USD"
     },
+    "NVDA": {
+      "price": 194.97,
+      "changePct": null,
+      "prevClose": 192.53,
+      "currency": "USD"
+    },
     "AMD": {
       "price": 539.49,
       "changePct": null,
       "prevClose": 521.58,
-      "currency": "USD"
-    },
-    "V": {
-      "price": 341.65,
-      "changePct": null,
-      "prevClose": 336.23,
-      "currency": "USD"
-    },
-    "TSLA": {
-      "price": 411.84,
-      "changePct": null,
-      "prevClose": 379.71,
       "currency": "USD"
     }
   }
