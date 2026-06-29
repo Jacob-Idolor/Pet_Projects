@@ -1,0 +1,87 @@
+---
+import type { Scenario } from "../data/scenarios";
+
+interface Props {
+  scenario: Scenario;
+}
+
+const { scenario } = Astro.props;
+const diffClass = `diff-${scenario.difficulty}`;
+---
+
+<article class="scenario-card">
+  <div class="scenario-header">
+    <span class={`badge badge-${scenario.type}`}>{scenario.type}</span>
+    <span class={`badge ${diffClass}`}>{scenario.difficulty}</span>
+  </div>
+  <h3>{scenario.title}</h3>
+  <p class="symptom">{scenario.symptom}</p>
+  <p class="skill"><strong>Skills:</strong> {scenario.skill}</p>
+  <details class="scenario-details">
+    <summary>Commands & fix (spoiler)</summary>
+    <ul>
+      {scenario.commands.map((c) => <li><code>{c}</code></li>)}
+    </ul>
+    <p class="fix">{scenario.fix}</p>
+  </details>
+  <a class="btn btn-primary" href={scenario.href}>Practice scenario →</a>
+</article>
+
+<style>
+  .scenario-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .scenario-header {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .badge-docker { color: #38bdf8; }
+  .badge-kubernetes { color: #a78bfa; }
+  .diff-beginner { color: var(--success); }
+  .diff-intermediate { color: var(--warn); }
+  .diff-advanced { color: #f87171; }
+  .scenario-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .symptom {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  .skill {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  .scenario-details {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .scenario-details summary {
+    cursor: pointer;
+    color: var(--accent);
+  }
+  .scenario-details ul {
+    margin: 0.5rem 0;
+    padding-left: 1.25rem;
+  }
+  .fix {
+    margin: 0.5rem 0 0;
+    padding: 0.5rem;
+    background: #0a0e12;
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+  .scenario-card .btn {
+    margin-top: auto;
+    text-align: center;
+  }
+</style>

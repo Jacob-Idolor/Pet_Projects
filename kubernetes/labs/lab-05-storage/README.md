@@ -1,6 +1,12 @@
 # Lab 05 — Storage
 
-**Level:** L3 | **Time:** 45 min
+**Level:** L3 | **Time:** 45 min · **Module:** Storage & RBAC
+
+## Concepts
+
+**emptyDir** volumes die with the Pod. **PersistentVolumeClaims** request durable storage that survives Pod deletion — essential for databases and stateful apps.
+
+**ReadWriteOnce (RWO)** means one node mounts read-write at a time. **StorageClass** enables dynamic provisioning (cloud disk created when PVC is created).
 
 ## Goals
 

@@ -13,13 +13,16 @@ Mark items as you complete them. Add dates if you want a visible learning journa
 
 ## Docker fundamentals
 
-- [ ] [Docker guide](docker/README.md) — read
+- [ ] [Docker hub (browser)](../site/) — `/docker.html` missions complete
+- [ ] [Lab 00 — Docker](../labs/lab-00-docker/) — build & run sample app
+- [ ] [Docker guide](../docker/README.md) — read
 - [ ] Built and ran first custom image
-- [ ] Completed [docker command drill](drills/docker-commands.md)
+- [ ] Completed [docker command drill](../drills/docker-commands.md)
 
 ## Labs
 
-- [ ] [Lab 01 — First pod](labs/lab-01-first-pod/)
+- [ ] [Lab 00 — Docker](../labs/lab-00-docker/)
+- [ ] [Lab 01 — First pod](../labs/lab-01-first-pod/)
 - [ ] [Lab 02 — Deployments & services](labs/lab-02-deployments-services/)
 - [ ] [Lab 03 — ConfigMaps & secrets](labs/lab-03-config-secrets/)
 - [ ] [Lab 04 — Networking & ingress](labs/lab-04-networking-ingress/)
@@ -30,10 +33,10 @@ Mark items as you complete them. Add dates if you want a visible learning journa
 
 ## Command drills
 
-- [ ] [kubectl essentials](drills/kubectl-commands.md) — 5 sessions
-- [ ] [docker essentials](drills/docker-commands.md) — 5 sessions
-- [ ] [oc / OpenShift](drills/oc-commands.md) — 3 sessions
-- [ ] [Troubleshooting scenarios](drills/troubleshooting-scenarios.md) — 3 scenarios solved
+- [ ] [kubectl essentials](../drills/kubectl-commands.md) — 5 sessions
+- [ ] [docker essentials](../drills/docker-commands.md) — 5 sessions
+- [ ] [Troubleshooting scenarios (browser)](../site/) — `/troubleshoot.html` all 6
+- [ ] [Troubleshooting scenarios (cluster)](../drills/troubleshooting-scenarios.md) — 5+ solved
 
 ## Curriculum (concept reading)
 

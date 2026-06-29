@@ -1,0 +1,420 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { allTrackables } from "../data/trackables";
+import { PROGRAM_TITLE, PROGRAM_SUBTITLE, ISSUER, REPO_URL } from "../lib/certificate";
+---
+
+<BaseLayout title="Completion certificate">
+  <section class="hero container cert-hero no-print">
+    <h1>Completion certificate</h1>
+    <p class="lead">
+      Finish all core labs in the Tracker to unlock a printable certificate and LinkedIn-ready text.
+      No login — proof is based on your local progress.
+    </p>
+    <div id="progress-to-cert" class="progress-to-cert"></div>
+  </section>
+
+  <section class="container no-print" id="locked-section">
+    <div class="callout">
+      <p id="locked-msg">Complete all core labs to unlock your certificate. Track progress on <a href="/progress.html">Tracker</a>.</p>
+      <a class="btn btn-primary" href="/">Back to Lab Hub</a>
+    </div>
+  </section>
+
+  <section class="container cert-section" id="cert-section" hidden>
+    <div class="name-field no-print">
+      <label for="cert-name">Your name (appears on certificate)</label>
+      <input type="text" id="cert-name" placeholder="Your full name" maxlength="80" />
+    </div>
+
+    <article class="certificate" id="certificate">
+      <div class="cert-border">
+        <div class="cert-inner">
+          <p class="cert-issuer">{ISSUER}</p>
+          <h2 class="cert-title">Certificate of Completion</h2>
+          <p class="cert-program">{PROGRAM_TITLE}</p>
+          <p class="cert-sub">{PROGRAM_SUBTITLE}</p>
+          <p class="cert-presented">This certifies that</p>
+          <p class="cert-name" id="display-name">Your Name</p>
+          <p class="cert-body">
+            has successfully completed the hands-on training program including Docker containerization,
+            Kubernetes core concepts, local cluster labs, and troubleshooting scenarios.
+          </p>
+          <p class="cert-tier" id="cert-tier"></p>
+          <ul class="cert-skills" id="cert-skills"></ul>
+          <div class="cert-meta">
+            <div>
+              <span class="meta-label">Date</span>
+              <span class="meta-value" id="cert-date">—</span>
+            </div>
+            <div>
+              <span class="meta-label">Credential ID</span>
+              <span class="meta-value cert-id" id="cert-id">—</span>
+            </div>
+          </div>
+          <p class="cert-repo">{REPO_URL}</p>
+        </div>
+      </div>
+    </article>
+
+    <div class="cert-actions no-print">
+      <button type="button" class="btn btn-primary" id="btn-print">Download PDF (Print)</button>
+      <button type="button" class="btn btn-secondary" id="btn-export-json">Export progress proof (JSON)</button>
+    </div>
+
+    <div class="linkedin-section no-print">
+      <h2>Share on LinkedIn</h2>
+      <p class="muted">This is self-directed open-source training — list it under <strong>Licenses &amp; certifications</strong> or share as a post. Copy the text below.</p>
+
+      <div class="copy-block">
+        <h3>Add certification (Licenses &amp; certifications)</h3>
+        <dl class="li-fields">
+          <dt>Name</dt>
+          <dd id="li-name">{PROGRAM_TITLE}</dd>
+          <dt>Issuing organization</dt>
+          <dd>K8s Practice Lab · Open Source</dd>
+          <dt>Issue date</dt>
+          <dd id="li-date">—</dd>
+          <dt>Credential ID</dt>
+          <dd id="li-credential">—</dd>
+        </dl>
+        <textarea id="li-cert-desc" rows="8" readonly></textarea>
+        <button type="button" class="btn btn-secondary btn-copy" data-copy="li-cert-desc">Copy description</button>
+      </div>
+
+      <div class="copy-block">
+        <h3>Share as a post</h3>
+        <textarea id="li-post" rows="8" readonly></textarea>
+        <button type="button" class="btn btn-secondary btn-copy" data-copy="li-post">Copy post text</button>
+      </div>
+
+      <div class="copy-block">
+        <h3>Suggested skills to add</h3>
+        <p id="li-skills" class="skills-list"></p>
+        <button type="button" class="btn btn-secondary btn-copy" data-copy-text="skills">Copy skills</button>
+      </div>
+
+      <p class="disclaimer muted">
+        <strong>Note:</strong> This credential reflects completion of your local Tracker — it is not an accredited industry certification (like CKA). It demonstrates structured self-study and hands-on practice you can discuss in interviews and link to your GitHub repo.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ trackablesJson: JSON.stringify(allTrackables) }}>
+  import { loadProgress, exportProgress } from "../lib/progress-store";
+  import {
+    getCertificateStatus,
+    linkedInCertificationText,
+    linkedInPostText,
+    linkedInSkills,
+    CERTIFICATE_NAME_KEY,
+  } from "../lib/certificate";
+
+  const trackables = JSON.parse(trackablesJson);
+  const progress = loadProgress();
+  const status = getCertificateStatus(progress, trackables);
+
+  const progressEl = document.getElementById("progress-to-cert")!;
+  progressEl.innerHTML = `
+    <div class="cert-progress-bar">
+      <span>Core labs: <strong>${status.coreDone}/${status.coreTotal}</strong> (${status.corePct}%)</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${status.corePct}%"></div></div>
+    </div>
+    <div class="cert-progress-bar">
+      <span>Full program: <strong>${status.fullDone}/${status.fullTotal}</strong> (${status.fullPct}%)</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${status.fullPct}%"></div></div>
+    </div>
+  `;
+
+  if (!status.eligible) {
+    document.getElementById("locked-msg")!.textContent =
+      `You've completed ${status.coreDone} of ${status.coreTotal} core labs. Finish the rest in Tracker, then return here.`;
+  } else {
+    document.getElementById("locked-section")!.hidden = true;
+    document.getElementById("cert-section")!.hidden = false;
+
+    const nameInput = document.getElementById("cert-name") as HTMLInputElement;
+    const displayName = document.getElementById("display-name")!;
+    const savedName = localStorage.getItem(CERTIFICATE_NAME_KEY) || "";
+    nameInput.value = savedName;
+    displayName.textContent = savedName || "Your Name";
+
+    nameInput.addEventListener("input", () => {
+      const v = nameInput.value.trim() || "Your Name";
+      displayName.textContent = v;
+      localStorage.setItem(CERTIFICATE_NAME_KEY, nameInput.value);
+    });
+
+    document.getElementById("cert-date")!.textContent = status.completionDate ?? new Date().toISOString().slice(0, 10);
+    document.getElementById("cert-id")!.textContent = status.credentialId ?? "—";
+    document.getElementById("cert-tier")!.textContent =
+      status.tier === "full"
+        ? "Distinction: Full program including advanced challenges and drills"
+        : "Core program: All browser and local cluster labs";
+
+    const skillsEl = document.getElementById("cert-skills")!;
+    skillsEl.innerHTML = [
+      "Docker & containerization",
+      "Kubernetes fundamentals",
+      "kubectl & Helm",
+      "Deployments, Services, Ingress",
+      "ConfigMaps, Secrets, Storage, RBAC",
+      "Production troubleshooting",
+    ].map((s) => `<li>${s}</li>`).join("");
+
+    const liDate = document.getElementById("li-date")!;
+    liDate.textContent = status.completionDate ?? "—";
+    document.getElementById("li-credential")!.textContent = status.credentialId ?? "—";
+
+    const certDesc = document.getElementById("li-cert-desc") as HTMLTextAreaElement;
+    const postText = document.getElementById("li-post") as HTMLTextAreaElement;
+    const skills = linkedInSkills();
+
+    function refreshLinkedIn() {
+      const name = nameInput.value.trim() || "Your Name";
+      certDesc.value = linkedInCertificationText(status, name);
+      postText.value = linkedInPostText(status, name);
+      document.getElementById("li-skills")!.textContent = skills.join(" · ");
+    }
+    refreshLinkedIn();
+    nameInput.addEventListener("input", refreshLinkedIn);
+
+    document.getElementById("btn-print")!.addEventListener("click", () => window.print());
+
+    document.getElementById("btn-export-json")!.addEventListener("click", () => {
+      const proof = {
+        program: "Kubernetes & Docker Hands-On Lab",
+        credentialId: status.credentialId,
+        completionDate: status.completionDate,
+        tier: status.tier,
+        completedTasks: status.completedTitles,
+        progress: JSON.parse(exportProgress(progress)),
+        repo: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes",
+      };
+      const blob = new Blob([JSON.stringify(proof, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `k8s-lab-credential-${status.credentialId}.json`;
+      a.click();
+    });
+
+    document.querySelectorAll(".btn-copy").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = (btn as HTMLElement).dataset.copy;
+        let text = "";
+        if (key === "skills") text = skills.join(", ");
+        else text = (document.getElementById(key!) as HTMLTextAreaElement).value;
+        navigator.clipboard.writeText(text).then(() => {
+          (btn as HTMLButtonElement).textContent = "Copied!";
+          setTimeout(() => { (btn as HTMLButtonElement).textContent = "Copy"; }, 2000);
+        });
+      });
+    });
+  }
+</script>
+
+<style>
+  .cert-hero { padding: 2rem 0 1rem; text-align: center; }
+  .cert-hero .lead { color: var(--muted); max-width: 36rem; margin: 0 auto; }
+  .progress-to-cert {
+    max-width: 400px;
+    margin: 1.5rem auto 0;
+    text-align: left;
+  }
+  .cert-progress-bar {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .progress-bar {
+    height: 8px;
+    background: #0a0e12;
+    border-radius: 4px;
+    margin-top: 0.35rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 4px;
+  }
+  .cert-section { padding-bottom: 4rem; }
+  .name-field {
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+  }
+  .name-field label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+  .name-field input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 1rem;
+  }
+  .certificate {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+  }
+  .cert-border {
+    background: linear-gradient(135deg, #3b82f6, #22c55e, #a78bfa);
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .cert-inner {
+    background: #0f1419;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    border-radius: 2px;
+  }
+  .cert-issuer {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin: 0 0 1rem;
+  }
+  .cert-title {
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+  }
+  .cert-program {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin: 0 0 0.25rem;
+    font-weight: 600;
+  }
+  .cert-sub {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin: 0 0 1.5rem;
+  }
+  .cert-presented {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0 0 0.25rem;
+  }
+  .cert-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+    color: #fff;
+  }
+  .cert-body {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 1rem;
+    line-height: 1.6;
+  }
+  .cert-tier {
+    font-size: 0.85rem;
+    color: var(--success);
+    margin: 0 0 1rem;
+  }
+  .cert-skills {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .cert-meta {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 1rem;
+  }
+  .meta-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .meta-value {
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+  .cert-id {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85rem;
+  }
+  .cert-repo {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin: 0;
+    word-break: break-all;
+  }
+  .cert-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+  .linkedin-section h2 { margin-top: 0; }
+  .linkedin-section .muted { font-size: 0.9rem; }
+  .copy-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .copy-block h3 {
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem;
+  }
+  .li-fields {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 1rem;
+    font-size: 0.9rem;
+    margin: 0 0 1rem;
+  }
+  .li-fields dt { color: var(--muted); }
+  .li-fields dd { margin: 0; }
+  .copy-block textarea {
+    width: 100%;
+    background: #0a0e12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    resize: vertical;
+  }
+  .skills-list { font-size: 0.9rem; color: var(--muted); }
+  .disclaimer {
+    border-left: 3px solid var(--warn);
+    padding-left: 1rem;
+    margin-top: 2rem;
+  }
+
+  @media print {
+    .no-print { display: none !important; }
+    .site-header, .site-footer, .back-link-wrap { display: none !important; }
+    body { background: #fff; color: #111; }
+    .cert-inner { background: #fff; color: #111; }
+    .cert-name { color: #111; }
+    .cert-body, .cert-sub, .cert-issuer, .cert-skills li, .meta-label { color: #444; }
+    .cert-program { color: #2563eb; }
+    .cert-border { padding: 3px; }
+    .certificate { max-width: 100%; }
+  }
+</style>

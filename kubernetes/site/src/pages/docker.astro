@@ -1,0 +1,96 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DockerTerminal from "../components/DockerTerminal.astro";
+import DockerPipelineDiagram from "../components/DockerPipelineDiagram.astro";
+import { dockerMissions, dockerBestPractices } from "../lib/docker-sim";
+---
+
+<BaseLayout title="Docker fundamentals" description="Learn Docker and containerization — simulated terminal, best practices, and hands-on labs.">
+  <section class="hero container">
+    <span class="badge">Module 0 · Containers first</span>
+    <h1>Docker & containerization</h1>
+    <p class="lead">
+      Master images, containers, and Dockerfile best practices before Kubernetes.
+      Practice in the simulator below — then build the real sample app with <code>make docker-lab</code>.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/learn.html">Start Part 1 lessons</a>
+      <a class="btn btn-secondary" href="/troubleshoot.html">Troubleshooting scenarios</a>
+    </div>
+  </section>
+
+  <section class="container">
+    <DockerPipelineDiagram />
+  </section>
+
+  <section class="container">
+    <DockerTerminal cluster="default" height="380px" />
+  </section>
+
+  <section class="container prose">
+    <h2>Guided missions</h2>
+    <p>Complete these in the terminal above. Progress saves in your browser.</p>
+    <div class="card-grid">
+      {dockerMissions.map((m) => (
+        <article class="card">
+          <h3>{m.title}</h3>
+          <p>{m.hint}</p>
+        </article>
+      ))}
+    </div>
+
+    <h2>Scenario practice</h2>
+    <div class="cta-row">
+      <a class="btn btn-secondary" href="/docker.html">Default (running app)</a>
+      <a class="btn btn-secondary" href="/practice-docker-exited.html">Exited container</a>
+      <a class="btn btn-secondary" href="/practice-docker-wrongport.html">Wrong port mapping</a>
+    </div>
+
+    <h2>Containerization best practices</h2>
+    <div class="card-grid practices-grid">
+      {dockerBestPractices.map((p) => (
+        <article class="card practice-card">
+          <span class="practice-icon">{p.icon}</span>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </article>
+      ))}
+    </div>
+
+    <h2>Real hands-on (local machine)</h2>
+    <div class="callout">
+      <p>
+        <strong>Lab 00:</strong> Build and run the sample Go app in <code>docker/sample-app/</code>.
+        From repo root: <code>make docker-lab</code> — builds the image, runs it, and shows health check commands.
+      </p>
+    </div>
+
+    <h2>Sample Dockerfile highlights</h2>
+    <pre class="code-block"><code>{`FROM golang:1.22-alpine AS builder    # build stage
+...
+FROM alpine:3.19                      # slim runtime
+USER appuser                            # non-root
+HEALTHCHECK CMD wget ... /health        # health probe
+ENTRYPOINT ["./server"]`}</code></pre>
+  </section>
+</BaseLayout>
+
+<style>
+  .practices-grid .practice-card {
+    text-align: left;
+  }
+  .practice-icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  .code-block {
+    background: #0a0e12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+</style>

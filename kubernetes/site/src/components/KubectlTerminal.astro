@@ -1,6 +1,6 @@
 ---
 interface Props {
-  cluster?: "default" | "lab02" | "broken" | "crash";
+  cluster?: "default" | "lab02" | "broken" | "crash" | "imagepull" | "pending";
   missionId?: string;
   height?: string;
 }
@@ -29,6 +29,8 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
     lab02Cluster,
     brokenEndpointsCluster,
     crashLoopCluster,
+    imagePullCluster,
+    pendingCluster,
     missions,
   } from "../lib/kubectl-sim";
 
@@ -37,6 +39,8 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
       case "lab02": return lab02Cluster();
       case "broken": return brokenEndpointsCluster();
       case "crash": return crashLoopCluster();
+      case "imagepull": return imagePullCluster();
+      case "pending": return pendingCluster();
       default: return defaultCluster();
     }
   }

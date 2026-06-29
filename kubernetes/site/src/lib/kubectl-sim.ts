@@ -105,6 +105,55 @@ export function crashLoopCluster(): ClusterState {
   };
 }
 
+export function imagePullCluster(): ClusterState {
+  return {
+    namespace: "default",
+    pods: [
+      {
+        name: "broken-app",
+        namespace: "default",
+        status: "ImagePullBackOff",
+        image: "nginx:doesnotexist-tag-999",
+        restarts: 0,
+        node: "kind-control-plane",
+        labels: { app: "broken-app" },
+        logs: "",
+        events: [
+          "Warning Failed  Failed to pull image nginx:doesnotexist-tag-999: manifest unknown",
+          "Warning Failed  Error: ErrImagePull",
+          "Normal BackOff  Back-off pulling image nginx:doesnotexist-tag-999",
+        ],
+      },
+    ],
+    deployments: [],
+    services: [],
+  };
+}
+
+export function pendingCluster(): ClusterState {
+  return {
+    namespace: "default",
+    pods: [
+      {
+        name: "hungry-pod",
+        namespace: "default",
+        status: "Pending",
+        image: "nginx:1.25",
+        restarts: 0,
+        node: "",
+        labels: { app: "hungry" },
+        logs: "",
+        events: [
+          "Warning FailedScheduling  0/1 nodes available: 1 Insufficient cpu, 1 Insufficient memory",
+          "Warning FailedScheduling  preemption: no preemptible victims",
+        ],
+      },
+    ],
+    deployments: [],
+    services: [],
+  };
+}
+
 function pad(s: string, n: number) {
   return s.padEnd(n);
 }

@@ -37,6 +37,18 @@ Thumbs.db
 kubeconfig
 *.kubeconfig
 
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.tfstate.lock.info
+
 # Test artifacts
 tests_artifacts/
 *.db

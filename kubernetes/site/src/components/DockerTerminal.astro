@@ -1,0 +1,175 @@
+---
+interface Props {
+  cluster?: "default" | "exited" | "wrongport";
+  missionId?: string;
+  height?: string;
+}
+
+const { cluster = "default", missionId, height = "320px" } = Astro.props;
+---
+
+<div class="terminal-wrap" data-docker-terminal data-cluster={cluster} data-mission={missionId ?? ""} style={`min-height: ${height}`}>
+  <div class="terminal-header">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+    <span class="terminal-title">docker simulator — browser only (no daemon)</span>
+  </div>
+  <div class="terminal-output" data-output></div>
+  <form class="terminal-input-row" data-form>
+    <span class="prompt">$</span>
+    <input type="text" data-input autocomplete="off" spellcheck="false" placeholder="docker ps" />
+  </form>
+</div>
+
+<script>
+  import {
+    runDocker,
+    defaultDocker,
+    exitedDocker,
+    wrongPortDocker,
+    dockerMissions,
+  } from "../lib/docker-sim";
+
+  function loadCluster(kind: string) {
+    switch (kind) {
+      case "exited": return exitedDocker();
+      case "wrongport": return wrongPortDocker();
+      default: return defaultDocker();
+    }
+  }
+
+  function initTerminal(root: HTMLElement) {
+    const clusterKind = root.dataset.cluster || "default";
+    const missionId = root.dataset.mission || "";
+    const output = root.querySelector("[data-output]") as HTMLElement;
+    const form = root.querySelector("[data-form]") as HTMLFormElement;
+    const input = root.querySelector("[data-input]") as HTMLInputElement;
+
+    let state = loadCluster(clusterKind);
+    const history: string[] = [];
+    let histIdx = -1;
+    const completedMissions = new Set(JSON.parse(localStorage.getItem("docker-missions") || "[]"));
+
+    function writeln(text: string, className = "") {
+      const line = document.createElement("div");
+      line.className = `line ${className}`;
+      line.textContent = text;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function print(text: string) {
+      if (!text) return;
+      text.split("\n").forEach((l) => writeln(l));
+    }
+
+    writeln("Simulated Docker ready. Practice container commands in your browser.", "muted");
+    writeln(`Scenario: ${clusterKind} | Try: docker ps`, "muted");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const cmd = input.value.trim();
+      if (!cmd) return;
+      writeln(`$ ${cmd}`, "cmd");
+      history.push(cmd);
+      histIdx = history.length;
+
+      const result = runDocker(state, cmd);
+      state = result.state;
+      print(result.output);
+
+      dockerMissions.forEach((m) => {
+        const clusterMatch = !m.cluster || m.cluster === clusterKind;
+        if (clusterMatch && m.validate(cmd) && !completedMissions.has(m.id)) {
+          completedMissions.add(m.id);
+          localStorage.setItem("docker-missions", JSON.stringify([...completedMissions]));
+          writeln(`✓ Mission complete: ${m.title}`, "success");
+        }
+      });
+
+      if (missionId) {
+        const mission = dockerMissions.find((m) => m.id === missionId);
+        if (mission?.validate(cmd)) {
+          localStorage.setItem(`docker-module-${missionId}`, "done");
+          writeln("✓ Practice goal met!", "success");
+        }
+      }
+
+      input.value = "";
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (histIdx > 0) {
+          histIdx--;
+          input.value = history[histIdx];
+        }
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (histIdx < history.length - 1) {
+          histIdx++;
+          input.value = history[histIdx];
+        }
+      }
+    });
+  }
+
+  document.querySelectorAll("[data-docker-terminal]").forEach((el) => initTerminal(el as HTMLElement));
+</script>
+
+<style>
+  .terminal-wrap {
+    background: #0a0e12;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.6rem 1rem;
+    background: #151b24;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.red { background: #ef4444; }
+  .dot.yellow { background: #eab308; }
+  .dot.green { background: #22c55e; }
+  .terminal-title { color: var(--muted); font-size: 0.75rem; margin-left: 0.5rem; }
+  .terminal-output {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: 280px;
+  }
+  .line { white-space: pre-wrap; word-break: break-word; margin-bottom: 0.25rem; }
+  .line.muted { color: var(--muted); }
+  .line.cmd { color: #93c5fd; }
+  .line.success { color: var(--success); font-weight: 600; }
+  .terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+    background: #0d1117;
+  }
+  .prompt { color: #38bdf8; }
+  .terminal-input-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+  }
+</style>

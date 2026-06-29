@@ -1,6 +1,12 @@
 # Lab 03 — ConfigMaps & secrets
 
-**Level:** L2 | **Time:** 45 min
+**Level:** L2 | **Time:** 45 min · **Module:** Config & Secrets
+
+## Concepts
+
+**Twelve-factor apps** store config in the environment, not in the image. ConfigMaps hold non-sensitive config; Secrets hold sensitive data (still protect with RBAC — base64 is not encryption).
+
+Pods can consume config via **environment variables** (simple) or **volume mounts** (files on disk). After changing a ConfigMap, many apps need a **rollout restart** to pick up new values.
 
 ## Goals
 

@@ -1,14 +1,25 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import KubectlTerminal from "../components/KubectlTerminal.astro";
+import ScenarioLearn from "../components/ScenarioLearn.astro";
 ---
 
 <BaseLayout title="Practice — Broken endpoints">
   <section class="hero container prose">
     <h1>Scenario: empty endpoints</h1>
-    <p class="lead">The Service selector doesn't match Pod labels. Find the mismatch with <code>kubectl get endpoints</code> and <code>kubectl describe</code>.</p>
+    <p class="lead">The Service exists but has no backends — traffic goes nowhere.</p>
   </section>
   <section class="container">
+    <ScenarioLearn
+      concept="A Service routes traffic to Pod IPs listed in its Endpoints object. Kubernetes builds endpoints automatically from Pods whose labels match the Service selector. If labels don't match exactly — even a typo — endpoints show <none> and every request fails."
+      workflow={[
+        "kubectl get endpoints — see if backends exist",
+        "kubectl describe svc — note the selector labels",
+        "kubectl get pods --show-labels — compare Pod labels to selector",
+        "Fix selector or Pod template labels to match",
+      ]}
+      fixHint="Use kubectl get endpoints and find the label mismatch in this cluster."
+    />
     <KubectlTerminal cluster="broken" height="380px" />
   </section>
 </BaseLayout>

@@ -1,31 +1,144 @@
 ---
 interface Props {
+  /** Placement name for your reference (e.g. learn-top) */
   slot?: string;
   label?: string;
 }
 
-const { slot = "placeholder", label = "Advertisement" } = Astro.props;
+const { slot = "default", label = "Advertisement" } = Astro.props;
 ---
 
-<!-- Enable after Google AdSense approval — replace with your ad unit script -->
-<div class="ad-slot" data-ad-slot={slot} aria-label={label}>
+<div class="ad-slot-wrap" data-ad-wrap data-placement={slot}>
   <span class="ad-label">{label}</span>
+  <div class="ad-placeholder" data-ad-placeholder>
+    <span class="ad-preview-badge">Preview</span>
+    <p class="ad-preview-text">Ad space · <code data-ph-slot>{slot}</code></p>
+    <p class="ad-preview-hint">Configure in <a href="/ads.html">Ad settings</a></p>
+  </div>
+  <ins
+    class="adsbygoogle ad-live"
+    data-ad-live
+    style="display:none"
+    data-ad-format="auto"
+    data-full-width-responsive="true"
+  ></ins>
 </div>
 
+<script>
+  import {
+    loadAdSettings,
+    loadAdSenseScript,
+    pushAdSlot,
+    isValidClientId,
+  } from "../lib/ads-settings";
+
+  function initAd(wrap: HTMLElement) {
+    const settings = loadAdSettings();
+    const placeholder = wrap.querySelector("[data-ad-placeholder]") as HTMLElement;
+    const live = wrap.querySelector("[data-ad-live]") as HTMLElement;
+
+    wrap.classList.toggle("ads-off", !settings.enabled);
+
+    if (!settings.enabled) {
+      placeholder.hidden = true;
+      live.hidden = true;
+      wrap.hidden = true;
+      return;
+    }
+
+    wrap.hidden = false;
+    const clientId = settings.clientId.trim();
+    const slotId = settings.defaultSlotId.trim();
+    const useLive = isValidClientId(clientId);
+
+    if (useLive) {
+      placeholder.hidden = true;
+      live.hidden = false;
+      live.style.display = "block";
+      live.dataset.adClient = clientId;
+      if (slotId) live.dataset.adSlot = slotId;
+
+      loadAdSenseScript(clientId).then(() => pushAdSlot(live)).catch(() => {
+        placeholder.hidden = false;
+        live.hidden = true;
+        live.style.display = "none";
+        wrap.querySelector(".ad-preview-hint")!.textContent =
+          "AdSense script blocked or failed — check client ID or ad blocker.";
+      });
+    } else if (settings.previewPlaceholders) {
+      placeholder.hidden = false;
+      live.hidden = true;
+      wrap.classList.add("ads-preview");
+    } else {
+      placeholder.hidden = true;
+      live.hidden = true;
+    }
+  }
+
+  document.querySelectorAll("[data-ad-wrap]").forEach((el) => initAd(el as HTMLElement));
+
+  window.addEventListener("k8s-ads-settings-changed", () => {
+    document.querySelectorAll("[data-ad-wrap]").forEach((el) => initAd(el as HTMLElement));
+  });
+</script>
+
 <style>
-  .ad-slot {
+  .ad-slot-wrap {
     margin: 2rem 0;
-    padding: 1.5rem;
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    text-align: center;
     min-height: 90px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+  }
+  .ad-slot-wrap.ads-off {
+    display: none;
   }
   .ad-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--muted);
+    margin-bottom: 0.35rem;
+    text-align: center;
+  }
+  .ad-placeholder {
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+    background: #0a0e12;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+  .ads-preview .ad-placeholder {
+    border-color: #eab308;
+    background: linear-gradient(135deg, #0a0e12 0%, #1a1808 100%);
+  }
+  .ad-preview-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--warn);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .ad-preview-text {
+    margin: 0;
     font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .ad-preview-text code {
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+  .ad-preview-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .ad-live {
+    min-height: 90px;
   }
 </style>

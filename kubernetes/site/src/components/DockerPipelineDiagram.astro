@@ -1,0 +1,130 @@
+---
+// Docker build pipeline — Dockerfile → Image → Container → Registry
+interface Props {
+  animated?: boolean;
+}
+const { animated = false } = Astro.props;
+---
+
+<section class={`pipeline-section ${animated ? "pipeline-animated" : ""}`}>
+  <h3>Container build pipeline</h3>
+  <p class="pipeline-caption">The same flow you use locally becomes what Kubernetes orchestrates at scale.</p>
+  <div class="pipeline-flow">
+    <div class="pipeline-step">
+      <div class="step-icon">📝</div>
+      <strong>Dockerfile</strong>
+      <span>Recipe: FROM, COPY, RUN, EXPOSE</span>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step step-build">
+      <div class="step-icon">🔨</div>
+      <strong>docker build</strong>
+      <span>Layers cached · multi-stage</span>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step step-image">
+      <div class="step-icon">📦</div>
+      <strong>Image</strong>
+      <span>Immutable · tagged</span>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step step-run">
+      <div class="step-icon">▶️</div>
+      <strong>docker run</strong>
+      <span>Running container</span>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step step-k8s">
+      <div class="step-icon">☸</div>
+      <strong>Kubernetes</strong>
+      <span>Pod pulls image · runs N copies</span>
+    </div>
+  </div>
+  <div class="pipeline-registry">
+    <span class="registry-label">↕ push / pull</span>
+    <span class="registry-box">Registry (Docker Hub · GHCR · ECR)</span>
+  </div>
+</section>
+
+<style>
+  .pipeline-section {
+    margin: 2rem 0;
+  }
+  .pipeline-section h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.15rem;
+  }
+  .pipeline-caption {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 1.25rem;
+  }
+  .pipeline-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .pipeline-animated .pipeline-step {
+    animation: fade-up 0.6s ease backwards;
+  }
+  .pipeline-animated .pipeline-step:nth-child(1) { animation-delay: 0.05s; }
+  .pipeline-animated .pipeline-step:nth-child(3) { animation-delay: 0.15s; }
+  .pipeline-animated .pipeline-step:nth-child(5) { animation-delay: 0.25s; }
+  .pipeline-animated .pipeline-step:nth-child(7) { animation-delay: 0.35s; }
+  .pipeline-animated .pipeline-step:nth-child(9) { animation-delay: 0.45s; }
+  .pipeline-animated .pipeline-arrow {
+    animation: flow-right 1.4s ease-in-out infinite;
+  }
+  .pipeline-step {
+    flex: 1 1 100px;
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #1a2332;
+    border: 1px solid var(--border);
+  }
+  .pipeline-step strong {
+    display: block;
+    font-size: 0.9rem;
+    margin: 0.35rem 0 0.2rem;
+  }
+  .pipeline-step span {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .step-icon { font-size: 1.4rem; }
+  .step-build { border-color: #38bdf8; }
+  .step-image { border-color: var(--success); }
+  .step-run { border-color: var(--accent); }
+  .step-k8s { border-color: #a78bfa; }
+  .pipeline-arrow {
+    color: var(--muted);
+    font-size: 1.25rem;
+    flex: 0 0 auto;
+  }
+  .pipeline-registry {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+  }
+  .registry-label { color: var(--muted); }
+  .registry-box {
+    background: #1f2937;
+    border: 1px dashed var(--border);
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    color: var(--text);
+  }
+  @media (max-width: 640px) {
+    .pipeline-arrow { display: none; }
+    .pipeline-step { flex: 1 1 45%; }
+  }
+</style>

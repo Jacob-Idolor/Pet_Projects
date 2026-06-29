@@ -1,33 +1,46 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import ConceptDiagram from "../../components/ConceptDiagram.astro";
+import DockerPipelineDiagram from "../../components/DockerPipelineDiagram.astro";
 ---
 
 <BaseLayout title="About">
   <section class="hero container prose">
     <h1>About K8s Practice Lab</h1>
     <p class="lead">
-      A free learning platform for <strong>containers and Kubernetes fundamentals</strong> —
-      entirely in your browser. No installs. No cloud cluster required.
+      An open-source, portfolio-grade learning platform for <strong>Docker, containers, and Kubernetes</strong>.
+      Built for consistent daily practice — share it, fork it, or host it on AWS.
     </p>
 
-    <h2>How it works</h2>
+    <h2>What makes this resume-worthy</h2>
     <ul>
-      <li><strong>Learn</strong> — 7 modules from Docker concepts to production patterns</li>
-      <li><strong>Practice</strong> — simulated kubectl with realistic cluster states</li>
-      <li><strong>Quiz</strong> — check understanding after each module</li>
-      <li><strong>Progress</strong> — saved locally in your browser</li>
+      <li><strong>Full stack learning product</strong> — Astro static site, browser simulators, progress tracking</li>
+      <li><strong>Dual-path infrastructure</strong> — localhost kind cluster + Terraform AWS hosting</li>
+      <li><strong>Real-world debugging</strong> — 6 troubleshooting scenarios (Docker + Kubernetes)</li>
+      <li><strong>Containerization best practices</strong> — multi-stage builds, non-root, health checks</li>
+      <li><strong>Open source</strong> — others can clone, run <code>make site-dev</code>, and practice for free</li>
     </ul>
 
-    <h2>Simulation vs real clusters</h2>
+    <h2>Three modes, one repo</h2>
+    <ul>
+      <li><strong>Browser</strong> — Docker + kubectl simulators, modules, quizzes, troubleshoot hub</li>
+      <li><strong>Localhost</strong> — kind cluster + 8 guided labs with real YAML</li>
+      <li><strong>AWS</strong> — optional Terraform to host the site on S3 + CloudFront</li>
+    </ul>
+
+    <DockerPipelineDiagram />
+    <ConceptDiagram />
+
+    <h2>For contributors & learners</h2>
     <p>
-      This site teaches you <em>what</em> commands do and <em>why</em> — so when you deploy to a real
-      cluster (locally or in the cloud), you already understand Pods, Deployments, Services, and debugging.
+      Clone the repo, run <code>make site-dev</code> for browser practice or <code>make docker-lab</code> +
+      <code>make local-lab</code> for hands-on work. No paid cloud Kubernetes required.
     </p>
 
     <h2>Built in public</h2>
     <p>
       Open source on <a href="https://github.com/Jacob-Idolor/Pet_Projects">GitHub</a>.
-      Fork it, host your own copy on AWS (~$1–5/mo), improve it, share it.
+      Fork it, host your own copy, improve it, share it.
     </p>
   </section>
 </BaseLayout>

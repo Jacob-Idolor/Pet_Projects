@@ -1,14 +1,25 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import KubectlTerminal from "../components/KubectlTerminal.astro";
+import ScenarioLearn from "../components/ScenarioLearn.astro";
 ---
 
 <BaseLayout title="Practice — CrashLoopBackOff">
   <section class="hero container prose">
     <h1>Scenario: CrashLoopBackOff</h1>
-    <p class="lead">Classic on-call flow: <code>kubectl get pods</code> → <code>describe</code> → <code>logs</code>.</p>
+    <p class="lead">Classic on-call flow when a container keeps exiting.</p>
   </section>
   <section class="container">
+    <ScenarioLearn
+      concept="CrashLoopBackOff means the container started, exited with an error, and kubelet is backing off restart attempts. The Pod exists but the app never stays running. This is almost always an application or config problem — not a Kubernetes bug."
+      workflow={[
+        "kubectl get pods — confirm STATUS and restart count",
+        "kubectl describe pod — read Events and container state",
+        "kubectl logs POD — see why the process exited",
+        "Fix command, env, or image in the manifest",
+      ]}
+      fixHint="Find why busybox exits immediately, then imagine the fix you'd apply in YAML."
+    />
     <KubectlTerminal cluster="crash" height="380px" />
   </section>
 </BaseLayout>

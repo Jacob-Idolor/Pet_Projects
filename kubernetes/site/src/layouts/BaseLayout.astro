@@ -4,7 +4,8 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "Learn Kubernetes and containers in your browser — simulated practice, no install required." } = Astro.props;
+const { title, description = "Choose a lab — Docker, Kubernetes, troubleshooting, or local cluster practice." } = Astro.props;
+const isHub = Astro.url.pathname === "/" || Astro.url.pathname === "/index.html";
 ---
 
 <!doctype html>
@@ -15,29 +16,35 @@ const { title, description = "Learn Kubernetes and containers in your browser �
     <meta name="description" content={description} />
     <title>{title} | K8s Practice Lab</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <!-- Google AdSense: paste your script after approval -->
-    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script> -->
+    <!-- AdSense script loads dynamically when enabled — see /ads.html -->
   </head>
   <body>
     <header class="site-header">
       <div class="container">
-        <a class="logo" href="/">☸ K8s Practice Lab</a>
+        <a class="logo" href="/">☸ Lab Hub</a>
         <nav>
+          <a href="/">Labs</a>
           <a href="/learn.html">Learn</a>
-          <a href="/practice.html">Practice</a>
-          <a href="/progress.html">Progress</a>
+          <a href="/progress.html">Tracker</a>
+          <a href="/certificate.html">Certificate</a>
           <a href="/about.html">About</a>
         </nav>
       </div>
     </header>
     <main>
+      {!isHub && (
+        <div class="container back-link-wrap">
+          <a href="/" class="back-link">← Lab Hub</a>
+        </div>
+      )}
       <slot />
     </main>
     <footer class="site-footer">
       <div class="container">
         <p>
-          Browser-based Kubernetes learning — simulated practice, no downloads required.
+          Browser + local Kubernetes learning — simulated practice and real kind labs.
           <a href="/privacy.html">Privacy</a> ·
+          <a href="/ads.html">Ad settings</a> ·
           <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
       </div>
@@ -47,4 +54,5 @@ const { title, description = "Learn Kubernetes and containers in your browser �
 
 <style is:global>
   @import "../styles/global.css";
+  @import "../styles/lesson.css";
 </style>

@@ -1,6 +1,12 @@
 # Lab 06 — RBAC
 
-**Level:** L3 | **Time:** 45 min
+**Level:** L3 | **Time:** 45 min · **Module:** Storage & RBAC
+
+## Concepts
+
+**RBAC** controls who can do what. A **ServiceAccount** is an identity (for Pods or automation). **Role** defines permissions in a namespace; **RoleBinding** attaches that Role to a Subject.
+
+Principle of **least privilege**: grant only the verbs and resources needed. Test with `kubectl auth can-i` before debugging mysterious Forbidden errors.
 
 ## Goals
 

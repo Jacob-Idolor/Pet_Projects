@@ -72,8 +72,15 @@ terraform output s3_bucket_name
 
 ## Deploy site content
 
-```powershell
+```bash
+# From kubernetes/ (Linux/macOS)
+AWS_PROFILE=pet-projects make aws-deploy
+
+# Or directly
 cd kubernetes/infra
+./deploy-site.sh
+
+# Windows
 .\deploy-site.ps1 -Profile pet-projects
 ```
 

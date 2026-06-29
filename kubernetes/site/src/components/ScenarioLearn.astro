@@ -1,0 +1,67 @@
+---
+interface Props {
+  concept: string;
+  workflow?: string[];
+  fixHint?: string;
+}
+
+const { concept, workflow, fixHint } = Astro.props;
+---
+
+<div class="scenario-learn">
+  <h2>What you're learning</h2>
+  <p>{concept}</p>
+  {workflow && workflow.length > 0 && (
+    <>
+      <h3>Debug workflow</h3>
+      <ol>
+        {workflow.map((step) => <li>{step}</li>)}
+      </ol>
+    </>
+  )}
+  {fixHint && (
+    <p class="fix-hint"><strong>Goal:</strong> {fixHint}</p>
+  )}
+</div>
+
+<style>
+  .scenario-learn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .scenario-learn h2 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+    color: var(--accent);
+  }
+  .scenario-learn h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 1rem 0 0.5rem;
+  }
+  .scenario-learn p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .scenario-learn ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  .scenario-learn li {
+    margin-bottom: 0.3rem;
+  }
+  .fix-hint {
+    margin-top: 1rem !important;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+</style>

@@ -1,0 +1,317 @@
+---
+interface Props {
+  lessonId: string;
+}
+
+const { lessonId } = Astro.props;
+
+const meta: Record<string, { title: string; caption: string }> = {
+  "c1-containers": { title: "Visual — VM vs container", caption: "VMs bundle a full OS per app. Containers share one kernel — lighter and faster." },
+  "c2-images": { title: "Visual — Image layers", caption: "One read-only image stacks layers. Run it many times → many containers." },
+  "c3-dockerfile": { title: "Visual — Build pipeline", caption: "Dockerfile → build → image → run. Kubernetes pulls the same images." },
+  "c4-docker-cli": { title: "Visual — Docker CLI map", caption: "See what's running, read logs, inspect config — your daily toolkit." },
+  "c5-debug-docker": { title: "Visual — Debug decision tree", caption: "Follow the branches: exited? wrong port? logs tell the story." },
+  "c6-orchestration": { title: "Visual — One machine → many nodes", caption: "Docker on one host. Kubernetes schedules containers across a fleet." },
+  "k1-overview": { title: "Visual — Cluster anatomy", caption: "Control plane decides; worker nodes run your containers." },
+  "k2-pods": { title: "Visual — Pod anatomy", caption: "A Pod wraps containers with shared network namespace and volumes." },
+  "k3-pod-debug": { title: "Visual — Debug workflow", caption: "Memorize this order — it works on every cluster." },
+  "k4-deployments": { title: "Visual — Deployment chain", caption: "You edit Deployment → ReplicaSet keeps N Pods → self-healing loop." },
+  "k5-services": { title: "Visual — Service routing", caption: "Stable Service IP routes to Pod IPs that change constantly." },
+  "k6-config": { title: "Visual — Config injection", caption: "ConfigMaps & Secrets mount into Pods without rebuilding images." },
+  "k7-networking": { title: "Visual — Traffic path", caption: "Debug top-down: Ingress → Service → Endpoints → Pod." },
+  "k8-storage-rbac": { title: "Visual — Storage & permissions", caption: "PVC claims storage; RBAC controls who can touch what." },
+  "k9-production": { title: "Visual — Health probes", caption: "Readiness = traffic on/off. Liveness = restart if dead." },
+};
+
+const info = meta[lessonId];
+---
+
+{info && (
+  <figure class="lesson-visual-wrap lesson-animate" data-lesson-visual>
+    <figcaption class="lesson-visual-title">{info.title}</figcaption>
+    <p class="lesson-visual-caption">{info.caption}</p>
+
+    {lessonId === "c1-containers" && (
+      <svg viewBox="0 0 640 220" class="lesson-visual-svg" role="img" aria-label="VM vs container comparison">
+        <rect x="20" y="30" width="280" height="160" rx="10" class="v-box v-box-warn" />
+        <text x="160" y="58" text-anchor="middle" class="v-label">Virtual Machine</text>
+        <rect x="40" y="72" width="240" height="28" rx="4" fill="#2a2215" stroke="#f59e0b" />
+        <text x="160" y="90" text-anchor="middle" class="v-sublabel">Guest OS (full copy)</text>
+        <rect x="40" y="108" width="240" height="28" rx="4" fill="#2a2215" stroke="#f59e0b" />
+        <text x="160" y="126" text-anchor="middle" class="v-sublabel">Guest OS (full copy)</text>
+        <rect x="40" y="144" width="240" height="28" rx="4" fill="#1f2a3d" stroke="#8b9bb4" />
+        <text x="160" y="162" text-anchor="middle" class="v-sublabel">Hypervisor + Host OS</text>
+        <text x="160" y="198" text-anchor="middle" class="v-sublabel">Heavy · minutes to boot</text>
+
+        <text x="320" y="110" text-anchor="middle" class="v-label" style="font-size:20px">vs</text>
+
+        <rect x="340" y="30" width="280" height="160" rx="10" class="v-box v-box-success" />
+        <text x="480" y="58" text-anchor="middle" class="v-label">Containers</text>
+        <rect x="360" y="72" width="70" height="50" rx="6" fill="#152a1f" stroke="#22c55e" />
+        <text x="395" y="102" text-anchor="middle" class="v-sublabel">App A</text>
+        <rect x="445" y="72" width="70" height="50" rx="6" fill="#152a1f" stroke="#22c55e" />
+        <text x="480" y="102" text-anchor="middle" class="v-sublabel">App B</text>
+        <rect x="530" y="72" width="70" height="50" rx="6" fill="#152a1f" stroke="#22c55e" />
+        <text x="565" y="102" text-anchor="middle" class="v-sublabel">App C</text>
+        <rect x="360" y="132" width="240" height="28" rx="4" fill="#1f2a3d" stroke="#3b82f6" />
+        <text x="480" y="150" text-anchor="middle" class="v-sublabel">Shared Host OS Kernel</text>
+        <text x="480" y="198" text-anchor="middle" class="v-sublabel">Light · starts in seconds</text>
+        <circle cx="395" cy="95" r="3" fill="#22c55e" class="v-pulse" />
+        <circle cx="480" cy="95" r="3" fill="#22c55e" class="v-pulse" style="animation-delay:0.3s" />
+        <circle cx="565" cy="95" r="3" fill="#22c55e" class="v-pulse" style="animation-delay:0.6s" />
+      </svg>
+    )}
+
+    {lessonId === "c2-images" && (
+      <svg viewBox="0 0 640 200" class="lesson-visual-svg" role="img" aria-label="Image layers and containers">
+        <rect x="30" y="40" width="180" height="24" rx="4" fill="#1f2937" stroke="#64748b" style="animation: layer-stack 2s ease infinite" />
+        <rect x="30" y="68" width="180" height="24" rx="4" fill="#1e3a5f" stroke="#3b82f6" style="animation: layer-stack 2s ease 0.2s infinite" />
+        <rect x="30" y="96" width="180" height="24" rx="4" fill="#152a1f" stroke="#22c55e" style="animation: layer-stack 2s ease 0.4s infinite" />
+        <rect x="30" y="124" width="180" height="24" rx="4" fill="#2a2215" stroke="#f59e0b" style="animation: layer-stack 2s ease 0.6s infinite" />
+        <text x="120" y="28" text-anchor="middle" class="v-label">Image (read-only layers)</text>
+        <text x="120" y="168" text-anchor="middle" class="v-sublabel">myapp:1.0</text>
+
+        <path d="M230 100 L280 100" class="v-arrow" marker-end="url(#arr)" />
+        <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6" /></marker></defs>
+
+        <rect x="300" y="50" width="90" height="44" rx="8" class="v-box v-box-success" />
+        <text x="345" y="76" text-anchor="middle" class="v-sublabel">Container 1</text>
+        <rect x="410" y="50" width="90" height="44" rx="8" class="v-box v-box-success" />
+        <text x="455" y="76" text-anchor="middle" class="v-sublabel">Container 2</text>
+        <rect x="520" y="50" width="90" height="44" rx="8" class="v-box v-box-success" />
+        <text x="565" y="76" text-anchor="middle" class="v-sublabel">Container 3</text>
+        <text x="432" y="130" text-anchor="middle" class="v-label">Running copies</text>
+        <text x="432" y="148" text-anchor="middle" class="v-sublabel">Same image · independent processes</text>
+      </svg>
+    )}
+
+    {lessonId === "c3-dockerfile" && (
+      <svg viewBox="0 0 640 120" class="lesson-visual-svg" role="img" aria-label="Docker build pipeline">
+        <rect x="10" y="35" width="100" height="50" rx="8" class="v-box v-box-warn" />
+        <text x="60" y="65" text-anchor="middle" class="v-sublabel">Dockerfile</text>
+        <path d="M120 60 L150 60" class="v-arrow" />
+        <rect x="160" y="35" width="100" height="50" rx="8" class="v-box v-box-accent" />
+        <text x="210" y="65" text-anchor="middle" class="v-sublabel">docker build</text>
+        <path d="M270 60 L300 60" class="v-arrow" />
+        <rect x="310" y="35" width="100" height="50" rx="8" class="v-box v-box-success" />
+        <text x="360" y="65" text-anchor="middle" class="v-sublabel">Image</text>
+        <path d="M420 60 L450 60" class="v-arrow" />
+        <rect x="460" y="35" width="100" height="50" rx="8" class="v-box v-box-accent" />
+        <text x="510" y="65" text-anchor="middle" class="v-sublabel">docker run</text>
+        <path d="M570 60 L600 60" class="v-arrow" />
+        <rect x="610" y="35" width="20" height="50" rx="4" class="v-box v-box-success" />
+        <text x="320" y="110" text-anchor="middle" class="v-sublabel">↕ push / pull Registry</text>
+      </svg>
+    )}
+
+    {lessonId === "c4-docker-cli" && (
+      <svg viewBox="0 0 640 180" class="lesson-visual-svg" role="img" aria-label="Docker CLI commands">
+        <rect x="240" y="10" width="160" height="44" rx="8" class="v-box v-box-accent" />
+        <text x="320" y="38" text-anchor="middle" class="v-label">Container</text>
+        <line x1="320" y1="54" x2="120" y2="100" class="v-arrow" />
+        <line x1="320" y1="54" x2="320" y2="100" class="v-arrow" />
+        <line x1="320" y1="54" x2="520" y2="100" class="v-arrow" />
+        <rect x="60" y="100" width="120" height="56" rx="8" class="v-box" />
+        <text x="120" y="124" text-anchor="middle" class="v-sublabel">docker ps</text>
+        <text x="120" y="142" text-anchor="middle" class="v-sublabel">what's running?</text>
+        <rect x="260" y="100" width="120" height="56" rx="8" class="v-box" />
+        <text x="320" y="124" text-anchor="middle" class="v-sublabel">docker logs</text>
+        <text x="320" y="142" text-anchor="middle" class="v-sublabel">app output</text>
+        <rect x="460" y="100" width="120" height="56" rx="8" class="v-box" />
+        <text x="520" y="124" text-anchor="middle" class="v-sublabel">docker inspect</text>
+        <text x="520" y="142" text-anchor="middle" class="v-sublabel">ports · exit code</text>
+      </svg>
+    )}
+
+    {lessonId === "c5-debug-docker" && (
+      <svg viewBox="0 0 640 200" class="lesson-visual-svg" role="img" aria-label="Docker debug flow">
+        <rect x="250" y="10" width="140" height="40" rx="8" class="v-box v-box-warn" />
+        <text x="320" y="35" text-anchor="middle" class="v-sublabel">App not working?</text>
+        <line x1="280" y1="50" x2="160" y2="90" class="v-arrow" />
+        <line x1="360" y1="50" x2="480" y2="90" class="v-arrow" />
+        <rect x="80" y="90" width="160" height="50" rx="8" class="v-box" />
+        <text x="160" y="112" text-anchor="middle" class="v-sublabel">docker ps -a</text>
+        <text x="160" y="128" text-anchor="middle" class="v-sublabel">Exited? → logs</text>
+        <rect x="400" y="90" width="160" height="50" rx="8" class="v-box" />
+        <text x="480" y="112" text-anchor="middle" class="v-sublabel">Running? → inspect</text>
+        <text x="480" y="128" text-anchor="middle" class="v-sublabel">Wrong port mapping?</text>
+        <rect x="240" y="160" width="160" height="36" rx="8" class="v-box v-box-success" />
+        <text x="320" y="183" text-anchor="middle" class="v-sublabel">Fix & re-run</text>
+      </svg>
+    )}
+
+    {lessonId === "c6-orchestration" && (
+      <svg viewBox="0 0 640 180" class="lesson-visual-svg" role="img" aria-label="Docker vs Kubernetes scale">
+        <rect x="20" y="30" width="260" height="120" rx="10" class="v-box" />
+        <text x="150" y="55" text-anchor="middle" class="v-label">One machine (Docker)</text>
+        <rect x="40" y="70" width="60" height="40" rx="6" class="v-box v-box-success" />
+        <rect x="110" y="70" width="60" height="40" rx="6" class="v-box v-box-success" />
+        <rect x="180" y="70" width="60" height="40" rx="6" class="v-box v-box-success" />
+        <text x="150" y="135" text-anchor="middle" class="v-sublabel">Manual restarts · one host</text>
+        <text x="300" y="95" class="v-flow-arrow">→</text>
+        <rect x="340" y="20" width="280" height="140" rx="10" class="v-box v-box-accent" />
+        <text x="480" y="45" text-anchor="middle" class="v-label">Kubernetes cluster</text>
+        <rect x="360" y="60" width="70" height="35" rx="4" fill="#152238" stroke="#3b82f6" />
+        <text x="395" y="82" text-anchor="middle" class="v-sublabel">Node 1</text>
+        <rect x="445" y="60" width="70" height="35" rx="4" fill="#152238" stroke="#3b82f6" />
+        <text x="480" y="82" text-anchor="middle" class="v-sublabel">Node 2</text>
+        <rect x="530" y="60" width="70" height="35" rx="4" fill="#152238" stroke="#3b82f6" />
+        <text x="565" y="82" text-anchor="middle" class="v-sublabel">Node 3</text>
+        <rect x="400" y="110" width="160" height="30" rx="6" fill="#1a2540" stroke="#a78bfa" />
+        <text x="480" y="130" text-anchor="middle" class="v-sublabel">Control plane schedules & heals</text>
+      </svg>
+    )}
+
+    {lessonId === "k1-overview" && (
+      <svg viewBox="0 0 640 200" class="lesson-visual-svg" role="img" aria-label="Kubernetes cluster">
+        <rect x="200" y="15" width="240" height="55" rx="10" class="v-box v-box-accent" />
+        <text x="320" y="38" text-anchor="middle" class="v-label">Control Plane</text>
+        <text x="320" y="56" text-anchor="middle" class="v-sublabel">API · Scheduler · etcd</text>
+        <line x1="260" y1="70" x2="130" y2="110" class="v-arrow" />
+        <line x1="320" y1="70" x2="320" y2="110" class="v-arrow" />
+        <line x1="380" y1="70" x2="510" y2="110" class="v-arrow" />
+        <rect x="60" y="110" width="140" height="70" rx="8" class="v-box v-box-success" />
+        <text x="130" y="140" text-anchor="middle" class="v-label">Worker Node</text>
+        <text x="130" y="158" text-anchor="middle" class="v-sublabel">kubelet · Pods</text>
+        <rect x="250" y="110" width="140" height="70" rx="8" class="v-box v-box-success" />
+        <text x="320" y="140" text-anchor="middle" class="v-label">Worker Node</text>
+        <rect x="440" y="110" width="140" height="70" rx="8" class="v-box v-box-success" />
+        <text x="510" y="140" text-anchor="middle" class="v-label">Worker Node</text>
+        <text x="320" y="195" text-anchor="middle" class="v-sublabel">kubectl → API → desired state reconciled</text>
+      </svg>
+    )}
+
+    {lessonId === "k2-pods" && (
+      <svg viewBox="0 0 640 160" class="lesson-visual-svg" role="img" aria-label="Pod anatomy">
+        <rect x="180" y="20" width="280" height="110" rx="12" class="v-box v-box-success" stroke-width="2" />
+        <text x="320" y="48" text-anchor="middle" class="v-label">Pod</text>
+        <text x="320" y="64" text-anchor="middle" class="v-sublabel">shared network · shared volumes</text>
+        <rect x="210" y="78" width="100" height="40" rx="6" fill="#1f2a3d" stroke="#8b9bb4" />
+        <text x="260" y="103" text-anchor="middle" class="v-sublabel">app container</text>
+        <rect x="330" y="78" width="100" height="40" rx="6" fill="#1f2a3d" stroke="#8b9bb4" stroke-dasharray="4 2" />
+        <text x="380" y="103" text-anchor="middle" class="v-sublabel">sidecar (opt)</text>
+        <text x="320" y="148" text-anchor="middle" class="v-sublabel">Usually 1 app container per Pod</text>
+        <circle cx="320" cy="98" r="4" fill="#22c55e" class="v-pulse" />
+      </svg>
+    )}
+
+    {lessonId === "k3-pod-debug" && (
+      <svg viewBox="0 0 640 100" class="lesson-visual-svg" role="img" aria-label="Pod debug workflow">
+        <rect x="10" y="30" width="110" height="44" rx="8" class="v-box v-box-accent" />
+        <text x="65" y="58" text-anchor="middle" class="v-sublabel">1. get pods</text>
+        <path d="M125 52 L155 52" class="v-arrow" />
+        <rect x="165" y="30" width="110" height="44" rx="8" class="v-box" />
+        <text x="220" y="58" text-anchor="middle" class="v-sublabel">2. describe</text>
+        <path d="M280 52 L310 52" class="v-arrow" />
+        <rect x="320" y="30" width="110" height="44" rx="8" class="v-box" />
+        <text x="375" y="58" text-anchor="middle" class="v-sublabel">3. logs</text>
+        <path d="M435 52 L465 52" class="v-arrow" />
+        <rect x="475" y="30" width="150" height="44" rx="8" class="v-box v-box-success" />
+        <text x="550" y="58" text-anchor="middle" class="v-sublabel">4. logs --previous</text>
+        <text x="320" y="92" text-anchor="middle" class="v-sublabel">Events at bottom of describe = gold</text>
+      </svg>
+    )}
+
+    {lessonId === "k4-deployments" && (
+      <svg viewBox="0 0 640 200" class="lesson-visual-svg" role="img" aria-label="Deployment to Pods">
+        <rect x="20" y="60" width="130" height="50" rx="8" class="v-box v-box-accent" />
+        <text x="85" y="90" text-anchor="middle" class="v-label">Deployment</text>
+        <path d="M155 85 L195 85" class="v-arrow" />
+        <rect x="205" y="60" width="130" height="50" rx="8" class="v-box" />
+        <text x="270" y="90" text-anchor="middle" class="v-label">ReplicaSet</text>
+        <path d="M340 85 L380 85" class="v-arrow" />
+        <rect x="390" y="40" width="80" height="36" rx="6" class="v-box v-box-success" />
+        <text x="430" y="62" text-anchor="middle" class="v-sublabel">Pod</text>
+        <rect x="390" y="82" width="80" height="36" rx="6" class="v-box v-box-success" />
+        <rect x="390" y="124" width="80" height="36" rx="6" class="v-box v-box-success" />
+        <path d="M430 160 Q430 180 320 180 Q210 180 85 160" class="v-arrow" fill="none" />
+        <text x="320" y="195" text-anchor="middle" class="v-sublabel">Delete a Pod → ReplicaSet recreates it (self-healing)</text>
+      </svg>
+    )}
+
+    {lessonId === "k5-services" && (
+      <svg viewBox="0 0 640 170" class="lesson-visual-svg" role="img" aria-label="Service routing">
+        <rect x="240" y="15" width="160" height="50" rx="8" class="v-box v-box-accent" />
+        <text x="320" y="38" text-anchor="middle" class="v-label">Service</text>
+        <text x="320" y="54" text-anchor="middle" class="v-sublabel">stable IP · DNS · selector</text>
+        <line x1="280" y1="65" x2="160" y2="110" class="v-arrow" />
+        <line x1="320" y1="65" x2="320" y2="110" class="v-arrow" />
+        <line x1="360" y1="65" x2="480" y2="110" class="v-arrow" />
+        <rect x="100" y="110" width="120" height="44" rx="8" class="v-box v-box-success" />
+        <text x="160" y="137" text-anchor="middle" class="v-sublabel">Pod IP (ephemeral)</text>
+        <rect x="260" y="110" width="120" height="44" rx="8" class="v-box v-box-success" />
+        <rect x="420" y="110" width="120" height="44" rx="8" class="v-box v-box-success" />
+        <text x="320" y="168" text-anchor="middle" class="v-sublabel">No endpoints? → check label selector match</text>
+      </svg>
+    )}
+
+    {lessonId === "k6-config" && (
+      <svg viewBox="0 0 640 150" class="lesson-visual-svg" role="img" aria-label="ConfigMap and Secret injection">
+        <rect x="40" y="40" width="120" height="50" rx="8" class="v-box" />
+        <text x="100" y="62" text-anchor="middle" class="v-sublabel">ConfigMap</text>
+        <text x="100" y="78" text-anchor="middle" class="v-sublabel">non-sensitive</text>
+        <rect x="40" y="100" width="120" height="40" rx="8" class="v-box v-box-warn" />
+        <text x="100" y="125" text-anchor="middle" class="v-sublabel">Secret</text>
+        <path d="M170 90 L280 90" class="v-arrow" />
+        <rect x="290" y="50" width="200" height="80" rx="10" class="v-box v-box-success" />
+        <text x="390" y="78" text-anchor="middle" class="v-label">Pod</text>
+        <text x="390" y="98" text-anchor="middle" class="v-sublabel">env vars or volume mounts</text>
+        <text x="390" y="140" text-anchor="middle" class="v-sublabel">Same image · different config per env</text>
+      </svg>
+    )}
+
+    {lessonId === "k7-networking" && (
+      <svg viewBox="0 0 640 120" class="lesson-visual-svg" role="img" aria-label="Networking path">
+        <rect x="20" y="35" width="100" height="44" rx="8" class="v-box" />
+        <text x="70" y="62" text-anchor="middle" class="v-sublabel">Ingress</text>
+        <path d="M125 57 L165 57" class="v-arrow" />
+        <rect x="175" y="35" width="100" height="44" rx="8" class="v-box v-box-accent" />
+        <text x="225" y="62" text-anchor="middle" class="v-sublabel">Service</text>
+        <path d="M280 57 L320 57" class="v-arrow" />
+        <rect x="330" y="35" width="100" height="44" rx="8" class="v-box" />
+        <text x="380" y="62" text-anchor="middle" class="v-sublabel">Endpoints</text>
+        <path d="M435 57 L475 57" class="v-arrow" />
+        <rect x="485" y="35" width="100" height="44" rx="8" class="v-box v-box-success" />
+        <text x="535" y="62" text-anchor="middle" class="v-sublabel">Pod</text>
+        <text x="320" y="105" text-anchor="middle" class="v-sublabel">Debug top → down · don't skip layers</text>
+      </svg>
+    )}
+
+    {lessonId === "k8-storage-rbac" && (
+      <svg viewBox="0 0 640 170" class="lesson-visual-svg" role="img" aria-label="Storage and RBAC">
+        <rect x="30" y="20" width="250" height="130" rx="10" class="v-box" />
+        <text x="155" y="45" text-anchor="middle" class="v-label">Storage</text>
+        <rect x="50" y="60" width="90" height="40" rx="6" class="v-box v-box-accent" />
+        <text x="95" y="85" text-anchor="middle" class="v-sublabel">PVC</text>
+        <path d="M145 80 L175 80" class="v-arrow" />
+        <rect x="185" y="60" width="70" height="40" rx="6" class="v-box v-box-success" />
+        <text x="220" y="85" text-anchor="middle" class="v-sublabel">Pod</text>
+        <text x="155" y="130" text-anchor="middle" class="v-sublabel">Data survives Pod restart</text>
+        <rect x="360" y="20" width="250" height="130" rx="10" class="v-box v-box-warn" />
+        <text x="485" y="45" text-anchor="middle" class="v-label">RBAC</text>
+        <polygon points="485,65 530,95 440,95" fill="#2a2215" stroke="#f59e0b" />
+        <text x="485" y="88" text-anchor="middle" class="v-sublabel" style="font-size:9px">Role</text>
+        <text x="420" y="120" text-anchor="middle" class="v-sublabel">SA</text>
+        <text x="550" y="120" text-anchor="middle" class="v-sublabel">Binding</text>
+        <text x="485" y="140" text-anchor="middle" class="v-sublabel">Who can do what</text>
+      </svg>
+    )}
+
+    {lessonId === "k9-production" && (
+      <svg viewBox="0 0 640 140" class="lesson-visual-svg" role="img" aria-label="Liveness and readiness probes">
+        <rect x="40" y="30" width="260" height="80" rx="10" class="v-box v-box-success" />
+        <text x="170" y="55" text-anchor="middle" class="v-label">Pod lifecycle</text>
+        <rect x="60" y="68" width="100" height="28" rx="4" fill="#152a1f" stroke="#22c55e" />
+        <text x="110" y="86" text-anchor="middle" class="v-sublabel">Starting…</text>
+        <rect x="180" y="68" width="100" height="28" rx="4" fill="#152238" stroke="#3b82f6" />
+        <text x="230" y="86" text-anchor="middle" class="v-sublabel">Ready ✓</text>
+        <text x="170" y="125" text-anchor="middle" class="v-sublabel">Readiness probe → added to Service</text>
+        <rect x="340" y="30" width="260" height="80" rx="10" class="v-box v-box-warn" />
+        <text x="470" y="55" text-anchor="middle" class="v-label">If unhealthy</text>
+        <text x="470" y="78" text-anchor="middle" class="v-sublabel">Liveness fails → kubelet restarts</text>
+        <text x="470" y="98" text-anchor="middle" class="v-sublabel">Readiness fails → no traffic</text>
+        <circle cx="230" cy="82" r="4" fill="#22c55e" class="v-pulse" />
+      </svg>
+    )}
+  </figure>
+)}

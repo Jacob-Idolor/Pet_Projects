@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DockerTerminal from "../components/DockerTerminal.astro";
+---
+
+<BaseLayout title="Practice — Wrong port mapping">
+  <section class="hero container prose">
+    <h1>Scenario: wrong port mapping</h1>
+    <p class="lead">
+      Container is running but <code>curl localhost:8080</code> fails.
+      Check the PORTS column with <code>docker ps</code> — host vs container port matters.
+    </p>
+  </section>
+  <section class="container">
+    <DockerTerminal cluster="wrongport" height="380px" />
+  </section>
+  <section class="container prose">
+    <div class="callout">
+      <p><strong>Fix:</strong> PORTS shows <code>9090-&gt;80</code>. nginx listens on 80 inside the container. Use <code>-p 8080:80</code> to reach it on localhost:8080.</p>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import KubectlTerminal from "../components/KubectlTerminal.astro";
+import ScenarioLearn from "../components/ScenarioLearn.astro";
+---
+
+<BaseLayout title="Practice — ImagePullBackOff">
+  <section class="hero container prose">
+    <h1>Scenario: ImagePullBackOff</h1>
+    <p class="lead">The cluster cannot pull the container image.</p>
+  </section>
+  <section class="container">
+    <ScenarioLearn
+      concept="Before a Pod runs, the kubelet must pull the container image from a registry. ImagePullBackOff means that pull failed — wrong name, non-existent tag, private registry without credentials, or image not loaded into kind."
+      workflow={[
+        "kubectl get pods — note ImagePullBackOff status",
+        "kubectl describe pod — read Events for pull error details",
+        "Verify image name:tag exists (Docker Hub, or kind load for local)",
+        "Fix image in manifest and re-apply",
+      ]}
+      fixHint="Describe broken-app and read which tag failed to pull."
+    />
+    <KubectlTerminal cluster="imagepull" height="380px" />
+  </section>
+</BaseLayout>
