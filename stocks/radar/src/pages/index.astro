@@ -1,12 +1,9 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import StockSection from "../components/StockSection.astro";
 import HoldingsUpload from "../components/HoldingsUpload.astro";
+import WatchlistBoard from "../components/WatchlistBoard.astro";
 import { meta, stocks } from "../data/watchlist";
 
-const ownedCount = stocks.filter((s) => s.category === "owned").length;
-const targetCount = stocks.filter((s) => s.category === "targets").length;
-const watchCount = stocks.filter((s) => s.category === "watching").length;
 const symbols = [...new Set(stocks.map((s) => s.symbol))];
 ---
 
@@ -15,55 +12,63 @@ const symbols = [...new Set(stocks.map((s) => s.symbol))];
     <h1>{meta.groupName}</h1>
     <p class="tagline">{meta.tagline}</p>
     <div class="hero-stats">
-      <span class="stat-pill"><strong>{ownedCount}</strong> holding{ownedCount === 1 ? "" : "s"}</span>
-      <span class="stat-pill"><strong>{targetCount}</strong> price target{targetCount === 1 ? "" : "s"}</span>
-      <span class="stat-pill"><strong>{watchCount}</strong> on watch</span>
+      <span class="stat-pill"><strong>{stocks.length}</strong> tickers tracked</span>
       <span class="stat-pill">Updated {meta.lastUpdated}</span>
     </div>
   </section>
 
   <div class="container">
     <HoldingsUpload />
-
-    <StockSection category="owned" />
-    <StockSection category="targets" />
-    <StockSection category="watching" />
+    <WatchlistBoard />
   </div>
 </BaseLayout>
 
 <script define:vars={{ symbols }}>
-  async function fetchQuotes(symbols) {
-    if (!symbols.length) return;
+  async function fetchOne(symbol) {
+    try {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
+        { headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (!meta?.regularMarketPrice) return null;
+      return {
+        price: meta.regularMarketPrice,
+        changePct: meta.regularMarketChangePercent ?? null,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchQuotesBatched(symbolList) {
+    if (!symbolList.length) return;
 
     const quotes = {};
+    const chunkSize = 12;
+    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    await Promise.all(
-      symbols.map(async (symbol) => {
-        try {
-          const res = await fetch(
-            `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
-            { headers: { Accept: "application/json" } }
-          );
-          if (!res.ok) return;
-          const data = await res.json();
-          const meta = data?.chart?.result?.[0]?.meta;
-          if (!meta?.regularMarketPrice) return;
-
-          quotes[symbol] = {
-            price: meta.regularMarketPrice,
-            changePct: meta.regularMarketChangePercent ?? null,
-          };
-        } catch {
-          /* offline or CORS — fall back to static prices in watchlist.ts */
-        }
-      })
-    );
+    for (let i = 0; i < symbolList.length; i += chunkSize) {
+      const chunk = symbolList.slice(i, i + chunkSize);
+      const results = await Promise.all(
+        chunk.map(async (symbol) => {
+          const q = await fetchOne(symbol);
+          return q ? [symbol, q] : null;
+        })
+      );
+      for (const row of results) {
+        if (row) quotes[row[0]] = row[1];
+      }
+      if (i + chunkSize < symbolList.length) await delay(250);
+    }
 
     if (Object.keys(quotes).length) {
       document.dispatchEvent(new CustomEvent("radar:quotes", { detail: quotes }));
     }
   }
 
-  fetchQuotes(symbols);
-  setInterval(() => fetchQuotes(symbols), 60_000);
+  fetchQuotesBatched(symbols);
+  setInterval(() => fetchQuotesBatched(symbols), 120_000);
 </script>

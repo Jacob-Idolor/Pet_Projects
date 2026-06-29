@@ -20,10 +20,11 @@ stocks/
 - **Price targets** — waiting for a specific entry or trim level
 - **Long-term watchlist** — keeping an eye on, no rush
 
-Drop broker screenshots locally (IndexedDB — nothing hits a server). Edit `radar/src/data/watchlist.ts` to update the shared list.
+Drop broker screenshots locally (IndexedDB — nothing hits a server). Supports **100+ tickers** via CSV import, searchable table, and holistic overview (at-target counts, closest-to-entry chips).
 
 ```bash
 cd stocks/radar && npm install && npm run dev
+npm run import-csv -- my-tickers.csv   # bulk merge into watchlist.json
 ```
 
 ## Conventions

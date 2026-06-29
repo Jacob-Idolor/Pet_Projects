@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "groupName": "The Radar",
+    "tagline": "Everything on our radar — owned, waiting on entry, and long-term watches.",
+    "lastUpdated": "2026-06-29"
+  },
+  "stocks": [
+    {
+      "id": "nvda-owned",
+      "symbol": "NVDA",
+      "name": "NVIDIA",
+      "category": "owned",
+      "lastPrice": 135.5,
+      "targetPrice": 180,
+      "targetNote": "Trim 25% above $175",
+      "thesis": "AI infra leader — holding through next earnings.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "aapl-owned",
+      "symbol": "AAPL",
+      "name": "Apple",
+      "category": "owned",
+      "lastPrice": 198.2,
+      "thesis": "Core compounder — services mix keeps improving.",
+      "addedBy": "M",
+      "holder": "M"
+    },
+    {
+      "id": "pltr-targets",
+      "symbol": "PLTR",
+      "name": "Palantir",
+      "category": "targets",
+      "lastPrice": 24.8,
+      "targetPrice": 18,
+      "targetNote": "Starter if it pulls back to $18–19",
+      "thesis": "Like the story, want a better entry.",
+      "addedBy": "K"
+    },
+    {
+      "id": "cost-targets",
+      "symbol": "COST",
+      "name": "Costco",
+      "category": "targets",
+      "lastPrice": 892.0,
+      "targetPrice": 820,
+      "targetNote": "Buy zone on a 5–8% dip",
+      "thesis": "Quality compounder — patience for a sale.",
+      "addedBy": "J"
+    },
+    {
+      "id": "amd-watching",
+      "symbol": "AMD",
+      "name": "Advanced Micro Devices",
+      "category": "watching",
+      "lastPrice": 162.4,
+      "targetPrice": 200,
+      "targetNote": "Re-evaluate if MI300 share gains accelerate",
+      "thesis": "GPU/CPU competition with NVDA.",
+      "addedBy": "M"
+    },
+    {
+      "id": "v-watching",
+      "symbol": "V",
+      "name": "Visa",
+      "category": "watching",
+      "lastPrice": 278.6,
+      "thesis": "Payments toll road — long-term hold candidate.",
+      "addedBy": "K"
+    },
+    {
+      "id": "tsla-watching",
+      "symbol": "TSLA",
+      "name": "Tesla",
+      "category": "watching",
+      "lastPrice": 248.5,
+      "targetPrice": 200,
+      "targetNote": "Interesting again sub-$200",
+      "thesis": "Volatility play — only on a deep pullback.",
+      "addedBy": "J"
+    }
+  ]
+}
