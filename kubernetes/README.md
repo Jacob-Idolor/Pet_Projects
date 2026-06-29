@@ -8,7 +8,9 @@ A **dual-path** practice environment for containers and Kubernetes:
 | **Localhost** | kind cluster + Docker lab + hands-on labs | Build muscle memory with real commands |
 | **AWS** | Terraform → S3 + CloudFront (~$1–5/mo) | Share the learning site publicly |
 
-Start here: run `make site-dev` and open **http://localhost:4321** — the Lab Hub lets you pick any lab.
+Start here: run `make site-dev` → **Lab Hub** at http://localhost:4321
+
+Full learning guide: **[LEARNING-PATH.md](LEARNING-PATH.md)**
 
 ---
 

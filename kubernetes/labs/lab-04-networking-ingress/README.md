@@ -1,6 +1,12 @@
 # Lab 04 — Networking & ingress
 
-**Level:** L2 | **Time:** 60 min
+**Level:** L2 | **Time:** 60 min · **Module:** Networking & Ingress
+
+## Concepts
+
+**ClusterIP Services** are reachable only inside the cluster. **Ingress** adds HTTP routing (hostnames, paths, TLS) but requires an **Ingress controller** pod running in the cluster — applying an Ingress YAML alone does nothing without one.
+
+Debug order: Pod Running → Service endpoints exist → Ingress rules point to correct Service → DNS/Host header correct.
 
 ## Goals
 

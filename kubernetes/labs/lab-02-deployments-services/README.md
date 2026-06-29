@@ -1,6 +1,20 @@
 # Lab 02 — Deployments & services
 
-**Level:** L1–L2 | **Time:** 45–60 min
+**Level:** L1–L2 | **Time:** 45–60 min · **Module:** Deployments & Services
+
+## Concepts
+
+A **Deployment** declares desired state: which image, how many replicas, which env vars. Kubernetes runs a control loop — if a Pod dies, it's replaced. If you scale to 3, three Pods run.
+
+A **Service** is a stable network address for a set of Pods. Pods have ephemeral IPs; Services have DNS names and selectors that find Pods by labels.
+
+| Type | Use case |
+|------|----------|
+| ClusterIP | Internal traffic only (default) |
+| NodePort | Expose on each node's IP at a high port |
+| LoadBalancer | Cloud LB in front of NodePort |
+
+**Endpoints** connect Services to Pod IPs. No endpoints = selector mismatch.
 
 ## Goals
 

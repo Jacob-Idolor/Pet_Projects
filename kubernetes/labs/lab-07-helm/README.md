@@ -1,6 +1,12 @@
 # Lab 07 — Helm
 
-**Level:** L3 | **Time:** 45–60 min
+**Level:** L3 | **Time:** 45–60 min · **Module:** Production patterns
+
+## Concepts
+
+**Helm** is a package manager for Kubernetes. A **chart** bundles templated YAML + default **values.yaml**. `helm install` creates resources; `helm upgrade` changes them; `helm rollback` reverts to a previous revision — similar mental model to Deployment rollouts.
+
+Charts help you avoid copy-pasting YAML and give you versioned, repeatable deploys.
 
 ## Goals
 

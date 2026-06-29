@@ -2,7 +2,20 @@
 
 **Level:** L0 | **Time:** 45–60 min | **Prerequisites:** Docker installed
 
-Do this **before** Lab 01 if you're new to containers. Browser practice: [/docker.html](../site/) (run `make site-dev`).
+Do this **before** Lab 01 if you're new to containers. Browser first: `/docker.html` (run `make site-dev`).
+
+## Concepts
+
+**Why Docker before Kubernetes?** Kubernetes orchestrates containers — it does not replace understanding images, layers, ports, and logs. If you can't debug `docker ps` and `docker logs`, kubectl will feel like magic instead of mechanics.
+
+| Term | Definition |
+|------|------------|
+| Image | Immutable template (layers stacked) |
+| Container | Running process from an image |
+| Registry | Storage for images (Docker Hub, ECR, GHCR) |
+| Multi-stage build | Compile in one stage, copy binary to slim runtime |
+
+The sample app Dockerfile demonstrates production patterns: pinned tags, non-root user, health check, multi-stage build.
 
 ## Goals
 

@@ -100,16 +100,28 @@ export const modules: Module[] = [
     cluster: "default",
     sections: [
       {
+        heading: "What is a Pod?",
+        body: "A <strong>Pod</strong> is the smallest object Kubernetes schedules. It wraps one or more containers that share network and storage. In practice, most Pods run a single app container plus optional sidecars (logging, proxies).",
+      },
+      {
         heading: "Pod lifecycle",
-        body: "Pending → Running → Succeeded/Failed. <code>CrashLoopBackOff</code> means the container keeps exiting and kubelet backs off restarts.",
+        body: "<strong>Pending</strong> — waiting to be scheduled or pulling image.<br><strong>Running</strong> — at least one container is active.<br><strong>Succeeded / Failed</strong> — terminal states for jobs.<br><code>CrashLoopBackOff</code> — container keeps exiting; kubelet backs off restart attempts.",
       },
       {
-        heading: "First commands to learn",
-        body: "<code>kubectl get pods</code> — list pods<br><code>kubectl describe pod NAME</code> — events, state, image<br><code>kubectl logs NAME</code> — stdout/stderr<br><code>kubectl exec -it NAME -- sh</code> — shell (simulated in real clusters)",
+        heading: "Why Pods get replaced",
+        body: "Pod IPs and names are ephemeral. When a node fails or you deploy a new version, Kubernetes creates <em>new</em> Pods — it does not restart the old one in place. That's why we use Deployments (next module) instead of managing Pods directly.",
       },
       {
-        heading: "Debugging order",
-        body: "1. <code>kubectl get pods</code> — status column<br>2. <code>kubectl describe</code> — Events at bottom<br>3. <code>kubectl logs</code> — app output<br>4. <code>kubectl logs --previous</code> — last crash",
+        heading: "Essential commands",
+        body: "<code>kubectl get pods</code> — list pods and STATUS column<br><code>kubectl describe pod NAME</code> — events, state, image, node<br><code>kubectl logs NAME</code> — stdout/stderr<br><code>kubectl logs NAME --previous</code> — logs from last crashed container<br><code>kubectl exec -it NAME -- sh</code> — shell inside container",
+      },
+      {
+        heading: "Debugging order (memorize this)",
+        body: "1. <code>kubectl get pods</code> — what does STATUS say?<br>2. <code>kubectl describe pod</code> — read <strong>Events</strong> at the bottom<br>3. <code>kubectl logs</code> — what did the app print?<br>4. <code>kubectl logs --previous</code> — if it crashed before current run",
+      },
+      {
+        heading: "Status codes you'll see",
+        body: "<code>ImagePullBackOff</code> — bad image name/tag or registry auth.<br><code>CrashLoopBackOff</code> — container starts then exits (bad command, missing config).<br><code>Pending</code> — not scheduled yet (resources, PVC, taints).",
       },
     ],
     quiz: [
@@ -125,6 +137,12 @@ export const modules: Module[] = [
         correct: 2,
         explain: "describe includes Events, conditions, and container state.",
       },
+      {
+        question: "Why use Deployments instead of creating Pods directly?",
+        options: ["Pods are deprecated", "Deployments self-heal, scale, and roll out updates", "Pods cannot run containers", "Deployments are faster to create"],
+        correct: 1,
+        explain: "Bare Pods aren't replaced if deleted; Deployments maintain desired state.",
+      },
     ],
     practiceGoal: "Describe the nginx pod and read its logs in the terminal below.",
   },
@@ -137,20 +155,24 @@ export const modules: Module[] = [
     cluster: "lab02",
     sections: [
       {
-        heading: "Deployment",
-        body: "Declarative way to run N copies of a Pod template. Handles rolling updates and rollbacks. You rarely create Pods directly in production.",
+        heading: "The control loop",
+        body: "You declare <strong>desired state</strong> (3 replicas, image nginx:1.25). Kubernetes continuously compares desired vs actual state and fixes drift — recreating deleted Pods, scaling up, rolling out new images.",
       },
       {
-        heading: "ReplicaSet",
-        body: "Deployment owns ReplicaSets; ReplicaSets own Pods. If you delete a Pod, the ReplicaSet recreates it to match desired replicas.",
+        heading: "Deployment → ReplicaSet → Pod",
+        body: "<strong>Deployment</strong> — what you edit (replicas, image, env).<br><strong>ReplicaSet</strong> — ensures N Pods match the template.<br><strong>Pod</strong> — runs the container. Delete a Pod manually and the ReplicaSet creates a replacement within seconds.",
       },
       {
         heading: "Service types",
-        body: "<strong>ClusterIP</strong> — internal only (default). <strong>NodePort</strong> — port on each node. <strong>LoadBalancer</strong> — cloud LB. Service selects Pods by labels — selector must match Pod labels exactly.",
+        body: "<strong>ClusterIP</strong> — internal VIP + DNS (my-svc.default.svc.cluster.local). Default type.<br><strong>NodePort</strong> — opens a port on every node (30000–32767).<br><strong>LoadBalancer</strong> — cloud provider provisions external LB.<br>Services route by <strong>labels</strong> — selector must match Pod labels exactly.",
       },
       {
-        heading: "Rollouts",
-        body: "<code>kubectl rollout status deployment/NAME</code><br><code>kubectl rollout undo deployment/NAME</code><br>Bad image? Undo. This is how pros recover without panic.",
+        heading: "Endpoints",
+        body: "<code>kubectl get endpoints</code> shows Pod IPs behind a Service. If you see <code>&lt;none&gt;</code>, traffic has nowhere to go — almost always a label/selector mismatch, not an app bug.",
+      },
+      {
+        heading: "Rollouts and rollback",
+        body: "<code>kubectl set image deployment/web web=nginx:1.24</code> — trigger update<br><code>kubectl rollout status deployment/web</code> — wait for completion<br><code>kubectl rollout history deployment/web</code> — see revisions<br><code>kubectl rollout undo deployment/web</code> — revert to previous version",
       },
     ],
     quiz: [
@@ -166,6 +188,12 @@ export const modules: Module[] = [
         correct: 1,
         explain: "Deployment scales and heals Pods via ReplicaSet.",
       },
+      {
+        question: "You pushed a bad image to production. Fastest recovery?",
+        options: ["Delete all Pods", "kubectl rollout undo deployment/NAME", "Restart the node", "Delete the namespace"],
+        correct: 1,
+        explain: "rollout undo reverts to the previous ReplicaSet template safely.",
+      },
     ],
     practiceGoal: "Run kubectl get deploy,svc and kubectl get endpoints.",
   },
@@ -178,16 +206,24 @@ export const modules: Module[] = [
     cluster: "default",
     sections: [
       {
+        heading: "Twelve-factor config",
+        body: "Store config in the environment, not in the image. Kubernetes ConfigMaps and Secrets let you inject config at deploy time — same image runs in dev, staging, and prod with different config.",
+      },
+      {
         heading: "ConfigMap",
-        body: "Non-sensitive config — env vars or files mounted into Pods. Change ConfigMap → often need Pod restart to pick up changes.",
+        body: "Key/value pairs or file contents for <strong>non-sensitive</strong> settings (feature flags, URLs, config files). Mount as env vars or as files in a volume. Updating a ConfigMap does not automatically reload running Pods unless the app watches for changes or you restart.",
       },
       {
         heading: "Secret",
-        body: "Sensitive data (tokens, passwords). Base64 in etcd — not encryption by default. Use external secret managers in production. Never commit Secrets to git.",
+        body: "Same mechanisms as ConfigMap but intended for sensitive data. Stored base64-encoded in etcd — <strong>not encrypted by default</strong>. Restrict access with RBAC. In production use Sealed Secrets, External Secrets Operator, or HashiCorp Vault.",
       },
       {
-        heading: "Mount vs env",
-        body: "Env vars: simple key/value. Volumes: config files apps read from disk. Choose based on how your app loads config.",
+        heading: "Mount vs environment variable",
+        body: "<strong>Env vars</strong> — simple, good for flags and connection strings apps read at startup.<br><strong>Volume mount</strong> — good for config files, TLS certs, or apps that hot-reload from disk.<br>Wrong key reference in YAML often causes silent failures or CrashLoop.",
+      },
+      {
+        heading: "After changing config",
+        body: "<code>kubectl rollout restart deployment/NAME</code> — force Pods to recreate and pick up new ConfigMap/Secret values when the app doesn't reload automatically.",
       },
     ],
     quiz: [
@@ -196,6 +232,18 @@ export const modules: Module[] = [
         options: ["Dockerfile ENV", "ConfigMap", "Kubernetes Secret or external vault", "Deployment name"],
         correct: 2,
         explain: "Secrets + RBAC at minimum; sealed-secrets, External Secrets, or Vault for prod.",
+      },
+      {
+        question: "You changed a ConfigMap but the app still shows old values. Likely fix?",
+        options: ["Delete the namespace", "Rollout restart the Deployment", "Rebuild the Docker image", "Delete the ConfigMap"],
+        correct: 1,
+        explain: "Pods often read config only at startup; restart picks up new values.",
+      },
+      {
+        question: "ConfigMap vs Secret — when use Secret?",
+        options: ["Always — Secrets are faster", "For passwords, tokens, and TLS keys", "Only for files over 1MB", "Never in Kubernetes"],
+        correct: 1,
+        explain: "Secrets signal sensitive data and enable stricter RBAC policies.",
       },
     ],
     practiceGoal: "Run kubectl explain pod.spec.containers to explore the API.",
@@ -209,16 +257,24 @@ export const modules: Module[] = [
     cluster: "broken",
     sections: [
       {
-        heading: "Cluster networking",
-        body: "Every Pod gets an IP. Services provide stable DNS name + virtual IP. kube-proxy routes Service traffic to Pod endpoints.",
+        heading: "Pod network model",
+        body: "Every Pod gets its own IP address in the cluster. Containers in the same Pod share that IP and can talk via <code>localhost</code>. Pods talk to other Pods across nodes via the cluster network (CNI plugin).",
+      },
+      {
+        heading: "Services — stable front door",
+        body: "Pods come and go; Services provide a stable DNS name and virtual IP. Other Pods reach your app at <code>my-svc.namespace.svc.cluster.local</code> instead of chasing ephemeral Pod IPs.",
+      },
+      {
+        heading: "How traffic flows",
+        body: "Client → Service VIP → kube-proxy (or eBPF) → Pod IP:port. <code>kubectl get endpoints</code> lists which Pod IPs are registered for each Service.",
       },
       {
         heading: "Ingress",
-        body: "HTTP/S routing into the cluster. Requires an Ingress controller (nginx, traefik). Maps hostnames and paths to Services.",
+        body: "Layer 7 HTTP/S routing: hostnames, paths, TLS termination. Requires an <strong>Ingress controller</strong> (nginx, traefik, etc.) installed in the cluster. Ingress rules point to Services, not Pods directly.",
       },
       {
-        heading: "Debug pattern",
-        body: "App unreachable? Check: Pod Running → Service endpoints populated → Ingress rules → DNS/TLS. This module's cluster has a broken selector — find it with <code>kubectl get endpoints</code>.",
+        heading: "Debug checklist",
+        body: "1. Pod <code>Running</code>? 2. Service <code>endpoints</code> populated? 3. Labels match selector? 4. Ingress rules correct? 5. DNS / TLS / Host header correct?<br>This module's simulator has a broken selector — practice finding it.",
       },
     ],
     quiz: [
@@ -240,12 +296,24 @@ export const modules: Module[] = [
     cluster: "default",
     sections: [
       {
-        heading: "PVC / PV",
-        body: "Pod claims storage via PersistentVolumeClaim. PV is the actual storage. StorageClass enables dynamic provisioning.",
+        heading: "Why persistent storage?",
+        body: "Container filesystems are ephemeral — data dies with the Pod. Databases, uploads, and stateful apps need volumes that outlive Pod restarts and reschedules.",
       },
       {
-        heading: "RBAC",
-        body: "Role + RoleBinding + ServiceAccount = what identities can do in a namespace. Principle of least privilege for apps and humans.",
+        heading: "PVC, PV, StorageClass",
+        body: "<strong>PersistentVolumeClaim (PVC)</strong> — Pod requests storage (&quot;I need 10Gi&quot;).<br><strong>PersistentVolume (PV)</strong> — the actual storage resource.<br><strong>StorageClass</strong> — template for dynamic provisioning (cloud disk created on demand).",
+      },
+      {
+        heading: "Access modes",
+        body: "<strong>ReadWriteOnce (RWO)</strong> — one node can mount read-write (typical for block storage).<br><strong>ReadWriteMany (RWX)</strong> — multiple nodes (shared file systems). Choose based on whether replicas need shared data.",
+      },
+      {
+        heading: "RBAC model",
+        body: "<strong>ServiceAccount</strong> — identity for Pods or automation.<br><strong>Role</strong> — permissions in a namespace.<br><strong>RoleBinding</strong> — attaches Role to Subject.<br><strong>ClusterRole / ClusterRoleBinding</strong> — cluster-wide. Principle: least privilege.",
+      },
+      {
+        heading: "Verify permissions",
+        body: "<code>kubectl auth can-i create pods --as=system:serviceaccount:ns:sa-name -n ns</code> — test what an identity can do before debugging mysterious &quot;Forbidden&quot; errors.",
       },
     ],
     quiz: [
@@ -254,6 +322,12 @@ export const modules: Module[] = [
         options: ["EmptyDir volume", "PersistentVolumeClaim", "ConfigMap", "Larger CPU limit"],
         correct: 1,
         explain: "PVC-backed volumes persist beyond Pod lifecycle.",
+      },
+      {
+        question: "A Pod needs to read ConfigMaps but not create Pods. You create?",
+        options: ["ClusterRoleBinding to cluster-admin", "Role with get/list on configmaps + RoleBinding to SA", "Secret", "NetworkPolicy"],
+        correct: 1,
+        explain: "Role scopes permissions; RoleBinding ties them to the ServiceAccount.",
       },
     ],
     practiceGoal: "Review kubectl get ns — namespaces isolate resources and RBAC scope.",
@@ -267,16 +341,24 @@ export const modules: Module[] = [
     cluster: "crash",
     sections: [
       {
+        heading: "Production readiness",
+        body: "Production means: pinned images, resource requests/limits, health probes, config externalized, RBAC locked down, rollouts tested, and an on-call debug workflow you can execute under pressure.",
+      },
+      {
+        heading: "Resources",
+        body: "<strong>requests</strong> — guaranteed CPU/memory for scheduling (Pod won't land on a node without capacity).<br><strong>limits</strong> — hard cap; exceed memory limit → OOMKilled. Always set both in production.",
+      },
+      {
+        heading: "Health probes",
+        body: "<strong>liveness</strong> — restart container if failing (deadlock detection).<br><strong>readiness</strong> — remove from Service endpoints if failing (don't send traffic until ready).<br><strong>startup</strong> — for slow-starting apps, disable liveness until startup succeeds.",
+      },
+      {
         heading: "Helm",
-        body: "Package manager for Kubernetes — charts templatize YAML. install / upgrade / rollback. GitOps (Argo CD) often deploys Helm charts from git.",
+        body: "Package manager for Kubernetes — charts templatize YAML with values.yaml. <code>helm install / upgrade / rollback</code> map to revision history like Deployment rollouts. GitOps tools (Argo CD, Flux) often deploy Helm charts from git.",
       },
       {
-        heading: "Requests & limits",
-        body: "requests = scheduling guarantee. limits = cap (OOM kill if memory exceeded). Always set in production.",
-      },
-      {
-        heading: "CrashLoopBackOff",
-        body: "This module loads a crashing pod. Practice: get pods → describe → logs. That's the on-call workflow.",
+        heading: "On-call: CrashLoopBackOff",
+        body: "1. <code>kubectl get pods</code> 2. <code>kubectl describe pod</code> — Events 3. <code>kubectl logs</code> 4. Fix manifest or <code>rollout undo</code>. Practice this flow in the simulator below.",
       },
     ],
     quiz: [
@@ -285,6 +367,18 @@ export const modules: Module[] = [
         options: ["Delete namespace", "kubectl rollout undo deployment/NAME", "Restart laptop", "Delete all pods manually"],
         correct: 1,
         explain: "rollout undo reverts to previous ReplicaSet template.",
+      },
+      {
+        question: "Readiness probe fails. What happens?",
+        options: ["Pod is deleted", "Pod removed from Service endpoints", "Node is drained", "Deployment scales to zero"],
+        correct: 1,
+        explain: "Readiness controls traffic; liveness controls restarts.",
+      },
+      {
+        question: "Memory limit exceeded. Kubernetes will?",
+        options: ["Ignore it", "OOMKill the container", "Scale the node", "Throttle CPU only"],
+        correct: 1,
+        explain: "Cgroups enforce memory limits; excess usage kills the container.",
       },
     ],
     practiceGoal: "Debug crash-demo: get pods, describe, logs — find why it crashes.",

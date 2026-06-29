@@ -1,22 +1,25 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import KubectlTerminal from "../components/KubectlTerminal.astro";
+import ScenarioLearn from "../components/ScenarioLearn.astro";
 ---
 
 <BaseLayout title="Practice — Pod Pending">
   <section class="hero container prose">
     <h1>Scenario: Pod stuck Pending</h1>
-    <p class="lead">
-      <code>hungry-pod</code> requests 100 CPU and 64Gi memory — more than the node has.
-      Use <code>kubectl describe pod hungry-pod</code> and read Events.
-    </p>
+    <p class="lead">The scheduler cannot place the Pod on any node.</p>
   </section>
   <section class="container">
+    <ScenarioLearn
+      concept="Pending means the Pod was accepted but never scheduled to a node (or can't start after scheduling). Common causes: insufficient CPU/memory on nodes, unbound PVC, taints without tolerations, or resource requests larger than any node can satisfy."
+      workflow={[
+        "kubectl describe pod — read Events (FailedScheduling)",
+        "Check resources.requests vs node capacity",
+        "Check PVC status if volumes are used",
+        "Lower requests or add cluster capacity",
+      ]}
+      fixHint="hungry-pod requests 100 CPU and 64Gi — far more than a kind node has."
+    />
     <KubectlTerminal cluster="pending" height="380px" />
-  </section>
-  <section class="container prose">
-    <div class="callout">
-      <p><strong>Fix:</strong> Lower <code>resources.requests</code> in the manifest to fit your node. On local kind, use realistic values like <code>cpu: 100m</code>.</p>
-    </div>
   </section>
 </BaseLayout>

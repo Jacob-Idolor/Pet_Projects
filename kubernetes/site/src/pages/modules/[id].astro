@@ -5,7 +5,9 @@ import DockerTerminal from "../../components/DockerTerminal.astro";
 import Quiz from "../../components/Quiz.astro";
 import AdSlot from "../../components/AdSlot.astro";
 import DockerPipelineDiagram from "../../components/DockerPipelineDiagram.astro";
+import LearningPanel from "../../components/LearningPanel.astro";
 import { modules, getModule } from "../../data/modules";
+import { moduleMeta } from "../../data/learning-meta";
 
 export function getStaticPaths() {
   return modules.map((m) => ({ params: { id: m.id } }));
@@ -16,6 +18,7 @@ const mod = getModule(id!);
 if (!mod) throw new Error(`Module not found: ${id}`);
 const prev = modules.find((m) => m.order === mod.order - 1);
 const next = modules.find((m) => m.order === mod.order + 1);
+const meta = moduleMeta[mod.id];
 ---
 
 <BaseLayout title={mod.title} description={mod.subtitle}>
@@ -23,7 +26,14 @@ const next = modules.find((m) => m.order === mod.order + 1);
     <span class="badge">Module {mod.order} · {mod.time}</span>
     <h1>{mod.title}</h1>
     <p class="lead">{mod.subtitle}</p>
+    <p class="learn-flow"><strong>Learn flow:</strong> Read below → practice in the simulator → pass the quiz → do the local lab → mark complete in <a href="/progress.html">Tracker</a>.</p>
   </section>
+
+  {meta && (
+    <section class="container">
+      <LearningPanel meta={meta} moduleOrder={mod.order} />
+    </section>
+  )}
 
   <section class="container prose">
     {mod.sections.map((s) => (
@@ -69,5 +79,10 @@ const next = modules.find((m) => m.order === mod.order + 1);
     margin: 3rem 0 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
+  }
+  .learn-flow {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-top: 1rem;
   }
 </style>

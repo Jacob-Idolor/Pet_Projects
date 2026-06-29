@@ -8,7 +8,7 @@ import { labs, filters } from "../data/lab-hub";
   <section class="hero container hub-hero">
     <h1>Lab Hub</h1>
     <p class="lead">Pick a lab and start practicing. Everything lives here — browser simulators, modules, debug scenarios, and local cluster guides.</p>
-    <p class="hub-stats" id="hub-stats">{labs.length} labs · Browser or local · <a href="/progress.html">Track progress</a></p>
+    <p class="hub-stats" id="hub-stats">{labs.length} labs · Browser or local · <a href="/progress.html">Tracker</a> · <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/LEARNING-PATH.md" target="_blank" rel="noopener">Learning path</a></p>
     <div class="hub-progress" id="hub-progress" hidden>
       <div class="hub-progress-bar"><div class="hub-progress-fill" id="hub-progress-fill"></div></div>
       <span class="hub-progress-text" id="hub-progress-text"></span>
@@ -39,9 +39,8 @@ import { labs, filters } from "../data/lab-hub";
   <section class="container hub-footer">
     <div class="callout">
       <p>
-        <strong>Local setup:</strong> Browser labs need no install. For local cluster labs run
-        <code>make docker-lab</code> or <code>make local-lab</code> from the repo.
-        Track progress on <a href="/progress.html">Tracker</a>.
+        <strong>How to learn:</strong> Read the module → simulator → local lab → mark done in Tracker.
+        Full path: <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/LEARNING-PATH.md" target="_blank" rel="noopener">LEARNING-PATH.md</a>
       </p>
     </div>
   </section>
