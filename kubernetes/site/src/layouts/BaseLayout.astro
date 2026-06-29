@@ -16,8 +16,7 @@ const isHub = Astro.url.pathname === "/" || Astro.url.pathname === "/index.html"
     <meta name="description" content={description} />
     <title>{title} | K8s Practice Lab</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <!-- Google AdSense: paste your script after approval -->
-    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script> -->
+    <!-- AdSense script loads dynamically when enabled — see /ads.html -->
   </head>
   <body>
     <header class="site-header">
@@ -44,6 +43,7 @@ const isHub = Astro.url.pathname === "/" || Astro.url.pathname === "/index.html"
         <p>
           Browser + local Kubernetes learning — simulated practice and real kind labs.
           <a href="/privacy.html">Privacy</a> ·
+          <a href="/ads.html">Ad settings</a> ·
           <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
       </div>

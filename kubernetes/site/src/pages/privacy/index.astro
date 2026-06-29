@@ -10,13 +10,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <h2>What we collect</h2>
     <ul>
       <li><strong>Hosting logs</strong> — AWS CloudFront may log IP address, browser, and pages requested (standard CDN access logs).</li>
-      <li><strong>Analytics / ads</strong> — If enabled, third-party services (e.g. Google AdSense) may use cookies per their policies. Update this page before enabling ads.</li>
+      <li><strong>Analytics / ads</strong> — If you enable ads in <a href="/ads.html">Ad settings</a>, Google AdSense may load scripts and use cookies per <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>. Ads are <strong>off by default</strong>.</li>
+    </ul>
+
+    <h2>What stays in your browser only</h2>
+    <ul>
+      <li><strong>Progress tracker</strong> — lab completion checkmarks and notes (localStorage)</li>
+      <li><strong>Ad settings</strong> — your AdSense client ID and on/off toggle (localStorage, not sent to us)</li>
+      <li><strong>Certificate name</strong> — optional display name for your completion certificate</li>
     </ul>
 
     <h2>What we do not collect</h2>
     <ul>
+      <li>User accounts or login credentials</li>
       <li>Kubernetes credentials or cloud account access</li>
-      <li>Lab progress (tracking is local in your clone of the repo)</li>
     </ul>
 
     <h2>Contact</h2>

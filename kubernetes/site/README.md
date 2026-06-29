@@ -29,8 +29,7 @@ cd ..
 - `/practice.html` — kubectl simulator + missions
 - `/practice-broken.html` — empty endpoints scenario
 - `/practice-crash.html` — CrashLoopBackOff scenario
-- Ad placeholders in `src/components/AdSlot.astro`
-- AdSense script slot in `BaseLayout.astro` (commented until approval)
+- Ad placements via `AdSlot.astro` — configure at `/ads.html` (toggle on/off, AdSense client ID)
 
 ## Cost
 

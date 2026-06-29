@@ -1,0 +1,158 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AdSlot from "../components/AdSlot.astro";
+---
+
+<BaseLayout title="Ad settings" description="Configure Google AdSense — toggle ads on or off for practice.">
+  <section class="hero container prose">
+    <h1>Ad settings</h1>
+    <p class="lead">
+      Practice Google AdSense on your lab site. Settings stay in your browser only — nothing is sent to a server.
+      Turn ads off anytime while you're learning.
+    </p>
+  </section>
+
+  <section class="container ads-form-wrap">
+    <form id="ads-form" class="ads-form">
+      <label class="toggle-row">
+        <input type="checkbox" id="ads-enabled" />
+        <span><strong>Show ads on site</strong> — master on/off switch</span>
+      </label>
+
+      <label class="field">
+        <span>AdSense client ID</span>
+        <input type="text" id="ads-client" placeholder="ca-pub-1234567890123456" autocomplete="off" />
+        <small>From AdSense → Account → Account information. Required for real ads.</small>
+      </label>
+
+      <label class="field">
+        <span>Ad unit slot ID (optional)</span>
+        <input type="text" id="ads-slot" placeholder="1234567890" autocomplete="off" />
+        <small>From AdSense → Ads → By ad unit. One slot can be reused for all placements on this site.</small>
+      </label>
+
+      <label class="toggle-row">
+        <input type="checkbox" id="ads-preview" />
+        <span><strong>Preview placeholders</strong> — show fake ad boxes when client ID is empty (for layout practice)</span>
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save settings</button>
+        <button type="button" class="btn btn-secondary" id="ads-turn-off">Turn ads off</button>
+      </div>
+    </form>
+
+    <div class="callout">
+      <p>
+        <strong>Before going live:</strong> Google must approve your site for AdSense. Until then, real ads may not fill —
+        use preview placeholders to see layout. Update <a href="/privacy.html">Privacy policy</a> when you enable ads publicly.
+      </p>
+    </div>
+  </section>
+
+  <section class="container">
+    <h2>Live preview</h2>
+    <p class="muted">How an ad slot looks with your current settings:</p>
+    <AdSlot slot="settings-preview" label="Sample ad placement" />
+  </section>
+
+  <section class="container prose setup-guide">
+    <h2>Quick AdSense setup</h2>
+    <ol>
+      <li>Create / sign in at <a href="https://www.google.com/adsense" target="_blank" rel="noopener">Google AdSense</a></li>
+      <li>Add your site URL when you deploy (CloudFront or custom domain)</li>
+      <li>Copy your <code>ca-pub-…</code> client ID into the field above</li>
+      <li>Create a display ad unit → copy the slot ID (optional but recommended)</li>
+      <li>Enable ads here → Save → browse the site to see placements</li>
+    </ol>
+    <p class="muted">Placements today: Learn page, Practice page, and mid-module content. Hidden completely when ads are off.</p>
+  </section>
+</BaseLayout>
+
+<script>
+  import {
+    loadAdSettings,
+    saveAdSettings,
+    isValidClientId,
+    defaultAdSettings,
+  } from "../lib/ads-settings";
+
+  const form = document.getElementById("ads-form") as HTMLFormElement;
+  const enabledEl = document.getElementById("ads-enabled") as HTMLInputElement;
+  const clientEl = document.getElementById("ads-client") as HTMLInputElement;
+  const slotEl = document.getElementById("ads-slot") as HTMLInputElement;
+  const previewEl = document.getElementById("ads-preview") as HTMLInputElement;
+
+  function populateForm() {
+    const s = loadAdSettings();
+    enabledEl.checked = s.enabled;
+    clientEl.value = s.clientId;
+    slotEl.value = s.defaultSlotId;
+    previewEl.checked = s.previewPlaceholders;
+  }
+
+  populateForm();
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const clientId = clientEl.value.trim();
+    if (clientId && !isValidClientId(clientId)) {
+      alert("Client ID should look like ca-pub-1234567890123456");
+      return;
+    }
+    saveAdSettings({
+      enabled: enabledEl.checked,
+      clientId,
+      defaultSlotId: slotEl.value.trim(),
+      previewPlaceholders: previewEl.checked,
+    });
+    window.dispatchEvent(new Event("k8s-ads-settings-changed"));
+    alert("Saved. Browse the site to see ad placements.");
+  });
+
+  document.getElementById("ads-turn-off")!.addEventListener("click", () => {
+    saveAdSettings({ ...loadAdSettings(), enabled: false });
+    populateForm();
+    window.dispatchEvent(new Event("k8s-ads-settings-changed"));
+  });
+</script>
+
+<style>
+  .ads-form-wrap { max-width: 520px; padding-bottom: 2rem; }
+  .ads-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .toggle-row input { margin-top: 0.2rem; }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .field span { font-weight: 600; font-size: 0.9rem; }
+  .field input {
+    padding: 0.6rem 0.85rem;
+    background: #0a0e12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85rem;
+  }
+  .field small { color: var(--muted); font-size: 0.8rem; }
+  .form-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .setup-guide { padding-bottom: 4rem; }
+</style>
