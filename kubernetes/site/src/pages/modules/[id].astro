@@ -7,6 +7,8 @@ import AdSlot from "../../components/AdSlot.astro";
 import DockerPipelineDiagram from "../../components/DockerPipelineDiagram.astro";
 import LearningPanel from "../../components/LearningPanel.astro";
 import LessonStep from "../../components/LessonStep.astro";
+import LessonVisual from "../../components/LessonVisual.astro";
+import LessonProgress from "../../components/LessonProgress.astro";
 import { modules, getModule, phaseLabels } from "../../data/modules";
 import { moduleMeta } from "../../data/learning-meta";
 
@@ -23,15 +25,30 @@ const meta = moduleMeta[mod.id];
 const phaseInfo = phaseLabels[mod.phase];
 const phaseLessons = modules.filter((m) => m.phase === mod.phase);
 const lessonInPhase = phaseLessons.findIndex((m) => m.id === mod.id) + 1;
-const showPipeline = mod.phase === "containers" && mod.order <= 3;
+const showPipeline = mod.id === "c3-dockerfile";
 ---
 
 <BaseLayout title={mod.title} description={mod.subtitle}>
-  <section class="hero container prose">
+  <section class="hero container prose lesson-hero">
     <span class="badge">{phaseInfo.title} · Lesson {lessonInPhase} of {phaseLessons.length}</span>
     <h1>{mod.title}</h1>
     <p class="lead">{mod.subtitle}</p>
-    <p class="learn-flow"><strong>Flow:</strong> Read each step → try commands in the terminal → quick quiz → <a href="/progress.html">Tracker</a></p>
+    <p class="learn-flow"><strong>Flow:</strong> Study the visual → read each step → try commands → quick quiz → <a href="/progress.html">Tracker</a></p>
+  </section>
+
+  <section class="container">
+    <LessonProgress
+      currentOrder={mod.order}
+      totalLessons={modules.length}
+      phaseTitle={phaseInfo.title}
+      lessonInPhase={lessonInPhase}
+      phaseTotal={phaseLessons.length}
+      sectionCount={mod.sections.length}
+    />
+  </section>
+
+  <section class="container">
+    <LessonVisual lessonId={mod.id} />
   </section>
 
   {meta && (
@@ -40,7 +57,7 @@ const showPipeline = mod.phase === "containers" && mod.order <= 3;
     </section>
   )}
 
-  <section class="container">
+  <section class="container lesson-steps-wrap">
     {mod.sections.map((s, i) => (
       <LessonStep
         heading={s.heading}
@@ -51,20 +68,25 @@ const showPipeline = mod.phase === "containers" && mod.order <= 3;
       />
     ))}
 
-    {showPipeline && <DockerPipelineDiagram />}
+    {showPipeline && <DockerPipelineDiagram animated />}
 
     <AdSlot slot={`module-${mod.id}-mid`} />
 
-    <div class="practice-goal-box">
-      <strong>Practice goal:</strong> {mod.practiceGoal}
+    <div class="practice-goal-box lesson-animate">
+      <span class="goal-icon">🎯</span>
+      <div>
+        <strong>Practice goal</strong>
+        <p>{mod.practiceGoal}</p>
+      </div>
     </div>
   </section>
 
-  <section class="container">
+  <section class="container terminal-wrap lesson-animate">
+    <p class="terminal-label">Interactive simulator — type commands here</p>
     {mod.terminal === "docker" ? (
       <DockerTerminal cluster="default" height="340px" />
     ) : (
-      <KubectlTerminal cluster={mod.cluster} height="340px" />
+      <KubectlTerminal cluster={mod.cluster ?? "default"} height="340px" />
     )}
   </section>
 
@@ -73,19 +95,28 @@ const showPipeline = mod.phase === "containers" && mod.order <= 3;
     <Quiz questions={mod.quiz} moduleId={mod.id} compact />
 
     <nav class="module-nav">
-      {prev ? <a href={`/modules/${prev.id}.html`}>← {prev.title}</a> : <a href="/learn.html">All lessons</a>}
-      {next ? <a href={`/modules/${next.id}.html`}>{next.title} →</a> : <a href="/practice.html">Practice →</a>}
+      {prev ? <a href={`/modules/${prev.id}.html`} class="nav-prev">← {prev.title}</a> : <a href="/learn.html">All lessons</a>}
+      {next ? <a href={`/modules/${next.id}.html`} class="nav-next">{next.title} →</a> : <a href="/practice.html">Practice →</a>}
     </nav>
   </section>
 </BaseLayout>
 
 <style>
+  .lesson-hero {
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+  }
   .module-nav {
     display: flex;
     justify-content: space-between;
     margin: 2rem 0;
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .nav-next {
+    margin-left: auto;
+    text-align: right;
   }
   .learn-flow {
     font-size: 0.9rem;
@@ -93,17 +124,44 @@ const showPipeline = mod.phase === "containers" && mod.order <= 3;
     margin-top: 0.75rem;
   }
   .practice-goal-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #152238 0%, var(--surface) 100%);
+    border: 1px solid var(--accent);
     border-radius: 10px;
     padding: 1rem 1.25rem;
     margin: 1.5rem 0;
     font-size: 0.95rem;
     color: var(--muted);
   }
-  .practice-goal-box strong { color: var(--text); }
+  .goal-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .practice-goal-box strong { color: var(--text); display: block; margin-bottom: 0.25rem; }
+  .practice-goal-box p { margin: 0; }
+  .terminal-wrap {
+    margin-bottom: 2rem;
+  }
+  .terminal-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin: 0 0 0.5rem;
+  }
   .quiz-heading {
     font-size: 1rem;
     margin-bottom: 0.75rem;
   }
 </style>
+
+<script>
+  document.querySelectorAll(".lesson-animate").forEach((el) => {
+    if (el.closest(".lesson-step")) return;
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add("is-visible")),
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+  });
+</script>

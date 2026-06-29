@@ -21,7 +21,7 @@ export interface Module {
   time: string;
   order: number;
   phase: LessonPhase;
-  cluster: "default" | "lab02" | "broken" | "crash" | "imagepull" | "pending";
+  cluster?: "default" | "lab02" | "broken" | "crash" | "imagepull" | "pending";
   terminal?: "docker" | "kubectl";
   sections: LessonSection[];
   quiz: QuizQ[];

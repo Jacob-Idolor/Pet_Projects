@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
+import CurriculumMap from "../components/CurriculumMap.astro";
 import { modules, getModulesByPhase, phaseLabels } from "../data/modules";
 ---
 
@@ -14,6 +15,7 @@ import { modules, getModulesByPhase, phaseLabels } from "../data/modules";
   </section>
 
   <section class="container">
+    <CurriculumMap />
     <AdSlot slot="learn-top" />
   </section>
 
@@ -83,9 +85,13 @@ import { modules, getModulesByPhase, phaseLabels } from "../data/modules";
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1rem 1.25rem;
-    transition: border-color 0.15s;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .lesson-item:hover { border-color: var(--accent); }
+  .lesson-item:hover {
+    border-color: var(--accent);
+    transform: translateX(4px);
+    box-shadow: -4px 0 0 var(--accent);
+  }
   .lesson-num {
     width: 2rem;
     height: 2rem;

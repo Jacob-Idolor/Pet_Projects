@@ -14,17 +14,28 @@ const icons: Record<string, string> = {
   "try-it": "⌨️",
   tip: "⚡",
 };
+const typeLabels: Record<string, string> = {
+  concept: "Concept",
+  analogy: "Analogy",
+  "try-it": "Try it",
+  tip: "Pro tip",
+};
 ---
 
-<article class={`lesson-step step-${type}`}>
+<article
+  class={`lesson-step lesson-animate step-${type}`}
+  data-step-index={index - 1}
+>
   <div class="step-header">
     <span class="step-num">{index}</span>
-    <span class="step-icon">{icons[type]}</span>
+    <span class="step-type-badge">{typeLabels[type]}</span>
+    <span class="step-icon" aria-hidden="true">{icons[type]}</span>
     <h2>{heading}</h2>
   </div>
   <div class="step-body" set:html={body} />
   {tryCommand && (
     <div class="try-it-box">
+      <span class="try-pulse" aria-hidden="true"></span>
       <strong>Try it in the terminal below:</strong>
       <code>{tryCommand}</code>
     </div>
@@ -38,15 +49,22 @@ const icons: Record<string, string> = {
     border-radius: 12px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
+    transition: border-color 0.35s ease, box-shadow 0.35s ease;
   }
-  .step-analogy { border-left: 3px solid var(--warn); }
-  .step-try-it { border-left: 3px solid var(--accent); }
-  .step-tip { border-left: 3px solid var(--success); }
+  .lesson-step:hover {
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+  .step-analogy { border-left: 4px solid var(--warn); }
+  .step-try-it { border-left: 4px solid var(--accent); }
+  .step-tip { border-left: 4px solid var(--success); }
+  .step-concept { border-left: 4px solid #64748b; }
   .step-header {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     margin-bottom: 0.75rem;
+    flex-wrap: wrap;
   }
   .step-num {
     width: 1.75rem;
@@ -60,11 +78,29 @@ const icons: Record<string, string> = {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    transition: transform 0.3s ease, background 0.3s ease;
+  }
+  .lesson-step:hover .step-num {
+    transform: scale(1.08);
+  }
+  .step-type-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    background: #0a0e12;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
   }
   .step-icon { font-size: 1.1rem; }
   .step-header h2 {
     margin: 0;
     font-size: 1.05rem;
+    flex: 1 1 100%;
+  }
+  @media (min-width: 480px) {
+    .step-header h2 { flex: 1; }
   }
   .step-body {
     color: var(--muted);
@@ -72,12 +108,35 @@ const icons: Record<string, string> = {
     line-height: 1.65;
   }
   .step-body :global(strong) { color: var(--text); }
+  .step-body :global(code) {
+    background: #0a0e12;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    color: var(--success);
+    font-size: 0.85em;
+  }
   .try-it-box {
     margin-top: 1rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem 0.75rem 1.25rem;
     background: #0a0e12;
     border-radius: 8px;
     font-size: 0.85rem;
+    border-left: 3px solid var(--accent);
+    position: relative;
+    overflow: hidden;
+  }
+  .try-pulse {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    animation: try-pulse-bar 1.8s ease-in-out infinite;
+  }
+  @keyframes try-pulse-bar {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; box-shadow: 0 0 12px var(--accent); }
   }
   .try-it-box code {
     display: block;
@@ -85,4 +144,20 @@ const icons: Record<string, string> = {
     color: var(--success);
     font-family: "JetBrains Mono", monospace;
   }
+  @media (prefers-reduced-motion: reduce) {
+    .try-pulse { animation: none; opacity: 1; }
+    .lesson-step:hover .step-num { transform: none; }
+  }
 </style>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add("is-visible");
+      });
+    },
+    { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+  );
+  document.querySelectorAll(".lesson-animate").forEach((el) => observer.observe(el));
+</script>

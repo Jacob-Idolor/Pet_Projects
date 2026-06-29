@@ -65,6 +65,7 @@ const { questions, moduleId, compact = false } = Astro.props;
         localStorage.setItem(key, "passed");
         scoreEl.textContent = "✓ Passed — saved to progress";
         scoreEl.className = "quiz-score pass";
+        root.classList.add("quiz-passed");
       } else {
         scoreEl.textContent = `${correct}/${items.length} — read the feedback and try again`;
         scoreEl.className = "quiz-score fail";

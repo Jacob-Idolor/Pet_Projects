@@ -1,0 +1,211 @@
+/* Shared lesson visuals & animations */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35); }
+  50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+}
+
+@keyframes flow-right {
+  0% { transform: translateX(-6px); opacity: 0.4; }
+  50% { transform: translateX(6px); opacity: 1; }
+  100% { transform: translateX(-6px); opacity: 0.4; }
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes layer-stack {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.lesson-animate {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.lesson-animate.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lesson-visual-wrap {
+  margin: 1.5rem 0 2rem;
+  background: linear-gradient(145deg, #121820 0%, #0d1219 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem 1rem 1rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.lesson-visual-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.08), transparent 60%);
+  pointer-events: none;
+}
+
+.lesson-visual-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  position: relative;
+}
+
+.lesson-visual-caption {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  position: relative;
+}
+
+.lesson-visual-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+}
+
+.lesson-visual-svg .v-box {
+  fill: #1a2332;
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.lesson-visual-svg .v-box-accent { stroke: var(--accent); fill: #152238; }
+.lesson-visual-svg .v-box-success { stroke: var(--success); fill: #152a1f; }
+.lesson-visual-svg .v-box-warn { stroke: var(--warn); fill: #2a2215; }
+.lesson-visual-svg .v-label {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.lesson-visual-svg .v-sublabel {
+  fill: var(--muted);
+  font-size: 10px;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.lesson-visual-svg .v-arrow {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 6 4;
+  animation: dash-flow 1.2s linear infinite;
+}
+.lesson-visual-svg .v-flow-arrow {
+  fill: var(--accent);
+  animation: flow-right 1.4s ease-in-out infinite;
+}
+.lesson-visual-svg .v-pulse {
+  animation: blink-dot 1.6s ease-in-out infinite;
+}
+
+.lesson-progress-track {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 1.25rem 0 0;
+  flex-wrap: wrap;
+}
+
+.lesson-progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.3s, transform 0.3s;
+}
+
+.lesson-progress-dot.active {
+  background: var(--accent);
+  transform: scale(1.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.lesson-progress-dot.done {
+  background: var(--success);
+}
+
+.lesson-progress-line {
+  flex: 1;
+  min-width: 40px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.lesson-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.lesson-flow-steps {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.lesson-flow-step {
+  flex: 1 1 120px;
+  text-align: center;
+  padding: 0.65rem 0.5rem;
+  border-radius: 8px;
+  background: #1a2332;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.lesson-flow-step.active {
+  border-color: var(--accent);
+  color: var(--text);
+  animation: pulse-glow 2s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-animate {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .lesson-visual-svg .v-arrow,
+  .lesson-visual-svg .v-flow-arrow,
+  .lesson-visual-svg .v-pulse,
+  .lesson-flow-step.active {
+    animation: none;
+  }
+}

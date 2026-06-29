@@ -1,0 +1,99 @@
+---
+interface Props {
+  currentOrder: number;
+  totalLessons: number;
+  phaseTitle: string;
+  lessonInPhase: number;
+  phaseTotal: number;
+  sectionCount: number;
+}
+
+const { currentOrder, totalLessons, phaseTitle, lessonInPhase, phaseTotal, sectionCount } = Astro.props;
+const overallPct = Math.round((currentOrder / totalLessons) * 100);
+---
+
+<div class="lesson-progress-bar lesson-animate" data-lesson-progress>
+  <div class="progress-header">
+    <span class="progress-phase">{phaseTitle}</span>
+    <span class="progress-count">Lesson {lessonInPhase}/{phaseTotal} · {overallPct}% of curriculum</span>
+  </div>
+  <div class="lesson-progress-track">
+    {Array.from({ length: sectionCount }, (_, i) => (
+      <span class="lesson-progress-dot" data-step-dot={i} title={`Step ${i + 1}`} />
+    ))}
+    <div class="lesson-progress-line">
+      <div class="lesson-progress-fill" style={`width: ${Math.round((1 / sectionCount) * 100)}%`} data-progress-fill />
+    </div>
+  </div>
+  <div class="lesson-flow-steps">
+    <span class="lesson-flow-step active">📖 Read</span>
+    <span class="lesson-flow-step">⌨️ Try it</span>
+    <span class="lesson-flow-step">✓ Quiz</span>
+    <span class="lesson-flow-step">📋 Tracker</span>
+  </div>
+</div>
+
+<style>
+  .lesson-progress-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+  }
+  .progress-phase {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .progress-count {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+</style>
+
+<script define:vars={{ sectionCount }}>
+  const dots = document.querySelectorAll("[data-step-dot]");
+  const fill = document.querySelector("[data-progress-fill]");
+  const flowSteps = document.querySelectorAll(".lesson-flow-step");
+
+  function setStep(idx) {
+    dots.forEach((d, i) => {
+      d.classList.toggle("active", i === idx);
+      d.classList.toggle("done", i < idx);
+    });
+    if (fill) {
+      fill.style.width = `${Math.round(((idx + 1) / sectionCount) * 100)}%`;
+    }
+    flowSteps.forEach((s, i) => {
+      const map = [0, 1, 1, 1];
+      s.classList.toggle("active", i <= Math.min(idx, 2) || (idx >= sectionCount - 1 && i === 2));
+    });
+  }
+
+  const steps = document.querySelectorAll(".lesson-step");
+  if (steps.length) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const idx = Number((e.target as HTMLElement).dataset.stepIndex ?? 0);
+            setStep(idx);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -55% 0px", threshold: 0 }
+    );
+    steps.forEach((s) => observer.observe(s));
+  }
+</script>
