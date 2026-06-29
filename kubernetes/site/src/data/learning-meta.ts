@@ -8,152 +8,169 @@ export interface ModuleMeta {
 }
 
 export const moduleMeta: Record<string, ModuleMeta> = {
-  containers: {
-    prerequisites: ["Basic command line", "Optional: complete /docker.html simulator first"],
+  "c1-containers": {
+    prerequisites: ["Basic command line"],
     keyTakeaways: [
-      "An image is immutable; a container is a running instance of that image.",
-      "docker build → image → docker run → container is the same pipeline Kubernetes uses.",
-      "Host:container port mapping (-p 8080:80) is a common source of 'app won't load' bugs.",
-      "Multi-stage builds and non-root users are production defaults, not extras.",
+      "A container is an isolated process sharing the host kernel — not a full VM.",
+      "Kubernetes runs containers; it does not replace them.",
+    ],
+    browserLab: "/docker.html",
+    reflection: ["Can you explain VM vs container in one sentence?"],
+    commonMistakes: ["Treating containers as tiny VMs — they share the host kernel."],
+  },
+  "c2-images": {
+    prerequisites: ["Lesson 1: What is a container?"],
+    keyTakeaways: [
+      "Image = immutable template; container = running instance.",
+      "Images live in registries (Docker Hub, GHCR, ECR).",
+    ],
+    browserLab: "/docker.html",
+    reflection: ["Why can one image spawn many containers?"],
+    commonMistakes: ["Confusing image tags with container names."],
+  },
+  "c3-dockerfile": {
+    prerequisites: ["Lesson 2: Images & layers"],
+    keyTakeaways: [
+      "Dockerfile → docker build → image → docker run → container.",
+      "Multi-stage builds keep production images small.",
     ],
     localLab: { title: "Lab 00 — Docker hands-on", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-00-docker", command: "make docker-lab" },
     browserLab: "/docker.html",
-    reflection: [
-      "Can you explain the difference between an image layer and a running container?",
-      "What would you check first if curl to your container fails?",
-    ],
-    commonMistakes: [
-      "Using :latest in production — pin tags for reproducibility.",
-      "Mapping ports backwards (container:host instead of host:container).",
-      "Putting secrets in Dockerfile ENV — layers persist forever.",
-    ],
+    reflection: ["What does each Dockerfile instruction do in your app?"],
+    commonMistakes: ["Using :latest in production.", "Putting secrets in ENV — layers persist."],
   },
-  pods: {
-    prerequisites: ["Module 1: Containers & Docker", "Optional: Lab 00"],
+  "c4-docker-cli": {
+    prerequisites: ["Lesson 3: Dockerfile & build"],
     keyTakeaways: [
-      "A Pod is the smallest unit Kubernetes schedules — usually one app container.",
-      "Pod IP is ephemeral; when a Pod dies, its replacement gets a new IP.",
-      "Debugging order: get → describe (Events) → logs → logs --previous.",
-      "CrashLoopBackOff means the container exits repeatedly; describe + logs reveal why.",
+      "docker ps / ps -a, logs, inspect are your daily tools.",
+      "Port mapping is host:container (-p 8080:80).",
+    ],
+    browserLab: "/docker.html",
+    reflection: ["What would you run first if a container won't respond on curl?"],
+    commonMistakes: ["Mapping ports backwards (container:host)."],
+  },
+  "c5-debug-docker": {
+    prerequisites: ["Lesson 4: Essential Docker commands"],
+    keyTakeaways: [
+      "Exited containers: ps -a → logs → inspect exit code.",
+      "Wrong port mapping is the #1 'app won't load' Docker bug.",
+    ],
+    browserLab: "/practice-docker-exited.html",
+    reflection: ["How does Docker debugging map to kubectl describe + logs?"],
+    commonMistakes: ["Only checking docker ps (misses exited containers)."],
+  },
+  "c6-orchestration": {
+    prerequisites: ["Lessons 1–5: Container fundamentals"],
+    keyTakeaways: [
+      "Docker excels on one machine; production needs orchestration.",
+      "Kubernetes adds scheduling, healing, scaling, and rollouts.",
+    ],
+    reflection: ["What problems does K8s solve that Docker alone cannot?"],
+    commonMistakes: ["Jumping to Kubernetes before understanding images and containers."],
+  },
+  "k1-overview": {
+    prerequisites: ["Part 1 complete (Lessons 1–6)"],
+    keyTakeaways: [
+      "Control plane schedules work; nodes run containers; kubectl is the CLI.",
+      "Declarative YAML — describe desired state, K8s reconciles.",
     ],
     localLab: { title: "Lab 01 — First pod", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-01-first-pod", command: "make local-lab" },
-    reflection: [
-      "Why shouldn't you create bare Pods in production instead of Deployments?",
-      "What does ImagePullBackOff tell you before you even run describe?",
-    ],
-    commonMistakes: [
-      "Skipping describe and going straight to deleting/recreating the Pod.",
-      "Ignoring the Events section at the bottom of describe output.",
-      "Assuming Pod name stays the same after delete — it won't with Deployments.",
-    ],
+    reflection: ["What is the difference between imperative and declarative?"],
+    commonMistakes: ["Expecting kubectl to build images — it manages cluster state."],
   },
-  deployments: {
-    prerequisites: ["Module 2: Pods", "Lab 01 complete"],
+  "k2-pods": {
+    prerequisites: ["Lesson 7: Kubernetes overview"],
     keyTakeaways: [
-      "Deployment → ReplicaSet → Pod: declarative desired state with self-healing.",
-      "Services provide stable DNS/IP; Pods do not — always expose via Service.",
-      "Empty endpoints = Service selector doesn't match Pod labels. Check this first.",
-      "rollout undo is the fastest safe recovery from a bad image push.",
+      "Pod = smallest schedulable unit; usually one app container.",
+      "Pod IPs are ephemeral — don't rely on them staying stable.",
+    ],
+    localLab: { title: "Lab 01 — First pod", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-01-first-pod", command: "make local-lab" },
+    reflection: ["Why schedule Pods instead of bare containers?"],
+    commonMistakes: ["Creating bare Pods in production instead of Deployments."],
+  },
+  "k3-pod-debug": {
+    prerequisites: ["Lesson 8: Pods explained"],
+    keyTakeaways: [
+      "Debug order: get → describe (Events) → logs → logs --previous.",
+      "ImagePullBackOff, CrashLoopBackOff, Pending each mean something specific.",
+    ],
+    browserLab: "/practice-crash.html",
+    reflection: ["What do Events at the bottom of describe tell you?"],
+    commonMistakes: ["Deleting Pods before reading describe Events."],
+  },
+  "k4-deployments": {
+    prerequisites: ["Lesson 9: Debugging Pods"],
+    keyTakeaways: [
+      "Deployment → ReplicaSet → Pod with self-healing.",
+      "kubectl rollout undo is the fastest bad-deploy recovery.",
     ],
     localLab: { title: "Lab 02 — Deployments & services", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-02-deployments-services", command: "make local-lab" },
-    reflection: [
-      "What happens when you delete a Pod managed by a Deployment?",
-      "Why does ClusterIP not work from your laptop browser without port-forward?",
-    ],
-    commonMistakes: [
-      "Service selector typo — app: web vs app:web (labels must match exactly).",
-      "Scaling by creating Pods manually instead of kubectl scale / edit Deployment.",
-      "Forgetting rollout status after image change.",
-    ],
+    reflection: ["What happens when you delete a Pod owned by a Deployment?"],
+    commonMistakes: ["Scaling by creating Pods manually."],
   },
-  config: {
-    prerequisites: ["Module 3: Deployments & Services"],
+  "k5-services": {
+    prerequisites: ["Lesson 10: Deployments"],
     keyTakeaways: [
-      "ConfigMap = non-sensitive config; Secret = sensitive (still protect with RBAC).",
-      "Changing a ConfigMap does not always reload running Pods — rollout restart may be needed.",
-      "Mount as file when app reads config from disk; use env when app reads env vars.",
-      "Never commit real Secrets to git — use Sealed Secrets, External Secrets, or Vault in prod.",
+      "Services provide stable DNS/IP; Pods do not.",
+      "Empty endpoints = selector doesn't match Pod labels.",
+    ],
+    localLab: { title: "Lab 02 — Deployments & services", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-02-deployments-services", command: "make local-lab" },
+    browserLab: "/practice-broken.html",
+    reflection: ["Why check endpoints before blaming the app?"],
+    commonMistakes: ["Service selector typo — labels must match exactly."],
+  },
+  "k6-config": {
+    prerequisites: ["Lesson 11: Services & endpoints"],
+    keyTakeaways: [
+      "ConfigMap = non-sensitive; Secret = sensitive (protect with RBAC).",
+      "Config changes may need rollout restart to take effect.",
     ],
     localLab: { title: "Lab 03 — ConfigMaps & secrets", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-03-config-secrets", command: "make local-lab" },
-    reflection: [
-      "When would you choose a volume mount over an environment variable?",
-      "Why is base64 in a Secret YAML not real encryption?",
-    ],
-    commonMistakes: [
-      "Wrong key name in env valueFrom — silent empty string or crash.",
-      "Expecting hot reload without app support or Pod restart.",
-      "Storing production credentials in plain ConfigMap.",
-    ],
+    reflection: ["When mount as file vs env var?"],
+    commonMistakes: ["Storing prod credentials in plain ConfigMap."],
   },
-  networking: {
-    prerequisites: ["Module 3: Deployments & Services", "Understand Services and labels"],
+  "k7-networking": {
+    prerequisites: ["Lesson 11: Services & endpoints"],
     keyTakeaways: [
-      "Every Pod gets a cluster IP; Services group Pods behind one stable address.",
-      "kube-proxy (or CNI) implements Service routing to Pod endpoints.",
-      "Ingress = HTTP routing layer; needs an Ingress controller installed.",
-      "Debug path: Pod Running → endpoints populated → Ingress rules → DNS/TLS.",
+      "Debug path: Pod Running → endpoints → Ingress → DNS/TLS.",
+      "Ingress needs a controller installed — YAML alone does nothing.",
     ],
     localLab: { title: "Lab 04 — Networking & ingress", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-04-networking-ingress", command: "make local-lab" },
     browserLab: "/practice-broken.html",
-    reflection: [
-      "What is the difference between NodePort and Ingress?",
-      "How would you verify a Service has backends before blaming the app?",
-    ],
-    commonMistakes: [
-      "Installing Ingress resource without an Ingress controller — nothing routes traffic.",
-      "Wrong host header or missing /etc/hosts entry when testing locally.",
-      "Debugging Ingress before confirming Service endpoints exist.",
-    ],
+    reflection: ["NodePort vs Ingress — when use each?"],
+    commonMistakes: ["Debugging Ingress before confirming Service endpoints."],
   },
-  storage: {
-    prerequisites: ["Module 2: Pods", "Basic volume concept"],
+  "k8-storage-rbac": {
+    prerequisites: ["Lesson 8: Pods explained"],
     keyTakeaways: [
-      "emptyDir dies with the Pod; PVC data survives Pod deletion.",
-      "PVC requests storage; PV provides it; StorageClass enables dynamic provisioning.",
-      "ReadWriteOnce (RWO) = one node at a time — matters for multi-replica apps.",
-      "RBAC: Role + RoleBinding + ServiceAccount = who can do what in a namespace.",
+      "PVC data survives Pod deletion; emptyDir does not.",
+      "Role + RoleBinding + ServiceAccount = least privilege.",
     ],
     localLab: { title: "Lab 05 — Storage", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-05-storage", command: "make local-lab" },
-    reflection: [
-      "Why can't two Pods on different nodes share a RWO volume?",
-      "When would you use a Role vs ClusterRole?",
-    ],
-    commonMistakes: [
-      "Using emptyDir for data that must survive restarts.",
-      "PVC stuck Pending — no default StorageClass or wrong access mode.",
-      "Granting cluster-admin to app ServiceAccounts.",
-    ],
+    reflection: ["When Role vs ClusterRole?"],
+    commonMistakes: ["Using emptyDir for data that must persist."],
   },
-  production: {
-    prerequisites: ["Modules 1–6", "At least Labs 01–03 on local cluster"],
+  "k9-production": {
+    prerequisites: ["Lessons 7–14"],
     keyTakeaways: [
-      "Set requests (scheduling) and limits (cap) — unset memory limits risk OOM kills.",
-      "Liveness = restart if dead; readiness = remove from Service if not ready.",
-      "Helm packages YAML; upgrade/rollback map to Deployment rollout patterns.",
-      "On-call flow for CrashLoop: get pods → describe → logs → fix manifest → rollout.",
+      "Liveness vs readiness probes — restart vs remove from Service.",
+      "Set requests and limits; use rollout undo for bad deploys.",
     ],
     localLab: { title: "Lab 07 — Helm", href: "https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-07-helm", command: "make local-lab" },
     browserLab: "/practice-crash.html",
-    reflection: [
-      "What's the difference between liveness and readiness probes?",
-      "When would helm rollback beat kubectl rollout undo?",
-    ],
-    commonMistakes: [
-      "Liveness probe too aggressive — restarts healthy but slow-starting apps.",
-      "No resource requests — Pod schedules anywhere, then gets OOMKilled under load.",
-      "Panic-deleting namespace in prod instead of rollout undo.",
-    ],
+    reflection: ["What's your on-call flow for CrashLoopBackOff?"],
+    commonMistakes: ["Aggressive liveness probe killing slow starters."],
   },
 };
 
 export const learningPathOrder = [
-  { step: 1, label: "Docker fundamentals", browser: "/docker.html", local: "lab-00-docker" },
-  { step: 2, label: "Containers module + quiz", browser: "/modules/containers.html", local: "lab-00-docker" },
-  { step: 3, label: "Pods module → Lab 01", browser: "/modules/pods.html", local: "lab-01-first-pod" },
-  { step: 4, label: "Deployments module → Lab 02", browser: "/modules/deployments.html", local: "lab-02-deployments-services" },
-  { step: 5, label: "Config module → Lab 03", browser: "/modules/config.html", local: "lab-03-config-secrets" },
-  { step: 6, label: "Networking → Lab 04 + troubleshoot", browser: "/modules/networking.html", local: "lab-04-networking-ingress" },
-  { step: 7, label: "Storage & RBAC → Labs 05–06", browser: "/modules/storage.html", local: "lab-05-storage" },
-  { step: 8, label: "Production + Helm → Lab 07", browser: "/modules/production.html", local: "lab-07-helm" },
-  { step: 9, label: "Advanced challenges", browser: "/troubleshoot.html", local: "manifests/broken/" },
+  { step: 1, label: "Part 1 — Container lessons (1–6)", browser: "/learn.html#containers", local: "lab-00-docker" },
+  { step: 2, label: "Docker simulator + Lab 00", browser: "/docker.html", local: "lab-00-docker" },
+  { step: 3, label: "Part 2 — K8s overview & Pods (7–9)", browser: "/learn.html#kubernetes", local: "lab-01-first-pod" },
+  { step: 4, label: "Deployments & Services (10–11) → Lab 02", browser: "/modules/k4-deployments.html", local: "lab-02-deployments-services" },
+  { step: 5, label: "Config (12) → Lab 03", browser: "/modules/k6-config.html", local: "lab-03-config-secrets" },
+  { step: 6, label: "Networking (13) → Lab 04", browser: "/modules/k7-networking.html", local: "lab-04-networking-ingress" },
+  { step: 7, label: "Storage & RBAC (14) → Labs 05–06", browser: "/modules/k8-storage-rbac.html", local: "lab-05-storage" },
+  { step: 8, label: "Production (15) + Helm → Lab 07", browser: "/modules/k9-production.html", local: "lab-07-helm" },
+  { step: 9, label: "Troubleshoot scenarios", browser: "/troubleshoot.html", local: "manifests/broken/" },
 ];

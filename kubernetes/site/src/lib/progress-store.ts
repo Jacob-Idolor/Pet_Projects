@@ -1,5 +1,7 @@
 /** Personal progress — localStorage only, no login */
 
+import { modules } from "../data/modules";
+
 export const PROGRESS_KEY = "k8s-lab-progress-v1";
 
 export interface CompletionRecord {
@@ -116,24 +118,15 @@ export function syncAutoCompletions(data: ProgressData): ProgressData {
   const next = { ...data, completed: { ...data.completed } };
   let changed = false;
 
-  const quizToLab: Record<string, string> = {
-    containers: "mod-containers",
-    pods: "mod-pods",
-    deployments: "mod-deployments",
-    config: "mod-config",
-    networking: "mod-networking",
-    storage: "mod-storage",
-    production: "mod-production",
-  };
-  for (const [quizId, labId] of Object.entries(quizToLab)) {
-    if (localStorage.getItem(`k8s-quiz-${quizId}`) === "passed" && !next.completed[labId]) {
+  for (const mod of modules) {
+    const labId = `mod-${mod.id}`;
+    if (localStorage.getItem(`k8s-quiz-${mod.id}`) === "passed" && !next.completed[labId]) {
       next.completed[labId] = { completedAt: new Date().toISOString(), note: "Auto: quiz passed" };
       changed = true;
     }
   }
 
-  const moduleIds = ["containers", "pods", "deployments", "config", "networking", "storage", "production"];
-  const allQuizzesPassed = moduleIds.every((id) => localStorage.getItem(`k8s-quiz-${id}`) === "passed");
+  const allQuizzesPassed = modules.every((m) => localStorage.getItem(`k8s-quiz-${m.id}`) === "passed");
   if (allQuizzesPassed && !next.completed["extra-quiz-all"]) {
     next.completed["extra-quiz-all"] = { completedAt: new Date().toISOString(), note: "Auto: all quizzes passed" };
     changed = true;

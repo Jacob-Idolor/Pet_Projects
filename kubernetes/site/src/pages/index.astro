@@ -7,8 +7,8 @@ import { labs, filters } from "../data/lab-hub";
 <BaseLayout title="Lab Hub" description="Choose a lab — Docker, Kubernetes, troubleshooting, or local cluster practice.">
   <section class="hero container hub-hero">
     <h1>Lab Hub</h1>
-    <p class="lead">Pick a lab and start practicing. Everything lives here — browser simulators, modules, debug scenarios, and local cluster guides.</p>
-    <p class="hub-stats" id="hub-stats">{labs.length} labs · Browser or local · <a href="/progress.html">Tracker</a> · <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/LEARNING-PATH.md" target="_blank" rel="noopener">Learning path</a></p>
+    <p class="lead">Pick a lab and start practicing — or follow <a href="/learn.html">15 step-by-step lessons</a> from containers to Kubernetes.</p>
+    <p class="hub-stats" id="hub-stats">{labs.length} labs · Browser or local · <a href="/learn.html">Learn</a> · <a href="/progress.html">Tracker</a> · <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/LEARNING-PATH.md" target="_blank" rel="noopener">Learning path</a></p>
     <div class="hub-progress" id="hub-progress" hidden>
       <div class="hub-progress-bar"><div class="hub-progress-fill" id="hub-progress-fill"></div></div>
       <span class="hub-progress-text" id="hub-progress-text"></span>
@@ -39,7 +39,7 @@ import { labs, filters } from "../data/lab-hub";
   <section class="container hub-footer">
     <div class="callout">
       <p>
-        <strong>How to learn:</strong> Read the module → simulator → local lab → mark done in Tracker.
+        <strong>How to learn:</strong> <a href="/learn.html">Lessons</a> → simulator → local lab → mark done in Tracker.
         Full path: <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/kubernetes/LEARNING-PATH.md" target="_blank" rel="noopener">LEARNING-PATH.md</a>
       </p>
     </div>

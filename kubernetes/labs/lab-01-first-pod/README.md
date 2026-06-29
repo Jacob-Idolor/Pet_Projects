@@ -1,6 +1,6 @@
 # Lab 01 — First pod
 
-**Level:** L1 · **Time:** 30–45 min · **Prerequisites:** [Lab 00](../lab-00-docker/) or Docker basics · **Module:** [Pods](../../site/src/pages/modules/pods.html)
+**Level:** L1 · **Time:** 30–45 min · **Prerequisites:** [Lab 00](../lab-00-docker/) or Docker basics · **Lesson:** [L8 — Pods explained](../../site/src/pages/modules/k2-pods.html)
 
 ## Concepts
 

@@ -4,25 +4,28 @@ import type { QuizQ } from "../data/modules";
 interface Props {
   questions: QuizQ[];
   moduleId: string;
+  compact?: boolean;
 }
 
-const { questions, moduleId } = Astro.props;
+const { questions, moduleId, compact = false } = Astro.props;
 ---
 
-<div class="quiz" data-quiz data-module={moduleId} data-answers={JSON.stringify(questions)}>
+<div class={`quiz ${compact ? "quiz-compact" : ""}`} data-quiz data-module={moduleId} data-answers={JSON.stringify(questions)}>
   {questions.map((q, qi) => (
     <fieldset class="quiz-item" data-q={qi}>
-      <legend>{qi + 1}. {q.question}</legend>
-      {q.options.map((opt, oi) => (
-        <label class="quiz-option">
-          <input type="radio" name={`q-${moduleId}-${qi}`} value={oi} />
-          {opt}
-        </label>
-      ))}
+      <legend>{q.question}</legend>
+      <div class="quiz-options">
+        {q.options.map((opt, oi) => (
+          <label class="quiz-option">
+            <input type="radio" name={`q-${moduleId}-${qi}`} value={oi} />
+            {opt}
+          </label>
+        ))}
+      </div>
       <p class="quiz-feedback" hidden data-feedback></p>
     </fieldset>
   ))}
-  <button type="button" class="btn btn-primary" data-check>Check answers</button>
+  <button type="button" class="btn btn-primary btn-check" data-check>Check</button>
   <p class="quiz-score" data-score hidden></p>
 </div>
 
@@ -50,42 +53,82 @@ const { questions, moduleId } = Astro.props;
         const q = questions[qi];
         if (Number(selected.value) === q.correct) {
           correct++;
-          feedback.textContent = `✓ ${q.explain}`;
+          feedback.textContent = q.explain;
           feedback.className = "quiz-feedback right";
         } else {
-          feedback.textContent = `✗ ${q.explain}`;
+          feedback.textContent = q.explain;
           feedback.className = "quiz-feedback wrong";
         }
       });
       scoreEl.hidden = false;
-      scoreEl.textContent = `Score: ${correct} / ${items.length}`;
       if (correct === items.length) {
         localStorage.setItem(key, "passed");
-        scoreEl.textContent += " — saved to your progress!";
+        scoreEl.textContent = "✓ Passed — saved to progress";
+        scoreEl.className = "quiz-score pass";
+      } else {
+        scoreEl.textContent = `${correct}/${items.length} — read the feedback and try again`;
+        scoreEl.className = "quiz-score fail";
       }
     });
   });
 </script>
 
 <style>
-  .quiz { margin: 2rem 0; }
+  .quiz { margin: 1rem 0 2rem; }
   .quiz-item {
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.75rem;
     background: var(--surface);
   }
-  .quiz-item legend { font-weight: 600; margin-bottom: 0.75rem; }
+  .quiz-compact .quiz-item {
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+  .quiz-item legend {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .quiz-compact .quiz-options {
+    gap: 0.15rem;
+  }
   .quiz-option {
-    display: block;
-    padding: 0.4rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
     cursor: pointer;
     color: var(--text);
+    font-size: 0.9rem;
   }
+  .quiz-compact .quiz-option { font-size: 0.85rem; padding: 0.25rem 0; }
   .quiz-option:hover { color: var(--accent); }
-  .quiz-feedback { margin-top: 0.75rem; font-size: 0.9rem; }
-  .quiz-feedback.right { color: var(--success); }
-  .quiz-feedback.wrong { color: #f87171; }
-  .quiz-score { margin-top: 1rem; font-weight: 600; }
+  .quiz-option input { margin-top: 0.2rem; flex-shrink: 0; }
+  .quiz-feedback {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 6px;
+    background: #0a0e12;
+  }
+  .quiz-feedback.right { color: var(--success); border-left: 2px solid var(--success); }
+  .quiz-feedback.wrong { color: #fca5a5; border-left: 2px solid #f87171; }
+  .btn-check {
+    font-size: 0.9rem;
+    padding: 0.5rem 1.25rem;
+  }
+  .quiz-score {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .quiz-score.pass { color: var(--success); }
+  .quiz-score.fail { color: var(--muted); }
 </style>

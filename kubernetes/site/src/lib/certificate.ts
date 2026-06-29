@@ -6,11 +6,14 @@ import type { Trackable } from "../data/trackables";
 
 export const CERTIFICATE_NAME_KEY = "k8s-lab-certificate-name";
 
-/** Hub labs only (24) — minimum for core certificate */
+/** Hub labs — minimum for core certificate (excludes learn-curriculum overview card) */
 export const CORE_LAB_IDS = [
   "docker-fundamentals", "docker-exited", "docker-wrongport",
-  "mod-containers", "mod-pods", "mod-deployments", "mod-config",
-  "mod-networking", "mod-storage", "mod-production",
+  "mod-c1-containers", "mod-c2-images", "mod-c3-dockerfile", "mod-c4-docker-cli",
+  "mod-c5-debug-docker", "mod-c6-orchestration",
+  "mod-k1-overview", "mod-k2-pods", "mod-k3-pod-debug", "mod-k4-deployments",
+  "mod-k5-services", "mod-k6-config", "mod-k7-networking", "mod-k8-storage-rbac",
+  "mod-k9-production",
   "kubectl-sandbox",
   "ts-crashloop", "ts-endpoints", "ts-imagepull", "ts-pending",
   "local-00", "local-01", "local-02", "local-03", "local-04",

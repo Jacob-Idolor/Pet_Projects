@@ -1,15 +1,15 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
-import { modules } from "../data/modules";
+import { modules, getModulesByPhase, phaseLabels } from "../data/modules";
 ---
 
-<BaseLayout title="Learn" description="Free Kubernetes and container fundamentals — interactive modules in your browser.">
-  <section class="hero container prose">
-    <h1>Learn Kubernetes fundamentals</h1>
+<BaseLayout title="Learn" description="Step-by-step container and Kubernetes lessons — building blocks first, then orchestration.">
+  <section class="hero container">
+    <h1>Learn step by step</h1>
     <p class="lead">
-      Start with <a href="/docker.html">Docker fundamentals</a>, then seven modules from Pods to production.
-      Simulated terminals, quizzes, and troubleshooting — all in the browser.
+      <strong>Part 1</strong> builds container fundamentals. <strong>Part 2</strong> applies them in Kubernetes.
+      Short lessons, try-it commands, one quick quiz each.
     </p>
   </section>
 
@@ -17,23 +17,125 @@ import { modules } from "../data/modules";
     <AdSlot slot="learn-top" />
   </section>
 
-  <section class="container card-grid">
-    {modules.map((m) => (
-      <article class="card">
-        <span class="badge">Module {m.order} · {m.time}</span>
-        <h3>{m.title}</h3>
-        <p>{m.subtitle}</p>
-        <p><a class="btn btn-primary" href={`/modules/${m.id}.html`}>Start module →</a></p>
-      </article>
-    ))}
-  </section>
+  {(["containers", "kubernetes"] as const).map((phase) => {
+    const lessons = getModulesByPhase(phase);
+    const info = phaseLabels[phase];
+    return (
+      <section class="container phase-section" id={phase}>
+        <div class="phase-header">
+          <h2>{info.title}</h2>
+          <p>{info.desc}</p>
+          <span class="phase-count">{lessons.length} lessons · ~{lessons.reduce((a, l) => a + parseInt(l.time), 0)} min total</span>
+        </div>
+        <ol class="lesson-list">
+          {lessons.map((m, i) => (
+            <li class="lesson-item">
+              <span class="lesson-num">{i + 1}</span>
+              <div class="lesson-body">
+                <h3>{m.title}</h3>
+                <p>{m.subtitle}</p>
+                <span class="lesson-meta">{m.time} · {m.quiz.length} quiz question{m.quiz.length > 1 ? "s" : ""}</span>
+              </div>
+              <a class="btn btn-primary" href={`/modules/${m.id}.html`} data-lesson-id={m.id}>Start →</a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  })}
 
-  <section class="container prose">
+  <section class="container">
     <div class="callout">
       <p>
-        Want real kubectl on your machine? See <a href="/get-started.html">Get started</a> —
-        <code>make local-lab</code> spins up a kind cluster for hands-on labs.
+        After lessons, practice on the <a href="/">Lab Hub</a>, mark progress in <a href="/progress.html">Tracker</a>,
+        and run <code>make local-lab</code> for hands-on YAML.
       </p>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .hero { padding: 2.5rem 0 1.5rem; text-align: center; }
+  .hero h1 { margin: 0 0 0.75rem; }
+  .lead { color: var(--muted); max-width: 36rem; margin: 0 auto; }
+  .phase-section { margin-bottom: 3rem; }
+  .phase-header {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-header h2 { margin: 0 0 0.35rem; font-size: 1.25rem; }
+  .phase-header p { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.95rem; }
+  .phase-count { font-size: 0.8rem; color: var(--muted); }
+  .lesson-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .lesson-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    transition: border-color 0.15s;
+  }
+  .lesson-item:hover { border-color: var(--accent); }
+  .lesson-num {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .lesson-body { flex: 1; min-width: 0; }
+  .lesson-body h3 { margin: 0 0 0.2rem; font-size: 1rem; }
+  .lesson-body p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+  .lesson-meta { font-size: 0.75rem; color: var(--muted); }
+  .lesson-item .btn {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+  @media (max-width: 540px) {
+    .lesson-item { flex-wrap: wrap; }
+    .lesson-item .btn { width: 100%; text-align: center; }
+  }
+  .lesson-item.done { border-color: var(--success); }
+  .lesson-item.done .lesson-num { background: var(--success); }
+  .quiz-badge {
+    font-size: 0.7rem;
+    color: var(--success);
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+</style>
+
+<script>
+  document.querySelectorAll("[data-lesson-id]").forEach((link) => {
+    const id = (link as HTMLElement).dataset.lessonId!;
+    if (localStorage.getItem(`k8s-quiz-${id}`) === "passed") {
+      const item = link.closest(".lesson-item");
+      item?.classList.add("done");
+      const meta = item?.querySelector(".lesson-meta");
+      if (meta && !meta.querySelector(".quiz-badge")) {
+        const badge = document.createElement("span");
+        badge.className = "quiz-badge";
+        badge.textContent = " · quiz passed";
+        meta.appendChild(badge);
+      }
+      (link as HTMLAnchorElement).textContent = "Review →";
+    }
+  });
+</script>

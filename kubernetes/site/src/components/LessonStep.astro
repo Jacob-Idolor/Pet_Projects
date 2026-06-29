@@ -1,0 +1,88 @@
+---
+interface Props {
+  heading: string;
+  body: string;
+  type?: "concept" | "analogy" | "try-it" | "tip";
+  tryCommand?: string;
+  index: number;
+}
+
+const { heading, body, type = "concept", tryCommand, index } = Astro.props;
+const icons: Record<string, string> = {
+  concept: "📖",
+  analogy: "💡",
+  "try-it": "⌨️",
+  tip: "⚡",
+};
+---
+
+<article class={`lesson-step step-${type}`}>
+  <div class="step-header">
+    <span class="step-num">{index}</span>
+    <span class="step-icon">{icons[type]}</span>
+    <h2>{heading}</h2>
+  </div>
+  <div class="step-body" set:html={body} />
+  {tryCommand && (
+    <div class="try-it-box">
+      <strong>Try it in the terminal below:</strong>
+      <code>{tryCommand}</code>
+    </div>
+  )}
+</article>
+
+<style>
+  .lesson-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .step-analogy { border-left: 3px solid var(--warn); }
+  .step-try-it { border-left: 3px solid var(--accent); }
+  .step-tip { border-left: 3px solid var(--success); }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+  .step-num {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-icon { font-size: 1.1rem; }
+  .step-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .step-body {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .step-body :global(strong) { color: var(--text); }
+  .try-it-box {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #0a0e12;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  .try-it-box code {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--success);
+    font-family: "JetBrains Mono", monospace;
+  }
+</style>

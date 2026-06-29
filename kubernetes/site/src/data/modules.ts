@@ -5,386 +5,590 @@ export interface QuizQ {
   explain: string;
 }
 
+export type LessonPhase = "containers" | "kubernetes";
+
+export interface LessonSection {
+  heading: string;
+  body: string;
+  type?: "concept" | "analogy" | "try-it" | "tip";
+  tryCommand?: string;
+}
+
 export interface Module {
   id: string;
   title: string;
   subtitle: string;
   time: string;
   order: number;
+  phase: LessonPhase;
   cluster: "default" | "lab02" | "broken" | "crash" | "imagepull" | "pending";
   terminal?: "docker" | "kubectl";
-  sections: { heading: string; body: string }[];
+  sections: LessonSection[];
   quiz: QuizQ[];
   practiceGoal: string;
 }
 
+export const phaseLabels: Record<LessonPhase, { title: string; desc: string }> = {
+  containers: {
+    title: "Part 1 — Containers & Docker",
+    desc: "Building blocks: images, containers, Dockerfile, and debugging. Master this before Kubernetes.",
+  },
+  kubernetes: {
+    title: "Part 2 — Kubernetes",
+    desc: "Orchestration: Pods, Deployments, Services, config, networking, and production patterns.",
+  },
+};
+
 export const modules: Module[] = [
+  // ─── PART 1: CONTAINERS ───────────────────────────────────────────
   {
-    id: "containers",
-    title: "Containers & Docker",
-    subtitle: "Images, containers, Dockerfile best practices — the foundation of Kubernetes",
-    time: "35 min",
+    id: "c1-containers",
+    title: "What is a container?",
+    subtitle: "The building block everything else sits on",
+    time: "8 min",
     order: 1,
-    cluster: "default",
+    phase: "containers",
     terminal: "docker",
     sections: [
       {
-        heading: "What is a container?",
-        body: "A container is a running instance of an image — your app plus everything it needs to run, isolated from other processes. Unlike a VM, containers share the host kernel.",
+        heading: "Containers in plain English",
+        body: "A <strong>container</strong> is your app running in a isolated box — it includes your code, runtime, and dependencies. It shares the host OS kernel (unlike a VM which bundles a whole OS).",
+        type: "concept",
       },
+      {
+        heading: "VM vs container",
+        body: "A <strong>VM</strong> virtualizes hardware — heavy, minutes to boot. A <strong>container</strong> virtualizes the OS — lightweight, starts in seconds. That's why modern apps use containers.",
+        type: "analogy",
+      },
+      {
+        heading: "Why this matters for Kubernetes",
+        body: "Kubernetes doesn't replace containers — it <strong>runs</strong> them. You still build container images; K8s schedules and heals them across machines.",
+        type: "tip",
+      },
+    ],
+    quiz: [
+      {
+        question: "How is a container different from a VM?",
+        options: ["Containers include a full guest OS", "Containers share the host kernel and start faster", "VMs are always smaller", "There is no difference"],
+        correct: 1,
+        explain: "Containers share the kernel; VMs virtualize hardware with their own OS.",
+      },
+    ],
+    practiceGoal: "Run docker ps to see a running container in the simulator.",
+  },
+  {
+    id: "c2-images",
+    title: "Images & layers",
+    subtitle: "Immutable templates you build once and run many times",
+    time: "10 min",
+    order: 2,
+    phase: "containers",
+    terminal: "docker",
+    sections: [
       {
         heading: "Image vs container",
-        body: "<strong>Image</strong> = immutable template (layers). <strong>Container</strong> = running copy. You build once, run many times. Registry stores images (Docker Hub, ECR, GHCR).",
+        body: "<strong>Image</strong> = read-only template (stacked layers). <strong>Container</strong> = running instance of that image. One image → many containers.",
+        type: "concept",
       },
       {
-        heading: "The build pipeline",
-        body: "<code>Dockerfile</code> → <code>docker build -t myapp:1.0 .</code> → Image → <code>docker run -p 8080:8080 myapp:1.0</code> → Container. Kubernetes pulls the same image into Pods.",
+        heading: "Think of it like a cookie cutter",
+        body: "The <strong>image</strong> is the cutter (shape never changes). Each <strong>container</strong> is a cookie you stamp out — same shape, independent copies.",
+        type: "analogy",
       },
       {
-        heading: "Essential Docker commands",
-        body: "<code>docker ps</code> / <code>docker ps -a</code> — running vs all containers<br><code>docker logs NAME</code> — stdout/stderr<br><code>docker inspect NAME</code> — config, exit code, ports<br><code>docker images</code> — local images<br><code>docker build -t TAG .</code> — build from Dockerfile",
+        heading: "Registries",
+        body: "Images live in registries: Docker Hub, GHCR, ECR. You <code>docker pull</code> to download and <code>docker push</code> to publish. Kubernetes pulls from the same registries.",
+        type: "concept",
+        tryCommand: "docker images",
+      },
+    ],
+    quiz: [
+      {
+        question: "What is the relationship between an image and a container?",
+        options: ["Same thing", "Image is template; container is a running copy", "Container comes first", "Images only exist in Kubernetes"],
+        correct: 1,
+        explain: "Build an image once, run many containers from it.",
+      },
+    ],
+    practiceGoal: "Run docker images to list local images.",
+  },
+  {
+    id: "c3-dockerfile",
+    title: "Dockerfile & build",
+    subtitle: "How you create an image from code",
+    time: "10 min",
+    order: 3,
+    phase: "containers",
+    terminal: "docker",
+    sections: [
+      {
+        heading: "The pipeline",
+        body: "<code>Dockerfile</code> (recipe) → <code>docker build -t myapp:1.0 .</code> → <strong>Image</strong> → <code>docker run myapp:1.0</code> → <strong>Container</strong>",
+        type: "concept",
       },
       {
-        heading: "Dockerfile best practices",
-        body: "Pin tags (not <code>latest</code> in prod). Multi-stage builds for smaller images. Non-root <code>USER</code>. <code>.dockerignore</code> to exclude junk. Never put secrets in layers — use runtime env or K8s Secrets.",
+        heading: "Key Dockerfile instructions",
+        body: "<code>FROM</code> base image · <code>COPY</code> files in · <code>RUN</code> build steps · <code>EXPOSE</code> port · <code>CMD</code> or <code>ENTRYPOINT</code> what runs at start",
+        type: "concept",
       },
       {
-        heading: "Debugging containers",
-        body: "Container gone from <code>docker ps</code>? Use <code>docker ps -a</code>. Crashed? <code>docker logs</code> then <code>docker inspect --format='{{.State.ExitCode}}'</code>. Wrong port? Check PORTS column — <code>-p HOST:CONTAINER</code>.",
-      },
-      {
-        heading: "Why Kubernetes?",
-        body: "Docker runs one container. Production needs dozens or thousands — restart failures, roll out updates, expose services, mount storage. Kubernetes orchestrates containers across machines.",
+        heading: "Multi-stage builds",
+        body: "Compile in a <strong>builder</strong> stage, copy only the binary to a slim runtime image. Smaller = faster deploys, smaller attack surface.",
+        type: "tip",
+        tryCommand: "docker build -t myapp:1.0 .",
       },
     ],
     quiz: [
       {
         question: "What does docker build -t myapp:1.0 . do?",
-        options: ["Runs a container", "Builds an image tagged myapp:1.0 from the Dockerfile in the current directory", "Pushes to Docker Hub", "Creates a Kubernetes Pod"],
+        options: ["Runs a container", "Builds an image from the Dockerfile here", "Pushes to Docker Hub", "Creates a Pod"],
         correct: 1,
-        explain: "build creates an image from a Dockerfile; -t sets the name:tag.",
-      },
-      {
-        question: "What does -p 8080:80 mean in docker run?",
-        options: ["Container port 8080 maps to host 80", "Host port 8080 maps to container port 80", "Both ports must be 8080", "Enables HTTPS"],
-        correct: 1,
-        explain: "Format is host:container — traffic to localhost:8080 reaches port 80 inside the container.",
-      },
-      {
-        question: "Why use multi-stage Docker builds?",
-        options: ["Faster docker run", "Smaller final image — build tools stay in earlier stages", "Required by Kubernetes", "Enables root access"],
-        correct: 1,
-        explain: "Compile in a builder stage; copy only the binary to the runtime image.",
-      },
-      {
-        question: "What is the smallest deployable unit in Kubernetes?",
-        options: ["Container", "Pod", "Deployment", "Node"],
-        correct: 1,
-        explain: "A Pod wraps one or more containers. Deployments manage Pods.",
-      },
-      {
-        question: "Why use Kubernetes instead of only Docker?",
-        options: ["Kubernetes builds images faster", "Kubernetes orchestrates many containers with healing, scaling, and networking", "Docker cannot run in production", "Kubernetes replaces the need for images"],
-        correct: 1,
-        explain: "K8s adds scheduling, self-healing, service discovery, and declarative rollouts.",
+        explain: "-t tags the image; . is the build context directory.",
       },
     ],
-    practiceGoal: "Switch to the Docker tab on /docker.html — run docker ps, docker images, and docker logs web.",
+    practiceGoal: "Run docker build -t myapp:1.0 . in the simulator.",
   },
   {
-    id: "pods",
-    title: "Pods",
-    subtitle: "The building block of everything in Kubernetes",
-    time: "25 min",
-    order: 2,
-    cluster: "default",
+    id: "c4-docker-cli",
+    title: "Essential Docker commands",
+    subtitle: "The CLI you'll use every day",
+    time: "10 min",
+    order: 4,
+    phase: "containers",
+    terminal: "docker",
     sections: [
       {
-        heading: "What is a Pod?",
-        body: "A <strong>Pod</strong> is the smallest object Kubernetes schedules. It wraps one or more containers that share network and storage. In practice, most Pods run a single app container plus optional sidecars (logging, proxies).",
+        heading: "See what's running",
+        body: "<code>docker ps</code> — running containers only<br><code>docker ps -a</code> — includes stopped/exited",
+        type: "concept",
+        tryCommand: "docker ps",
       },
       {
-        heading: "Pod lifecycle",
-        body: "<strong>Pending</strong> — waiting to be scheduled or pulling image.<br><strong>Running</strong> — at least one container is active.<br><strong>Succeeded / Failed</strong> — terminal states for jobs.<br><code>CrashLoopBackOff</code> — container keeps exiting; kubelet backs off restart attempts.",
+        heading: "Inspect and logs",
+        body: "<code>docker logs NAME</code> — app output<br><code>docker inspect NAME</code> — full config, exit code, ports",
+        type: "concept",
+        tryCommand: "docker logs web",
       },
       {
-        heading: "Why Pods get replaced",
-        body: "Pod IPs and names are ephemeral. When a node fails or you deploy a new version, Kubernetes creates <em>new</em> Pods — it does not restart the old one in place. That's why we use Deployments (next module) instead of managing Pods directly.",
-      },
-      {
-        heading: "Essential commands",
-        body: "<code>kubectl get pods</code> — list pods and STATUS column<br><code>kubectl describe pod NAME</code> — events, state, image, node<br><code>kubectl logs NAME</code> — stdout/stderr<br><code>kubectl logs NAME --previous</code> — logs from last crashed container<br><code>kubectl exec -it NAME -- sh</code> — shell inside container",
-      },
-      {
-        heading: "Debugging order (memorize this)",
-        body: "1. <code>kubectl get pods</code> — what does STATUS say?<br>2. <code>kubectl describe pod</code> — read <strong>Events</strong> at the bottom<br>3. <code>kubectl logs</code> — what did the app print?<br>4. <code>kubectl logs --previous</code> — if it crashed before current run",
-      },
-      {
-        heading: "Status codes you'll see",
-        body: "<code>ImagePullBackOff</code> — bad image name/tag or registry auth.<br><code>CrashLoopBackOff</code> — container starts then exits (bad command, missing config).<br><code>Pending</code> — not scheduled yet (resources, PVC, taints).",
+        heading: "Port mapping",
+        body: "<code>docker run -p 8080:80 myapp</code> — host port 8080 → container port 80. Format is always <strong>host:container</strong>.",
+        type: "try-it",
+        tryCommand: "docker inspect web --format='{{.State.Status}}'",
       },
     ],
     quiz: [
       {
-        question: "A pod shows ImagePullBackOff. Most likely cause?",
-        options: ["Wrong Service selector", "Bad or missing image name/tag", "PVC not bound", "RBAC denied"],
+        question: "What does -p 8080:80 mean?",
+        options: ["Container 8080 → host 80", "Host 8080 → container 80", "Both must match", "HTTPS only"],
         correct: 1,
-        explain: "Kubelet cannot pull the container image from the registry.",
-      },
-      {
-        question: "Which command shows scheduling events and restart count?",
-        options: ["kubectl logs", "kubectl get svc", "kubectl describe pod", "kubectl apply"],
-        correct: 2,
-        explain: "describe includes Events, conditions, and container state.",
-      },
-      {
-        question: "Why use Deployments instead of creating Pods directly?",
-        options: ["Pods are deprecated", "Deployments self-heal, scale, and roll out updates", "Pods cannot run containers", "Deployments are faster to create"],
-        correct: 1,
-        explain: "Bare Pods aren't replaced if deleted; Deployments maintain desired state.",
+        explain: "Traffic to localhost:8080 reaches port 80 inside the container.",
       },
     ],
-    practiceGoal: "Describe the nginx pod and read its logs in the terminal below.",
+    practiceGoal: "Run docker ps, docker logs web, and docker images.",
   },
   {
-    id: "deployments",
-    title: "Deployments & Services",
-    subtitle: "How real apps are deployed and exposed",
-    time: "30 min",
-    order: 3,
+    id: "c5-debug-docker",
+    title: "Debugging containers",
+    subtitle: "When things crash or ports don't work",
+    time: "10 min",
+    order: 5,
+    phase: "containers",
+    terminal: "docker",
+    sections: [
+      {
+        heading: "Container exited?",
+        body: "It won't show in <code>docker ps</code> — use <code>docker ps -a</code>. Then <code>docker logs</code> and <code>docker inspect --format='{{.State.ExitCode}}'</code>.",
+        type: "concept",
+        tryCommand: "docker ps -a",
+      },
+      {
+        heading: "curl fails but container runs?",
+        body: "Check the <strong>PORTS</strong> column in <code>docker ps</code>. You might be curling the wrong host port.",
+        type: "tip",
+      },
+      {
+        heading: "Same skills in Kubernetes",
+        body: "Pod won't start? Same mindset: logs + describe + events. You already know half of kubectl debugging from Docker.",
+        type: "analogy",
+      },
+    ],
+    quiz: [
+      {
+        question: "Container crashed — first two commands?",
+        options: ["docker rm && docker run", "docker ps -a then docker logs", "docker push", "kubectl delete pod"],
+        correct: 1,
+        explain: "Find exited container, then read logs for the error.",
+      },
+    ],
+    practiceGoal: "Practice on /practice-docker-exited.html — debug a crashed container.",
+  },
+  {
+    id: "c6-orchestration",
+    title: "Why orchestration?",
+    subtitle: "The bridge from Docker to Kubernetes",
+    time: "8 min",
+    order: 6,
+    phase: "containers",
+    terminal: "docker",
+    sections: [
+      {
+        heading: "Docker's limit",
+        body: "Docker runs containers on <strong>one machine</strong>. Production needs dozens of apps across many servers — with restarts, rollouts, and networking handled automatically.",
+        type: "concept",
+      },
+      {
+        heading: "What Kubernetes adds",
+        body: "Scheduling · self-healing · scaling · service discovery · load balancing · config management · storage · rollouts. It orchestrates containers you already know how to build.",
+        type: "concept",
+      },
+      {
+        heading: "You're ready for Part 2",
+        body: "You understand images, containers, and the CLI. Next: how Kubernetes wraps containers in <strong>Pods</strong> and manages them at scale.",
+        type: "tip",
+      },
+    ],
+    quiz: [
+      {
+        question: "Why use Kubernetes instead of only Docker?",
+        options: ["K8s builds images faster", "K8s orchestrates many containers with healing and rollouts", "Docker can't run in prod", "K8s replaces images"],
+        correct: 1,
+        explain: "K8s adds orchestration; you still use container images.",
+      },
+    ],
+    practiceGoal: "Mark Part 1 complete in Tracker — start Part 2: Kubernetes overview.",
+  },
+
+  // ─── PART 2: KUBERNETES ───────────────────────────────────────────
+  {
+    id: "k1-overview",
+    title: "Kubernetes overview",
+    subtitle: "What a cluster is and how the pieces fit",
+    time: "8 min",
+    order: 7,
+    phase: "kubernetes",
+    cluster: "default",
+    sections: [
+      {
+        heading: "What is Kubernetes?",
+        body: "An <strong>orchestrator</strong> for containers. You declare desired state (\"run 3 copies of nginx:1.25\"); Kubernetes makes it happen and keeps it that way.",
+        type: "concept",
+      },
+      {
+        heading: "Cluster parts",
+        body: "<strong>Control plane</strong> — schedules work, stores state.<br><strong>Nodes</strong> — machines that run your containers.<br><strong>kubectl</strong> — CLI you use to talk to the cluster.",
+        type: "concept",
+        tryCommand: "kubectl get nodes",
+      },
+      {
+        heading: "Declarative mindset",
+        body: "You write YAML describing <em>what</em> you want, not step-by-step how. Kubernetes reconciles reality to match — same idea as git declaring desired file state.",
+        type: "analogy",
+      },
+    ],
+    quiz: [
+      {
+        question: "What does kubectl do?",
+        options: ["Builds Docker images", "Talks to the Kubernetes API to manage resources", "Replaces Docker", "Only works on AWS"],
+        correct: 1,
+        explain: "kubectl is the CLI for your cluster.",
+      },
+    ],
+    practiceGoal: "Run kubectl get nodes in the simulator.",
+  },
+  {
+    id: "k2-pods",
+    title: "Pods explained",
+    subtitle: "The smallest thing Kubernetes schedules",
+    time: "10 min",
+    order: 8,
+    phase: "kubernetes",
+    cluster: "default",
+    sections: [
+      {
+        heading: "Pod = container wrapper",
+        body: "A <strong>Pod</strong> wraps one or more containers with shared network and storage. Usually one app container per Pod. Kubernetes schedules <strong>Pods</strong>, not containers directly.",
+        type: "concept",
+      },
+      {
+        heading: "Ephemeral by design",
+        body: "Pods get new IPs when recreated. Don't rely on Pod names or IPs staying stable — that's what Services are for (later lesson).",
+        type: "tip",
+      },
+      {
+        heading: "First command",
+        body: "<code>kubectl get pods</code> shows Pod name, status, restarts, and age. The STATUS column is your first debug clue.",
+        type: "try-it",
+        tryCommand: "kubectl get pods",
+      },
+    ],
+    quiz: [
+      {
+        question: "Smallest deployable unit in Kubernetes?",
+        options: ["Container", "Pod", "Deployment", "Node"],
+        correct: 1,
+        explain: "Pods wrap containers; Deployments manage Pods.",
+      },
+    ],
+    practiceGoal: "Run kubectl get pods and kubectl describe pod nginx.",
+  },
+  {
+    id: "k3-pod-debug",
+    title: "Debugging Pods",
+    subtitle: "The on-call workflow you'll use constantly",
+    time: "10 min",
+    order: 9,
+    phase: "kubernetes",
+    cluster: "default",
+    sections: [
+      {
+        heading: "Memorize this order",
+        body: "1. <code>kubectl get pods</code> — STATUS<br>2. <code>kubectl describe pod</code> — Events at bottom<br>3. <code>kubectl logs</code> — app output<br>4. <code>kubectl logs --previous</code> — last crash",
+        type: "concept",
+      },
+      {
+        heading: "Status meanings",
+        body: "<code>ImagePullBackOff</code> — bad image tag<br><code>CrashLoopBackOff</code> — container keeps exiting<br><code>Pending</code> — can't schedule (resources, PVC)",
+        type: "tip",
+      },
+      {
+        heading: "Practice now",
+        body: "Run the sequence on the nginx pod below. In real clusters, <strong>Events</strong> at the bottom of describe are gold.",
+        type: "try-it",
+        tryCommand: "kubectl describe pod nginx",
+      },
+    ],
+    quiz: [
+      {
+        question: "Pod shows CrashLoopBackOff — best next step?",
+        options: ["Delete the namespace", "kubectl describe then kubectl logs", "Restart your laptop", "kubectl apply again"],
+        correct: 1,
+        explain: "describe for Events; logs for why the process exited.",
+      },
+    ],
+    practiceGoal: "Run kubectl logs nginx after describe.",
+  },
+  {
+    id: "k4-deployments",
+    title: "Deployments",
+    subtitle: "Self-healing, scalable app management",
+    time: "10 min",
+    order: 10,
+    phase: "kubernetes",
     cluster: "lab02",
     sections: [
       {
-        heading: "The control loop",
-        body: "You declare <strong>desired state</strong> (3 replicas, image nginx:1.25). Kubernetes continuously compares desired vs actual state and fixes drift — recreating deleted Pods, scaling up, rolling out new images.",
-      },
-      {
         heading: "Deployment → ReplicaSet → Pod",
-        body: "<strong>Deployment</strong> — what you edit (replicas, image, env).<br><strong>ReplicaSet</strong> — ensures N Pods match the template.<br><strong>Pod</strong> — runs the container. Delete a Pod manually and the ReplicaSet creates a replacement within seconds.",
+        body: "You edit a <strong>Deployment</strong>. It owns a <strong>ReplicaSet</strong> that keeps N Pods running. Delete a Pod manually — it comes back.",
+        type: "concept",
       },
       {
-        heading: "Service types",
-        body: "<strong>ClusterIP</strong> — internal VIP + DNS (my-svc.default.svc.cluster.local). Default type.<br><strong>NodePort</strong> — opens a port on every node (30000–32767).<br><strong>LoadBalancer</strong> — cloud provider provisions external LB.<br>Services route by <strong>labels</strong> — selector must match Pod labels exactly.",
+        heading: "Control loop again",
+        body: "Desired replicas: 3. Actual: 2 (one died). Deployment creates a replacement. You declare state; Kubernetes enforces it.",
+        type: "analogy",
       },
       {
-        heading: "Endpoints",
-        body: "<code>kubectl get endpoints</code> shows Pod IPs behind a Service. If you see <code>&lt;none&gt;</code>, traffic has nowhere to go — almost always a label/selector mismatch, not an app bug.",
-      },
-      {
-        heading: "Rollouts and rollback",
-        body: "<code>kubectl set image deployment/web web=nginx:1.24</code> — trigger update<br><code>kubectl rollout status deployment/web</code> — wait for completion<br><code>kubectl rollout history deployment/web</code> — see revisions<br><code>kubectl rollout undo deployment/web</code> — revert to previous version",
+        heading: "Rollouts",
+        body: "<code>kubectl rollout status</code> · <code>kubectl rollout undo</code> — bad image? Undo in seconds.",
+        type: "try-it",
+        tryCommand: "kubectl get deploy",
       },
     ],
     quiz: [
       {
-        question: "Service has no endpoints. First thing to check?",
-        options: ["Ingress annotations", "Pod labels vs Service selector", "PVC size", "Helm version"],
+        question: "What heals a deleted Pod in production?",
+        options: ["Nothing — it's gone", "Deployment via ReplicaSet", "ConfigMap", "Ingress"],
         correct: 1,
-        explain: "Endpoints are Pod IPs matching the Service selector. Mismatch = empty endpoints.",
-      },
-      {
-        question: "What manages Pod count for a stateless app?",
-        options: ["Pod directly", "Deployment", "ConfigMap", "Ingress"],
-        correct: 1,
-        explain: "Deployment scales and heals Pods via ReplicaSet.",
-      },
-      {
-        question: "You pushed a bad image to production. Fastest recovery?",
-        options: ["Delete all Pods", "kubectl rollout undo deployment/NAME", "Restart the node", "Delete the namespace"],
-        correct: 1,
-        explain: "rollout undo reverts to the previous ReplicaSet template safely.",
+        explain: "ReplicaSet maintains desired Pod count.",
       },
     ],
-    practiceGoal: "Run kubectl get deploy,svc and kubectl get endpoints.",
+    practiceGoal: "Run kubectl get deploy and kubectl get pods.",
   },
   {
-    id: "config",
+    id: "k5-services",
+    title: "Services & endpoints",
+    subtitle: "Stable network access to ephemeral Pods",
+    time: "10 min",
+    order: 11,
+    phase: "kubernetes",
+    cluster: "lab02",
+    sections: [
+      {
+        heading: "The problem Services solve",
+        body: "Pod IPs change. A <strong>Service</strong> gives a stable DNS name and virtual IP that routes to healthy Pods matching a label selector.",
+        type: "concept",
+      },
+      {
+        heading: "Endpoints",
+        body: "<code>kubectl get endpoints</code> shows Pod IPs behind a Service. <code>&lt;none&gt;</code> = selector doesn't match any Pod labels — #1 networking bug.",
+        type: "try-it",
+        tryCommand: "kubectl get endpoints",
+      },
+      {
+        heading: "Service types",
+        body: "<strong>ClusterIP</strong> — internal (default)<br><strong>NodePort</strong> — port on each node<br><strong>LoadBalancer</strong> — cloud LB",
+        type: "tip",
+      },
+    ],
+    quiz: [
+      {
+        question: "Service has no endpoints. First check?",
+        options: ["Ingress", "Pod labels vs Service selector", "Helm version", "PVC size"],
+        correct: 1,
+        explain: "Selector must match Pod labels exactly.",
+      },
+    ],
+    practiceGoal: "Run kubectl get svc and kubectl get endpoints.",
+  },
+  {
+    id: "k6-config",
     title: "Config & Secrets",
-    subtitle: "ConfigMaps, Secrets, and twelve-factor config",
-    time: "25 min",
-    order: 4,
+    subtitle: "Externalize configuration from images",
+    time: "10 min",
+    order: 12,
+    phase: "kubernetes",
     cluster: "default",
     sections: [
       {
-        heading: "Twelve-factor config",
-        body: "Store config in the environment, not in the image. Kubernetes ConfigMaps and Secrets let you inject config at deploy time — same image runs in dev, staging, and prod with different config.",
-      },
-      {
         heading: "ConfigMap",
-        body: "Key/value pairs or file contents for <strong>non-sensitive</strong> settings (feature flags, URLs, config files). Mount as env vars or as files in a volume. Updating a ConfigMap does not automatically reload running Pods unless the app watches for changes or you restart.",
+        body: "Non-sensitive config — env vars or files mounted into Pods. Same image, different config per environment.",
+        type: "concept",
       },
       {
         heading: "Secret",
-        body: "Same mechanisms as ConfigMap but intended for sensitive data. Stored base64-encoded in etcd — <strong>not encrypted by default</strong>. Restrict access with RBAC. In production use Sealed Secrets, External Secrets Operator, or HashiCorp Vault.",
+        body: "Sensitive data (tokens, passwords). Base64 in etcd — not encryption. Use external vaults in production.",
+        type: "concept",
       },
       {
-        heading: "Mount vs environment variable",
-        body: "<strong>Env vars</strong> — simple, good for flags and connection strings apps read at startup.<br><strong>Volume mount</strong> — good for config files, TLS certs, or apps that hot-reload from disk.<br>Wrong key reference in YAML often causes silent failures or CrashLoop.",
-      },
-      {
-        heading: "After changing config",
-        body: "<code>kubectl rollout restart deployment/NAME</code> — force Pods to recreate and pick up new ConfigMap/Secret values when the app doesn't reload automatically.",
+        heading: "After config changes",
+        body: "Many apps need a <code>kubectl rollout restart deployment/NAME</code> to pick up new ConfigMap values.",
+        type: "tip",
+        tryCommand: "kubectl explain pod.spec.containers",
       },
     ],
     quiz: [
       {
         question: "Where should production API keys live?",
-        options: ["Dockerfile ENV", "ConfigMap", "Kubernetes Secret or external vault", "Deployment name"],
+        options: ["Dockerfile", "ConfigMap", "Secret or external vault", "Pod name"],
         correct: 2,
-        explain: "Secrets + RBAC at minimum; sealed-secrets, External Secrets, or Vault for prod.",
-      },
-      {
-        question: "You changed a ConfigMap but the app still shows old values. Likely fix?",
-        options: ["Delete the namespace", "Rollout restart the Deployment", "Rebuild the Docker image", "Delete the ConfigMap"],
-        correct: 1,
-        explain: "Pods often read config only at startup; restart picks up new values.",
-      },
-      {
-        question: "ConfigMap vs Secret — when use Secret?",
-        options: ["Always — Secrets are faster", "For passwords, tokens, and TLS keys", "Only for files over 1MB", "Never in Kubernetes"],
-        correct: 1,
-        explain: "Secrets signal sensitive data and enable stricter RBAC policies.",
+        explain: "Secrets + RBAC minimum; vault for prod.",
       },
     ],
-    practiceGoal: "Run kubectl explain pod.spec.containers to explore the API.",
+    practiceGoal: "Explore the API with kubectl explain.",
   },
   {
-    id: "networking",
+    id: "k7-networking",
     title: "Networking & Ingress",
-    subtitle: "How traffic reaches your Pods",
-    time: "25 min",
-    order: 5,
+    subtitle: "How traffic reaches your apps",
+    time: "10 min",
+    order: 13,
+    phase: "kubernetes",
     cluster: "broken",
     sections: [
       {
-        heading: "Pod network model",
-        body: "Every Pod gets its own IP address in the cluster. Containers in the same Pod share that IP and can talk via <code>localhost</code>. Pods talk to other Pods across nodes via the cluster network (CNI plugin).",
-      },
-      {
-        heading: "Services — stable front door",
-        body: "Pods come and go; Services provide a stable DNS name and virtual IP. Other Pods reach your app at <code>my-svc.namespace.svc.cluster.local</code> instead of chasing ephemeral Pod IPs.",
-      },
-      {
-        heading: "How traffic flows",
-        body: "Client → Service VIP → kube-proxy (or eBPF) → Pod IP:port. <code>kubectl get endpoints</code> lists which Pod IPs are registered for each Service.",
+        heading: "Debug path",
+        body: "Pod Running? → Endpoints populated? → Ingress rules correct? → DNS/TLS? Work top to bottom.",
+        type: "concept",
       },
       {
         heading: "Ingress",
-        body: "Layer 7 HTTP/S routing: hostnames, paths, TLS termination. Requires an <strong>Ingress controller</strong> (nginx, traefik, etc.) installed in the cluster. Ingress rules point to Services, not Pods directly.",
+        body: "HTTP routing into the cluster. Requires an <strong>Ingress controller</strong> installed — the YAML alone does nothing without one.",
+        type: "concept",
+        tryCommand: "kubectl get endpoints",
       },
       {
-        heading: "Debug checklist",
-        body: "1. Pod <code>Running</code>? 2. Service <code>endpoints</code> populated? 3. Labels match selector? 4. Ingress rules correct? 5. DNS / TLS / Host header correct?<br>This module's simulator has a broken selector — practice finding it.",
+        heading: "Broken selector practice",
+        body: "This cluster has a Service with no backends. Find the label mismatch — same skill as Docker port debugging, different layer.",
+        type: "try-it",
       },
     ],
     quiz: [
       {
-        question: "curl to Service fails but Pod logs look fine. Likely issue?",
-        options: ["Pod not scheduled", "Service selector doesn't match Pod labels", "Image wrong tag", "Node out of disk"],
+        question: "curl to Service fails but Pod logs fine. Likely cause?",
+        options: ["Bad image", "Service selector mismatch", "Node down", "Wrong kubectl version"],
         correct: 1,
-        explain: "No matching endpoints = Service routes nowhere.",
+        explain: "No matching endpoints = traffic goes nowhere.",
       },
     ],
-    practiceGoal: "Use kubectl get endpoints and compare Service selector to Pod labels in describe output.",
+    practiceGoal: "Find the broken selector with kubectl get endpoints.",
   },
   {
-    id: "storage",
+    id: "k8-storage-rbac",
     title: "Storage & RBAC",
-    subtitle: "Persistent data and who can do what",
-    time: "25 min",
-    order: 6,
+    subtitle: "Persistent data and permissions",
+    time: "10 min",
+    order: 14,
+    phase: "kubernetes",
     cluster: "default",
     sections: [
       {
-        heading: "Why persistent storage?",
-        body: "Container filesystems are ephemeral — data dies with the Pod. Databases, uploads, and stateful apps need volumes that outlive Pod restarts and reschedules.",
+        heading: "PersistentVolumeClaim",
+        body: "Data that survives Pod deletion. Pod claims storage via <strong>PVC</strong>; cluster provisions a <strong>PV</strong> via StorageClass.",
+        type: "concept",
       },
       {
-        heading: "PVC, PV, StorageClass",
-        body: "<strong>PersistentVolumeClaim (PVC)</strong> — Pod requests storage (&quot;I need 10Gi&quot;).<br><strong>PersistentVolume (PV)</strong> — the actual storage resource.<br><strong>StorageClass</strong> — template for dynamic provisioning (cloud disk created on demand).",
+        heading: "RBAC",
+        body: "<strong>Role</strong> + <strong>RoleBinding</strong> + <strong>ServiceAccount</strong> = who can do what. Least privilege always.",
+        type: "concept",
       },
       {
-        heading: "Access modes",
-        body: "<strong>ReadWriteOnce (RWO)</strong> — one node can mount read-write (typical for block storage).<br><strong>ReadWriteMany (RWX)</strong> — multiple nodes (shared file systems). Choose based on whether replicas need shared data.",
-      },
-      {
-        heading: "RBAC model",
-        body: "<strong>ServiceAccount</strong> — identity for Pods or automation.<br><strong>Role</strong> — permissions in a namespace.<br><strong>RoleBinding</strong> — attaches Role to Subject.<br><strong>ClusterRole / ClusterRoleBinding</strong> — cluster-wide. Principle: least privilege.",
-      },
-      {
-        heading: "Verify permissions",
-        body: "<code>kubectl auth can-i create pods --as=system:serviceaccount:ns:sa-name -n ns</code> — test what an identity can do before debugging mysterious &quot;Forbidden&quot; errors.",
+        heading: "Verify access",
+        body: "<code>kubectl auth can-i get pods --as=system:serviceaccount:ns:sa</code> — test before debugging Forbidden errors.",
+        type: "try-it",
+        tryCommand: "kubectl get ns",
       },
     ],
     quiz: [
       {
-        question: "Data must survive Pod deletion. You need?",
-        options: ["EmptyDir volume", "PersistentVolumeClaim", "ConfigMap", "Larger CPU limit"],
+        question: "Data must survive Pod deletion?",
+        options: ["emptyDir", "PersistentVolumeClaim", "ConfigMap", "Bigger CPU"],
         correct: 1,
         explain: "PVC-backed volumes persist beyond Pod lifecycle.",
       },
-      {
-        question: "A Pod needs to read ConfigMaps but not create Pods. You create?",
-        options: ["ClusterRoleBinding to cluster-admin", "Role with get/list on configmaps + RoleBinding to SA", "Secret", "NetworkPolicy"],
-        correct: 1,
-        explain: "Role scopes permissions; RoleBinding ties them to the ServiceAccount.",
-      },
     ],
-    practiceGoal: "Review kubectl get ns — namespaces isolate resources and RBAC scope.",
+    practiceGoal: "Run kubectl get ns — namespaces scope resources and RBAC.",
   },
   {
-    id: "production",
+    id: "k9-production",
     title: "Production patterns",
-    subtitle: "Helm, rollouts, and deploying like a pro",
-    time: "20 min",
-    order: 7,
+    subtitle: "Probes, resources, Helm, and rollbacks",
+    time: "10 min",
+    order: 15,
+    phase: "kubernetes",
     cluster: "crash",
     sections: [
       {
-        heading: "Production readiness",
-        body: "Production means: pinned images, resource requests/limits, health probes, config externalized, RBAC locked down, rollouts tested, and an on-call debug workflow you can execute under pressure.",
+        heading: "Health probes",
+        body: "<strong>Liveness</strong> — restart if dead.<br><strong>Readiness</strong> — remove from Service if not ready.<br>Don't hit liveness too aggressively on slow starters.",
+        type: "concept",
       },
       {
         heading: "Resources",
-        body: "<strong>requests</strong> — guaranteed CPU/memory for scheduling (Pod won't land on a node without capacity).<br><strong>limits</strong> — hard cap; exceed memory limit → OOMKilled. Always set both in production.",
+        body: "<code>requests</code> = scheduling guarantee. <code>limits</code> = cap (OOM kill if exceeded). Always set in prod.",
+        type: "tip",
       },
       {
-        heading: "Health probes",
-        body: "<strong>liveness</strong> — restart container if failing (deadlock detection).<br><strong>readiness</strong> — remove from Service endpoints if failing (don't send traffic until ready).<br><strong>startup</strong> — for slow-starting apps, disable liveness until startup succeeds.",
-      },
-      {
-        heading: "Helm",
-        body: "Package manager for Kubernetes — charts templatize YAML with values.yaml. <code>helm install / upgrade / rollback</code> map to revision history like Deployment rollouts. GitOps tools (Argo CD, Flux) often deploy Helm charts from git.",
-      },
-      {
-        heading: "On-call: CrashLoopBackOff",
-        body: "1. <code>kubectl get pods</code> 2. <code>kubectl describe pod</code> — Events 3. <code>kubectl logs</code> 4. Fix manifest or <code>rollout undo</code>. Practice this flow in the simulator below.",
+        heading: "CrashLoop practice",
+        body: "This cluster has a crashing Pod. get → describe → logs. Same workflow as Docker debugging, Kubernetes edition.",
+        type: "try-it",
+        tryCommand: "kubectl get pods",
       },
     ],
     quiz: [
       {
-        question: "Bad deployment pushed to prod. Fastest safe rollback?",
-        options: ["Delete namespace", "kubectl rollout undo deployment/NAME", "Restart laptop", "Delete all pods manually"],
+        question: "Bad deploy in prod — fastest rollback?",
+        options: ["Delete namespace", "kubectl rollout undo deployment/NAME", "Restart node", "Delete all pods"],
         correct: 1,
-        explain: "rollout undo reverts to previous ReplicaSet template.",
-      },
-      {
-        question: "Readiness probe fails. What happens?",
-        options: ["Pod is deleted", "Pod removed from Service endpoints", "Node is drained", "Deployment scales to zero"],
-        correct: 1,
-        explain: "Readiness controls traffic; liveness controls restarts.",
-      },
-      {
-        question: "Memory limit exceeded. Kubernetes will?",
-        options: ["Ignore it", "OOMKill the container", "Scale the node", "Throttle CPU only"],
-        correct: 1,
-        explain: "Cgroups enforce memory limits; excess usage kills the container.",
+        explain: "rollout undo reverts to previous template.",
       },
     ],
-    practiceGoal: "Debug crash-demo: get pods, describe, logs — find why it crashes.",
+    practiceGoal: "Debug crash-demo: get pods, describe, logs.",
   },
 ];
 
 export function getModule(id: string) {
   return modules.find((m) => m.id === id);
+}
+
+export function getModulesByPhase(phase: LessonPhase) {
+  return modules.filter((m) => m.phase === phase);
 }

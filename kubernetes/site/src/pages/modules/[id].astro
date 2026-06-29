@@ -6,7 +6,8 @@ import Quiz from "../../components/Quiz.astro";
 import AdSlot from "../../components/AdSlot.astro";
 import DockerPipelineDiagram from "../../components/DockerPipelineDiagram.astro";
 import LearningPanel from "../../components/LearningPanel.astro";
-import { modules, getModule } from "../../data/modules";
+import LessonStep from "../../components/LessonStep.astro";
+import { modules, getModule, phaseLabels } from "../../data/modules";
 import { moduleMeta } from "../../data/learning-meta";
 
 export function getStaticPaths() {
@@ -19,14 +20,18 @@ if (!mod) throw new Error(`Module not found: ${id}`);
 const prev = modules.find((m) => m.order === mod.order - 1);
 const next = modules.find((m) => m.order === mod.order + 1);
 const meta = moduleMeta[mod.id];
+const phaseInfo = phaseLabels[mod.phase];
+const phaseLessons = modules.filter((m) => m.phase === mod.phase);
+const lessonInPhase = phaseLessons.findIndex((m) => m.id === mod.id) + 1;
+const showPipeline = mod.phase === "containers" && mod.order <= 3;
 ---
 
 <BaseLayout title={mod.title} description={mod.subtitle}>
   <section class="hero container prose">
-    <span class="badge">Module {mod.order} · {mod.time}</span>
+    <span class="badge">{phaseInfo.title} · Lesson {lessonInPhase} of {phaseLessons.length}</span>
     <h1>{mod.title}</h1>
     <p class="lead">{mod.subtitle}</p>
-    <p class="learn-flow"><strong>Learn flow:</strong> Read below → practice in the simulator → pass the quiz → do the local lab → mark complete in <a href="/progress.html">Tracker</a>.</p>
+    <p class="learn-flow"><strong>Flow:</strong> Read each step → try commands in the terminal → quick quiz → <a href="/progress.html">Tracker</a></p>
   </section>
 
   {meta && (
@@ -35,38 +40,40 @@ const meta = moduleMeta[mod.id];
     </section>
   )}
 
-  <section class="container prose">
-    {mod.sections.map((s) => (
-      <div>
-        <h2>{s.heading}</h2>
-        <p set:html={s.body} />
-      </div>
+  <section class="container">
+    {mod.sections.map((s, i) => (
+      <LessonStep
+        heading={s.heading}
+        body={s.body}
+        type={s.type}
+        tryCommand={s.tryCommand}
+        index={i + 1}
+      />
     ))}
+
+    {showPipeline && <DockerPipelineDiagram />}
 
     <AdSlot slot={`module-${mod.id}-mid`} />
 
-    {mod.id === "containers" && (
-      <DockerPipelineDiagram />
-    )}
-
-    <h2>Practice goal</h2>
-    <p>{mod.practiceGoal}</p>
+    <div class="practice-goal-box">
+      <strong>Practice goal:</strong> {mod.practiceGoal}
+    </div>
   </section>
 
   <section class="container">
     {mod.terminal === "docker" ? (
-      <DockerTerminal cluster="default" height="360px" />
+      <DockerTerminal cluster="default" height="340px" />
     ) : (
-      <KubectlTerminal cluster={mod.cluster} height="360px" />
+      <KubectlTerminal cluster={mod.cluster} height="340px" />
     )}
   </section>
 
   <section class="container prose">
-    <h2>Check your understanding</h2>
-    <Quiz questions={mod.quiz} moduleId={mod.id} />
+    <h2 class="quiz-heading">Quick check ({mod.quiz.length} question{mod.quiz.length > 1 ? "s" : ""})</h2>
+    <Quiz questions={mod.quiz} moduleId={mod.id} compact />
 
     <nav class="module-nav">
-      {prev ? <a href={`/modules/${prev.id}.html`}>← {prev.title}</a> : <span />}
+      {prev ? <a href={`/modules/${prev.id}.html`}>← {prev.title}</a> : <a href="/learn.html">All lessons</a>}
       {next ? <a href={`/modules/${next.id}.html`}>{next.title} →</a> : <a href="/practice.html">Practice →</a>}
     </nav>
   </section>
@@ -76,13 +83,27 @@ const meta = moduleMeta[mod.id];
   .module-nav {
     display: flex;
     justify-content: space-between;
-    margin: 3rem 0 2rem;
+    margin: 2rem 0;
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
   }
   .learn-flow {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+  }
+  .practice-goal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
     font-size: 0.95rem;
     color: var(--muted);
-    margin-top: 1rem;
+  }
+  .practice-goal-box strong { color: var(--text); }
+  .quiz-heading {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
   }
 </style>

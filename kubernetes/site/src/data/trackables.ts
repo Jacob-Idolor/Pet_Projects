@@ -39,8 +39,8 @@ export const extraTrackables: Trackable[] = [
   },
   {
     id: "extra-quiz-all",
-    title: "Pass all module quizzes",
-    description: "Score 100% on every module quiz (7 total).",
+    title: "Pass all lesson quizzes",
+    description: "Score 100% on every lesson quiz (15 total).",
     category: "kubernetes",
     difficulty: "intermediate",
     kind: "challenge",
