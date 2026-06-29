@@ -1,0 +1,39 @@
+{
+  "submissions": [
+    {
+      "id": "seed-smh",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "SMH — top exposure, broad semi basket and core chip cycle play.",
+      "symbols": ["SMH"]
+    },
+    {
+      "id": "seed-nbis",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "NBIS — favorite investment for the next few years. Highest conviction on the list.",
+      "symbols": ["NBIS"]
+    },
+    {
+      "id": "seed-sivef",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "SIVEF — high upside photonics. Speculative swing, not the highest quality but big potential.",
+      "symbols": ["SIVEF"]
+    },
+    {
+      "id": "seed-meta",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "META — highest upside in Mag 7 outside NVDA. AI + ads + efficiency.",
+      "symbols": ["META"]
+    },
+    {
+      "id": "seed-aaoi",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "AAOI — photonics exposure alongside SIVEF. Optical / datacenter connectivity bet.",
+      "symbols": ["AAOI"]
+    }
+  ]
+}

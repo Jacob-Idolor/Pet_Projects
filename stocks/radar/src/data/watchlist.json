@@ -1,7 +1,7 @@
 {
   "meta": {
     "groupName": "The Radar",
-    "tagline": "Top exposures, entry targets, and the long-term watchlist.",
+    "tagline": "What we're in, what we're watching, and what gets added over time.",
     "lastUpdated": "2026-06-29"
   },
   "stocks": [
@@ -64,52 +64,6 @@
       "thesis": "High upside photonics exposure — optical/datacenter connectivity bet alongside SIVEF.",
       "addedBy": "J",
       "holder": "J"
-    },
-    {
-      "id": "pltr-targets",
-      "symbol": "PLTR",
-      "name": "Palantir",
-      "category": "targets",
-      "sector": "Software",
-      "tags": ["ai", "gov"],
-      "targetPrice": 18,
-      "targetNote": "Starter if it pulls back to $18–19",
-      "thesis": "Like the story, want a better entry.",
-      "addedBy": "K"
-    },
-    {
-      "id": "cost-targets",
-      "symbol": "COST",
-      "name": "Costco",
-      "category": "targets",
-      "sector": "Consumer",
-      "tags": ["quality", "compounder"],
-      "targetPrice": 820,
-      "targetNote": "Buy zone on a 5–8% dip",
-      "thesis": "Quality compounder — patience for a sale.",
-      "addedBy": "J"
-    },
-    {
-      "id": "nvda-watching",
-      "symbol": "NVDA",
-      "name": "NVIDIA",
-      "category": "watching",
-      "sector": "Semiconductors",
-      "tags": ["mag7", "ai", "semi"],
-      "thesis": "Mag 7 benchmark — compare everything else against this AI infra leader.",
-      "addedBy": "J"
-    },
-    {
-      "id": "amd-watching",
-      "symbol": "AMD",
-      "name": "Advanced Micro Devices",
-      "category": "watching",
-      "sector": "Semiconductors",
-      "tags": ["semi", "ai"],
-      "targetPrice": 200,
-      "targetNote": "Re-evaluate if MI300 share gains accelerate",
-      "thesis": "GPU/CPU competition with NVDA — watching data-center wins.",
-      "addedBy": "M"
     }
   ]
 }

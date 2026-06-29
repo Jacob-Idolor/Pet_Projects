@@ -371,7 +371,176 @@ a:hover {
   line-height: 1.5;
 }
 
-/* Holdings upload panel */
+/* Group submissions feed */
+.submissions-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.submissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.submissions-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+}
+
+.submissions-header .subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.submission-count {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--dim);
+  white-space: nowrap;
+  padding: 0.35rem 0.65rem;
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+}
+
+.submission-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.submission-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.submission-form label.full-width {
+  width: 100%;
+}
+
+.submission-form input,
+.submission-form textarea {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.submission-form input {
+  width: 6rem;
+}
+
+.submission-form textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.submission-form input:focus,
+.submission-form textarea:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.submission-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.submission-item {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+}
+
+.submission-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.submission-meta strong {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.submission-meta time {
+  color: var(--dim);
+}
+
+.local-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--amber);
+  background: rgba(245, 158, 11, 0.12);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.submission-symbols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
+.sub-symbol {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--green-glow);
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.submission-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.35rem 0 0;
+  font-family: inherit;
+}
+
+.btn-text:hover {
+  color: var(--red);
+}
+
+/* Legacy holdings / screenshot styles kept minimal for compat */
 .holdings-panel {
   background: var(--surface);
   border: 1px solid var(--border-subtle);

@@ -755,6 +755,20 @@ function bindEvents() {
     quotes = { ...quotes, ...e.detail };
     renderAll();
   }) as EventListener);
+
+  document.addEventListener("radar:submission-added", (async (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    const incoming = detail?.stocks as StockRow[] | undefined;
+    if (!incoming?.length) return;
+    const baseSymbols = new Set(baseStocks.map((s) => s.symbol));
+    const novel = incoming.filter((s) => !baseSymbols.has(s.symbol));
+    if (!novel.length) return;
+    const existing = await getCustomStocks();
+    const merged = mergeStocks(existing, novel);
+    await setCustomStocks(merged);
+    allStocks = mergeStocks(baseStocks, merged);
+    renderAll();
+  }) as EventListener);
 }
 
 export async function initWatchlistBoard(stocksJson: string) {

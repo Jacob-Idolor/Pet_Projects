@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-06-29T23:24:54.068Z",
+  "updatedAt": "2026-06-29T23:29:27.569Z",
   "marketTime": "US/Eastern",
-  "count": 9,
-  "total": 9,
+  "count": 5,
+  "total": 5,
   "quotes": {
     "SMH": {
       "price": 631.98,
@@ -32,30 +32,6 @@
       "price": 150.1,
       "changePct": null,
       "prevClose": 135.69,
-      "currency": "USD"
-    },
-    "PLTR": {
-      "price": 115.7,
-      "changePct": null,
-      "prevClose": 112.93,
-      "currency": "USD"
-    },
-    "COST": {
-      "price": 946.68,
-      "changePct": null,
-      "prevClose": 952.54,
-      "currency": "USD"
-    },
-    "NVDA": {
-      "price": 194.97,
-      "changePct": null,
-      "prevClose": 192.53,
-      "currency": "USD"
-    },
-    "AMD": {
-      "price": 539.49,
-      "changePct": null,
-      "prevClose": 521.58,
       "currency": "USD"
     }
   }

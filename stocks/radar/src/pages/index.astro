@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LiveStatus from "../components/LiveStatus.astro";
-import HoldingsUpload from "../components/HoldingsUpload.astro";
+import GroupSubmissions from "../components/GroupSubmissions.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import { meta, stocks } from "../data/watchlist";
 ---
@@ -17,7 +17,7 @@ import { meta, stocks } from "../data/watchlist";
     </div>
   </section>
   <div class="container">
-    <HoldingsUpload />
+    <GroupSubmissions />
     <WatchlistBoard />
   </div>
 </BaseLayout>

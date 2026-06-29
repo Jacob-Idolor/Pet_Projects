@@ -627,6 +627,19 @@ function bindEvents() {
     quotes = { ...quotes, ...e.detail };
     renderAll();
   }));
+  document.addEventListener("radar:submission-added", (async (e) => {
+    const detail = e.detail;
+    const incoming = detail?.stocks;
+    if (!incoming?.length) return;
+    const baseSymbols = new Set(baseStocks.map((s) => s.symbol));
+    const novel = incoming.filter((s) => !baseSymbols.has(s.symbol));
+    if (!novel.length) return;
+    const existing = await getCustomStocks();
+    const merged = mergeStocks(existing, novel);
+    await setCustomStocks(merged);
+    allStocks = mergeStocks(baseStocks, merged);
+    renderAll();
+  }));
 }
 async function initWatchlistBoard(stocksJson) {
   const prefs = loadPrefs();
