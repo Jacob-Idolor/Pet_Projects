@@ -7,7 +7,7 @@
  *   node scripts/csv-to-watchlist.mjs my-tickers.csv --replace
  *
  * CSV columns (header row optional):
- *   symbol, name, category, targetPrice, targetNote, thesis, addedBy, holder, lastPrice
+ *   symbol, name, category, sector, tags, targetPrice, targetNote, thesis, priority, addedBy, holder, lastPrice
  *
  * Minimal CSV — one symbol per line also works:
  *   NVDA
@@ -111,6 +111,11 @@ function rowToStock(row) {
   if (row.thesis) stock.thesis = row.thesis;
   if (row.addedby) stock.addedBy = row.addedby;
   if (row.holder) stock.holder = row.holder;
+  if (row.sector) stock.sector = row.sector;
+  if (row.priority) stock.priority = row.priority;
+  if (row.tags) {
+    stock.tags = row.tags.split(/[;|]/).map((t) => t.trim()).filter(Boolean);
+  }
 
   return stock;
 }

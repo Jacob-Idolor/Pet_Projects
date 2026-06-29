@@ -1,143 +1,77 @@
 # Stocks Radar
 
-A single-page watchlist for you and your friends — built to handle **100+ tickers** with search, filters, and a holistic overview of what's closest to your entry targets.
+A robust single-page watchlist for you and your friends — holdings, price targets, and long-term watches in one place. Built for **100+ tickers**, zero API keys, zero monthly cost.
 
-> ⚠️ Not financial advice. Personal tooling for tracking tickers and theses with friends.
+> ⚠️ Not financial advice. Personal tooling for tracking tickers and theses.
 
-## What it does
+## What you get
 
-- **Full watchlist table** — sortable, searchable, filterable (owned / targets / watching)
-- **Holistic overview** — total counts, how many are at target, within 5%/10% of entry
-- **Closest to entry** — quick chips for the tickers nearest your price targets
-- **Bulk CSV import** — paste or import hundreds of tickers at once
-- **Live-ish quotes** — server-fetched `quotes.json` on deploy + auto-refresh every 60s in the browser
-- **Holdings screenshots** — drag-and-drop broker screenshots; stored locally in IndexedDB
+- **Holdings strip** — top cards for everything you own (thesis, tags, live price)
+- **Three buckets** — Owned · Targets · Watching (collapsible sections)
+- **All-tickers table** — pagination (25–200/page), sort any column, expand rows for full detail
+- **Theme tags** — filter by photonics, semi, mag7, etc.
+- **Closest to entry** — tickers nearest their target price
+- **Overview stats** — at target, within 5%/10%, counts by bucket
+- **CSV import/export** — bulk load your full watchlist
+- **Live prices** — free quote fetch on deploy + browser refresh (no paid APIs)
 
 ## Quick start
 
 ```bash
 cd stocks/radar
 npm install
-npm run update-quotes   # optional — refresh prices locally
 npm run dev
 ```
 
-Open [http://localhost:4321](http://localhost:4321).
+## Watchlist data
 
-## Go live (automatic updates)
-
-The site can run on **GitHub Pages** with prices that refresh on their own — no manual rebuild needed.
-
-### One-time setup
-
-1. Merge this to `main`
-2. In GitHub → **Settings → Pages** → Source: **GitHub Actions**
-3. The workflow `Stocks Radar — live deploy` handles the rest
-
-### What stays automatic
-
-| What | How often |
-|------|-----------|
-| **Price quotes** | Fetched before every deploy; page polls `quotes.json` every **60s** |
-| **Scheduled redeploy** | Weekdays, every **15 min** (refreshes quotes + republishes) |
-| **On git push** | Any change under `stocks/radar/` triggers a fresh deploy |
-
-**Live URL (after setup):**  
-https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
-
-Share that link with your group — bookmark it on your phones. When anyone pushes watchlist changes to `main`, everyone gets them on the next deploy.
-
-### Manual refresh
-
-GitHub → **Actions** → **Stocks Radar — live deploy** → **Run workflow**
-
-Or locally:
-
-```bash
-npm run update-quotes && npm run build
-```
-
-## Adding 100+ tickers
-
-### Option A — CSV file (shared with the group)
-
-1. Put tickers in a CSV (see `src/data/watchlist.example.csv`):
+Edit `src/data/watchlist.json` or import CSV:
 
 ```csv
-symbol,name,category,targetPrice,targetNote,thesis,addedBy
-NVDA,NVIDIA,owned,180,Trim above 175,AI infra,J
-PLTR,Palantir,targets,18,Wait for dip,Want entry,K
-SOFI,SoFi,watching,12,,Fintech,M
+symbol,name,category,sector,tags,targetPrice,thesis,priority,addedBy
+NBIS,Nebius Group,owned,AI Infrastructure,ai;high-conviction,,Favorite for next few years,high,J
+PLTR,Palantir,targets,Software,ai;gov,18,Want better entry,medium,K
 ```
-
-Minimal format — one symbol per line also works:
-
-```csv
-NVDA
-AAPL
-MSFT
-```
-
-2. Merge into the shared watchlist:
 
 ```bash
-npm run import-csv -- my-tickers.csv          # merge
-npm run import-csv -- my-tickers.csv --replace # replace all
+npm run import-csv -- my-tickers.csv
 ```
 
-3. Commit `src/data/watchlist.json` — everyone gets the full list on deploy.
+### Fields
 
-### Option B — Paste in the browser (personal overlay)
+| Field | Purpose |
+|-------|---------|
+| `category` | `owned` · `targets` · `watching` |
+| `sector` | Grouping label (Semiconductors, Photonics, …) |
+| `tags` | Semicolon-separated themes (`photonics;speculative`) |
+| `priority` | `high` · `medium` · `low` — conviction signal |
+| `targetPrice` | Entry or trim level |
+| `thesis` | Your one-liner — shows on cards and expandable rows |
 
-Click **Import CSV** on the page, paste tickers from a spreadsheet, hit **Add to my watchlist**. Stored in your browser and merged with the shared list (marked with ★).
+## Using the page
 
-### Option C — Edit JSON directly
+- **By bucket** (default) — three collapsible sections for the full picture
+- **All tickers** — paginated master table for 100+ names
+- **/** — focus search
+- **Theme chips** — filter one tag at a time
+- **+** on a row — expand full thesis, sector, Yahoo link
 
-Edit `src/data/watchlist.json` — same fields as before, just easier to bulk-generate from a script or spreadsheet export.
+## Go live
 
-## Categories
+1. Merge to `main`
+2. GitHub → Settings → Pages → Source: **GitHub Actions**
+3. URL: https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
 
-| Category | Use for |
-|----------|---------|
-| `owned` | Positions you're in |
-| `targets` | Waiting for a specific entry or trim price |
-| `watching` | Long-term radar — no specific trigger yet |
-
-## Using the dashboard
-
-- **Search** — symbol, company name, or thesis text
-- **Filter chips** — narrow to owned, targets, has-target, at-target
-- **Sort** — click column headers; default sort is closest to target
-- **Export CSV** — download the merged list (shared + your imports)
-- **Closest to entry** — click a chip to jump to that ticker in the table
-
-## Holdings screenshots
-
-1. Enter your initials
-2. Drop broker screenshots (tickers only — no values needed)
-3. Images stay in **IndexedDB** on your device
-
-## Build & deploy
-
-```bash
-npm run update-quotes   # refresh public/quotes.json
-npm run build           # runs update-quotes automatically (prebuild)
-npm run preview
-```
-
-**GitHub Pages (recommended):** enable Pages → GitHub Actions source. See [Go live](#go-live-automatic-updates) above.
-
-Also works on S3 + CloudFront, Netlify, or Vercel — set `STOCKS_RADAR_BASE` if not hosting at domain root.
+Prices refresh on deploy + every 15 min on weekdays (scheduled CI). Page polls every 60s while open.
 
 ## Project layout
 
 ```
 stocks/radar/
-  src/data/watchlist.json       # shared ticker list (100+ OK)
-  src/data/watchlist.example.csv
-  scripts/csv-to-watchlist.mjs  # bulk CSV → JSON
-  src/components/WatchlistBoard.astro
-  src/pages/index.astro
+  src/data/watchlist.json
+  src/scripts/watchlist-board.ts   # table, filters, buckets UI
+  scripts/csv-to-watchlist.mjs
+  scripts/fetch-quotes.mjs
 ```
 
 ## License

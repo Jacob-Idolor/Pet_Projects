@@ -5,12 +5,18 @@ const stocksJson = JSON.stringify(stocks);
 ---
 
 <section class="watchlist-board" id="watchlist-board">
+  <div id="held-strip" class="held-strip" hidden aria-label="Current holdings"></div>
+
   <div class="board-header">
     <div>
-      <h2>Full watchlist</h2>
-      <p class="board-subtitle">Search, filter, and sort — built for 100+ tickers waiting on entry.</p>
+      <h2>Watchlist</h2>
+      <p class="board-subtitle">Full picture — holdings, targets, and long-term watches. Press <kbd>/</kbd> to search.</p>
     </div>
     <div class="board-actions">
+      <div class="view-toggle">
+        <button type="button" class="chip active" id="view-buckets">By bucket</button>
+        <button type="button" class="chip" id="view-table">All tickers</button>
+      </div>
       <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button>
       <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button>
     </div>
@@ -18,17 +24,17 @@ const stocksJson = JSON.stringify(stocks);
 
   <div class="import-panel" id="import-panel" hidden>
     <p class="import-help">
-      Paste tickers from a spreadsheet — one per line, or CSV with columns:
-      <code>symbol, name, category, targetPrice, thesis</code>.
-      Saved in your browser and merged with the shared list.
+      Paste from a spreadsheet — columns:
+      <code>symbol, name, category, sector, tags, targetPrice, thesis, priority</code>.
+      Tags use semicolons (<code>photonics;speculative</code>). Saved in your browser only.
     </p>
     <textarea
       id="import-text"
       rows="6"
-      placeholder="NVDA&#10;AAPL,Apple,owned,,Core holding,J&#10;PLTR,Palantir,targets,18,Waiting for dip,K"
+      placeholder="NVDA,NVIDIA,watching,Semiconductors,ai;semi,,Mag7 benchmark,J&#10;PLTR,Palantir,targets,Software,ai;gov,18,Waiting for dip,medium,K"
     ></textarea>
     <div class="import-actions">
-      <button type="button" class="btn btn-primary" id="import-apply">Add to my watchlist</button>
+      <button type="button" class="btn btn-primary" id="import-apply">Add to watchlist</button>
       <button type="button" class="btn btn-ghost" id="import-clear">Clear my imports</button>
     </div>
   </div>
@@ -37,7 +43,7 @@ const stocksJson = JSON.stringify(stocks);
 
   <div class="opportunities-panel" id="opportunities-panel">
     <h3>Closest to entry</h3>
-    <p class="panel-hint">Tickers with targets — sorted by how near price is to your level.</p>
+    <p class="panel-hint">Tickers with targets — nearest to your price level first.</p>
     <div class="opp-chips" id="opp-chips"></div>
   </div>
 
@@ -46,7 +52,7 @@ const stocksJson = JSON.stringify(stocks);
       type="search"
       id="search-input"
       class="search-input"
-      placeholder="Search symbol, name, thesis…"
+      placeholder="Search symbol, name, sector, tags, thesis…"
       autocomplete="off"
     />
     <div class="filter-chips" id="filter-chips">
@@ -56,438 +62,73 @@ const stocksJson = JSON.stringify(stocks);
       <button type="button" class="chip" data-filter="watching">Watching</button>
       <button type="button" class="chip" data-filter="has-target">Has target</button>
       <button type="button" class="chip" data-filter="at-target">At target</button>
+      <button type="button" class="chip" data-filter="high-priority">High priority</button>
     </div>
   </div>
 
+  <div class="tag-filters" id="tag-filters"></div>
+
   <p class="result-count" id="result-count"></p>
 
-  <div class="table-wrap">
-    <table class="watchlist-table" id="watchlist-table">
-      <thead>
-        <tr>
-          <th data-sort="symbol" class="sortable">Symbol</th>
-          <th data-sort="name" class="sortable">Name</th>
-          <th data-sort="category" class="sortable">Bucket</th>
-          <th data-sort="price" class="sortable num">Price</th>
-          <th class="num">Chg</th>
-          <th data-sort="target" class="sortable num">Target</th>
-          <th data-sort="distance" class="sortable num">Distance</th>
-          <th>Thesis / note</th>
-          <th data-sort="by" class="sortable">By</th>
-        </tr>
-      </thead>
-      <tbody id="watchlist-tbody"></tbody>
-    </table>
+  <div id="bucket-view">
+    <section class="bucket-section">
+      <details class="bucket-details" open>
+        <summary class="bucket-summary">
+          <span class="bucket-icon">💼</span>
+          <div class="bucket-titles"><h3>Currently Holding</h3><p>Active positions</p></div>
+          <span class="bucket-count" data-bucket-count="owned">0</span>
+        </summary>
+        <div data-bucket-body="owned"></div>
+      </details>
+    </section>
+    <section class="bucket-section">
+      <details class="bucket-details" open>
+        <summary class="bucket-summary">
+          <span class="bucket-icon">🎯</span>
+          <div class="bucket-titles"><h3>Waiting on Price Targets</h3><p>Entry and trim levels</p></div>
+          <span class="bucket-count" data-bucket-count="targets">0</span>
+        </summary>
+        <div data-bucket-body="targets"></div>
+      </details>
+    </section>
+    <section class="bucket-section">
+      <details class="bucket-details" open>
+        <summary class="bucket-summary">
+          <span class="bucket-icon">👀</span>
+          <div class="bucket-titles"><h3>Long-Term Watchlist</h3><p>Track the thesis</p></div>
+          <span class="bucket-count" data-bucket-count="watching">0</span>
+        </summary>
+        <div data-bucket-body="watching"></div>
+      </details>
+    </section>
+  </div>
+
+  <div id="table-view" hidden>
+    <div class="table-wrap">
+      <table class="watchlist-table" id="watchlist-table">
+        <thead>
+          <tr>
+            <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
+            <th data-sort="name" class="sortable">Name</th>
+            <th data-sort="category" class="sortable">Bucket</th>
+            <th>Tags</th>
+            <th data-sort="price" class="sortable num">Price</th>
+            <th class="num">Chg</th>
+            <th data-sort="target" class="sortable num">Target</th>
+            <th data-sort="distance" class="sortable num">Distance</th>
+            <th>Thesis</th>
+            <th data-sort="priority" class="sortable">Priority</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="watchlist-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
   </div>
 </section>
 
 <script define:vars={{ stocksJson }}>
-  const CUSTOM_STORE = "stocks-radar-custom";
-  const CUSTOM_KEY = "entries";
-
-  /** @type {Record<string, { price: number, changePct: number | null }>} */
-  let quotes = {};
-
-  let allStocks = [];
-  let filter = "all";
-  let search = "";
-  let sortKey = "distance";
-  let sortDir = 1;
-
-  function openCustomDb() {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(CUSTOM_STORE, 1);
-      req.onupgradeneeded = () => {
-        if (!req.result.objectStoreNames.contains("kv")) {
-          req.result.createObjectStore("kv");
-        }
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  async function getCustomStocks() {
-    try {
-      const db = await openCustomDb();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction("kv", "readonly");
-        const req = tx.objectStore("kv").get(CUSTOM_KEY);
-        req.onsuccess = () => resolve(req.result ?? []);
-        req.onerror = () => reject(req.error);
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  async function setCustomStocks(entries) {
-    const db = await openCustomDb();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction("kv", "readwrite");
-      tx.objectStore("kv").put(entries, CUSTOM_KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  function parseImportCsv(text) {
-    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    if (!lines.length) return [];
-
-    const first = lines[0].toLowerCase();
-    const hasHeader = first.includes("symbol");
-    const dataLines = hasHeader ? lines.slice(1) : lines;
-
-    const split = (line) => {
-      const out = [];
-      let cur = "";
-      let q = false;
-      for (const ch of line) {
-        if (ch === '"') { q = !q; continue; }
-        if (ch === "," && !q) { out.push(cur); cur = ""; continue; }
-        cur += ch;
-      }
-      out.push(cur);
-      return out.map((s) => s.trim());
-    };
-
-    const rows = hasHeader
-      ? (() => {
-          const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-          return dataLines.map((line) => {
-            const cols = split(line);
-            const row = {};
-            headers.forEach((h, i) => { row[h] = cols[i] ?? ""; });
-            return row;
-          });
-        })()
-      : dataLines.map((line) => {
-          const cols = split(line);
-          if (cols.length === 1) return { symbol: cols[0] };
-          return {
-            symbol: cols[0],
-            name: cols[1],
-            category: cols[2],
-            targetprice: cols[3],
-            thesis: cols[4],
-            addedby: cols[5],
-          };
-        });
-
-    const cats = new Set(["owned", "targets", "watching"]);
-    return rows.map((row) => {
-      const symbol = (row.symbol ?? "").toUpperCase();
-      if (!symbol) return null;
-      const category = (row.category ?? "watching").toLowerCase();
-      const cat = cats.has(category) ? category : "watching";
-      const tp = row.targetprice ?? row.target_price;
-      const stock = {
-        id: `custom-${symbol.toLowerCase()}-${cat}`,
-        symbol,
-        name: row.name || symbol,
-        category: cat,
-        custom: true,
-      };
-      if (tp !== "" && tp != null) stock.targetPrice = Number(tp);
-      if (row.thesis) stock.thesis = row.thesis;
-      if (row.addedby) stock.addedBy = row.addedby;
-      if (row.holder) stock.holder = row.holder;
-      return stock;
-    }).filter(Boolean);
-  }
-
-  function mergeStocks(base, custom) {
-    const map = new Map();
-    for (const s of base) map.set(`${s.symbol}:${s.category}`, s);
-    for (const s of custom) map.set(`${s.symbol}:${s.category}`, s);
-    return [...map.values()];
-  }
-
-  function fmtPrice(v) {
-    if (v == null || Number.isNaN(v)) return "—";
-    return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
-  }
-
-  function getPrice(stock) {
-    return quotes[stock.symbol]?.price ?? stock.lastPrice ?? null;
-  }
-
-  function getDistance(stock) {
-    const price = getPrice(stock);
-    if (price == null || stock.targetPrice == null || stock.targetPrice === 0) return null;
-    return ((price - stock.targetPrice) / stock.targetPrice) * 100;
-  }
-
-  function distanceLabel(pct) {
-    if (pct == null) return { text: "—", cls: "" };
-    const abs = Math.abs(pct);
-    if (abs < 0.5) return { text: "At target", cls: "at" };
-    if (pct > 0) return { text: `+${abs.toFixed(1)}%`, cls: "above" };
-    return { text: `-${abs.toFixed(1)}%`, cls: "below" };
-  }
-
-  function catLabel(cat) {
-    const map = { owned: "Owned", targets: "Targets", watching: "Watching" };
-    return map[cat] ?? cat;
-  }
-
-  function matchesFilter(stock) {
-    const dist = getDistance(stock);
-    switch (filter) {
-      case "owned":
-      case "targets":
-      case "watching":
-        return stock.category === filter;
-      case "has-target":
-        return stock.targetPrice != null;
-      case "at-target":
-        return dist != null && Math.abs(dist) < 0.5;
-      default:
-        return true;
-    }
-  }
-
-  function matchesSearch(stock) {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      stock.symbol.toLowerCase().includes(q) ||
-      (stock.name ?? "").toLowerCase().includes(q) ||
-      (stock.thesis ?? "").toLowerCase().includes(q) ||
-      (stock.targetNote ?? "").toLowerCase().includes(q)
-    );
-  }
-
-  function sortStocks(list) {
-    const sorted = [...list];
-    sorted.sort((a, b) => {
-      let av, bv;
-      switch (sortKey) {
-        case "symbol":
-          av = a.symbol; bv = b.symbol;
-          return sortDir * av.localeCompare(bv);
-        case "name":
-          av = a.name ?? ""; bv = b.name ?? "";
-          return sortDir * av.localeCompare(bv);
-        case "category":
-          av = a.category; bv = b.category;
-          return sortDir * av.localeCompare(bv);
-        case "price":
-          av = getPrice(a) ?? -Infinity;
-          bv = getPrice(b) ?? -Infinity;
-          return sortDir * (av - bv);
-        case "target":
-          av = a.targetPrice ?? -Infinity;
-          bv = b.targetPrice ?? -Infinity;
-          return sortDir * (av - bv);
-        case "distance": {
-          const da = getDistance(a);
-          const db = getDistance(b);
-          if (da == null && db == null) return a.symbol.localeCompare(b.symbol);
-          if (da == null) return 1;
-          if (db == null) return -1;
-          return sortDir * (Math.abs(da) - Math.abs(db));
-        }
-        case "by":
-          av = a.holder ?? a.addedBy ?? "";
-          bv = b.holder ?? b.addedBy ?? "";
-          return sortDir * av.localeCompare(bv);
-        default:
-          return 0;
-      }
-    });
-    return sorted;
-  }
-
-  function renderOverview() {
-    const withTarget = allStocks.filter((s) => s.targetPrice != null);
-    let atTarget = 0;
-    let within5 = 0;
-    let within10 = 0;
-
-    for (const s of withTarget) {
-      const d = getDistance(s);
-      if (d == null) continue;
-      const abs = Math.abs(d);
-      if (abs < 0.5) atTarget++;
-      if (abs <= 5) within5++;
-      if (abs <= 10) within10++;
-    }
-
-    const grid = document.getElementById("overview-grid");
-    grid.innerHTML = `
-      <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Total tickers</span></div>
-      <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "owned").length}</span><span class="ov-label">Owned</span></div>
-      <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "targets").length}</span><span class="ov-label">Price targets</span></div>
-      <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "watching").length}</span><span class="ov-label">Long-term watch</span></div>
-      <div class="overview-card highlight"><span class="ov-value">${atTarget}</span><span class="ov-label">At target now</span></div>
-      <div class="overview-card highlight"><span class="ov-value">${within5}</span><span class="ov-label">Within 5% of target</span></div>
-      <div class="overview-card"><span class="ov-value">${within10}</span><span class="ov-label">Within 10% of target</span></div>
-      <div class="overview-card"><span class="ov-value">${withTarget.length}</span><span class="ov-label">Have a target set</span></div>
-    `;
-  }
-
-  function renderOpportunities() {
-    const chips = document.getElementById("opp-chips");
-    const candidates = allStocks
-      .filter((s) => s.targetPrice != null)
-      .map((s) => ({ stock: s, dist: getDistance(s) }))
-      .filter((x) => x.dist != null)
-      .sort((a, b) => Math.abs(a.dist) - Math.abs(b.dist))
-      .slice(0, 12);
-
-    if (!candidates.length) {
-      chips.innerHTML = `<span class="opp-empty">Set target prices to see what's closest to entry.</span>`;
-      return;
-    }
-
-    chips.innerHTML = candidates.map(({ stock, dist }) => {
-      const { text, cls } = distanceLabel(dist);
-      const price = getPrice(stock);
-      return `<button type="button" class="opp-chip ${cls}" data-jump="${stock.symbol}" title="${stock.thesis ?? ""}">
-        <strong>${stock.symbol}</strong>
-        <span>${fmtPrice(price)} → ${fmtPrice(stock.targetPrice)}</span>
-        <em>${text}</em>
-      </button>`;
-    }).join("");
-
-    chips.querySelectorAll("[data-jump]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const sym = btn.getAttribute("data-jump");
-        search = sym;
-        document.getElementById("search-input").value = sym;
-        filter = "all";
-        document.querySelectorAll(".filter-chips .chip").forEach((c) => {
-          c.classList.toggle("active", c.getAttribute("data-filter") === "all");
-        });
-        renderTable();
-        const row = document.querySelector(`tr[data-symbol="${sym}"]`);
-        row?.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
-    });
-  }
-
-  function renderTable() {
-    const filtered = sortStocks(allStocks.filter((s) => matchesFilter(s) && matchesSearch(s)));
-    const tbody = document.getElementById("watchlist-tbody");
-    const countEl = document.getElementById("result-count");
-
-    countEl.textContent = filtered.length === allStocks.length
-      ? `Showing all ${allStocks.length} tickers`
-      : `Showing ${filtered.length} of ${allStocks.length} tickers`;
-
-    tbody.innerHTML = filtered.map((stock) => {
-      const price = getPrice(stock);
-      const q = quotes[stock.symbol];
-      const dist = getDistance(stock);
-      const { text: distText, cls: distCls } = distanceLabel(dist);
-      const chg = q?.changePct;
-      const chgHtml = chg != null
-        ? `<span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>`
-        : `<span class="chg dim">—</span>`;
-      const note = [stock.targetNote, stock.thesis].filter(Boolean).join(" · ") || "—";
-      const by = stock.holder ?? stock.addedBy ?? "—";
-
-      return `<tr data-symbol="${stock.symbol}" class="${dist != null && Math.abs(dist) < 0.5 ? "row-at-target" : ""}">
-        <td class="mono sym">${stock.symbol}${stock.custom ? '<span class="custom-tag" title="Imported in your browser">★</span>' : ""}</td>
-        <td class="name-cell">${stock.name}</td>
-        <td><span class="cat-badge cat-${stock.category}">${catLabel(stock.category)}</span></td>
-        <td class="num mono">${fmtPrice(price)}</td>
-        <td class="num">${chgHtml}</td>
-        <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
-        <td class="num dist ${distCls}">${distText}</td>
-        <td class="note-cell" title="${note.replace(/"/g, "&quot;")}">${note}</td>
-        <td>${by}</td>
-      </tr>`;
-    }).join("");
-
-    document.querySelectorAll("th.sortable").forEach((th) => {
-      th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === sortKey && sortDir === 1);
-      th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
-    });
-
-    renderOverview();
-    renderOpportunities();
-  }
-
-  function exportCsv() {
-    const header = "symbol,name,category,targetPrice,targetNote,thesis,addedBy,holder";
-    const rows = allStocks.map((s) =>
-      [s.symbol, s.name, s.category, s.targetPrice ?? "", s.targetNote ?? "", s.thesis ?? "", s.addedBy ?? "", s.holder ?? ""]
-        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-        .join(",")
-    );
-    const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "watchlist-export.csv";
-    a.click();
-  }
-
-  async function init() {
-    const base = JSON.parse(stocksJson);
-    const custom = await getCustomStocks();
-    allStocks = mergeStocks(base, custom);
-    renderTable();
-
-    document.getElementById("search-input").addEventListener("input", (e) => {
-      search = e.target.value.trim();
-      renderTable();
-    });
-
-    document.getElementById("filter-chips").addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-filter]");
-      if (!btn) return;
-      filter = btn.getAttribute("data-filter");
-      document.querySelectorAll(".filter-chips .chip").forEach((c) => c.classList.remove("active"));
-      btn.classList.add("active");
-      renderTable();
-    });
-
-    document.querySelectorAll("th.sortable").forEach((th) => {
-      th.addEventListener("click", () => {
-        const key = th.getAttribute("data-sort");
-        if (sortKey === key) sortDir *= -1;
-        else { sortKey = key; sortDir = key === "distance" ? 1 : 1; }
-        renderTable();
-      });
-    });
-
-    document.getElementById("toggle-import").addEventListener("click", () => {
-      const panel = document.getElementById("import-panel");
-      panel.hidden = !panel.hidden;
-    });
-
-    document.getElementById("import-apply").addEventListener("click", async () => {
-      const text = document.getElementById("import-text").value;
-      const parsed = parseImportCsv(text).map((s) => ({ ...s, custom: true }));
-      if (!parsed.length) {
-        alert("Nothing to import — check your format.");
-        return;
-      }
-      const existing = await getCustomStocks();
-      const merged = mergeStocks(existing, parsed);
-      await setCustomStocks(merged);
-      allStocks = mergeStocks(JSON.parse(stocksJson), merged);
-      document.getElementById("import-text").value = "";
-      renderTable();
-    });
-
-    document.getElementById("import-clear").addEventListener("click", async () => {
-      if (!confirm("Remove all tickers you imported in this browser?")) return;
-      await setCustomStocks([]);
-      allStocks = mergeStocks(JSON.parse(stocksJson), []);
-      renderTable();
-    });
-
-    document.getElementById("export-csv").addEventListener("click", exportCsv);
-
-    document.addEventListener("radar:quotes", (e) => {
-      quotes = { ...quotes, ...e.detail };
-      renderTable();
-    });
-  }
-
-  init();
+  import { initWatchlistBoard } from "../scripts/watchlist-board";
+  initWatchlistBoard(stocksJson);
 </script>

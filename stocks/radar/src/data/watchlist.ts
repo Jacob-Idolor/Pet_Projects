@@ -1,6 +1,7 @@
 import raw from "./watchlist.json";
 
 export type StockCategory = "owned" | "targets" | "watching";
+export type StockPriority = "high" | "medium" | "low";
 
 export interface Stock {
   id: string;
@@ -13,6 +14,11 @@ export interface Stock {
   thesis?: string;
   addedBy?: string;
   holder?: string;
+  /** Theme labels — e.g. photonics, semi, mag7 */
+  tags?: string[];
+  /** Conviction / sizing signal */
+  priority?: StockPriority;
+  sector?: string;
 }
 
 export interface WatchlistMeta {
@@ -21,28 +27,25 @@ export interface WatchlistMeta {
   lastUpdated: string;
 }
 
-export const meta: WatchlistMeta = raw.meta;
-export const stocks: Stock[] = raw.stocks;
-
 export const categoryLabels: Record<
   StockCategory,
   { title: string; description: string; icon: string; short: string }
 > = {
   owned: {
     title: "Currently Holding",
-    description: "Positions we're in.",
+    description: "Active positions — what you're in today.",
     icon: "💼",
     short: "Owned",
   },
   targets: {
     title: "Waiting on Price Targets",
-    description: "Specific entry or trim levels.",
+    description: "Specific entry or trim levels — watch closely.",
     icon: "🎯",
     short: "Targets",
   },
   watching: {
     title: "Long-Term Watchlist",
-    description: "Keeping an eye on — no rush.",
+    description: "On radar — track the thesis, wait for the setup.",
     icon: "👀",
     short: "Watching",
   },
@@ -73,3 +76,6 @@ export function distanceToTarget(
   }
   return { pct, label: `${abs.toFixed(1)}% below`, direction: "below" };
 }
+
+export const meta: WatchlistMeta = raw.meta;
+export const stocks: Stock[] = raw.stocks;

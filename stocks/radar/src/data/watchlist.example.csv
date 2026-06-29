@@ -1,4 +1,4 @@
-symbol,name,category,targetPrice,targetNote,thesis,addedBy
-NVDA,NVIDIA,owned,180,Trim above 175,AI infra leader,J
-PLTR,Palantir,targets,18,Starter on pullback,Want better entry,K
-SOFI,SoFi,watching,12,,Fintech turnaround,M
+symbol,name,category,sector,tags,targetPrice,thesis,priority,addedBy
+SMH,VanEck Semiconductor ETF,owned,Semiconductors,semi;etf;core,,Top semi exposure,high,J
+NBIS,Nebius Group,owned,AI Infrastructure,ai;high-conviction,,Favorite for next few years,high,J
+PLTR,Palantir,targets,Software,ai;gov,18,Want better entry,medium,K
