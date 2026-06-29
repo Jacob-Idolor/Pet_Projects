@@ -2,12 +2,12 @@
 const base = import.meta.env.BASE_URL;
 ---
 
-<div class="live-status" id="live-status" role="status" aria-live="polite">
+<div class="live-status" id="live-status" role="status" aria-live="polite" data-radar-base={base}>
   <span class="live-dot" id="live-dot" aria-hidden="true"></span>
   <span id="live-status-text">Loading prices…</span>
 </div>
 
-<script define:vars={{ base }}>
+<script is:inline>
   const REFRESH_MS = 60_000;
   let lastUpdated = null;
   let timer = null;
@@ -41,8 +41,9 @@ const base = import.meta.env.BASE_URL;
   }
 
   async function loadQuotes() {
+    const base = document.getElementById("live-status")?.dataset.radarBase ?? "/";
     try {
-      const res = await fetch(`${base}quotes.json?t=${Date.now()}`, { cache: "no-store" });
+      const res = await fetch(base + "quotes.json?t=" + Date.now(), { cache: "no-store" });
       if (!res.ok) throw new Error("not found");
       const data = await res.json();
       lastUpdated = data.updatedAt;

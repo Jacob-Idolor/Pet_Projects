@@ -4,14 +4,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
+    "bundle:watchlist": "esbuild src/scripts/watchlist-board.ts --bundle --format=esm --outfile=public/watchlist-board.mjs",
+    "dev": "npm run bundle:watchlist && astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "import-csv": "node scripts/csv-to-watchlist.mjs",
     "update-quotes": "node scripts/fetch-quotes.mjs",
-    "prebuild": "node scripts/fetch-quotes.mjs"
+    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs"
   },
   "dependencies": {
     "astro": "^5.7.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }

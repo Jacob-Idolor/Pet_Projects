@@ -1,70 +1,46 @@
-import { escapeHtml, yahooUrl } from "../lib/format";
-
-export type QuoteMap = Record<string, { price: number; changePct: number | null; prevClose?: number | null }>;
-
-export interface StockRow {
-  id: string;
-  symbol: string;
-  name: string;
-  category: string;
-  lastPrice?: number;
-  targetPrice?: number;
-  targetNote?: string;
-  thesis?: string;
-  addedBy?: string;
-  holder?: string;
-  tags?: string[];
-  priority?: string;
-  sector?: string;
-  custom?: boolean;
+// src/lib/format.ts
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function yahooUrl(symbol) {
+  return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
 }
 
-const CUSTOM_STORE = "stocks-radar-custom";
-const CUSTOM_KEY = "entries";
-const PREFS_KEY = "stocks-radar-prefs";
-
-const CAT_LABEL: Record<string, string> = {
+// src/scripts/watchlist-board.ts
+var CUSTOM_STORE = "stocks-radar-custom";
+var CUSTOM_KEY = "entries";
+var PREFS_KEY = "stocks-radar-prefs";
+var CAT_LABEL = {
   owned: "Owned",
   targets: "Targets",
-  watching: "Watching",
+  watching: "Watching"
 };
-
-let baseStocks: StockRow[] = [];
-let allStocks: StockRow[] = [];
-let quotes: QuoteMap = {};
-let filter = "all";
-let tagFilter: string | null = null;
-let search = "";
-let sortKey = "distance";
-let sortDir = 1;
-let viewMode: "table" | "buckets" = "buckets";
-let page = 1;
-let pageSize = 50;
-let expandedId: string | null = null;
-
-interface Prefs {
-  viewMode?: "table" | "buckets";
-  pageSize?: number;
-  sortKey?: string;
-  filter?: string;
-}
-
-function loadPrefs(): Prefs {
+var baseStocks = [];
+var allStocks = [];
+var quotes = {};
+var filter = "all";
+var tagFilter = null;
+var search = "";
+var sortKey = "distance";
+var sortDir = 1;
+var viewMode = "buckets";
+var page = 1;
+var pageSize = 50;
+var expandedId = null;
+function loadPrefs() {
   try {
     return JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}");
   } catch {
     return {};
   }
 }
-
 function savePrefs() {
   localStorage.setItem(
     PREFS_KEY,
     JSON.stringify({ viewMode, pageSize, sortKey, filter })
   );
 }
-
-function openCustomDb(): Promise<IDBDatabase> {
+function openCustomDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(CUSTOM_STORE, 1);
     req.onupgradeneeded = () => {
@@ -76,80 +52,70 @@ function openCustomDb(): Promise<IDBDatabase> {
     req.onerror = () => reject(req.error);
   });
 }
-
-async function getCustomStocks(): Promise<StockRow[]> {
+async function getCustomStocks() {
   try {
     const db = await openCustomDb();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("kv", "readonly");
       const req = tx.objectStore("kv").get(CUSTOM_KEY);
-      req.onsuccess = () => resolve((req.result as StockRow[]) ?? []);
+      req.onsuccess = () => resolve(req.result ?? []);
       req.onerror = () => reject(req.error);
     });
   } catch {
     return [];
   }
 }
-
-async function setCustomStocks(entries: StockRow[]) {
+async function setCustomStocks(entries) {
   const db = await openCustomDb();
-  return new Promise<void>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const tx = db.transaction("kv", "readwrite");
     tx.objectStore("kv").put(entries, CUSTOM_KEY);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 }
-
-function mergeStocks(base: StockRow[], custom: StockRow[]) {
-  const map = new Map<string, StockRow>();
+function mergeStocks(base, custom) {
+  const map = /* @__PURE__ */ new Map();
   for (const s of base) map.set(`${s.symbol}:${s.category}`, s);
   for (const s of custom) map.set(`${s.symbol}:${s.category}`, s);
   return [...map.values()];
 }
-
-function fmtPrice(v: number | null | undefined) {
-  if (v == null || Number.isNaN(v)) return "—";
+function fmtPrice(v) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
   return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 }
-
-function getPrice(stock: StockRow) {
+function getPrice(stock) {
   return quotes[stock.symbol]?.price ?? stock.lastPrice ?? null;
 }
-
-function getChange(stock: StockRow) {
+function getChange(stock) {
   const q = quotes[stock.symbol];
   if (q?.changePct != null) return q.changePct;
   const price = getPrice(stock);
   const prev = q?.prevClose;
   if (price != null && prev != null && prev !== 0) {
-    return ((price - prev) / prev) * 100;
+    return (price - prev) / prev * 100;
   }
   return null;
 }
-
-function getDistance(stock: StockRow) {
+function getDistance(stock) {
   const price = getPrice(stock);
   if (price == null || stock.targetPrice == null || stock.targetPrice === 0) return null;
-  return ((price - stock.targetPrice) / stock.targetPrice) * 100;
+  return (price - stock.targetPrice) / stock.targetPrice * 100;
 }
-
-function distanceLabel(pct: number | null) {
-  if (pct == null) return { text: "—", cls: "" };
+function distanceLabel(pct) {
+  if (pct == null) return { text: "\u2014", cls: "" };
   const abs = Math.abs(pct);
   if (abs < 0.5) return { text: "At target", cls: "at" };
   if (pct > 0) return { text: `+${abs.toFixed(1)}%`, cls: "above" };
   return { text: `-${abs.toFixed(1)}%`, cls: "below" };
 }
-
-function distanceBar(pct: number | null) {
+function distanceBar(pct) {
   if (pct == null) return "";
   const width = Math.min(100, Math.abs(pct));
   const cls = Math.abs(pct) < 0.5 ? "at" : pct > 0 ? "above" : "below";
   return `<div class="dist-bar" title="${escapeHtml(distanceLabel(pct).text)}"><div class="dist-bar-fill ${cls}" style="width:${width}%"></div></div>`;
 }
-
-function matchesFilter(stock: StockRow) {
+function matchesFilter(stock) {
   const dist = getDistance(stock);
   if (tagFilter && !(stock.tags ?? []).includes(tagFilter)) return false;
   switch (filter) {
@@ -167,25 +133,16 @@ function matchesFilter(stock: StockRow) {
       return true;
   }
 }
-
-function matchesSearch(stock: StockRow) {
+function matchesSearch(stock) {
   if (!search) return true;
   const q = search.toLowerCase();
-  return (
-    stock.symbol.toLowerCase().includes(q) ||
-    (stock.name ?? "").toLowerCase().includes(q) ||
-    (stock.thesis ?? "").toLowerCase().includes(q) ||
-    (stock.targetNote ?? "").toLowerCase().includes(q) ||
-    (stock.sector ?? "").toLowerCase().includes(q) ||
-    (stock.tags ?? []).some((t) => t.toLowerCase().includes(q))
-  );
+  return stock.symbol.toLowerCase().includes(q) || (stock.name ?? "").toLowerCase().includes(q) || (stock.thesis ?? "").toLowerCase().includes(q) || (stock.targetNote ?? "").toLowerCase().includes(q) || (stock.sector ?? "").toLowerCase().includes(q) || (stock.tags ?? []).some((t) => t.toLowerCase().includes(q));
 }
-
-function sortStocks(list: StockRow[]) {
+function sortStocks(list) {
   const sorted = [...list];
   sorted.sort((a, b) => {
-    let av: string | number;
-    let bv: string | number;
+    let av;
+    let bv;
     switch (sortKey) {
       case "symbol":
         return sortDir * a.symbol.localeCompare(b.symbol);
@@ -198,11 +155,11 @@ function sortStocks(list: StockRow[]) {
       case "price":
         av = getPrice(a) ?? -Infinity;
         bv = getPrice(b) ?? -Infinity;
-        return sortDir * ((av as number) - (bv as number));
+        return sortDir * (av - bv);
       case "target":
         av = a.targetPrice ?? -Infinity;
         bv = b.targetPrice ?? -Infinity;
-        return sortDir * ((av as number) - (bv as number));
+        return sortDir * (av - bv);
       case "distance": {
         const da = getDistance(a);
         const db = getDistance(b);
@@ -212,10 +169,10 @@ function sortStocks(list: StockRow[]) {
         return sortDir * (Math.abs(da) - Math.abs(db));
       }
       case "priority": {
-        const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
+        const order = { high: 0, medium: 1, low: 2 };
         av = order[a.priority ?? ""] ?? 3;
         bv = order[b.priority ?? ""] ?? 3;
-        return sortDir * ((av as number) - (bv as number));
+        return sortDir * (av - bv);
       }
       case "by":
         return sortDir * (a.holder ?? a.addedBy ?? "").localeCompare(b.holder ?? b.addedBy ?? "");
@@ -225,91 +182,73 @@ function sortStocks(list: StockRow[]) {
   });
   return sorted;
 }
-
 function filteredStocks() {
   return sortStocks(allStocks.filter((s) => matchesFilter(s) && matchesSearch(s)));
 }
-
-function renderTagsHtml(stock: StockRow) {
-  if (!stock.tags?.length) return `<span class="dim">—</span>`;
-  return stock.tags
-    .map((t) => `<span class="tag-pill">${escapeHtml(t)}</span>`)
-    .join("");
+function renderTagsHtml(stock) {
+  if (!stock.tags?.length) return `<span class="dim">\u2014</span>`;
+  return stock.tags.map((t) => `<span class="tag-pill">${escapeHtml(t)}</span>`).join("");
 }
-
-function renderPriority(stock: StockRow) {
-  if (!stock.priority) return "—";
+function renderPriority(stock) {
+  if (!stock.priority) return "\u2014";
   return `<span class="priority priority-${stock.priority}">${stock.priority}</span>`;
 }
-
-function renderRow(stock: StockRow, compact = false) {
+function renderRow(stock, compact = false) {
   const price = getPrice(stock);
   const chg = getChange(stock);
   const dist = getDistance(stock);
   const { text: distText, cls: distCls } = distanceLabel(dist);
-  const chgHtml =
-    chg != null
-      ? `<span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>`
-      : `<span class="chg dim">—</span>`;
+  const chgHtml = chg != null ? `<span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>` : `<span class="chg dim">\u2014</span>`;
   const expanded = expandedId === stock.id;
   const atTarget = dist != null && Math.abs(dist) < 0.5;
-
   return `
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${expanded ? "expanded" : ""}">
       <td class="mono sym">
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
-        ${stock.custom ? '<span class="custom-tag" title="Browser import">★</span>' : ""}
+        ${stock.custom ? '<span class="custom-tag" title="Browser import">\u2605</span>' : ""}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td><span class="cat-badge cat-${stock.category}">${CAT_LABEL[stock.category] ?? stock.category}</span></td>
       <td class="tags-cell">${renderTagsHtml(stock)}</td>
       <td class="num mono">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
+      <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
       <td class="num dist-cell">
         <span class="dist ${distCls}">${distText}</span>
         ${distanceBar(dist)}
       </td>
-      <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
+      <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "\u2014")}</td>
       <td>${renderPriority(stock)}</td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
-    ${
-      expanded
-        ? `<tr class="detail-row" data-detail-for="${stock.id}">
+    ${expanded ? `<tr class="detail-row" data-detail-for="${stock.id}">
         <td colspan="11">
           <div class="detail-panel">
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
-            <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "—")}</p>
-            <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
+            <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "\u2014")}</p>
+            <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance \u2192</a>
           </div>
         </td>
-      </tr>`
-        : ""
-    }
+      </tr>` : ""}
   `;
 }
-
-function renderTableHtml(stocks: StockRow[]) {
+function renderTableHtml(stocks) {
   if (!stocks.length) {
     return `<tr><td colspan="11" class="empty-row">No tickers match your filters.</td></tr>`;
   }
   return stocks.map((s) => renderRow(s)).join("");
 }
-
 function renderOverview() {
   const el = document.getElementById("overview-grid");
   if (!el) return;
-
   const withTarget = allStocks.filter((s) => s.targetPrice != null);
   let atTarget = 0;
   let within5 = 0;
   let within10 = 0;
-
   for (const s of withTarget) {
     const d = getDistance(s);
     if (d == null) continue;
@@ -318,10 +257,8 @@ function renderOverview() {
     if (abs <= 5) within5++;
     if (abs <= 10) within10++;
   }
-
-  const tags = new Set<string>();
+  const tags = /* @__PURE__ */ new Set();
   allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
-
   el.innerHTML = `
     <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Total</span></div>
     <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "owned").length}</span><span class="ov-label">Owned</span></div>
@@ -333,76 +270,52 @@ function renderOverview() {
     <div class="overview-card"><span class="ov-value">${tags.size}</span><span class="ov-label">Themes</span></div>
   `;
 }
-
 function renderTagFilters() {
   const el = document.getElementById("tag-filters");
   if (!el) return;
-
-  const tags = new Set<string>();
+  const tags = /* @__PURE__ */ new Set();
   allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
   if (!tags.size) {
     el.innerHTML = "";
     return;
   }
-
-  el.innerHTML = `<span class="tag-filter-label">Themes:</span>` +
-    [...tags]
-      .sort()
-      .map(
-        (t) =>
-          `<button type="button" class="chip tag-chip ${tagFilter === t ? "active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
-      )
-      .join("") +
-    (tagFilter ? `<button type="button" class="chip tag-clear" data-tag="">Clear</button>` : "");
+  el.innerHTML = `<span class="tag-filter-label">Themes:</span>` + [...tags].sort().map(
+    (t) => `<button type="button" class="chip tag-chip ${tagFilter === t ? "active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+  ).join("") + (tagFilter ? `<button type="button" class="chip tag-clear" data-tag="">Clear</button>` : "");
 }
-
 function renderOpportunities() {
   const chips = document.getElementById("opp-chips");
   if (!chips) return;
-
-  const candidates = allStocks
-    .filter((s) => s.targetPrice != null)
-    .map((s) => ({ stock: s, dist: getDistance(s) }))
-    .filter((x) => x.dist != null)
-    .sort((a, b) => Math.abs(a.dist!) - Math.abs(b.dist!))
-    .slice(0, 15);
-
+  const candidates = allStocks.filter((s) => s.targetPrice != null).map((s) => ({ stock: s, dist: getDistance(s) })).filter((x) => x.dist != null).sort((a, b) => Math.abs(a.dist) - Math.abs(b.dist)).slice(0, 15);
   if (!candidates.length) {
     chips.innerHTML = `<span class="opp-empty">Add target prices to track entries.</span>`;
     return;
   }
-
-  chips.innerHTML = candidates
-    .map(({ stock, dist }) => {
-      const { text, cls } = distanceLabel(dist);
-      const price = getPrice(stock);
-      return `<button type="button" class="opp-chip ${cls}" data-jump="${stock.symbol}" title="${escapeHtml(stock.thesis ?? "")}">
+  chips.innerHTML = candidates.map(({ stock, dist }) => {
+    const { text, cls } = distanceLabel(dist);
+    const price = getPrice(stock);
+    return `<button type="button" class="opp-chip ${cls}" data-jump="${stock.symbol}" title="${escapeHtml(stock.thesis ?? "")}">
         <strong>${stock.symbol}</strong>
-        <span>${fmtPrice(price)} → ${fmtPrice(stock.targetPrice!)}</span>
+        <span>${fmtPrice(price)} \u2192 ${fmtPrice(stock.targetPrice)}</span>
         <em>${text}</em>
       </button>`;
-    })
-    .join("");
+  }).join("");
 }
-
 function renderHeldStrip() {
   const el = document.getElementById("held-strip");
   if (!el) return;
-
   const owned = sortStocks(allStocks.filter((s) => s.category === "owned"));
   if (!owned.length) {
     el.hidden = true;
     return;
   }
   el.hidden = false;
-
-  el.innerHTML = owned
-    .map((stock) => {
-      const price = getPrice(stock);
-      const chg = getChange(stock);
-      const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
-      const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
-      return `<article class="held-card" data-symbol="${stock.symbol}">
+  el.innerHTML = owned.map((stock) => {
+    const price = getPrice(stock);
+    const chg = getChange(stock);
+    const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
+    const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
+    return `<article class="held-card" data-symbol="${stock.symbol}">
         <div class="held-top">
           <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="held-sym">${stock.symbol}</a>
           ${stock.priority === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
@@ -412,17 +325,13 @@ function renderHeldStrip() {
         <p class="held-thesis">${escapeHtml(stock.thesis ?? "")}</p>
         <div class="held-tags">${renderTagsHtml(stock)}</div>
       </article>`;
-    })
-    .join("");
+  }).join("");
 }
-
-function renderPagination(total: number) {
+function renderPagination(total) {
   const el = document.getElementById("pagination");
   if (!el) return;
-
   const pages = Math.max(1, Math.ceil(total / pageSize));
   if (page > pages) page = pages;
-
   el.innerHTML = `
     <div class="page-size">
       <label>Per page
@@ -438,29 +347,22 @@ function renderPagination(total: number) {
     </div>
   `;
 }
-
-function renderBucketView(list: StockRow[]) {
+function renderBucketView(list) {
   const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
   if (!wrap || !tableWrap) return;
-
   wrap.hidden = false;
   tableWrap.hidden = true;
-
   for (const cat of ["owned", "targets", "watching"]) {
     const body = document.querySelector(`[data-bucket-body="${cat}"]`);
     const countEl = document.querySelector(`[data-bucket-count="${cat}"]`);
     const subset = list.filter((s) => s.category === cat);
     if (countEl) countEl.textContent = String(subset.length);
     if (body) {
-      body.innerHTML =
-        subset.length > 0
-          ? `<div class="table-wrap compact"><table class="watchlist-table"><thead>${tableHead()}</thead><tbody>${renderTableHtml(subset)}</tbody></table></div>`
-          : `<p class="bucket-empty">No tickers in this bucket.</p>`;
+      body.innerHTML = subset.length > 0 ? `<div class="table-wrap compact"><table class="watchlist-table"><thead>${tableHead()}</thead><tbody>${renderTableHtml(subset)}</tbody></table></div>` : `<p class="bucket-empty">No tickers in this bucket.</p>`;
     }
   }
 }
-
 function tableHead() {
   return `<tr>
     <th>Symbol</th><th>Name</th><th>Bucket</th><th>Tags</th>
@@ -468,129 +370,117 @@ function tableHead() {
     <th class="num">Distance</th><th>Thesis</th><th>Priority</th><th></th>
   </tr>`;
 }
-
-function renderTableView(list: StockRow[]) {
+function renderTableView(list) {
   const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
   const tbody = document.getElementById("watchlist-tbody");
   const countEl = document.getElementById("result-count");
   if (!tbody || !tableWrap) return;
-
   if (wrap) wrap.hidden = true;
   tableWrap.hidden = false;
-
   const total = list.length;
   const start = (page - 1) * pageSize;
   const pageItems = list.slice(start, start + pageSize);
-
   if (countEl) {
-    countEl.textContent =
-      total === allStocks.length
-        ? `Showing ${start + 1}–${Math.min(start + pageSize, total)} of ${total}`
-        : `Showing ${start + 1}–${Math.min(start + pageSize, total)} of ${total} (filtered from ${allStocks.length})`;
+    countEl.textContent = total === allStocks.length ? `Showing ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total}` : `Showing ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total} (filtered from ${allStocks.length})`;
   }
-
   tbody.innerHTML = renderTableHtml(pageItems);
   renderPagination(total);
-
   document.querySelectorAll("th.sortable").forEach((th) => {
     th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === sortKey && sortDir === 1);
     th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
   });
 }
-
 function renderAll() {
   const list = filteredStocks();
   renderOverview();
   renderTagFilters();
   renderOpportunities();
   renderHeldStrip();
-
   if (viewMode === "buckets") {
     renderBucketView(list);
   } else {
     renderTableView(list);
   }
 }
-
-function parseImportCsv(text: string): StockRow[] {
+function parseImportCsv(text) {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return [];
-
   const first = lines[0].toLowerCase();
   const hasHeader = first.includes("symbol");
   const dataLines = hasHeader ? lines.slice(1) : lines;
-
-  const split = (line: string) => {
-    const out: string[] = [];
+  const split = (line) => {
+    const out = [];
     let cur = "";
     let q = false;
     for (const ch of line) {
-      if (ch === '"') { q = !q; continue; }
-      if (ch === "," && !q) { out.push(cur); cur = ""; continue; }
+      if (ch === '"') {
+        q = !q;
+        continue;
+      }
+      if (ch === "," && !q) {
+        out.push(cur);
+        cur = "";
+        continue;
+      }
       cur += ch;
     }
     out.push(cur);
     return out.map((s) => s.trim());
   };
-
-  const rows = hasHeader
-    ? (() => {
-        const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-        return dataLines.map((line) => {
-          const cols = split(line);
-          const row: Record<string, string> = {};
-          headers.forEach((h, i) => { row[h] = cols[i] ?? ""; });
-          return row;
-        });
-      })()
-    : dataLines.map((line) => {
-        const cols = split(line);
-        if (cols.length === 1) return { symbol: cols[0] };
-        return {
-          symbol: cols[0],
-          name: cols[1],
-          category: cols[2],
-          targetprice: cols[3],
-          thesis: cols[4],
-          addedby: cols[5],
-        };
+  const rows = hasHeader ? (() => {
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    return dataLines.map((line) => {
+      const cols = split(line);
+      const row = {};
+      headers.forEach((h, i) => {
+        row[h] = cols[i] ?? "";
       });
-
-  const cats = new Set(["owned", "targets", "watching"]);
-  return rows
-    .map((row) => {
-      const symbol = (row.symbol ?? "").toUpperCase();
-      if (!symbol) return null;
-      const category = (row.category ?? "watching").toLowerCase();
-      const cat = cats.has(category) ? category : "watching";
-      const tp = row.targetprice ?? row.target_price;
-      const stock: StockRow = {
-        id: `custom-${symbol.toLowerCase()}-${cat}`,
-        symbol,
-        name: row.name || symbol,
-        category: cat,
-        custom: true,
-      };
-      if (tp !== "" && tp != null) stock.targetPrice = Number(tp);
-      if (row.thesis) stock.thesis = row.thesis;
-      if (row.targetnote) stock.targetNote = row.targetnote;
-      if (row.addedby) stock.addedBy = row.addedby;
-      if (row.holder) stock.holder = row.holder;
-      if (row.sector) stock.sector = row.sector;
-      if (row.priority) stock.priority = row.priority;
-      if (row.tags) {
-        stock.tags = row.tags.split(/[;|]/).map((t) => t.trim()).filter(Boolean);
-      }
-      return stock;
-    })
-    .filter(Boolean) as StockRow[];
+      return row;
+    });
+  })() : dataLines.map((line) => {
+    const cols = split(line);
+    if (cols.length === 1) return { symbol: cols[0] };
+    return {
+      symbol: cols[0],
+      name: cols[1],
+      category: cols[2],
+      targetprice: cols[3],
+      thesis: cols[4],
+      addedby: cols[5]
+    };
+  });
+  const cats = /* @__PURE__ */ new Set(["owned", "targets", "watching"]);
+  return rows.map((row) => {
+    const symbol = (row.symbol ?? "").toUpperCase();
+    if (!symbol) return null;
+    const category = (row.category ?? "watching").toLowerCase();
+    const cat = cats.has(category) ? category : "watching";
+    const tp = row.targetprice ?? row.target_price;
+    const stock = {
+      id: `custom-${symbol.toLowerCase()}-${cat}`,
+      symbol,
+      name: row.name || symbol,
+      category: cat,
+      custom: true
+    };
+    if (tp !== "" && tp != null) stock.targetPrice = Number(tp);
+    if (row.thesis) stock.thesis = row.thesis;
+    if (row.targetnote) stock.targetNote = row.targetnote;
+    if (row.addedby) stock.addedBy = row.addedby;
+    if (row.holder) stock.holder = row.holder;
+    if (row.sector) stock.sector = row.sector;
+    if (row.priority) stock.priority = row.priority;
+    if (row.tags) {
+      stock.tags = row.tags.split(/[;|]/).map((t) => t.trim()).filter(Boolean);
+    }
+    return stock;
+  }).filter(Boolean);
 }
-
 function exportCsv() {
   const header = "symbol,name,category,sector,tags,targetPrice,targetNote,thesis,priority,addedBy,holder";
-  const rows = allStocks.map((s) =>
-    [
+  const rows = allStocks.map(
+    (s) => [
       s.symbol,
       s.name,
       s.category,
@@ -601,10 +491,8 @@ function exportCsv() {
       s.thesis ?? "",
       s.priority ?? "",
       s.addedBy ?? "",
-      s.holder ?? "",
-    ]
-      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-      .join(",")
+      s.holder ?? ""
+    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
   );
   const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv" });
   const a = document.createElement("a");
@@ -612,16 +500,14 @@ function exportCsv() {
   a.download = "watchlist-export.csv";
   a.click();
 }
-
 function bindEvents() {
   document.getElementById("search-input")?.addEventListener("input", (e) => {
-    search = (e.target as HTMLInputElement).value.trim();
+    search = e.target.value.trim();
     page = 1;
     renderAll();
   });
-
   document.getElementById("filter-chips")?.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest("[data-filter]");
+    const btn = e.target.closest("[data-filter]");
     if (!btn) return;
     filter = btn.getAttribute("data-filter") ?? "all";
     document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
@@ -630,19 +516,17 @@ function bindEvents() {
     savePrefs();
     renderAll();
   });
-
   document.getElementById("tag-filters")?.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest("[data-tag]");
+    const btn = e.target.closest("[data-tag]");
     if (!btn) return;
     const t = btn.getAttribute("data-tag");
     tagFilter = t || null;
     page = 1;
     renderAll();
   });
-
   document.querySelectorAll("th.sortable").forEach((th) => {
     th.addEventListener("click", () => {
-      const key = th.getAttribute("data-sort")!;
+      const key = th.getAttribute("data-sort");
       if (sortKey === key) sortDir *= -1;
       else {
         sortKey = key;
@@ -652,7 +536,6 @@ function bindEvents() {
       renderAll();
     });
   });
-
   document.getElementById("view-table")?.addEventListener("click", () => {
     viewMode = "table";
     document.getElementById("view-table")?.classList.add("active");
@@ -660,7 +543,6 @@ function bindEvents() {
     savePrefs();
     renderAll();
   });
-
   document.getElementById("view-buckets")?.addEventListener("click", () => {
     viewMode = "buckets";
     document.getElementById("view-buckets")?.classList.add("active");
@@ -668,42 +550,37 @@ function bindEvents() {
     savePrefs();
     renderAll();
   });
-
   document.getElementById("toggle-import")?.addEventListener("click", () => {
     const panel = document.getElementById("import-panel");
     if (panel) panel.hidden = !panel.hidden;
   });
-
   document.getElementById("import-apply")?.addEventListener("click", async () => {
-    const text = (document.getElementById("import-text") as HTMLTextAreaElement).value;
+    const text = document.getElementById("import-text").value;
     const parsed = parseImportCsv(text).map((s) => ({ ...s, custom: true }));
     if (!parsed.length) {
-      alert("Nothing to import — check your format.");
+      alert("Nothing to import \u2014 check your format.");
       return;
     }
     const existing = await getCustomStocks();
     const merged = mergeStocks(existing, parsed);
     await setCustomStocks(merged);
     allStocks = mergeStocks(baseStocks, merged);
-    (document.getElementById("import-text") as HTMLTextAreaElement).value = "";
+    document.getElementById("import-text").value = "";
     renderAll();
   });
-
   document.getElementById("import-clear")?.addEventListener("click", async () => {
     if (!confirm("Remove all tickers you imported in this browser?")) return;
     await setCustomStocks([]);
     allStocks = mergeStocks(baseStocks, []);
     renderAll();
   });
-
   document.getElementById("export-csv")?.addEventListener("click", exportCsv);
-
   document.getElementById("opp-chips")?.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest("[data-jump]");
+    const btn = e.target.closest("[data-jump]");
     if (!btn) return;
-    const sym = btn.getAttribute("data-jump")!;
+    const sym = btn.getAttribute("data-jump");
     search = sym;
-    const input = document.getElementById("search-input") as HTMLInputElement;
+    const input = document.getElementById("search-input");
     if (input) input.value = sym;
     filter = "all";
     tagFilter = null;
@@ -715,59 +592,51 @@ function bindEvents() {
     renderAll();
     document.querySelector(`tr[data-symbol="${sym}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
-
   document.getElementById("watchlist-board")?.addEventListener("change", (e) => {
-    if ((e.target as HTMLElement).id === "page-size-select") {
-      pageSize = Number((e.target as HTMLSelectElement).value);
+    if (e.target.id === "page-size-select") {
+      pageSize = Number(e.target.value);
       page = 1;
       savePrefs();
       renderAll();
     }
   });
-
   document.getElementById("watchlist-board")?.addEventListener("click", (e) => {
-    const expand = (e.target as HTMLElement).closest("[data-expand]");
+    const expand = e.target.closest("[data-expand]");
     if (expand) {
-      const id = expand.getAttribute("data-expand")!;
+      const id = expand.getAttribute("data-expand");
       expandedId = expandedId === id ? null : id;
       renderAll();
       return;
     }
-
-    const pag = (e.target as HTMLElement).closest("#page-prev, #page-next, #page-size-select");
+    const pag = e.target.closest("#page-prev, #page-next, #page-size-select");
     if (pag) {
-    if ((pag as HTMLElement).id === "page-prev" && page > 1) page--;
-    else if ((pag as HTMLElement).id === "page-next") page++;
-    else return;
+      if (pag.id === "page-prev" && page > 1) page--;
+      else if (pag.id === "page-next") page++;
+      else return;
       renderAll();
       return;
     }
   });
-
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
       e.preventDefault();
-      (document.getElementById("search-input") as HTMLInputElement)?.focus();
+      document.getElementById("search-input")?.focus();
     }
   });
-
-  document.addEventListener("radar:quotes", ((e: CustomEvent) => {
+  document.addEventListener("radar:quotes", ((e) => {
     quotes = { ...quotes, ...e.detail };
     renderAll();
-  }) as EventListener);
+  }));
 }
-
-export async function initWatchlistBoard(stocksJson: string) {
+async function initWatchlistBoard(stocksJson) {
   const prefs = loadPrefs();
   if (prefs.viewMode) viewMode = prefs.viewMode;
   if (prefs.pageSize) pageSize = prefs.pageSize;
   if (prefs.sortKey) sortKey = prefs.sortKey;
   if (prefs.filter) filter = prefs.filter;
-
   baseStocks = JSON.parse(stocksJson);
   const custom = await getCustomStocks();
   allStocks = mergeStocks(baseStocks, custom);
-
   if (viewMode === "buckets") {
     document.getElementById("view-buckets")?.classList.add("active");
     document.getElementById("view-table")?.classList.remove("active");
@@ -775,27 +644,23 @@ export async function initWatchlistBoard(stocksJson: string) {
     document.getElementById("view-table")?.classList.add("active");
     document.getElementById("view-buckets")?.classList.remove("active");
   }
-
   if (prefs.filter) {
     document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
       c.classList.toggle("active", c.getAttribute("data-filter") === prefs.filter);
     });
   }
-
   bindEvents();
   renderAll();
   startQuoteLoader();
 }
-
 function isUsMarketOpen() {
-  const et = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const et = new Date((/* @__PURE__ */ new Date()).toLocaleString("en-US", { timeZone: "America/New_York" }));
   const day = et.getDay();
   if (day === 0 || day === 6) return false;
   const mins = et.getHours() * 60 + et.getMinutes();
   return mins >= 570 && mins < 960;
 }
-
-async function fetchOneQuote(symbol: string) {
+async function fetchOneQuote(symbol) {
   try {
     const res = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
@@ -810,16 +675,15 @@ async function fetchOneQuote(symbol: string) {
     return null;
   }
 }
-
-async function fetchQuotesBatched(symbols: string[]) {
+async function fetchQuotesBatched(symbols) {
   const unique = [...new Set(symbols)];
   if (!unique.length) return;
-  const out: QuoteMap = {};
+  const out = {};
   for (let i = 0; i < unique.length; i += 12) {
     const chunk = unique.slice(i, i + 12);
     const results = await Promise.all(chunk.map(async (s) => {
       const q = await fetchOneQuote(s);
-      return q ? [s, q] as const : null;
+      return q ? [s, q] : null;
     }));
     for (const row of results) if (row) out[row[0]] = row[1];
     if (i + 12 < unique.length) await new Promise((r) => setTimeout(r, 250));
@@ -828,10 +692,8 @@ async function fetchQuotesBatched(symbols: string[]) {
     document.dispatchEvent(new CustomEvent("radar:quotes", { detail: out }));
   }
 }
-
 function startQuoteLoader() {
-  const base = document.querySelector<HTMLElement>("[data-radar-base]")?.dataset.radarBase ?? "/";
-
+  const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
   async function loadFromJson() {
     try {
       const res = await fetch(`${base}quotes.json?t=${Date.now()}`, { cache: "no-store" });
@@ -842,39 +704,34 @@ function startQuoteLoader() {
         return true;
       }
     } catch {
-      /* fall through */
     }
     return false;
   }
-
   const symbols = [...new Set(allStocks.map((s) => s.symbol))];
-
   loadFromJson().then((ok) => {
     if (!ok) fetchQuotesBatched(symbols);
   });
-
   setInterval(() => {
     if (document.hidden) return;
     loadFromJson();
-  }, 60_000);
-
+  }, 6e4);
   document.addEventListener("radar:stale-quotes", () => {
     if (isUsMarketOpen()) fetchQuotesBatched(symbols);
   });
 }
-
-export function initBucketSections() {
-  /* buckets rendered by initWatchlistBoard */
+function initBucketSections() {
 }
-
 function autoInit() {
   const dataEl = document.getElementById("watchlist-data");
   const raw = dataEl?.textContent ?? window.__STOCKS_RADAR_DATA__;
   if (raw) initWatchlistBoard(raw);
 }
-
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", autoInit);
 } else {
   autoInit();
 }
+export {
+  initBucketSections,
+  initWatchlistBoard
+};

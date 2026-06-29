@@ -2,9 +2,10 @@
 import { stocks } from "../data/watchlist";
 
 const stocksJson = JSON.stringify(stocks);
+const base = import.meta.env.BASE_URL;
 ---
 
-<section class="watchlist-board" id="watchlist-board">
+<section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
   <div id="held-strip" class="held-strip" hidden aria-label="Current holdings"></div>
 
   <div class="board-header">
@@ -128,7 +129,7 @@ const stocksJson = JSON.stringify(stocks);
   </div>
 </section>
 
-<script define:vars={{ stocksJson }}>
-  import { initWatchlistBoard } from "../scripts/watchlist-board";
-  initWatchlistBoard(stocksJson);
+<script is:inline define:vars={{ stocksJson }}>
+  window.__STOCKS_RADAR_DATA__ = stocksJson;
 </script>
+<script is:inline defer src="/watchlist-board.mjs"></script>

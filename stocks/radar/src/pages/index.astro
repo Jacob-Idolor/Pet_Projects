@@ -4,14 +4,10 @@ import LiveStatus from "../components/LiveStatus.astro";
 import HoldingsUpload from "../components/HoldingsUpload.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import { meta, stocks } from "../data/watchlist";
-
-const symbols = [...new Set(stocks.map((s) => s.symbol))];
-const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title={meta.groupName}>
   <LiveStatus />
-
   <section class="hero container">
     <h1>{meta.groupName}</h1>
     <p class="tagline">{meta.tagline}</p>
@@ -20,83 +16,8 @@ const base = import.meta.env.BASE_URL;
       <span class="stat-pill">List updated {meta.lastUpdated}</span>
     </div>
   </section>
-
   <div class="container">
     <HoldingsUpload />
     <WatchlistBoard />
   </div>
 </BaseLayout>
-
-<script define:vars={{ symbols, base }}>
-  /** Fallback: direct Yahoo fetch when quotes.json is missing (local dev) or stale */
-  async function fetchOne(symbol) {
-    try {
-      const res = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
-        { headers: { Accept: "application/json" } }
-      );
-      if (!res.ok) return null;
-      const data = await res.json();
-      const meta = data?.chart?.result?.[0]?.meta;
-      if (!meta?.regularMarketPrice) return null;
-      return {
-        price: meta.regularMarketPrice,
-        changePct: meta.regularMarketChangePercent ?? null,
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  async function fetchQuotesBatched(symbolList) {
-    if (!symbolList.length) return;
-    const quotes = {};
-    const chunkSize = 12;
-    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
-
-    for (let i = 0; i < symbolList.length; i += chunkSize) {
-      const chunk = symbolList.slice(i, i + chunkSize);
-      const results = await Promise.all(
-        chunk.map(async (symbol) => {
-          const q = await fetchOne(symbol);
-          return q ? [symbol, q] : null;
-        })
-      );
-      for (const row of results) {
-        if (row) quotes[row[0]] = row[1];
-      }
-      if (i + chunkSize < symbolList.length) await delay(250);
-    }
-
-    if (Object.keys(quotes).length) {
-      document.dispatchEvent(new CustomEvent("radar:quotes", { detail: quotes }));
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(async () => {
-      try {
-        const res = await fetch(`${base}quotes.json`, { cache: "no-store" });
-        const data = await res.json();
-        if (!data.quotes || Object.keys(data.quotes).length === 0) {
-          fetchQuotesBatched(symbols);
-        }
-      } catch {
-        fetchQuotesBatched(symbols);
-      }
-    }, 3000);
-  });
-
-  document.addEventListener("radar:stale-quotes", () => {
-    if (isUsMarketOpen()) fetchQuotesBatched(symbols);
-  });
-
-  function isUsMarketOpen() {
-    const now = new Date();
-    const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
-    const day = et.getDay();
-    if (day === 0 || day === 6) return false;
-    const mins = et.getHours() * 60 + et.getMinutes();
-    return mins >= 9 * 60 + 30 && mins < 16 * 60;
-  }
-</script>

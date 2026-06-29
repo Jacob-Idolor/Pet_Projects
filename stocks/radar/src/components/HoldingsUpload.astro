@@ -35,63 +35,56 @@
   const STORE = "screenshots";
   const DB_VERSION = 1;
 
-  interface ScreenshotRecord {
-    id: string;
-    holder: string;
-    blob: Blob;
-    addedAt: number;
-  }
-
-  function openDb(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
+  function openDb() {
+    return new Promise(function (resolve, reject) {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = () => {
+      req.onupgradeneeded = function () {
         const db = req.result;
         if (!db.objectStoreNames.contains(STORE)) {
           db.createObjectStore(STORE, { keyPath: "id" });
         }
       };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
     });
   }
 
-  async function getAll(): Promise<ScreenshotRecord[]> {
+  async function getAll() {
     const db = await openDb();
-    return new Promise((resolve, reject) => {
+    return new Promise(function (resolve, reject) {
       const tx = db.transaction(STORE, "readonly");
       const req = tx.objectStore(STORE).getAll();
-      req.onsuccess = () => resolve(req.result as ScreenshotRecord[]);
-      req.onerror = () => reject(req.error);
+      req.onsuccess = function () { resolve(req.result || []); };
+      req.onerror = function () { reject(req.error); };
     });
   }
 
-  async function put(record: ScreenshotRecord): Promise<void> {
+  async function put(record) {
     const db = await openDb();
-    return new Promise((resolve, reject) => {
+    return new Promise(function (resolve, reject) {
       const tx = db.transaction(STORE, "readwrite");
       tx.objectStore(STORE).put(record);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(tx.error); };
     });
   }
 
-  async function remove(id: string): Promise<void> {
+  async function remove(id) {
     const db = await openDb();
-    return new Promise((resolve, reject) => {
+    return new Promise(function (resolve, reject) {
       const tx = db.transaction(STORE, "readwrite");
       tx.objectStore(STORE).delete(id);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(tx.error); };
     });
   }
 
-  async function removeByHolder(holder: string): Promise<void> {
+  async function removeByHolder(holder) {
     const all = await getAll();
-    await Promise.all(all.filter((r) => r.holder === holder).map((r) => remove(r.id)));
+    await Promise.all(all.filter(function (r) { return r.holder === holder; }).map(function (r) { return remove(r.id); }));
   }
 
-  function formatWhen(ts: number): string {
+  function formatWhen(ts) {
     return new Date(ts).toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
@@ -100,30 +93,30 @@
     });
   }
 
-  const holderInput = document.getElementById("holder-name") as HTMLInputElement;
-  const dropZone = document.getElementById("drop-zone")!;
-  const fileInput = document.getElementById("file-input") as HTMLInputElement;
-  const grid = document.getElementById("screenshot-grid")!;
-  const emptyEl = document.getElementById("empty-holdings")!;
-  const lightbox = document.getElementById("lightbox")!;
-  const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement;
-  const clearBtn = document.getElementById("clear-all-screenshots")!;
+  const holderInput = document.getElementById("holder-name");
+  const dropZone = document.getElementById("drop-zone");
+  const fileInput = document.getElementById("file-input");
+  const grid = document.getElementById("screenshot-grid");
+  const emptyEl = document.getElementById("empty-holdings");
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const clearBtn = document.getElementById("clear-all-screenshots");
 
   const savedName = localStorage.getItem("radar-holder-name");
-  if (savedName) holderInput.value = savedName;
-  holderInput.addEventListener("change", () => {
+  if (savedName && holderInput) holderInput.value = savedName;
+  holderInput?.addEventListener("change", function () {
     localStorage.setItem("radar-holder-name", holderInput.value.trim().toUpperCase());
   });
 
-  const objectUrls: string[] = [];
+  const objectUrls = [];
 
   async function renderGrid() {
-    objectUrls.forEach((u) => URL.revokeObjectURL(u));
+    objectUrls.forEach(function (u) { URL.revokeObjectURL(u); });
     objectUrls.length = 0;
-    grid.innerHTML = "";
+    if (grid) grid.innerHTML = "";
 
-    const records = (await getAll()).sort((a, b) => b.addedAt - a.addedAt);
-    emptyEl.hidden = records.length > 0;
+    const records = (await getAll()).sort(function (a, b) { return b.addedAt - a.addedAt; });
+    if (emptyEl) emptyEl.hidden = records.length > 0;
 
     for (const rec of records) {
       const url = URL.createObjectURL(rec.blob);
@@ -131,88 +124,65 @@
 
       const card = document.createElement("div");
       card.className = "screenshot-card";
-      card.innerHTML = `
-        <img src="${url}" alt="Holdings screenshot from ${rec.holder}" loading="lazy" />
-        <div class="screenshot-meta">
-          <div>
-            <span class="who">${rec.holder}</span>
-            <span class="when">${formatWhen(rec.addedAt)}</span>
-          </div>
-          <button type="button" aria-label="Delete screenshot">✕</button>
-        </div>
-      `;
+      card.innerHTML =
+        '<img src="' + url + '" alt="Holdings screenshot from ' + rec.holder + '" loading="lazy" />' +
+        '<div class="screenshot-meta"><div><span class="who">' + rec.holder + '</span>' +
+        '<span class="when">' + formatWhen(rec.addedAt) + '</span></div>' +
+        '<button type="button" aria-label="Delete screenshot">✕</button></div>';
 
-      card.querySelector("img")!.addEventListener("click", () => {
-        lightboxImg.src = url;
-        lightbox.classList.add("open");
-        lightbox.setAttribute("aria-hidden", "false");
+      card.querySelector("img")?.addEventListener("click", function () {
+        if (lightboxImg) lightboxImg.src = url;
+        lightbox?.classList.add("open");
+        lightbox?.setAttribute("aria-hidden", "false");
       });
 
-      card.querySelector("button")!.addEventListener("click", async (e) => {
+      card.querySelector("button")?.addEventListener("click", async function (e) {
         e.stopPropagation();
         await remove(rec.id);
         await renderGrid();
       });
 
-      grid.appendChild(card);
+      grid?.appendChild(card);
     }
   }
 
-  async function handleFiles(files: FileList | File[]) {
-    const holder = holderInput.value.trim().toUpperCase() || "?";
+  async function handleFiles(files) {
+    const holder = (holderInput?.value.trim().toUpperCase()) || "?";
     localStorage.setItem("radar-holder-name", holder);
 
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
-      await put({
-        id: crypto.randomUUID(),
-        holder,
-        blob: file,
-        addedAt: Date.now(),
-      });
+      await put({ id: crypto.randomUUID(), holder: holder, blob: file, addedAt: Date.now() });
     }
     await renderGrid();
   }
 
-  dropZone.addEventListener("click", () => fileInput.click());
-  dropZone.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      fileInput.click();
-    }
+  dropZone?.addEventListener("click", function () { fileInput?.click(); });
+  dropZone?.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput?.click(); }
   });
-
-  dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-  dropZone.addEventListener("drop", (e) => {
+  dropZone?.addEventListener("dragover", function (e) { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone?.addEventListener("dragleave", function () { dropZone.classList.remove("dragover"); });
+  dropZone?.addEventListener("drop", function (e) {
     e.preventDefault();
     dropZone.classList.remove("dragover");
     if (e.dataTransfer?.files.length) handleFiles(e.dataTransfer.files);
   });
-
-  fileInput.addEventListener("change", () => {
+  fileInput?.addEventListener("change", function () {
     if (fileInput.files?.length) handleFiles(fileInput.files);
     fileInput.value = "";
   });
-
-  clearBtn.addEventListener("click", async () => {
-    const holder = holderInput.value.trim().toUpperCase();
-    if (!holder) {
-      alert("Enter your initials first.");
-      return;
-    }
-    if (!confirm(`Delete all screenshots uploaded as "${holder}"?`)) return;
+  clearBtn?.addEventListener("click", async function () {
+    const holder = holderInput?.value.trim().toUpperCase();
+    if (!holder) { alert("Enter your initials first."); return; }
+    if (!confirm('Delete all screenshots uploaded as "' + holder + '"?')) return;
     await removeByHolder(holder);
     await renderGrid();
   });
-
-  lightbox.addEventListener("click", () => {
+  lightbox?.addEventListener("click", function () {
     lightbox.classList.remove("open");
     lightbox.setAttribute("aria-hidden", "true");
-    lightboxImg.src = "";
+    if (lightboxImg) lightboxImg.src = "";
   });
 
   renderGrid();
