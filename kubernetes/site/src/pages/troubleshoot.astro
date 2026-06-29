@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ScenarioCard from "../components/ScenarioCard.astro";
+import { scenarios, scenariosByType } from "../data/scenarios";
+---
+
+<BaseLayout title="Troubleshooting" description="Practice fixing real Docker and Kubernetes problems — simulated and on your local cluster.">
+  <section class="hero container">
+    <span class="badge">Debug like on-call</span>
+    <h1>Troubleshooting scenarios</h1>
+    <p class="lead">
+      Six guided scenarios covering Docker crashes, port mapping, CrashLoopBackOff,
+      broken Services, ImagePullBackOff, and Pending pods. Practice in the browser first,
+      then replay on your local kind cluster.
+    </p>
+  </section>
+
+  <section class="container prose">
+    <h2>Docker scenarios</h2>
+    <div class="card-grid">
+      {scenariosByType.docker.map((s) => <ScenarioCard scenario={s} />)}
+    </div>
+
+    <h2>Kubernetes scenarios</h2>
+    <div class="card-grid">
+      {scenariosByType.kubernetes.map((s) => <ScenarioCard scenario={s} />)}
+    </div>
+
+    <h2>Real cluster practice</h2>
+    <p>After the browser simulator, apply broken manifests on your kind cluster:</p>
+    <pre class="code-block"><code>{`kubectl create namespace troubleshoot
+kubectl config set-context --current --namespace=troubleshoot
+kubectl apply -f manifests/broken/scenario-01-crashloop.yaml
+# Fix it, then try scenario-02 through scenario-05`}</code></pre>
+    <p>Full write-up: <code>drills/troubleshooting-scenarios.md</code> in the repo.</p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/practice.html">kubectl simulator</a>
+      <a class="btn btn-secondary" href="/docker.html">docker simulator</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .code-block {
+    background: #0a0e12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+</style>

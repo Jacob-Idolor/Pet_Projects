@@ -1,6 +1,6 @@
 ---
 interface Props {
-  cluster?: "default" | "lab02" | "broken" | "crash" | "imagepull" | "pending";
+  cluster?: "default" | "exited" | "wrongport";
   missionId?: string;
   height?: string;
 }
@@ -8,40 +8,34 @@ interface Props {
 const { cluster = "default", missionId, height = "320px" } = Astro.props;
 ---
 
-<div class="terminal-wrap" data-terminal data-cluster={cluster} data-mission={missionId ?? ""} style={`min-height: ${height}`}>
+<div class="terminal-wrap" data-docker-terminal data-cluster={cluster} data-mission={missionId ?? ""} style={`min-height: ${height}`}>
   <div class="terminal-header">
     <span class="dot red"></span>
     <span class="dot yellow"></span>
     <span class="dot green"></span>
-    <span class="terminal-title">kubectl simulator — browser only (no real cluster)</span>
+    <span class="terminal-title">docker simulator — browser only (no daemon)</span>
   </div>
   <div class="terminal-output" data-output></div>
   <form class="terminal-input-row" data-form>
     <span class="prompt">$</span>
-    <input type="text" data-input autocomplete="off" spellcheck="false" placeholder="kubectl get pods" />
+    <input type="text" data-input autocomplete="off" spellcheck="false" placeholder="docker ps" />
   </form>
 </div>
 
 <script>
   import {
-    runKubectl,
-    defaultCluster,
-    lab02Cluster,
-    brokenEndpointsCluster,
-    crashLoopCluster,
-    imagePullCluster,
-    pendingCluster,
-    missions,
-  } from "../lib/kubectl-sim";
+    runDocker,
+    defaultDocker,
+    exitedDocker,
+    wrongPortDocker,
+    dockerMissions,
+  } from "../lib/docker-sim";
 
   function loadCluster(kind: string) {
     switch (kind) {
-      case "lab02": return lab02Cluster();
-      case "broken": return brokenEndpointsCluster();
-      case "crash": return crashLoopCluster();
-      case "imagepull": return imagePullCluster();
-      case "pending": return pendingCluster();
-      default: return defaultCluster();
+      case "exited": return exitedDocker();
+      case "wrongport": return wrongPortDocker();
+      default: return defaultDocker();
     }
   }
 
@@ -55,7 +49,7 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
     let state = loadCluster(clusterKind);
     const history: string[] = [];
     let histIdx = -1;
-    const completedMissions = new Set(JSON.parse(localStorage.getItem("k8s-missions") || "[]"));
+    const completedMissions = new Set(JSON.parse(localStorage.getItem("docker-missions") || "[]"));
 
     function writeln(text: string, className = "") {
       const line = document.createElement("div");
@@ -70,9 +64,8 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
       text.split("\n").forEach((l) => writeln(l));
     }
 
-    writeln("Simulated cluster ready. No install required — practice kubectl in your browser.", "muted");
-    writeln(`Namespace: ${state.namespace} | Cluster: ${clusterKind}`, "muted");
-    writeln("Try: kubectl get pods", "muted");
+    writeln("Simulated Docker ready. Practice container commands in your browser.", "muted");
+    writeln(`Scenario: ${clusterKind} | Try: docker ps`, "muted");
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -82,25 +75,24 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
       history.push(cmd);
       histIdx = history.length;
 
-      const result = runKubectl(state, cmd);
+      const result = runDocker(state, cmd);
       state = result.state;
       print(result.output);
 
-      missions.forEach((m) => {
-        if (m.cluster === clusterKind || (!m.cluster && clusterKind === "default")) {
-          if (m.validate(cmd) && !completedMissions.has(m.id)) {
-            completedMissions.add(m.id);
-            localStorage.setItem("k8s-missions", JSON.stringify([...completedMissions]));
-            writeln(`✓ Mission complete: ${m.title}`, "success");
-          }
+      dockerMissions.forEach((m) => {
+        const clusterMatch = !m.cluster || m.cluster === clusterKind;
+        if (clusterMatch && m.validate(cmd) && !completedMissions.has(m.id)) {
+          completedMissions.add(m.id);
+          localStorage.setItem("docker-missions", JSON.stringify([...completedMissions]));
+          writeln(`✓ Mission complete: ${m.title}`, "success");
         }
       });
 
       if (missionId) {
-        const mission = missions.find((m) => m.id === missionId);
+        const mission = dockerMissions.find((m) => m.id === missionId);
         if (mission?.validate(cmd)) {
-          localStorage.setItem(`k8s-module-${missionId}`, "done");
-          writeln("✓ Module practice goal met!", "success");
+          localStorage.setItem(`docker-module-${missionId}`, "done");
+          writeln("✓ Practice goal met!", "success");
         }
       }
 
@@ -125,7 +117,7 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
     });
   }
 
-  document.querySelectorAll("[data-terminal]").forEach((el) => initTerminal(el as HTMLElement));
+  document.querySelectorAll("[data-docker-terminal]").forEach((el) => initTerminal(el as HTMLElement));
 </script>
 
 <style>
@@ -170,7 +162,7 @@ const { cluster = "default", missionId, height = "320px" } = Astro.props;
     border-top: 1px solid var(--border);
     background: #0d1117;
   }
-  .prompt { color: var(--success); }
+  .prompt { color: #38bdf8; }
   .terminal-input-row input {
     flex: 1;
     background: transparent;

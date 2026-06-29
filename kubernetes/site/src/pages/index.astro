@@ -2,20 +2,21 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
 import ConceptDiagram from "../components/ConceptDiagram.astro";
+import DockerPipelineDiagram from "../components/DockerPipelineDiagram.astro";
 ---
 
 <BaseLayout title="Home">
-  <section class="hero container">
-    <span class="badge">Learn · Practice · Deploy</span>
-    <h1>Your Kubernetes learning lab</h1>
+  <section class="hero container hero-gradient">
+    <span class="badge">Open source · Resume-ready · Shareable</span>
+    <h1>Your Kubernetes & Docker learning lab</h1>
     <p class="lead">
-      Interactive modules and a kubectl simulator in the browser — plus a real local cluster
-      when you're ready. Host the site on AWS for ~$1–5/mo. Everything in one repo.
+      Interactive modules, Docker and kubectl simulators, troubleshooting scenarios,
+      and real hands-on labs — run in the browser or on localhost. Host on AWS when you're ready to share.
     </p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="/learn.html">Start learning</a>
-      <a class="btn btn-secondary" href="/practice.html">kubectl simulator</a>
-      <a class="btn btn-secondary" href="/get-started.html">Get started</a>
+      <a class="btn btn-primary" href="/docker.html">Start with Docker</a>
+      <a class="btn btn-secondary" href="/learn.html">Kubernetes modules</a>
+      <a class="btn btn-secondary" href="/troubleshoot.html">Troubleshoot</a>
     </div>
   </section>
 
@@ -24,35 +25,57 @@ import ConceptDiagram from "../components/ConceptDiagram.astro";
   </section>
 
   <section class="container">
+    <DockerPipelineDiagram />
+  </section>
+
+  <section class="container">
     <ConceptDiagram />
   </section>
 
   <section class="container card-grid">
-    <article class="card">
-      <h3>📖 7 modules</h3>
-      <p>Containers → Pods → Deployments → Config → Networking → Storage → Production.</p>
+    <article class="card card-highlight">
+      <h3>🐳 Docker simulator</h3>
+      <p>docker ps, logs, inspect, build — container fundamentals with guided missions.</p>
+      <a class="btn btn-primary card-link" href="/docker.html">Practice Docker →</a>
     </article>
     <article class="card">
-      <h3>💻 Simulated kubectl</h3>
-      <p>Practice get, describe, logs, endpoints — CrashLoopBackOff and broken Services.</p>
+      <h3>📖 7 K8s modules</h3>
+      <p>Pods → Deployments → Config → Networking → Storage → Production patterns.</p>
     </article>
     <article class="card">
-      <h3>🖥️ Local cluster</h3>
-      <p>kind on localhost. Seven guided labs with real YAML and debugging scenarios.</p>
+      <h3>🔧 6 troubleshoot scenarios</h3>
+      <p>CrashLoop, ImagePull, Pending, broken endpoints, exited containers, wrong ports.</p>
     </article>
     <article class="card">
-      <h3>☁️ AWS hosting</h3>
-      <p>Terraform for S3 + CloudFront. Publish the site — no EKS bill.</p>
+      <h3>🖥️ Local + AWS</h3>
+      <p>kind cluster for real YAML labs. Terraform for S3 + CloudFront hosting.</p>
     </article>
   </section>
 
   <section class="container">
     <div class="callout">
       <p>
-        <strong>Recommended flow:</strong> Learn in the browser → quiz yourself → run
-        <code>make local-lab</code> in the repo for real hands-on → break and fix scenarios in
-        <code>manifests/broken/</code>.
+        <strong>Learning loop:</strong> Browser simulator → quiz → <code>make docker-lab</code> →
+        <code>make local-lab</code> → break/fix scenarios → track in Progress.
       </p>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .hero-gradient {
+    background: radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 1rem;
+  }
+  .card-highlight {
+    border-color: #38bdf8;
+    background: linear-gradient(135deg, var(--surface) 0%, #121a28 100%);
+  }
+  .card-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+  }
+</style>

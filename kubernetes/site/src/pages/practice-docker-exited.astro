@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import DockerTerminal from "../components/DockerTerminal.astro";
+---
+
+<BaseLayout title="Practice — Exited container">
+  <section class="hero container prose">
+    <h1>Scenario: container exited immediately</h1>
+    <p class="lead">
+      The <code>api</code> container crashed on startup. Use <code>docker ps -a</code>,
+      <code>docker logs api</code>, and <code>docker inspect</code> to find why.
+    </p>
+  </section>
+  <section class="container">
+    <DockerTerminal cluster="exited" height="380px" />
+  </section>
+  <section class="container prose">
+    <div class="callout">
+      <p><strong>Fix:</strong> Logs show missing <code>DATABASE_URL</code>. Pass env at run time: <code>docker run -e DATABASE_URL=... myapp:1.0</code></p>
+    </div>
+  </section>
+</BaseLayout>

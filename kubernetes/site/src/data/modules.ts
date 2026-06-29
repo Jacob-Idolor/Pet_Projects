@@ -11,7 +11,8 @@ export interface Module {
   subtitle: string;
   time: string;
   order: number;
-  cluster: "default" | "lab02" | "broken" | "crash";
+  cluster: "default" | "lab02" | "broken" | "crash" | "imagepull" | "pending";
+  terminal?: "docker" | "kubectl";
   sections: { heading: string; body: string }[];
   quiz: QuizQ[];
   practiceGoal: string;
@@ -21,10 +22,11 @@ export const modules: Module[] = [
   {
     id: "containers",
     title: "Containers & Docker",
-    subtitle: "Images, containers, and why Kubernetes exists",
-    time: "20 min",
+    subtitle: "Images, containers, Dockerfile best practices — the foundation of Kubernetes",
+    time: "35 min",
     order: 1,
     cluster: "default",
+    terminal: "docker",
     sections: [
       {
         heading: "What is a container?",
@@ -35,15 +37,45 @@ export const modules: Module[] = [
         body: "<strong>Image</strong> = immutable template (layers). <strong>Container</strong> = running copy. You build once, run many times. Registry stores images (Docker Hub, ECR, GHCR).",
       },
       {
+        heading: "The build pipeline",
+        body: "<code>Dockerfile</code> → <code>docker build -t myapp:1.0 .</code> → Image → <code>docker run -p 8080:8080 myapp:1.0</code> → Container. Kubernetes pulls the same image into Pods.",
+      },
+      {
+        heading: "Essential Docker commands",
+        body: "<code>docker ps</code> / <code>docker ps -a</code> — running vs all containers<br><code>docker logs NAME</code> — stdout/stderr<br><code>docker inspect NAME</code> — config, exit code, ports<br><code>docker images</code> — local images<br><code>docker build -t TAG .</code> — build from Dockerfile",
+      },
+      {
+        heading: "Dockerfile best practices",
+        body: "Pin tags (not <code>latest</code> in prod). Multi-stage builds for smaller images. Non-root <code>USER</code>. <code>.dockerignore</code> to exclude junk. Never put secrets in layers — use runtime env or K8s Secrets.",
+      },
+      {
+        heading: "Debugging containers",
+        body: "Container gone from <code>docker ps</code>? Use <code>docker ps -a</code>. Crashed? <code>docker logs</code> then <code>docker inspect --format='{{.State.ExitCode}}'</code>. Wrong port? Check PORTS column — <code>-p HOST:CONTAINER</code>.",
+      },
+      {
         heading: "Why Kubernetes?",
         body: "Docker runs one container. Production needs dozens or thousands — restart failures, roll out updates, expose services, mount storage. Kubernetes orchestrates containers across machines.",
       },
-      {
-        heading: "Professional mindset",
-        body: "Pin image tags (not <code>latest</code> in prod). Use multi-stage builds. Never put secrets in images. Health checks matter — Kubernetes uses probes for the same reason.",
-      },
     ],
     quiz: [
+      {
+        question: "What does docker build -t myapp:1.0 . do?",
+        options: ["Runs a container", "Builds an image tagged myapp:1.0 from the Dockerfile in the current directory", "Pushes to Docker Hub", "Creates a Kubernetes Pod"],
+        correct: 1,
+        explain: "build creates an image from a Dockerfile; -t sets the name:tag.",
+      },
+      {
+        question: "What does -p 8080:80 mean in docker run?",
+        options: ["Container port 8080 maps to host 80", "Host port 8080 maps to container port 80", "Both ports must be 8080", "Enables HTTPS"],
+        correct: 1,
+        explain: "Format is host:container — traffic to localhost:8080 reaches port 80 inside the container.",
+      },
+      {
+        question: "Why use multi-stage Docker builds?",
+        options: ["Faster docker run", "Smaller final image — build tools stay in earlier stages", "Required by Kubernetes", "Enables root access"],
+        correct: 1,
+        explain: "Compile in a builder stage; copy only the binary to the runtime image.",
+      },
       {
         question: "What is the smallest deployable unit in Kubernetes?",
         options: ["Container", "Pod", "Deployment", "Node"],
@@ -57,7 +89,7 @@ export const modules: Module[] = [
         explain: "K8s adds scheduling, self-healing, service discovery, and declarative rollouts.",
       },
     ],
-    practiceGoal: "Run kubectl get nodes and kubectl get pods to see your simulated cluster.",
+    practiceGoal: "Switch to the Docker tab on /docker.html — run docker ps, docker images, and docker logs web.",
   },
   {
     id: "pods",

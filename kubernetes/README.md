@@ -19,7 +19,8 @@ cd kubernetes
 
 make help          # all targets
 make site-dev      # browser learning @ localhost:4321
-make local-lab     # kind cluster + Lab 01 instructions
+make docker-lab    # build & run sample container
+make local-lab     # kind cluster + Lab instructions
 make aws-deploy    # build site → S3 (after terraform apply)
 ```
 

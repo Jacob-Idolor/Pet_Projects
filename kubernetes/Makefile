@@ -1,7 +1,7 @@
 # Kubernetes Learning Lab — common commands
 # Run from kubernetes/ : make help
 
-.PHONY: help site-dev site-build site-preview local-up local-down local-status local-lab aws-init aws-plan aws-apply aws-deploy aws-destroy check-tools
+.PHONY: help site-dev site-build site-preview local-up local-down local-status local-lab docker-lab check-docker aws-init aws-plan aws-apply aws-deploy aws-destroy check-tools
 
 AWS_PROFILE ?= pet-projects
 SITE_DIR    := site
@@ -22,6 +22,10 @@ help:
 	@echo "    make local-down     Delete kind cluster"
 	@echo "    make local-status   Show cluster nodes and contexts"
 	@echo "    make local-lab      Start cluster + print Lab 01 instructions"
+	@echo ""
+	@echo "  Docker (containerization practice):"
+	@echo "    make check-docker   Verify docker is installed"
+	@echo "    make docker-lab     Build sample app, run, health-check"
 	@echo ""
 	@echo "  AWS (host learning site on S3 + CloudFront, ~\$$1–5/mo):"
 	@echo "    make aws-init       terraform init"
@@ -57,6 +61,13 @@ local-status:
 
 local-lab: local-up
 	bash $(SCRIPTS_DIR)/bootstrap-lab.sh
+
+check-docker:
+	@command -v docker >/dev/null || { echo "Missing: docker — https://docs.docker.com/get-docker/"; exit 1; }
+	@echo "Docker found."
+
+docker-lab: check-docker
+	bash $(SCRIPTS_DIR)/docker-lab.sh
 
 aws-init:
 	cd $(INFRA_DIR) && terraform init

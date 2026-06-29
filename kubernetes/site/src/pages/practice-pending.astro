@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import KubectlTerminal from "../components/KubectlTerminal.astro";
+---
+
+<BaseLayout title="Practice — Pod Pending">
+  <section class="hero container prose">
+    <h1>Scenario: Pod stuck Pending</h1>
+    <p class="lead">
+      <code>hungry-pod</code> requests 100 CPU and 64Gi memory — more than the node has.
+      Use <code>kubectl describe pod hungry-pod</code> and read Events.
+    </p>
+  </section>
+  <section class="container">
+    <KubectlTerminal cluster="pending" height="380px" />
+  </section>
+  <section class="container prose">
+    <div class="callout">
+      <p><strong>Fix:</strong> Lower <code>resources.requests</code> in the manifest to fit your node. On local kind, use realistic values like <code>cpu: 100m</code>.</p>
+    </div>
+  </section>
+</BaseLayout>

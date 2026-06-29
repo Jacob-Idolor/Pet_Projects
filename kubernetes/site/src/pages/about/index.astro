@@ -1,35 +1,46 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ConceptDiagram from "../../components/ConceptDiagram.astro";
+import DockerPipelineDiagram from "../../components/DockerPipelineDiagram.astro";
 ---
 
 <BaseLayout title="About">
   <section class="hero container prose">
     <h1>About K8s Practice Lab</h1>
     <p class="lead">
-      A complete learning environment for <strong>containers and Kubernetes</strong> —
-      browser-based lessons plus optional real cluster practice on localhost.
+      An open-source, portfolio-grade learning platform for <strong>Docker, containers, and Kubernetes</strong>.
+      Built for consistent daily practice — share it, fork it, or host it on AWS.
     </p>
+
+    <h2>What makes this resume-worthy</h2>
+    <ul>
+      <li><strong>Full stack learning product</strong> — Astro static site, browser simulators, progress tracking</li>
+      <li><strong>Dual-path infrastructure</strong> — localhost kind cluster + Terraform AWS hosting</li>
+      <li><strong>Real-world debugging</strong> — 6 troubleshooting scenarios (Docker + Kubernetes)</li>
+      <li><strong>Containerization best practices</strong> — multi-stage builds, non-root, health checks</li>
+      <li><strong>Open source</strong> — others can clone, run <code>make site-dev</code>, and practice for free</li>
+    </ul>
 
     <h2>Three modes, one repo</h2>
     <ul>
-      <li><strong>Browser</strong> — 7 modules, quizzes, simulated kubectl (no install)</li>
-      <li><strong>Localhost</strong> — kind cluster + guided labs with real YAML</li>
+      <li><strong>Browser</strong> — Docker + kubectl simulators, modules, quizzes, troubleshoot hub</li>
+      <li><strong>Localhost</strong> — kind cluster + 8 guided labs with real YAML</li>
       <li><strong>AWS</strong> — optional Terraform to host the site on S3 + CloudFront</li>
     </ul>
 
+    <DockerPipelineDiagram />
     <ConceptDiagram />
 
-    <h2>Simulation vs real clusters</h2>
+    <h2>For contributors & learners</h2>
     <p>
-      The simulator teaches <em>what</em> commands do and <em>why</em>. The local kind cluster
-      gives you the real feel — latency, port-forwards, actual logs. Use both.
+      Clone the repo, run <code>make site-dev</code> for browser practice or <code>make docker-lab</code> +
+      <code>make local-lab</code> for hands-on work. No paid cloud Kubernetes required.
     </p>
 
     <h2>Built in public</h2>
     <p>
       Open source on <a href="https://github.com/Jacob-Idolor/Pet_Projects">GitHub</a>.
-      Fork it, run <code>make local-lab</code>, host your own copy on AWS, improve it, share it.
+      Fork it, host your own copy, improve it, share it.
     </p>
   </section>
 </BaseLayout>

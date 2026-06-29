@@ -6,29 +6,80 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <section class="hero container prose">
     <h1>Your progress</h1>
     <p class="lead">Saved in your browser — no account required.</p>
-    <ul id="progress-list" data-progress>
-      <li>Loading…</li>
-    </ul>
+
+    <h2>Kubernetes modules</h2>
+    <ul id="module-progress" data-modules></ul>
+
+    <h2>Docker missions</h2>
+    <ul id="docker-progress" data-docker></ul>
+
+    <h2>Kubectl missions</h2>
+    <p id="kubectl-missions" data-kubectl-missions></p>
+
+    <h2>Troubleshooting scenarios</h2>
+    <p class="muted">Complete scenarios in the browser, then on your local cluster. Track in <code>PROGRESS.md</code> in the repo.</p>
+    <ul id="scenario-list" class="scenario-checklist"></ul>
+
     <p class="muted">Clear browser data resets progress.</p>
   </section>
 </BaseLayout>
 
 <script>
   const modules = ["containers", "pods", "deployments", "config", "networking", "storage", "production"];
-  const list = document.querySelector("[data-progress]")!;
-  const missions = JSON.parse(localStorage.getItem("k8s-missions") || "[]");
-  const items: string[] = [];
+  const moduleLabels: Record<string, string> = {
+    containers: "Containers & Docker",
+    pods: "Pods",
+    deployments: "Deployments & Services",
+    config: "Config & Secrets",
+    networking: "Networking & Ingress",
+    storage: "Storage & RBAC",
+    production: "Production patterns",
+  };
 
-  modules.forEach((id) => {
-    const quiz = localStorage.getItem(`k8s-quiz-${id}`) === "passed" ? "✓" : "○";
-    items.push(`${quiz} Module: ${id}`);
-  });
+  const moduleList = document.querySelector("[data-modules]")!;
+  moduleList.innerHTML = modules
+    .map((id) => {
+      const quiz = localStorage.getItem(`k8s-quiz-${id}`) === "passed" ? "✓" : "○";
+      return `<li>${quiz} ${moduleLabels[id] || id}</li>`;
+    })
+    .join("");
 
-  items.push("", `Missions completed: ${missions.length}`);
-  list.innerHTML = items.map((i) => (i ? `<li>${i}</li>` : "<li><br></li>")).join("");
+  const dockerMissionIds = ["d1", "d2", "d3", "d4", "d5", "d6"];
+  const dockerLabels: Record<string, string> = {
+    d1: "List running containers",
+    d2: "View container logs",
+    d3: "List local images",
+    d4: "Find exit code",
+    d5: "See stopped containers",
+    d6: "Check port mapping",
+  };
+  const completedDocker = JSON.parse(localStorage.getItem("docker-missions") || "[]") as string[];
+  const dockerList = document.querySelector("[data-docker]")!;
+  dockerList.innerHTML = dockerMissionIds
+    .map((id) => {
+      const done = completedDocker.includes(id) ? "✓" : "○";
+      return `<li>${done} ${dockerLabels[id] || id}</li>`;
+    })
+    .join("");
+
+  const kubectlMissions = JSON.parse(localStorage.getItem("k8s-missions") || "[]");
+  const kubectlEl = document.querySelector("[data-kubectl-missions]")!;
+  kubectlEl.textContent = `${kubectlMissions.length} / 4 kubectl missions completed`;
+
+  const scenarios = [
+    "Docker: exited container",
+    "Docker: wrong port",
+    "K8s: CrashLoopBackOff",
+    "K8s: no endpoints",
+    "K8s: ImagePullBackOff",
+    "K8s: Pod Pending",
+  ];
+  const scenarioList = document.querySelector("#scenario-list")!;
+  scenarioList.innerHTML = scenarios.map((s) => `<li>○ ${s} — <a href="/troubleshoot.html">practice</a></li>`).join("");
 </script>
 
 <style>
   .muted { color: var(--muted); font-size: 0.9rem; }
-  #progress-list { line-height: 1.8; }
+  ul { line-height: 1.8; }
+  .scenario-checklist a { font-size: 0.9rem; }
 </style>

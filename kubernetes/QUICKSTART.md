@@ -9,18 +9,19 @@ cd kubernetes
 make site-dev
 ```
 
-Open http://localhost:4321 → **Learn** → **Practice**
+Open http://localhost:4321 → **Docker** → **Learn** → **Troubleshoot**
 
-## I want real kubectl on my machine
+## I want real Docker + kubectl on my machine
 
 **Prerequisites:** Docker, kubectl, kind
 
 ```bash
 cd kubernetes
-make local-lab          # creates kind cluster "practice"
+make docker-lab          # build & run sample container
+make local-lab           # kind cluster for Kubernetes labs
 ```
 
-Then open [labs/lab-01-first-pod/README.md](labs/lab-01-first-pod/README.md).
+Start with [labs/lab-00-docker/README.md](labs/lab-00-docker/README.md), then Lab 01.
 
 ```bash
 kubectl create namespace lab-01
@@ -49,9 +50,10 @@ See [infra/README.md](infra/README.md) for safeguards and cost (~$1–5/mo).
 
 | Folder | What it is |
 |--------|------------|
-| `site/` | Learning website (Astro) — modules, simulator, quizzes |
-| `scripts/` | Local kind cluster setup/teardown |
-| `labs/` | Step-by-step hands-on exercises (real cluster) |
+| `site/` | Learning website — Docker + kubectl simulators, modules, troubleshoot hub |
+| `docker/` | Sample app + containerization exercises |
+| `scripts/` | Local kind cluster + `docker-lab` bootstrap |
+| `labs/` | Lab 00 (Docker) + 7 Kubernetes hands-on exercises |
 | `manifests/` | YAML examples + broken scenarios to debug |
 | `drills/` | Command cheat sheets and troubleshooting practice |
 | `curriculum/` | Deep-dive reading material |

@@ -18,20 +18,21 @@ import ConceptDiagram from "../components/ConceptDiagram.astro";
 
   <section class="container prose">
     <h2>Path A — Browser only (fastest)</h2>
-    <p>No Docker, no kubectl, no AWS. Learn concepts and practice simulated commands.</p>
+    <p>No Docker daemon, no kubectl, no AWS. Learn concepts and practice simulated commands.</p>
     <ol>
       <li><code>cd kubernetes && make site-dev</code></li>
       <li>Open <a href="http://localhost:4321">http://localhost:4321</a></li>
-      <li>Work through <a href="/learn.html">Learn</a> → <a href="/practice.html">Practice</a></li>
+      <li>Start with <a href="/docker.html">Docker fundamentals</a> → <a href="/learn.html">Kubernetes modules</a></li>
+      <li>Debug scenarios on <a href="/troubleshoot.html">Troubleshoot</a></li>
     </ol>
 
-    <h2>Path B — Local cluster (recommended for real practice)</h2>
-    <p>Run a lightweight <strong>kind</strong> cluster on your machine. Same kubectl commands as production.</p>
+    <h2>Path B — Local practice (recommended)</h2>
+    <p>Real Docker and kind cluster on your machine.</p>
     <ol>
       <li>Install <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener">Docker</a>, <a href="https://kubernetes.io/docs/tasks/tools/" target="_blank" rel="noopener">kubectl</a>, and <a href="https://kind.sigs.k8s.io/" target="_blank" rel="noopener">kind</a></li>
-      <li><code>cd kubernetes && make local-lab</code></li>
-      <li>Start <a href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-01-first-pod" target="_blank" rel="noopener">Lab 01 — First pod</a></li>
-      <li>Use <code>drills/kubectl-commands.md</code> for spaced repetition</li>
+      <li><code>make docker-lab</code> — build and run the sample container</li>
+      <li><code>make local-lab</code> — kind cluster for Kubernetes</li>
+      <li><a href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/kubernetes/labs/lab-00-docker" target="_blank" rel="noopener">Lab 00 — Docker</a> then Lab 01</li>
     </ol>
     <p>See <code>kubernetes/SETUP.md</code> in the repo for Docker Desktop K8s, minikube, and OpenShift alternatives.</p>
 
@@ -47,17 +48,17 @@ import ConceptDiagram from "../components/ConceptDiagram.astro";
     <h2>Suggested learning loop</h2>
     <div class="callout">
       <p>
-        <strong>Read</strong> a module in the browser →
-        <strong>Quiz</strong> yourself →
-        <strong>Simulate</strong> kubectl on the Practice page →
-        <strong>Apply</strong> the same concepts in a local lab →
-        <strong>Break things</strong> with <code>manifests/broken/</code> scenarios.
+        <strong>Read</strong> Docker + a K8s module →
+        <strong>Quiz</strong> →
+        <strong>Simulate</strong> in browser →
+        <strong>make docker-lab</strong> + <strong>make local-lab</strong> →
+        <strong>Troubleshoot</strong> scenarios.
       </p>
     </div>
 
     <div class="cta-row">
-      <a class="btn btn-primary" href="/learn.html">Start learning</a>
-      <a class="btn btn-secondary" href="/practice.html">Open simulator</a>
+      <a class="btn btn-primary" href="/docker.html">Start with Docker</a>
+      <a class="btn btn-secondary" href="/troubleshoot.html">Troubleshoot</a>
     </div>
   </section>
 </BaseLayout>

@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import KubectlTerminal from "../components/KubectlTerminal.astro";
 import AdSlot from "../components/AdSlot.astro";
 import { missions } from "../lib/kubectl-sim";
+import { scenariosByType } from "../data/scenarios";
 ---
 
 <BaseLayout title="Practice" description="Simulated kubectl terminal — practice Kubernetes commands in your browser, no install.">
@@ -10,7 +11,7 @@ import { missions } from "../lib/kubectl-sim";
     <h1>Practice kubectl</h1>
     <p class="lead">
       A <strong>simulated cluster</strong> in your browser. Learn commands, debug scenarios, and build muscle memory —
-      no Docker, no kind, no downloads. When you're ready for production, you'll understand what each command does.
+      then replay on a real local cluster with <code>make local-lab</code>.
     </p>
   </section>
 
@@ -30,21 +31,22 @@ import { missions } from "../lib/kubectl-sim";
       ))}
     </div>
 
-    <h2>Scenario clusters</h2>
-    <p>Switch cluster state to practice different situations:</p>
+    <h2>Kubernetes scenarios</h2>
+    <p>Practice common on-call problems — or see all scenarios on the <a href="/troubleshoot.html">Troubleshoot hub</a>.</p>
     <div class="cta-row">
       <a class="btn btn-secondary" href="/practice.html">Default cluster</a>
-      <a class="btn btn-secondary" href="/practice-broken.html">Broken endpoints</a>
       <a class="btn btn-secondary" href="/practice-crash.html">CrashLoopBackOff</a>
+      <a class="btn btn-secondary" href="/practice-broken.html">Broken endpoints</a>
+      <a class="btn btn-secondary" href="/practice-imagepull.html">ImagePullBackOff</a>
+      <a class="btn btn-secondary" href="/practice-pending.html">Pod Pending</a>
     </div>
 
     <AdSlot slot="practice-bottom" />
 
     <div class="callout">
       <p>
-        <strong>Next step — real cluster:</strong> Clone the repo and run
-        <code>make local-lab</code> for a kind cluster on localhost.
-        See <a href="/get-started.html">Get started</a> for the full path.
+        <strong>Also practice Docker:</strong> <a href="/docker.html">Docker fundamentals</a> has its own simulator
+        for <code>docker ps</code>, <code>logs</code>, and container debugging.
       </p>
     </div>
   </section>

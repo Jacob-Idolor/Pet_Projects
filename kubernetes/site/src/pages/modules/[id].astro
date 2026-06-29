@@ -1,8 +1,10 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import KubectlTerminal from "../../components/KubectlTerminal.astro";
+import DockerTerminal from "../../components/DockerTerminal.astro";
 import Quiz from "../../components/Quiz.astro";
 import AdSlot from "../../components/AdSlot.astro";
+import DockerPipelineDiagram from "../../components/DockerPipelineDiagram.astro";
 import { modules, getModule } from "../../data/modules";
 
 export function getStaticPaths() {
@@ -33,12 +35,20 @@ const next = modules.find((m) => m.order === mod.order + 1);
 
     <AdSlot slot={`module-${mod.id}-mid`} />
 
+    {mod.id === "containers" && (
+      <DockerPipelineDiagram />
+    )}
+
     <h2>Practice goal</h2>
     <p>{mod.practiceGoal}</p>
   </section>
 
   <section class="container">
-    <KubectlTerminal cluster={mod.cluster} height="360px" />
+    {mod.terminal === "docker" ? (
+      <DockerTerminal cluster="default" height="360px" />
+    ) : (
+      <KubectlTerminal cluster={mod.cluster} height="360px" />
+    )}
   </section>
 
   <section class="container prose">
