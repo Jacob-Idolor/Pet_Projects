@@ -210,3 +210,19 @@ nav a:hover {
 .prose li {
   margin-bottom: 0.35rem;
 }
+
+.back-link-wrap {
+  padding-top: 1rem;
+  padding-bottom: 0;
+}
+
+.back-link {
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}

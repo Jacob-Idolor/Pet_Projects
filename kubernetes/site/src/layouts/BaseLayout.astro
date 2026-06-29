@@ -4,7 +4,8 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "Learn Kubernetes and containers in your browser — simulated practice, no install required." } = Astro.props;
+const { title, description = "Choose a lab — Docker, Kubernetes, troubleshooting, or local cluster practice." } = Astro.props;
+const isHub = Astro.url.pathname === "/" || Astro.url.pathname === "/index.html";
 ---
 
 <!doctype html>
@@ -21,19 +22,20 @@ const { title, description = "Learn Kubernetes and containers in your browser �
   <body>
     <header class="site-header">
       <div class="container">
-        <a class="logo" href="/">☸ K8s Practice Lab</a>
+        <a class="logo" href="/">☸ Lab Hub</a>
         <nav>
-          <a href="/learn.html">Learn</a>
-          <a href="/docker.html">Docker</a>
-          <a href="/practice.html">Practice</a>
-          <a href="/troubleshoot.html">Troubleshoot</a>
-          <a href="/get-started.html">Get started</a>
+          <a href="/">Labs</a>
           <a href="/progress.html">Progress</a>
           <a href="/about.html">About</a>
         </nav>
       </div>
     </header>
     <main>
+      {!isHub && (
+        <div class="container back-link-wrap">
+          <a href="/" class="back-link">← Lab Hub</a>
+        </div>
+      )}
       <slot />
     </main>
     <footer class="site-footer">

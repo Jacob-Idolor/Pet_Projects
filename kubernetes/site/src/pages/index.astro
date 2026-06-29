@@ -1,81 +1,132 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import AdSlot from "../components/AdSlot.astro";
-import ConceptDiagram from "../components/ConceptDiagram.astro";
-import DockerPipelineDiagram from "../components/DockerPipelineDiagram.astro";
+import LabCard from "../components/LabCard.astro";
+import { labs, filters } from "../data/lab-hub";
 ---
 
-<BaseLayout title="Home">
-  <section class="hero container hero-gradient">
-    <span class="badge">Open source · Resume-ready · Shareable</span>
-    <h1>Your Kubernetes & Docker learning lab</h1>
-    <p class="lead">
-      Interactive modules, Docker and kubectl simulators, troubleshooting scenarios,
-      and real hands-on labs — run in the browser or on localhost. Host on AWS when you're ready to share.
-    </p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="/docker.html">Start with Docker</a>
-      <a class="btn btn-secondary" href="/learn.html">Kubernetes modules</a>
-      <a class="btn btn-secondary" href="/troubleshoot.html">Troubleshoot</a>
+<BaseLayout title="Lab Hub" description="Choose a lab — Docker, Kubernetes, troubleshooting, or local cluster practice.">
+  <section class="hero container hub-hero">
+    <h1>Lab Hub</h1>
+    <p class="lead">Pick a lab and start practicing. Everything lives here — browser simulators, modules, debug scenarios, and local cluster guides.</p>
+    <p class="hub-stats">{labs.length} labs · Browser or local · Progress saved automatically</p>
+  </section>
+
+  <section class="container">
+    <div class="filter-bar" role="tablist">
+      {filters.map((f, i) => (
+        <button
+          type="button"
+          class={`filter-btn${i === 0 ? " active" : ""}`}
+          data-filter={f.id}
+          role="tab"
+        >
+          {f.label}
+        </button>
+      ))}
     </div>
+
+    <div class="lab-grid" id="lab-grid">
+      {labs.map((lab) => <LabCard lab={lab} />)}
+    </div>
+
+    <p class="empty-msg" id="empty-msg" hidden>No labs in this category.</p>
   </section>
 
-  <section class="container">
-    <AdSlot slot="home-top" />
-  </section>
-
-  <section class="container">
-    <DockerPipelineDiagram />
-  </section>
-
-  <section class="container">
-    <ConceptDiagram />
-  </section>
-
-  <section class="container card-grid">
-    <article class="card card-highlight">
-      <h3>🐳 Docker simulator</h3>
-      <p>docker ps, logs, inspect, build — container fundamentals with guided missions.</p>
-      <a class="btn btn-primary card-link" href="/docker.html">Practice Docker →</a>
-    </article>
-    <article class="card">
-      <h3>📖 7 K8s modules</h3>
-      <p>Pods → Deployments → Config → Networking → Storage → Production patterns.</p>
-    </article>
-    <article class="card">
-      <h3>🔧 6 troubleshoot scenarios</h3>
-      <p>CrashLoop, ImagePull, Pending, broken endpoints, exited containers, wrong ports.</p>
-    </article>
-    <article class="card">
-      <h3>🖥️ Local + AWS</h3>
-      <p>kind cluster for real YAML labs. Terraform for S3 + CloudFront hosting.</p>
-    </article>
-  </section>
-
-  <section class="container">
+  <section class="container hub-footer">
     <div class="callout">
       <p>
-        <strong>Learning loop:</strong> Browser simulator → quiz → <code>make docker-lab</code> →
-        <code>make local-lab</code> → break/fix scenarios → track in Progress.
+        <strong>Local setup:</strong> Browser labs need no install. For local cluster labs run
+        <code>make docker-lab</code> or <code>make local-lab</code> from the repo.
+        Track progress on <a href="/progress.html">Progress</a>.
       </p>
     </div>
   </section>
 </BaseLayout>
 
+<script>
+  const buttons = document.querySelectorAll(".filter-btn");
+  const cards = document.querySelectorAll(".lab-card");
+  const emptyMsg = document.getElementById("empty-msg")!;
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const filter = (btn as HTMLElement).dataset.filter!;
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      let visible = 0;
+      cards.forEach((card) => {
+        const cat = (card as HTMLElement).dataset.category;
+        const show = filter === "all" || cat === filter;
+        (card as HTMLElement).style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+      emptyMsg.hidden = visible > 0;
+    });
+  });
+</script>
+
 <style>
-  .hero-gradient {
-    background: radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 55%),
-                radial-gradient(ellipse at 80% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
-    border-radius: 0 0 16px 16px;
-    margin-bottom: 1rem;
+  .hub-hero {
+    padding: 3rem 0 2rem;
+    text-align: center;
   }
-  .card-highlight {
-    border-color: #38bdf8;
-    background: linear-gradient(135deg, var(--surface) 0%, #121a28 100%);
+  .hub-hero h1 {
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    margin: 0 0 0.75rem;
   }
-  .card-link {
-    display: inline-block;
-    margin-top: 0.75rem;
+  .hub-hero .lead {
+    max-width: 36rem;
+    margin: 0 auto 0.5rem;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+  .hub-stats {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
     font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .lab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding-bottom: 3rem;
+  }
+  .empty-msg {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+  }
+  .hub-footer {
+    padding-bottom: 3rem;
   }
 </style>

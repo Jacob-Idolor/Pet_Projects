@@ -1,32 +1,19 @@
 # Quick start
 
-Pick one path. You can combine them — most people use **browser + local**.
-
-## I want to learn right now (no install)
+**Open the Lab Hub** — one page to pick any lab:
 
 ```bash
 cd kubernetes
 make site-dev
 ```
 
-Open http://localhost:4321 → **Docker** → **Learn** → **Troubleshoot**
+Open http://localhost:4321 and choose Docker, Kubernetes, Troubleshoot, or Local cluster labs.
 
-## I want real Docker + kubectl on my machine
-
-**Prerequisites:** Docker, kubectl, kind
+## Local commands (when you pick a local lab)
 
 ```bash
-cd kubernetes
-make docker-lab          # build & run sample container
-make local-lab           # kind cluster for Kubernetes labs
-```
-
-Start with [labs/lab-00-docker/README.md](labs/lab-00-docker/README.md), then Lab 01.
-
-```bash
-kubectl create namespace lab-01
-kubectl apply -f manifests/examples/pod-nginx.yaml
-kubectl get pods -w
+make docker-lab    # Lab 00 — build & run sample container
+make local-lab     # kind cluster for Labs 01–07
 ```
 
 ## I want to host the site on AWS

@@ -4,11 +4,11 @@ A **dual-path** practice environment for containers and Kubernetes:
 
 | Path | What | When |
 |------|------|------|
-| **Browser** | Interactive site — modules, quizzes, simulated kubectl | Learn concepts anywhere, zero install |
-| **Localhost** | kind cluster + hands-on labs + real manifests | Build muscle memory with real `kubectl` |
+| **Browser** | Interactive site — Docker + kubectl simulators, modules, troubleshoot hub | Learn concepts anywhere, zero install |
+| **Localhost** | kind cluster + Docker lab + hands-on labs | Build muscle memory with real commands |
 | **AWS** | Terraform → S3 + CloudFront (~$1–5/mo) | Share the learning site publicly |
 
-Start here: **[QUICKSTART.md](QUICKSTART.md)**
+Start here: run `make site-dev` and open **http://localhost:4321** — the Lab Hub lets you pick any lab.
 
 ---
 

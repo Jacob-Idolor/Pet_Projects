@@ -1,0 +1,99 @@
+---
+import type { LabEntry } from "../data/lab-hub";
+
+interface Props {
+  lab: LabEntry;
+}
+
+const { lab } = Astro.props;
+const isExternal = lab.href.startsWith("http");
+---
+
+<article class="lab-card" data-category={lab.category}>
+  <div class="lab-card-top">
+    <span class="lab-icon">{lab.icon}</span>
+    <div class="lab-badges">
+      <span class={`badge badge-mode badge-${lab.mode}`}>{lab.mode === "browser" ? "Browser" : "Local"}</span>
+      {lab.difficulty && <span class={`badge badge-diff badge-${lab.difficulty}`}>{lab.difficulty}</span>}
+    </div>
+  </div>
+  <h3>{lab.title}</h3>
+  <p>{lab.description}</p>
+  <div class="lab-meta">
+    <span class="lab-time">⏱ {lab.time}</span>
+    {lab.command && <code class="lab-cmd">{lab.command}</code>}
+  </div>
+  <a
+    class="btn btn-primary lab-start"
+    href={lab.href}
+    {...(isExternal ? { target: "_blank", rel: "noopener" } : {})}
+  >
+    {lab.mode === "local" ? "Open lab guide →" : "Start lab →"}
+  </a>
+</article>
+
+<style>
+  .lab-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .lab-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .lab-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .lab-icon { font-size: 1.75rem; line-height: 1; }
+  .lab-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+  .badge-mode.badge-browser { color: #38bdf8; }
+  .badge-mode.badge-local { color: var(--warn); }
+  .badge-diff.badge-beginner { color: var(--success); font-size: 0.7rem; }
+  .badge-diff.badge-intermediate { color: var(--warn); font-size: 0.7rem; }
+  .lab-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .lab-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    flex: 1;
+  }
+  .lab-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+  .lab-time {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .lab-cmd {
+    font-size: 0.75rem;
+    background: #0a0e12;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: var(--success);
+  }
+  .lab-start {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+</style>
