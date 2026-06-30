@@ -55,16 +55,6 @@ function rangeBar(range52Pct, low, high) {
   const hint = low != null && high != null ? `${fmtPrice(low)} \u2013 ${fmtPrice(high)} \xB7 ${pos.toFixed(0)}% of range` : `${pos.toFixed(0)}% of 52w range`;
   return `<div class="range-bar" title="${escapeHtml(hint)}"><div class="range-bar-track"><div class="range-bar-marker zone-${zone}" style="left:${pos}%"></div></div><span class="range-bar-label">${pos.toFixed(0)}%</span></div>`;
 }
-function renderMaStrip(q, price) {
-  if (!q?.sma) return "";
-  const items = [20, 50, 200].map((p) => {
-    const ma = q.sma?.[p];
-    if (ma == null || price == null) return null;
-    const above = price >= ma;
-    return `<span class="ma-pill ${above ? "above" : "below"}" title="SMA ${p}: ${fmtPrice(ma)}">${p}${above ? "\u2191" : "\u2193"}</span>`;
-  }).filter(Boolean);
-  return items.length ? `<div class="ma-strip">${items.join("")}</div>` : "";
-}
 function renderTechnicalDetail(q, price) {
   if (!q?.sma && q?.range52Pct == null && q?.rsi14 == null) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy \u2014 run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
@@ -131,20 +121,15 @@ function matchesTechnicalFilter(filter2, q, price) {
 var CUSTOM_STORE = "stocks-radar-custom";
 var CUSTOM_KEY = "entries";
 var PREFS_KEY = "stocks-radar-prefs";
-var CAT_LABEL = {
-  owned: "Owned",
-  targets: "Targets",
-  watching: "Watching"
-};
 var baseStocks = [];
 var allStocks = [];
 var quotes = {};
 var filter = "all";
 var tagFilter = null;
 var search = "";
-var sortKey = "distance";
+var sortKey = "symbol";
 var sortDir = 1;
-var viewMode = "buckets";
+var viewMode = "table";
 var page = 1;
 var pageSize = 50;
 var expandedId = null;
@@ -197,20 +182,20 @@ async function setCustomStocks(entries) {
 }
 function mergeStocks(base, custom) {
   const map = /* @__PURE__ */ new Map();
-  for (const s of base) map.set(`${s.symbol}:${s.category}`, s);
-  for (const s of custom) map.set(`${s.symbol}:${s.category}`, s);
+  for (const s of base) map.set(s.symbol, s);
+  for (const s of custom) map.set(s.symbol, s);
   return [...map.values()];
 }
 async function savePriceTarget(symbol, targetPrice, opts) {
   const sym = symbol.toUpperCase().replace(/^\$/, "");
   if (!sym || !targetPrice || targetPrice <= 0) return false;
-  const existing = allStocks.find((s) => s.symbol === sym && s.category === "targets");
+  const existing = allStocks.find((s) => s.symbol === sym);
   const q = quotes[sym];
   const stock = {
-    id: `custom-${sym.toLowerCase()}-targets`,
+    id: `custom-${sym.toLowerCase()}`,
     symbol: sym,
     name: opts?.name ?? q?.name ?? existing?.name ?? sym,
-    category: "targets",
+    category: "tracking",
     targetPrice,
     custom: true,
     sector: existing?.sector,
@@ -260,20 +245,10 @@ function distanceLabel(pct) {
   if (pct > 0) return { text: `+${abs.toFixed(1)}%`, cls: "above" };
   return { text: `-${abs.toFixed(1)}%`, cls: "below" };
 }
-function distanceBar(pct) {
-  if (pct == null) return "";
-  const width = Math.min(100, Math.abs(pct));
-  const cls = Math.abs(pct) < 0.5 ? "at" : pct > 0 ? "above" : "below";
-  return `<div class="dist-bar" title="${escapeHtml(distanceLabel(pct).text)}"><div class="dist-bar-fill ${cls}" style="width:${width}%"></div></div>`;
-}
 function matchesFilter(stock) {
   const dist = getDistance(stock);
   if (tagFilter && !(stock.tags ?? []).includes(tagFilter)) return false;
   switch (filter) {
-    case "owned":
-    case "targets":
-    case "watching":
-      return stock.category === filter;
     case "has-target":
       return stock.targetPrice != null;
     case "at-target":
@@ -388,48 +363,39 @@ function renderRow(stock, compact = false, mode = "default") {
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${expanded ? "expanded" : ""}">
       <td class="mono sym">
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
-        ${renderMaStrip(q, price)}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td><span class="cat-badge cat-${stock.category}">${CAT_LABEL[stock.category] ?? stock.category}</span></td>
       <td class="num mono">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td>${trendBadge(q?.trend)}</td>
-      <td class="num">${maCell(price, q?.sma?.[20], q?.vsSma?.[20])}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
-      <td class="num">${maCell(price, q?.sma?.[200], q?.vsSma?.[200])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
-      <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
       <td class="row-actions">
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? renderDetailRow(stock, price, q, 13) : ""}`;
+    ${expanded ? renderDetailRow(stock, price, q, 9) : ""}`;
   }
   return `
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${expanded ? "expanded" : ""}">
       <td class="mono sym">
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
+        ${stock.priority === "high" ? '<span class="conviction-dot" title="High conviction">\u25CF</span>' : ""}
         ${stock.custom ? '<span class="custom-tag" title="Browser import">\u2605</span>' : ""}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td><span class="cat-badge cat-${stock.category}">${CAT_LABEL[stock.category] ?? stock.category}</span></td>
       <td class="tags-cell">${renderTagsHtml(stock)}</td>
       <td class="num mono">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
-      <td class="num dist-cell">
-        <span class="dist ${distCls}">${distText}</span>
-        ${distanceBar(dist)}
-      </td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "\u2014")}</td>
       <td>${renderPriority(stock)}</td>
       <td class="row-actions">
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 11) : ""}
+    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 9) : ""}
   `;
 }
 function renderDetailRow(stock, price, q, colspan) {
@@ -445,7 +411,7 @@ function renderDetailRow(stock, price, q, colspan) {
               <strong>Price target:</strong>
               <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${escapeHtml(stock.symbol)}" />
               <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${stock.symbol}">Save to PT list</button>
-              ${stock.category === "targets" && stock.targetPrice != null ? `<span class="pt-current">In Targets @ ${fmtPrice(stock.targetPrice)}</span>` : ""}
+              ${stock.targetPrice != null ? `<span class="pt-current">Target ${fmtPrice(stock.targetPrice)}</span>` : ""}
             </div>
             <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "\u2014")}</p>
             <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance \u2192</a>
@@ -455,7 +421,7 @@ function renderDetailRow(stock, price, q, colspan) {
 }
 function renderTableHtml(stocks, mode = "default") {
   if (!stocks.length) {
-    const cols = mode === "technical" ? 13 : 11;
+    const cols = mode === "technical" ? 9 : 9;
     return `<tr><td colspan="${cols}" class="empty-row">No tickers match your filters.</td></tr>`;
   }
   return stocks.map((s) => renderRow(s, false, mode)).join("");
@@ -499,14 +465,8 @@ function renderOverview() {
     <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>`;
   }
   el.innerHTML = `
-    <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Total</span></div>
-    <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "owned").length}</span><span class="ov-label">Owned</span></div>
-    <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "targets").length}</span><span class="ov-label">Targets</span></div>
-    <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "watching").length}</span><span class="ov-label">Watching</span></div>
-    <div class="overview-card highlight"><span class="ov-value">${atTarget}</span><span class="ov-label">At target</span></div>
-    <div class="overview-card highlight"><span class="ov-value">${within5}</span><span class="ov-label">Within 5%</span></div>
-    <div class="overview-card"><span class="ov-value">${within10}</span><span class="ov-label">Within 10%</span></div>
-    <div class="overview-card"><span class="ov-value">${tags.size}</span><span class="ov-label">Themes</span></div>
+    <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Tracking</span></div>
+    <div class="overview-card highlight"><span class="ov-value">${allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
     ${techHtml}
   `;
 }
@@ -522,53 +482,6 @@ function renderTagFilters() {
   el.innerHTML = `<span class="tag-filter-label">Themes:</span>` + [...tags].sort().map(
     (t) => `<button type="button" class="chip tag-chip ${tagFilter === t ? "active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
   ).join("") + (tagFilter ? `<button type="button" class="chip tag-clear" data-tag="">Clear</button>` : "");
-}
-function renderOpportunities() {
-  const chips = document.getElementById("opp-chips");
-  if (!chips) return;
-  const candidates = allStocks.filter((s) => s.targetPrice != null).map((s) => ({ stock: s, dist: getDistance(s) })).filter((x) => x.dist != null).sort((a, b) => Math.abs(a.dist) - Math.abs(b.dist)).slice(0, 15);
-  if (!candidates.length) {
-    chips.innerHTML = `<span class="opp-empty">Add target prices to track entries.</span>`;
-    return;
-  }
-  chips.innerHTML = candidates.map(({ stock, dist }) => {
-    const { text, cls } = distanceLabel(dist);
-    const price = getPrice(stock);
-    return `<button type="button" class="opp-chip ${cls}" data-jump="${stock.symbol}" title="${escapeHtml(stock.thesis ?? "")}">
-        <strong>${stock.symbol}</strong>
-        <span>${fmtPrice(price)} \u2192 ${fmtPrice(stock.targetPrice)}</span>
-        <em>${text}</em>
-      </button>`;
-  }).join("");
-}
-function renderHeldStrip() {
-  const el = document.getElementById("held-strip");
-  if (!el) return;
-  const owned = sortStocks(allStocks.filter((s) => s.category === "owned"));
-  if (!owned.length) {
-    el.hidden = true;
-    return;
-  }
-  el.hidden = false;
-  el.innerHTML = owned.map((stock) => {
-    const price = getPrice(stock);
-    const chg = getChange(stock);
-    const q = getQuote(stock);
-    const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
-    const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
-    return `<article class="held-card" data-symbol="${stock.symbol}">
-        <div class="held-top">
-          <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="held-sym">${stock.symbol}</a>
-          ${q?.trend ? trendBadge(q.trend) : ""}
-          ${stock.priority === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
-        </div>
-        <div class="held-name">${escapeHtml(stock.name)}</div>
-        <div class="held-price mono">${fmtPrice(price)} <span class="chg ${chgCls}">${chgTxt}</span></div>
-        ${renderMaStrip(q, price)}
-        <p class="held-thesis">${escapeHtml(stock.thesis ?? "")}</p>
-        <div class="held-tags">${renderTagsHtml(stock)}</div>
-      </article>`;
-  }).join("");
 }
 function renderPagination(total) {
   const el = document.getElementById(viewMode === "technical" ? "technical-pagination" : "pagination");
@@ -590,47 +503,12 @@ function renderPagination(total) {
     </div>
   `;
 }
-function renderBucketView(list) {
-  const wrap = document.getElementById("bucket-view");
-  const tableWrap = document.getElementById("table-view");
-  const techWrap = document.getElementById("technical-view");
-  if (!wrap || !tableWrap) return;
-  wrap.hidden = false;
-  tableWrap.hidden = true;
-  if (techWrap) techWrap.hidden = true;
-  for (const cat of ["owned", "targets", "watching"]) {
-    const body = document.querySelector(`[data-bucket-body="${cat}"]`);
-    const countEl = document.querySelector(`[data-bucket-count="${cat}"]`);
-    const subset = list.filter((s) => s.category === cat);
-    if (countEl) countEl.textContent = String(subset.length);
-    if (body) {
-      body.innerHTML = subset.length > 0 ? `<div class="table-wrap compact"><table class="watchlist-table"><thead>${tableHead()}</thead><tbody>${renderTableHtml(subset)}</tbody></table></div>` : `<p class="bucket-empty">No tickers in this bucket.</p>`;
-    }
-  }
-}
-function tableHead(mode = "default") {
-  if (mode === "technical") {
-    return `<tr>
-      <th>Symbol</th><th>Name</th><th>Bucket</th>
-      <th class="num">Price</th><th class="num">Chg</th><th>Trend</th>
-      <th class="num">SMA 20</th><th class="num">SMA 50</th><th class="num">SMA 200</th>
-      <th>52W range</th><th class="num">RSI</th><th class="num">Target</th><th></th>
-    </tr>`;
-  }
-  return `<tr>
-    <th>Symbol</th><th>Name</th><th>Bucket</th><th>Tags</th>
-    <th class="num">Price</th><th class="num">Chg</th><th class="num">Target</th>
-    <th class="num">Distance</th><th>Thesis</th><th>Priority</th><th></th>
-  </tr>`;
-}
 function renderTechnicalView(list) {
-  const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
   const techWrap = document.getElementById("technical-view");
   const tbody = document.getElementById("technical-tbody");
   const countEl = document.getElementById("result-count");
   if (!tbody || !techWrap) return;
-  if (wrap) wrap.hidden = true;
   if (tableWrap) tableWrap.hidden = true;
   techWrap.hidden = false;
   const total = list.length;
@@ -647,13 +525,11 @@ function renderTechnicalView(list) {
   });
 }
 function renderTableView(list) {
-  const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
   const techWrap = document.getElementById("technical-view");
   const tbody = document.getElementById("watchlist-tbody");
   const countEl = document.getElementById("result-count");
   if (!tbody || !tableWrap) return;
-  if (wrap) wrap.hidden = true;
   if (techWrap) techWrap.hidden = true;
   tableWrap.hidden = false;
   const total = list.length;
@@ -669,11 +545,6 @@ function renderTableView(list) {
     th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
   });
 }
-var BUCKET_MOBILE = {
-  owned: { icon: "\u{1F4BC}", label: "Owned" },
-  watching: { icon: "\u{1F440}", label: "Watching" },
-  targets: { icon: "\u{1F3AF}", label: "Targets" }
-};
 function isMobileLayout() {
   return window.matchMedia("(max-width: 640px)").matches;
 }
@@ -688,7 +559,7 @@ function renderMobileCard(stock) {
   return `<article class="stock-card-m" data-symbol="${stock.symbol}">
     <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="scm-main">
       <div class="scm-top">
-        <span class="scm-sym">${stock.symbol}</span>
+        <span class="scm-sym">${stock.symbol}${stock.priority === "high" ? '<span class="scm-conviction">high</span>' : ""}</span>
         <span class="scm-price mono">${fmtPrice(price)}</span>
       </div>
       <div class="scm-mid">
@@ -701,34 +572,21 @@ function renderMobileCard(stock) {
 }
 function renderMobileView(list) {
   const mobileEl = document.getElementById("mobile-stock-list");
-  const bucketView = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
   const techWrap = document.getElementById("technical-view");
   const countEl = document.getElementById("result-count");
-  const heldStrip = document.getElementById("held-strip");
   if (!mobileEl) return false;
   if (!isMobileLayout()) {
     mobileEl.hidden = true;
     return false;
   }
-  if (bucketView) bucketView.hidden = true;
   if (tableWrap) tableWrap.hidden = true;
   if (techWrap) techWrap.hidden = true;
-  if (heldStrip) heldStrip.hidden = true;
   mobileEl.hidden = false;
-  const order = ["owned", "watching", "targets"];
-  const sections = order.map((cat) => {
-    const subset = list.filter((s) => s.category === cat);
-    if (!subset.length) return "";
-    const meta = BUCKET_MOBILE[cat];
-    return `<section class="mobile-bucket">
-        <h3 class="mobile-bucket-title">${meta.icon} ${meta.label} <span class="mobile-bucket-count">${subset.length}</span></h3>
-        <div class="mobile-bucket-cards">${subset.map(renderMobileCard).join("")}</div>
-      </section>`;
-  }).filter(Boolean).join("");
-  mobileEl.innerHTML = sections || `<p class="mobile-empty">No tickers match. Try clearing filters or search.</p>`;
+  const sorted = sortStocks(list);
+  mobileEl.innerHTML = sorted.length > 0 ? `<div class="mobile-bucket-cards">${sorted.map(renderMobileCard).join("")}</div>` : `<p class="mobile-empty">No tickers match. Try clearing search.</p>`;
   if (countEl) {
-    countEl.textContent = `${list.length} stock${list.length === 1 ? "" : "s"}`;
+    countEl.textContent = `${list.length} tracking`;
   }
   return true;
 }
@@ -741,13 +599,9 @@ function renderAll() {
   }
   renderOverview();
   renderTagFilters();
-  renderOpportunities();
-  renderHeldStrip();
   const mobileEl = document.getElementById("mobile-stock-list");
   if (mobileEl) mobileEl.hidden = true;
-  if (viewMode === "buckets") {
-    renderBucketView(list);
-  } else if (viewMode === "technical") {
+  if (viewMode === "technical") {
     renderTechnicalView(list);
   } else {
     renderTableView(list);
@@ -800,15 +654,15 @@ function parseImportCsv(text) {
       addedby: cols[5]
     };
   });
-  const cats = /* @__PURE__ */ new Set(["owned", "targets", "watching"]);
+  const cats = /* @__PURE__ */ new Set(["tracking", "owned", "targets", "watching"]);
   return rows.map((row) => {
     const symbol = (row.symbol ?? "").toUpperCase();
     if (!symbol) return null;
-    const category = (row.category ?? "watching").toLowerCase();
-    const cat = cats.has(category) ? category : "watching";
+    const category = (row.category ?? "tracking").toLowerCase();
+    const cat = cats.has(category) ? category : "tracking";
     const tp = row.targetprice ?? row.target_price;
     const stock = {
-      id: `custom-${symbol.toLowerCase()}-${cat}`,
+      id: `custom-${symbol.toLowerCase()}`,
       symbol,
       name: row.name || symbol,
       category: cat,
@@ -851,7 +705,7 @@ function exportCsv() {
   a.click();
 }
 function setViewToggle(activeId) {
-  ["view-buckets", "view-table", "view-technical"].forEach((id) => {
+  ["view-table", "view-technical"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("active", id === activeId);
   });
 }
@@ -911,65 +765,15 @@ function bindEvents() {
     savePrefs();
     renderAll();
   });
-  document.getElementById("view-buckets")?.addEventListener("click", () => {
-    viewMode = "buckets";
-    setViewToggle("view-buckets");
-    savePrefs();
-    renderAll();
-  });
   document.getElementById("view-technical")?.addEventListener("click", () => {
     viewMode = "technical";
     setViewToggle("view-technical");
-    if (sortKey === "distance") sortKey = "vs50";
     savePrefs();
     renderAll();
   });
-  document.getElementById("toggle-pt")?.addEventListener("click", () => {
-    const panel = document.getElementById("pt-panel");
-    const importPanel = document.getElementById("import-panel");
-    if (importPanel) importPanel.hidden = true;
-    if (panel) {
-      panel.hidden = !panel.hidden;
-      if (!panel.hidden) {
-        document.getElementById("pt-symbol")?.focus();
-      }
-    }
-  });
   document.getElementById("toggle-import")?.addEventListener("click", () => {
     const panel = document.getElementById("import-panel");
-    const ptPanel = document.getElementById("pt-panel");
-    if (ptPanel) ptPanel.hidden = true;
     if (panel) panel.hidden = !panel.hidden;
-  });
-  document.getElementById("pt-form")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const sym = document.getElementById("pt-symbol").value.trim();
-    const price = Number(document.getElementById("pt-price").value);
-    const note = document.getElementById("pt-note").value.trim();
-    const author = document.getElementById("pt-author").value.trim();
-    if (!sym || !price || price <= 0) {
-      alert("Enter a symbol and target price.");
-      return;
-    }
-    if (author) localStorage.setItem("radar-author", author.toUpperCase());
-    const ok = await savePriceTarget(sym, price, {
-      note: note || void 0,
-      addedBy: author ? author.toUpperCase() : void 0
-    });
-    if (!ok) return;
-    filter = "targets";
-    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
-      c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
-    });
-    search = sym.toUpperCase().replace(/^\$/, "");
-    document.getElementById("search-input").value = search;
-    viewMode = "buckets";
-    setViewToggle("view-buckets");
-    document.getElementById("pt-symbol").value = "";
-    document.getElementById("pt-price").value = "";
-    document.getElementById("pt-note").value = "";
-    renderAll();
-    document.querySelector(`tr[data-symbol="${search}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
   document.getElementById("import-apply")?.addEventListener("click", async () => {
     const text = document.getElementById("import-text").value;
@@ -1030,10 +834,6 @@ function bindEvents() {
       }
       savePriceTarget(sym, price).then((ok) => {
         if (!ok) return;
-        filter = "targets";
-        document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
-          c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
-        });
         renderAll();
       });
       return;
@@ -1095,29 +895,28 @@ function bindEvents() {
 }
 async function initWatchlistBoard(stocksJson) {
   const prefs = loadPrefs();
-  if (prefs.viewMode) viewMode = prefs.viewMode;
   if (prefs.pageSize) pageSize = prefs.pageSize;
   if (prefs.sortKey) sortKey = prefs.sortKey;
   if (prefs.filter) filter = prefs.filter;
   baseStocks = JSON.parse(stocksJson);
   const custom = await getCustomStocks();
   allStocks = mergeStocks(baseStocks, custom);
-  if (viewMode === "buckets") {
-    setViewToggle("view-buckets");
-  } else if (viewMode === "technical") {
+  if (prefs.viewMode === "technical") {
+    viewMode = "technical";
     setViewToggle("view-technical");
   } else {
+    viewMode = "table";
     setViewToggle("view-table");
+  }
+  if (prefs.filter === "owned" || prefs.filter === "watching" || prefs.filter === "targets") {
+    filter = "all";
   }
   if (prefs.filter) {
     document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
-      c.classList.toggle("active", c.getAttribute("data-filter") === prefs.filter);
+      c.classList.toggle("active", c.getAttribute("data-filter") === filter);
     });
   }
   bindEvents();
-  const ptAuthor = document.getElementById("pt-author");
-  const savedAuthor = localStorage.getItem("radar-author");
-  if (ptAuthor && savedAuthor) ptAuthor.value = savedAuthor;
   syncLayoutClass();
   window.addEventListener("resize", () => {
     syncLayoutClass();
