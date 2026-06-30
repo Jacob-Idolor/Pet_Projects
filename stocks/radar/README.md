@@ -68,9 +68,9 @@ npm run import-csv -- my-tickers.csv
 
 **GitHub Pages (free):**
 
-1. Merge to `main`
-2. GitHub → Settings → Pages → Source: **GitHub Actions**
-3. Push to `main` triggers deploy (or run the workflow manually)
+1. **One-time:** enable Pages → [setup guide](../.github/PAGES_SETUP.md) (branch `gh-pages`, folder `/`)
+2. Merge to `main` — deploy workflow runs automatically
+3. URL: `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/`
 
 **AWS (optional):** infra lives in [`infra/`](infra/README.md) — Terraform + `./deploy.sh`. Does not touch app code; local dev is unchanged.
 
