@@ -1,15 +1,15 @@
 {
   "meta": {
     "groupName": "The Radar",
-    "tagline": "What we're in, what we're watching, and what gets added over time.",
+    "tagline": "One list — every ticker we're tracking together.",
     "lastUpdated": "2026-06-30"
   },
   "stocks": [
     {
-      "id": "smh-owned",
+      "id": "smh",
       "symbol": "SMH",
       "name": "VanEck Semiconductor ETF",
-      "category": "owned",
+      "category": "tracking",
       "sector": "Semiconductors",
       "tags": ["semi", "etf", "core"],
       "priority": "high",
@@ -18,10 +18,10 @@
       "holder": "J"
     },
     {
-      "id": "nbis-owned",
+      "id": "nbis",
       "symbol": "NBIS",
       "name": "Nebius Group",
-      "category": "owned",
+      "category": "tracking",
       "sector": "AI Infrastructure",
       "tags": ["ai", "high-conviction"],
       "priority": "high",
@@ -30,22 +30,22 @@
       "holder": "J"
     },
     {
-      "id": "sivef-owned",
+      "id": "sivef",
       "symbol": "SIVEF",
       "name": "Sivers Semiconductors",
-      "category": "owned",
+      "category": "tracking",
       "sector": "Photonics",
       "tags": ["photonics", "speculative"],
       "priority": "medium",
-      "thesis": "High upside photonics exposure — speculative, not highest quality but big swing potential.",
+      "thesis": "High upside photonics exposure — speculative swing potential.",
       "addedBy": "J",
       "holder": "J"
     },
     {
-      "id": "meta-owned",
+      "id": "meta",
       "symbol": "META",
       "name": "Meta Platforms",
-      "category": "owned",
+      "category": "tracking",
       "sector": "Technology",
       "tags": ["mag7", "ai"],
       "priority": "high",
@@ -54,70 +54,70 @@
       "holder": "J"
     },
     {
-      "id": "aaoi-owned",
+      "id": "aaoi",
       "symbol": "AAOI",
       "name": "Applied Optoelectronics",
-      "category": "owned",
+      "category": "tracking",
       "sector": "Photonics",
       "tags": ["photonics", "speculative"],
       "priority": "medium",
-      "thesis": "High upside photonics exposure — optical/datacenter connectivity bet alongside SIVEF.",
+      "thesis": "Photonics exposure — optical / datacenter connectivity bet.",
       "addedBy": "J",
       "holder": "J"
     },
     {
-      "id": "oust-watching",
+      "id": "oust",
       "symbol": "OUST",
       "name": "Ouster",
-      "category": "watching",
+      "category": "tracking",
       "sector": "Autonomous / Lidar",
-      "tags": ["lidar", "sensors", "speculative"],
+      "tags": ["lidar", "sensors"],
       "priority": "medium",
-      "thesis": "Digital lidar for robotics, AV, and industrial sensing — on radar for the autonomy stack.",
+      "thesis": "Digital lidar for robotics, AV, and industrial sensing.",
       "addedBy": "J"
     },
     {
-      "id": "vpg-watching",
+      "id": "vpg",
       "symbol": "VPG",
       "name": "Vishay Precision Group",
-      "category": "watching",
+      "category": "tracking",
       "sector": "Industrial / Sensors",
       "tags": ["sensors", "industrial"],
       "priority": "medium",
-      "thesis": "Precision resistors, sensors, and weighing — industrial quality compounder in the sensing chain.",
+      "thesis": "Precision sensors and resistors in the industrial sensing chain.",
       "addedBy": "J"
     },
     {
-      "id": "amba-watching",
+      "id": "amba",
       "symbol": "AMBA",
       "name": "Ambarella",
-      "category": "watching",
+      "category": "tracking",
       "sector": "Semiconductors",
       "tags": ["semi", "edge-ai", "video"],
       "priority": "medium",
-      "thesis": "Low-power vision and edge AI silicon — video processing for cameras, drones, and automotive.",
+      "thesis": "Low-power vision and edge AI silicon for cameras and automotive.",
       "addedBy": "J"
     },
     {
-      "id": "syna-watching",
+      "id": "syna",
       "symbol": "SYNA",
       "name": "Synaptics",
-      "category": "watching",
+      "category": "tracking",
       "sector": "Semiconductors",
       "tags": ["semi", "iot"],
       "priority": "medium",
-      "thesis": "Human-interface and connectivity ICs — touch, display, and IoT edge exposure.",
+      "thesis": "Human-interface and connectivity ICs for touch, display, and IoT.",
       "addedBy": "J"
     },
     {
-      "id": "inod-watching",
+      "id": "inod",
       "symbol": "INOD",
       "name": "Innodata",
-      "category": "watching",
+      "category": "tracking",
       "sector": "AI / Data Services",
       "tags": ["ai", "data"],
       "priority": "medium",
-      "thesis": "AI data engineering and digital transformation services — picks-and-shovels for model training workflows.",
+      "thesis": "AI data engineering and digital transformation services.",
       "addedBy": "J"
     }
   ]

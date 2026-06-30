@@ -1,6 +1,6 @@
 import raw from "./watchlist.json";
 
-export type StockCategory = "owned" | "targets" | "watching";
+export type StockCategory = "tracking" | "owned" | "targets" | "watching";
 export type StockPriority = "high" | "medium" | "low";
 
 export interface Stock {
@@ -31,6 +31,12 @@ export const categoryLabels: Record<
   StockCategory,
   { title: string; description: string; icon: string; short: string }
 > = {
+  tracking: {
+    title: "Tracking list",
+    description: "Every ticker on the radar — one unified list.",
+    icon: "📈",
+    short: "Tracking",
+  },
   owned: {
     title: "Currently Holding",
     description: "Active positions — what you're in today.",

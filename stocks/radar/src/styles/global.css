@@ -285,6 +285,25 @@ body[data-day-mood="mixed"] .site-header {
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scm-conviction {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--green);
+  background: var(--green-glow);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.conviction-dot {
+  color: var(--green);
+  font-size: 0.65rem;
+  margin-left: 0.15rem;
 }
 
 .scm-price {
@@ -438,6 +457,14 @@ body[data-day-mood="mixed"] .site-header {
     min-height: 2.75rem;
     font-size: 0.85rem;
     justify-content: center;
+  }
+
+  .mobile-bucket-title {
+    display: none;
+  }
+
+  .mobile-bucket-cards {
+    gap: 0.45rem;
   }
 
   .tag-filters {

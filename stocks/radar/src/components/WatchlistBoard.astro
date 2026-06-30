@@ -6,156 +6,78 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
-  <div id="held-strip" class="held-strip" hidden aria-label="Current holdings"></div>
-
   <div class="board-header">
     <div>
-      <h2>Watchlist</h2>
-      <p class="board-subtitle desktop-only">Holdings and watches — live prices. Press <kbd>/</kbd> to search.</p>
+      <h2>Tracking list</h2>
+      <p class="board-subtitle desktop-only">Live prices for every ticker on the radar. Press <kbd>/</kbd> to search.</p>
     </div>
     <div class="board-actions desktop-only">
       <div class="view-toggle">
-        <button type="button" class="chip active" id="view-buckets">By bucket</button>
-        <button type="button" class="chip" id="view-table">All tickers</button>
+        <button type="button" class="chip active" id="view-table">List</button>
         <button type="button" class="chip" id="view-technical">Technical</button>
       </div>
-      <button type="button" class="btn btn-ghost" id="toggle-pt">Add PT</button>
       <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button>
       <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button>
     </div>
   </div>
 
-  <div class="pt-panel" id="pt-panel" hidden>
-    <h3>Add price target</h3>
-    <p class="panel-hint">Send a ticker to the PT list — shows under <strong>Targets</strong> and in <strong>Closest to entry</strong>.</p>
-    <form class="pt-form" id="pt-form">
-      <label>
-        Symbol
-        <input type="text" id="pt-symbol" maxlength="6" placeholder="PLTR" required autocomplete="off" />
-      </label>
-      <label>
-        Target $
-        <input type="number" id="pt-price" step="0.01" min="0.01" placeholder="18.00" required />
-      </label>
-      <label>
-        Note
-        <input type="text" id="pt-note" placeholder="Want better entry (optional)" />
-      </label>
-      <label>
-        You
-        <input type="text" id="pt-author" maxlength="8" placeholder="Initials" />
-      </label>
-      <button type="submit" class="btn btn-primary">Add to PT list</button>
-    </form>
-    <p class="pt-hint">Tip: in the group feed try <code>PLTR @ 18</code> or <code>Watching NVDA under $120</code> — we auto-detect PTs.</p>
-  </div>
-
-  <div class="import-panel" id="import-panel" hidden>
+  <div class="import-panel desktop-only" id="import-panel" hidden>
     <p class="import-help">
-      Paste from a spreadsheet — columns:
-      <code>symbol, name, category, sector, tags, targetPrice, thesis, priority</code>.
-      Tags use semicolons (<code>photonics;speculative</code>). Saved in your browser only.
+      Paste CSV — columns:
+      <code>symbol, name, sector, tags, targetPrice, thesis, priority</code>.
+      Tags use semicolons. Saved in your browser only.
     </p>
     <textarea
       id="import-text"
       rows="6"
-      placeholder="NVDA,NVIDIA,watching,Semiconductors,ai;semi,,Mag7 benchmark,J&#10;PLTR,Palantir,targets,Software,ai;gov,18,Waiting for dip,medium,K"
+      placeholder="NVDA,NVIDIA,Semiconductors,ai;semi,,Mag7 benchmark,high&#10;PLTR,Palantir,Software,ai;gov,18,Want better entry,medium"
     ></textarea>
     <div class="import-actions">
-      <button type="button" class="btn btn-primary" id="import-apply">Add to watchlist</button>
+      <button type="button" class="btn btn-primary" id="import-apply">Add to list</button>
       <button type="button" class="btn btn-ghost" id="import-clear">Clear my imports</button>
     </div>
   </div>
 
   <div class="overview-grid desktop-only" id="overview-grid" aria-live="polite"></div>
 
-  <div class="opportunities-panel desktop-only" id="opportunities-panel">
-    <h3>Closest to entry</h3>
-    <p class="panel-hint">Tickers with targets — nearest to your price level first.</p>
-    <div class="opp-chips" id="opp-chips"></div>
-  </div>
-
   <div class="toolbar">
     <input
       type="search"
       id="search-input"
       class="search-input"
-      placeholder="Search symbol, name, sector, tags, thesis…"
+      placeholder="Search symbol, name, thesis…"
       autocomplete="off"
     />
     <div class="filter-chips" id="filter-chips">
       <button type="button" class="chip active" data-filter="all">All</button>
-      <button type="button" class="chip" data-filter="owned">Owned</button>
-      <button type="button" class="chip" data-filter="watching">Watching</button>
-      <button type="button" class="chip desktop-only" data-filter="targets">Targets</button>
+      <button type="button" class="chip" data-filter="high-priority">High conviction</button>
       <button type="button" class="chip desktop-only" data-filter="has-target">Has target</button>
-      <button type="button" class="chip desktop-only" data-filter="at-target">At target</button>
-      <button type="button" class="chip desktop-only" data-filter="high-priority">High priority</button>
     </div>
     <div class="filter-chips tech-filters desktop-only" id="tech-filter-chips">
       <span class="tag-filter-label">Technicals:</span>
       <button type="button" class="chip" data-filter="tech-above-50">Above 50 MA</button>
-      <button type="button" class="chip" data-filter="tech-below-200">Below 200 MA</button>
       <button type="button" class="chip" data-filter="tech-bullish">Bullish</button>
-      <button type="button" class="chip" data-filter="tech-bearish">Bearish</button>
       <button type="button" class="chip" data-filter="tech-near-low">Near 52w low</button>
-      <button type="button" class="chip" data-filter="tech-near-high">Near 52w high</button>
-      <button type="button" class="chip" data-filter="tech-oversold">RSI oversold</button>
     </div>
   </div>
 
-  <div class="tag-filters" id="tag-filters"></div>
+  <div class="tag-filters desktop-only" id="tag-filters"></div>
 
   <p class="result-count" id="result-count"></p>
 
   <div id="mobile-stock-list" class="mobile-stock-list" hidden aria-label="Stocks"></div>
 
-  <div id="bucket-view">
-    <section class="bucket-section">
-      <details class="bucket-details" open>
-        <summary class="bucket-summary">
-          <span class="bucket-icon">💼</span>
-          <div class="bucket-titles"><h3>Currently Holding</h3><p>Active positions</p></div>
-          <span class="bucket-count" data-bucket-count="owned">0</span>
-        </summary>
-        <div data-bucket-body="owned"></div>
-      </details>
-    </section>
-    <section class="bucket-section">
-      <details class="bucket-details" open>
-        <summary class="bucket-summary">
-          <span class="bucket-icon">🎯</span>
-          <div class="bucket-titles"><h3>Waiting on Price Targets</h3><p>Entry and trim levels</p></div>
-          <span class="bucket-count" data-bucket-count="targets">0</span>
-        </summary>
-        <div data-bucket-body="targets"></div>
-      </details>
-    </section>
-    <section class="bucket-section">
-      <details class="bucket-details" open>
-        <summary class="bucket-summary">
-          <span class="bucket-icon">👀</span>
-          <div class="bucket-titles"><h3>Long-Term Watchlist</h3><p>Track the thesis</p></div>
-          <span class="bucket-count" data-bucket-count="watching">0</span>
-        </summary>
-        <div data-bucket-body="watching"></div>
-      </details>
-    </section>
-  </div>
-
-  <div id="table-view" hidden>
-    <div class="table-wrap">
+  <div id="table-view">
+    <div class="table-wrap desktop-only">
       <table class="watchlist-table" id="watchlist-table">
         <thead>
           <tr>
             <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
             <th data-sort="name" class="sortable">Name</th>
-            <th data-sort="category" class="sortable">Bucket</th>
             <th>Tags</th>
             <th data-sort="price" class="sortable num">Price</th>
             <th class="num">Chg</th>
             <th data-sort="target" class="sortable num">Target</th>
-            <th data-sort="distance" class="sortable num">Distance</th>
             <th>Thesis</th>
             <th data-sort="priority" class="sortable">Priority</th>
             <th></th>
@@ -164,26 +86,22 @@ const base = import.meta.env.BASE_URL;
         <tbody id="watchlist-tbody"></tbody>
       </table>
     </div>
-    <div class="pagination" id="pagination"></div>
+    <div class="pagination desktop-only" id="pagination"></div>
   </div>
 
-  <div id="technical-view" hidden>
+  <div id="technical-view" class="desktop-only" hidden>
     <div class="table-wrap">
       <table class="watchlist-table technical-table" id="technical-table">
         <thead>
           <tr>
             <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
             <th data-sort="name" class="sortable">Name</th>
-            <th data-sort="category" class="sortable">Bucket</th>
             <th data-sort="price" class="sortable num">Price</th>
             <th class="num">Chg</th>
             <th data-sort="trend" class="sortable">Trend</th>
-            <th data-sort="vs20" class="sortable num">SMA 20</th>
             <th data-sort="vs50" class="sortable num">SMA 50</th>
-            <th data-sort="vs200" class="sortable num">SMA 200</th>
             <th data-sort="range52" class="sortable">52W range</th>
             <th data-sort="rsi" class="sortable num">RSI</th>
-            <th data-sort="target" class="sortable num">Target</th>
             <th></th>
           </tr>
         </thead>

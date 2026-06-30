@@ -101,12 +101,11 @@ const seedJson = JSON.stringify(seed.submissions);
     function stocksFromSubmission(sub) {
       return sub.symbols.map(function (sym) {
         var tp = parseTargetFromContent(sub.content, sym);
-        var cat = tp != null ? "targets" : "watching";
         var stock = {
-          id: "sub-" + sym.toLowerCase() + "-" + cat + "-" + sub.id,
+          id: "sub-" + sym.toLowerCase() + "-" + sub.id,
           symbol: sym,
           name: sym,
-          category: cat,
+          category: "tracking",
           thesis: sub.content,
           addedBy: sub.author,
           custom: true,
