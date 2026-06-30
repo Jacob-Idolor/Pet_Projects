@@ -1,0 +1,405 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#07090d"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="description" content="Track stocks you own, price targets you're waiting on, and long-term watchlist picks — one page for the whole group."><title>The Radar | Stocks Radar</title><link rel="icon" type="image/svg+xml" href="/Pet_Projects/stocks-radarfavicon.svg"><link rel="stylesheet" href="/Pet_Projects/stocks-radar/_astro/index.CPJLnG16.css"></head> <body> <header class="site-header"> <div class="container"> <a class="logo" href="/Pet_Projects/stocks-radar"> <span class="logo-icon">📈</span>
+Stocks Radar
+</a> <span class="header-meta">Live group watchlist</span> </div> </header> <main>  <div class="live-status" id="live-status" role="status" aria-live="polite" data-radar-base="/Pet_Projects/stocks-radar"> <span class="live-dot" id="live-dot" aria-hidden="true"></span> <span id="live-status-text">Loading prices…</span> </div> <script>
+  const REFRESH_MS = 60_000;
+  let lastUpdated = null;
+  let timer = null;
+  let countdown = null;
+
+  function isUsMarketOpen() {
+    const now = new Date();
+    const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    const day = et.getDay();
+    if (day === 0 || day === 6) return false;
+    const mins = et.getHours() * 60 + et.getMinutes();
+    return mins >= 9 * 60 + 30 && mins < 16 * 60;
+  }
+
+  function formatAgo(iso) {
+    if (!iso) return "unknown";
+    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (sec < 60) return "just now";
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+    return `${Math.floor(sec / 3600)}h ago`;
+  }
+
+  function setStatus(text, live = true) {
+    const el = document.getElementById("live-status-text");
+    const dot = document.getElementById("live-dot");
+    if (el) el.textContent = text;
+    if (dot) {
+      dot.classList.toggle("paused", !live);
+      dot.classList.toggle("live", live);
+    }
+  }
+
+  async function loadQuotes() {
+    const base = document.getElementById("live-status")?.dataset.radarBase ?? "/";
+    try {
+      const res = await fetch(base + "quotes.json?t=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("not found");
+      const data = await res.json();
+      lastUpdated = data.updatedAt;
+
+      if (data.quotes && Object.keys(data.quotes).length) {
+        document.dispatchEvent(new CustomEvent("radar:quotes", { detail: data.quotes }));
+      }
+
+      const market = isUsMarketOpen() ? "Market open" : "Market closed";
+      const coverage = data.count != null && data.total != null
+        ? `${data.count}/${data.total} quotes`
+        : "quotes loaded";
+      setStatus(`${market} · ${coverage} · updated ${formatAgo(lastUpdated)} · refreshes every 60s`);
+      const ageMs = Date.now() - new Date(lastUpdated).getTime();
+      if (ageMs > 10 * 60 * 1000) {
+        document.dispatchEvent(new CustomEvent("radar:stale-quotes"));
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function refresh() {
+    const ok = await loadQuotes();
+    if (!ok) {
+      setStatus("Live feed unavailable — using cached / manual prices", false);
+    }
+  }
+
+  function startLoop() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      if (document.hidden) return;
+      refresh();
+    }, REFRESH_MS);
+  }
+
+  refresh().then(() => startLoop());
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refresh();
+  });
+</script> <section class="day-mood-banner mood-unknown" id="day-mood-banner" role="status" aria-live="polite" aria-label="Today's watchlist mood"> <div class="container day-mood-inner"> <div class="day-mood-main"> <span class="day-mood-icon" id="day-mood-icon" aria-hidden="true">◐</span> <div> <h2 class="day-mood-title" id="day-mood-title">Reading the tape…</h2> <p class="day-mood-desc" id="day-mood-desc">Loading today’s move across your tickers</p> </div> </div> <p class="day-mood-hint" id="day-mood-hint"></p> </div> </section> <script>(function(){const stocksForMood = "[{\"symbol\":\"SMH\",\"category\":\"owned\"},{\"symbol\":\"NBIS\",\"category\":\"owned\"},{\"symbol\":\"SIVEF\",\"category\":\"owned\"},{\"symbol\":\"META\",\"category\":\"owned\"},{\"symbol\":\"AAOI\",\"category\":\"owned\"},{\"symbol\":\"OUST\",\"category\":\"watching\"},{\"symbol\":\"VPG\",\"category\":\"watching\"},{\"symbol\":\"AMBA\",\"category\":\"watching\"},{\"symbol\":\"SYNA\",\"category\":\"watching\"},{\"symbol\":\"INOD\",\"category\":\"watching\"},{\"symbol\":\"PLTR\",\"category\":\"targets\"}]";
+
+  (function () {
+    var stocks = JSON.parse(stocksForMood);
+    var banner = document.getElementById("day-mood-banner");
+    var titleEl = document.getElementById("day-mood-title");
+    var descEl = document.getElementById("day-mood-desc");
+    var hintEl = document.getElementById("day-mood-hint");
+    var iconEl = document.getElementById("day-mood-icon");
+
+    var FLAT = 0.05;
+
+    function marketOpen() {
+      var now = new Date();
+      var et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+      var day = et.getDay();
+      if (day === 0 || day === 6) return false;
+      var mins = et.getHours() * 60 + et.getMinutes();
+      return mins >= 570 && mins < 960;
+    }
+
+    function weightFor(cat) {
+      return cat === "owned" ? 2 : 1;
+    }
+
+    function compute(quotes) {
+      var up = 0, down = 0, flat = 0, counted = 0;
+      var weightedUp = 0, weightedDown = 0, weightedSum = 0, weightTotal = 0;
+
+      for (var i = 0; i < stocks.length; i++) {
+        var s = stocks[i];
+        var q = quotes[s.symbol];
+        if (!q || q.changePct == null || isNaN(q.changePct)) continue;
+        var chg = q.changePct;
+        var w = weightFor(s.category);
+        counted++;
+        weightedSum += chg * w;
+        weightTotal += w;
+        if (chg > FLAT) { up++; weightedUp += w; }
+        else if (chg < -FLAT) { down++; weightedDown += w; }
+        else flat++;
+      }
+
+      if (!counted) {
+        return { mood: "unknown", title: "Reading the tape…", description: "Waiting for live quotes", hint: "" };
+      }
+
+      var avg = weightTotal ? weightedSum / weightTotal : null;
+      var upShare = up / counted;
+      var downShare = down / counted;
+      var mood = "mixed";
+
+      if (weightedUp > weightedDown * 1.35 && (avg == null || avg >= 0.1)) mood = "bullish";
+      else if (weightedDown > weightedUp * 1.35 && (avg == null || avg <= -0.1)) mood = "bearish";
+      else if (upShare >= 0.65 && (avg == null || avg >= 0)) mood = "bullish";
+      else if (downShare >= 0.65 && (avg == null || avg <= 0)) mood = "bearish";
+      else if (avg != null && avg > 0.35 && up > down) mood = "bullish";
+      else if (avg != null && avg < -0.35 && down > up) mood = "bearish";
+
+      var avgTxt = avg != null ? "avg " + (avg >= 0 ? "+" : "") + avg.toFixed(2) + "%" : "";
+      var titles = { bullish: "Bullish day", bearish: "Bearish day", mixed: "Mixed day", unknown: "Reading the tape…" };
+      var hints = {
+        bullish: "Watchlist leaning green — more names up than down today.",
+        bearish: "Watchlist leaning red — more names down than up today.",
+        mixed: "No clear edge — winners and losers balanced across the list.",
+        unknown: ""
+      };
+      var desc;
+      if (mood === "bullish") desc = up + " of " + counted + " up · " + down + " down" + (avgTxt ? " · " + avgTxt : "");
+      else if (mood === "bearish") desc = down + " of " + counted + " down · " + up + " up" + (avgTxt ? " · " + avgTxt : "");
+      else desc = up + " up · " + down + " down · " + flat + " flat" + (avgTxt ? " · " + avgTxt : "");
+
+      if (!marketOpen()) desc += " · last session";
+
+      return { mood: mood, title: titles[mood], description: desc, hint: hints[mood] };
+    }
+
+    var icons = { bullish: "▲", bearish: "▼", mixed: "◐", unknown: "◐" };
+
+    function apply(result) {
+      if (!banner || !titleEl || !descEl) return;
+      banner.className = "day-mood-banner mood-" + result.mood;
+      document.body.dataset.dayMood = result.mood;
+      titleEl.textContent = result.title;
+      descEl.textContent = result.description;
+      if (hintEl) hintEl.textContent = result.hint;
+      if (iconEl) iconEl.textContent = icons[result.mood] || "◐";
+    }
+
+    document.addEventListener("radar:quotes", function (e) {
+      apply(compute(e.detail || {}));
+    });
+  })();
+})();</script> <section class="hero container"> <h1>The Radar</h1> <p class="tagline">What we&#39;re in, what we&#39;re watching, and what gets added over time.</p> <div class="hero-stats"> <span class="stat-pill"><strong>11</strong> tickers tracked</span> <span class="stat-pill">List updated 2026-06-30</span> </div> </section> <div class="container"> <section class="submissions-panel" id="submissions"> <div class="submissions-header"> <div> <h2>Group radar feed</h2> <p class="subtitle">Tickers, notes, paste from chat — anything you want on the list. Grows as you submit.</p> </div> <span class="submission-count" id="submission-count"></span> </div> <form class="submission-form" id="submission-form"> <div class="form-row"> <label>
+You
+<input type="text" id="submission-author" maxlength="8" placeholder="Initials" required> </label> </div> <label class="full-width">
+Add to the radar
+<textarea id="submission-content" rows="3" placeholder="SMH top semi exposure
+Watching PLTR under $18
+Paste a few tickers or a quick note — whatever you use in the group chat" required></textarea> </label> <button type="submit" class="btn btn-primary">Add to feed</button> </form> <ul class="submission-list" id="submission-list" aria-live="polite"></ul> </section> <script>(function(){const seedJson = "[{\"id\":\"seed-smh\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"SMH — top exposure, broad semi basket and core chip cycle play.\",\"symbols\":[\"SMH\"]},{\"id\":\"seed-nbis\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"NBIS — favorite investment for the next few years. Highest conviction on the list.\",\"symbols\":[\"NBIS\"]},{\"id\":\"seed-sivef\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"SIVEF — high upside photonics. Speculative swing, not the highest quality but big potential.\",\"symbols\":[\"SIVEF\"]},{\"id\":\"seed-meta\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"META — highest upside in Mag 7 outside NVDA. AI + ads + efficiency.\",\"symbols\":[\"META\"]},{\"id\":\"seed-aaoi\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"AAOI — photonics exposure alongside SIVEF. Optical / datacenter connectivity bet.\",\"symbols\":[\"AAOI\"]},{\"id\":\"seed-oust\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"OUST — digital lidar for robotics, AV, and industrial sensing.\",\"symbols\":[\"OUST\"]},{\"id\":\"seed-vpg\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"VPG — precision sensors and resistors in the industrial sensing chain.\",\"symbols\":[\"VPG\"]},{\"id\":\"seed-amba\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"AMBA — low-power vision and edge AI silicon for cameras and automotive.\",\"symbols\":[\"AMBA\"]},{\"id\":\"seed-syna\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"SYNA — human-interface and connectivity ICs for touch, display, and IoT.\",\"symbols\":[\"SYNA\"]},{\"id\":\"seed-inod\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"INOD — AI data engineering and digital transformation services.\",\"symbols\":[\"INOD\"]},{\"id\":\"seed-pltr\",\"author\":\"J\",\"submittedAt\":\"2026-06-29\",\"content\":\"PLTR — on PT list at $18. Want a better entry before sizing up.\",\"symbols\":[\"PLTR\"]}]";
+
+  (function () {
+    var DB = "stocks-radar-submissions";
+    var KEY = "entries";
+
+    function openDb() {
+      return new Promise(function (resolve, reject) {
+        var req = indexedDB.open(DB, 1);
+        req.onupgradeneeded = function () {
+          if (!req.result.objectStoreNames.contains("kv")) {
+            req.result.createObjectStore("kv");
+          }
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+      });
+    }
+
+    function getLocal() {
+      return openDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction("kv", "readonly");
+          var req = tx.objectStore("kv").get(KEY);
+          req.onsuccess = function () { resolve(req.result || []); };
+          req.onerror = function () { reject(req.error); };
+        });
+      }).catch(function () { return []; });
+    }
+
+    function setLocal(entries) {
+      return openDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction("kv", "readwrite");
+          tx.objectStore("kv").put(entries, KEY);
+          tx.oncomplete = function () { resolve(); };
+          tx.onerror = function () { reject(tx.error); };
+        });
+      });
+    }
+
+    function parseSymbols(text) {
+      var found = new Set();
+      var parts = text.split(/[\s,;|/]+/);
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i].trim().toUpperCase().replace(/^\$/, "");
+        if (/^[A-Z]{1,5}(\.[A-Z])?$/.test(p)) found.add(p);
+      }
+      return Array.from(found);
+    }
+
+    function parseTargetFromContent(content, symbol) {
+      var sym = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      var patterns = [
+        new RegExp(sym + "[^\\d]{0,24}(?:\\$|@|under|below|at|to)?\\s*(\\d+(?:\\.\\d+)?)", "i"),
+        new RegExp("(?:\\$|@|target|pt|under|below)\\s*(\\d+(?:\\.\\d+)?)[^\\d]{0,24}" + sym, "i"),
+      ];
+      for (var i = 0; i < patterns.length; i++) {
+        var m = content.match(patterns[i]);
+        if (m) return parseFloat(m[1]);
+      }
+      return null;
+    }
+
+    function stocksFromSubmission(sub) {
+      return sub.symbols.map(function (sym) {
+        var tp = parseTargetFromContent(sub.content, sym);
+        var cat = tp != null ? "targets" : "watching";
+        var stock = {
+          id: "sub-" + sym.toLowerCase() + "-" + cat + "-" + sub.id,
+          symbol: sym,
+          name: sym,
+          category: cat,
+          thesis: sub.content,
+          addedBy: sub.author,
+          custom: true,
+        };
+        if (tp != null) {
+          stock.targetPrice = tp;
+          stock.targetNote = sub.content;
+        }
+        return stock;
+      });
+    }
+
+    function mergeById(a, b) {
+      var map = {};
+      a.concat(b).forEach(function (s) { map[s.id] = s; });
+      return Object.keys(map).map(function (k) { return map[k]; });
+    }
+
+    function formatDate(iso) {
+      try {
+        return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      } catch {
+        return iso;
+      }
+    }
+
+    function escapeHtml(t) {
+      return String(t)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    var seed = JSON.parse(seedJson);
+    var form = document.getElementById("submission-form");
+    var authorInput = document.getElementById("submission-author");
+    var contentInput = document.getElementById("submission-content");
+    var listEl = document.getElementById("submission-list");
+    var countEl = document.getElementById("submission-count");
+
+    var savedAuthor = localStorage.getItem("radar-author");
+    if (savedAuthor && authorInput) authorInput.value = savedAuthor;
+
+    function allSubmissions(local) {
+      var map = {};
+      seed.forEach(function (s) { map[s.id] = s; });
+      local.forEach(function (s) { map[s.id] = s; });
+      return Object.keys(map).map(function (k) { return map[k]; })
+        .sort(function (a, b) { return String(b.submittedAt).localeCompare(String(a.submittedAt)); });
+    }
+
+    function render(local) {
+      var all = allSubmissions(local);
+      if (countEl) countEl.textContent = all.length + " on the feed";
+
+      if (!listEl) return;
+      listEl.innerHTML = all.map(function (sub) {
+        var chips = (sub.symbols || []).map(function (s) {
+          return '<span class="sub-symbol">' + escapeHtml(s) + '</span>';
+        }).join("");
+        var localTag = sub.id.indexOf("local-") === 0 ? ' <span class="local-tag">new</span>' : "";
+        return '<li class="submission-item" data-id="' + escapeHtml(sub.id) + '">' +
+          '<div class="submission-meta">' +
+          '<strong>' + escapeHtml(sub.author) + '</strong>' +
+          '<time>' + formatDate(sub.submittedAt) + '</time>' + localTag +
+          '</div>' +
+          (chips ? '<div class="submission-symbols">' + chips + '</div>' : "") +
+          '<p class="submission-text">' + escapeHtml(sub.content) + '</p>' +
+          (sub.id.indexOf("local-") === 0
+            ? '<button type="button" class="btn-text delete-sub" data-id="' + escapeHtml(sub.id) + '">Remove</button>'
+            : "") +
+          '</li>';
+      }).join("");
+
+      listEl.querySelectorAll(".delete-sub").forEach(function (btn) {
+        btn.addEventListener("click", async function () {
+          var id = btn.getAttribute("data-id");
+          var entries = await getLocal();
+          await setLocal(entries.filter(function (e) { return e.id !== id; }));
+          render(await getLocal());
+        });
+      });
+    }
+
+    async function init() {
+      var local = await getLocal();
+      render(local);
+
+      var all = allSubmissions(local);
+      var stocks = [];
+      all.forEach(function (sub) {
+        stocks = mergeById(stocks, stocksFromSubmission(sub));
+      });
+      if (stocks.length) {
+        document.dispatchEvent(new CustomEvent("radar:submission-added", { detail: { stocks: stocks } }));
+      }
+    }
+
+    form?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var author = (authorInput?.value || "").trim().toUpperCase();
+      var content = (contentInput?.value || "").trim();
+      if (!author || !content) return;
+
+      localStorage.setItem("radar-author", author);
+
+      var sub = {
+        id: "local-" + crypto.randomUUID(),
+        author: author,
+        submittedAt: new Date().toISOString().slice(0, 10),
+        content: content,
+        symbols: parseSymbols(content),
+      };
+
+      var local = await getLocal();
+      local.push(sub);
+      await setLocal(local);
+
+      if (contentInput) contentInput.value = "";
+      render(local);
+
+      var stocks = stocksFromSubmission(sub);
+      if (stocks.length) {
+        document.dispatchEvent(new CustomEvent("radar:submission-added", { detail: { stocks: stocks } }));
+      }
+    });
+
+    init();
+  })();
+})();</script> <section class="watchlist-board" id="watchlist-board" data-radar-base="/Pet_Projects/stocks-radar"> <div id="held-strip" class="held-strip" hidden aria-label="Current holdings"></div> <div class="board-header"> <div> <h2>Watchlist</h2> <p class="board-subtitle">Full picture — holdings, targets, and long-term watches. Press <kbd>/</kbd> to search.</p> </div> <div class="board-actions"> <div class="view-toggle"> <button type="button" class="chip active" id="view-buckets">By bucket</button> <button type="button" class="chip" id="view-table">All tickers</button> <button type="button" class="chip" id="view-technical">Technical</button> </div> <button type="button" class="btn btn-ghost" id="toggle-pt">Add PT</button> <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button> <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button> </div> </div> <div class="pt-panel" id="pt-panel" hidden> <h3>Add price target</h3> <p class="panel-hint">Send a ticker to the PT list — shows under <strong>Targets</strong> and in <strong>Closest to entry</strong>.</p> <form class="pt-form" id="pt-form"> <label>
+Symbol
+<input type="text" id="pt-symbol" maxlength="6" placeholder="PLTR" required autocomplete="off"> </label> <label>
+Target $
+<input type="number" id="pt-price" step="0.01" min="0.01" placeholder="18.00" required> </label> <label>
+Note
+<input type="text" id="pt-note" placeholder="Want better entry (optional)"> </label> <label>
+You
+<input type="text" id="pt-author" maxlength="8" placeholder="Initials"> </label> <button type="submit" class="btn btn-primary">Add to PT list</button> </form> <p class="pt-hint">Tip: in the group feed try <code>PLTR @ 18</code> or <code>Watching NVDA under $120</code> — we auto-detect PTs.</p> </div> <div class="import-panel" id="import-panel" hidden> <p class="import-help">
+Paste from a spreadsheet — columns:
+<code>symbol, name, category, sector, tags, targetPrice, thesis, priority</code>.
+      Tags use semicolons (<code>photonics;speculative</code>). Saved in your browser only.
+</p> <textarea id="import-text" rows="6" placeholder="NVDA,NVIDIA,watching,Semiconductors,ai;semi,,Mag7 benchmark,J
+PLTR,Palantir,targets,Software,ai;gov,18,Waiting for dip,medium,K"></textarea> <div class="import-actions"> <button type="button" class="btn btn-primary" id="import-apply">Add to watchlist</button> <button type="button" class="btn btn-ghost" id="import-clear">Clear my imports</button> </div> </div> <div class="overview-grid" id="overview-grid" aria-live="polite"></div> <div class="opportunities-panel" id="opportunities-panel"> <h3>Closest to entry</h3> <p class="panel-hint">Tickers with targets — nearest to your price level first.</p> <div class="opp-chips" id="opp-chips"></div> </div> <div class="toolbar"> <input type="search" id="search-input" class="search-input" placeholder="Search symbol, name, sector, tags, thesis…" autocomplete="off"> <div class="filter-chips" id="filter-chips"> <button type="button" class="chip active" data-filter="all">All</button> <button type="button" class="chip" data-filter="owned">Owned</button> <button type="button" class="chip" data-filter="targets">Targets</button> <button type="button" class="chip" data-filter="watching">Watching</button> <button type="button" class="chip" data-filter="has-target">Has target</button> <button type="button" class="chip" data-filter="at-target">At target</button> <button type="button" class="chip" data-filter="high-priority">High priority</button> </div> <div class="filter-chips tech-filters" id="tech-filter-chips"> <span class="tag-filter-label">Technicals:</span> <button type="button" class="chip" data-filter="tech-above-50">Above 50 MA</button> <button type="button" class="chip" data-filter="tech-below-200">Below 200 MA</button> <button type="button" class="chip" data-filter="tech-bullish">Bullish</button> <button type="button" class="chip" data-filter="tech-bearish">Bearish</button> <button type="button" class="chip" data-filter="tech-near-low">Near 52w low</button> <button type="button" class="chip" data-filter="tech-near-high">Near 52w high</button> <button type="button" class="chip" data-filter="tech-oversold">RSI oversold</button> </div> </div> <div class="tag-filters" id="tag-filters"></div> <p class="result-count" id="result-count"></p> <div id="bucket-view"> <section class="bucket-section"> <details class="bucket-details" open> <summary class="bucket-summary"> <span class="bucket-icon">💼</span> <div class="bucket-titles"><h3>Currently Holding</h3><p>Active positions</p></div> <span class="bucket-count" data-bucket-count="owned">0</span> </summary> <div data-bucket-body="owned"></div> </details> </section> <section class="bucket-section"> <details class="bucket-details" open> <summary class="bucket-summary"> <span class="bucket-icon">🎯</span> <div class="bucket-titles"><h3>Waiting on Price Targets</h3><p>Entry and trim levels</p></div> <span class="bucket-count" data-bucket-count="targets">0</span> </summary> <div data-bucket-body="targets"></div> </details> </section> <section class="bucket-section"> <details class="bucket-details" open> <summary class="bucket-summary"> <span class="bucket-icon">👀</span> <div class="bucket-titles"><h3>Long-Term Watchlist</h3><p>Track the thesis</p></div> <span class="bucket-count" data-bucket-count="watching">0</span> </summary> <div data-bucket-body="watching"></div> </details> </section> </div> <div id="table-view" hidden> <div class="table-wrap"> <table class="watchlist-table" id="watchlist-table"> <thead> <tr> <th data-sort="symbol" class="sortable sticky-col">Symbol</th> <th data-sort="name" class="sortable">Name</th> <th data-sort="category" class="sortable">Bucket</th> <th>Tags</th> <th data-sort="price" class="sortable num">Price</th> <th class="num">Chg</th> <th data-sort="target" class="sortable num">Target</th> <th data-sort="distance" class="sortable num">Distance</th> <th>Thesis</th> <th data-sort="priority" class="sortable">Priority</th> <th></th> </tr> </thead> <tbody id="watchlist-tbody"></tbody> </table> </div> <div class="pagination" id="pagination"></div> </div> <div id="technical-view" hidden> <div class="table-wrap"> <table class="watchlist-table technical-table" id="technical-table"> <thead> <tr> <th data-sort="symbol" class="sortable sticky-col">Symbol</th> <th data-sort="name" class="sortable">Name</th> <th data-sort="category" class="sortable">Bucket</th> <th data-sort="price" class="sortable num">Price</th> <th class="num">Chg</th> <th data-sort="trend" class="sortable">Trend</th> <th data-sort="vs20" class="sortable num">SMA 20</th> <th data-sort="vs50" class="sortable num">SMA 50</th> <th data-sort="vs200" class="sortable num">SMA 200</th> <th data-sort="range52" class="sortable">52W range</th> <th data-sort="rsi" class="sortable num">RSI</th> <th data-sort="target" class="sortable num">Target</th> <th></th> </tr> </thead> <tbody id="technical-tbody"></tbody> </table> </div> <div class="pagination" id="technical-pagination"></div> </div> </section> <script>(function(){const stocksJson = "[{\"id\":\"smh-owned\",\"symbol\":\"SMH\",\"name\":\"VanEck Semiconductor ETF\",\"category\":\"owned\",\"sector\":\"Semiconductors\",\"tags\":[\"semi\",\"etf\",\"core\"],\"priority\":\"high\",\"thesis\":\"Top exposure — broad semiconductor basket, core chip cycle play.\",\"addedBy\":\"J\",\"holder\":\"J\"},{\"id\":\"nbis-owned\",\"symbol\":\"NBIS\",\"name\":\"Nebius Group\",\"category\":\"owned\",\"sector\":\"AI Infrastructure\",\"tags\":[\"ai\",\"high-conviction\"],\"priority\":\"high\",\"thesis\":\"Favorite investment for the next few years — highest conviction name on the list.\",\"addedBy\":\"J\",\"holder\":\"J\"},{\"id\":\"sivef-owned\",\"symbol\":\"SIVEF\",\"name\":\"Sivers Semiconductors\",\"category\":\"owned\",\"sector\":\"Photonics\",\"tags\":[\"photonics\",\"speculative\"],\"priority\":\"medium\",\"thesis\":\"High upside photonics exposure — speculative, not highest quality but big swing potential.\",\"addedBy\":\"J\",\"holder\":\"J\"},{\"id\":\"meta-owned\",\"symbol\":\"META\",\"name\":\"Meta Platforms\",\"category\":\"owned\",\"sector\":\"Technology\",\"tags\":[\"mag7\",\"ai\"],\"priority\":\"high\",\"thesis\":\"Highest upside in Mag 7 outside NVDA — AI + ads + efficiency story.\",\"addedBy\":\"J\",\"holder\":\"J\"},{\"id\":\"aaoi-owned\",\"symbol\":\"AAOI\",\"name\":\"Applied Optoelectronics\",\"category\":\"owned\",\"sector\":\"Photonics\",\"tags\":[\"photonics\",\"speculative\"],\"priority\":\"medium\",\"thesis\":\"High upside photonics exposure — optical/datacenter connectivity bet alongside SIVEF.\",\"addedBy\":\"J\",\"holder\":\"J\"},{\"id\":\"oust-watching\",\"symbol\":\"OUST\",\"name\":\"Ouster\",\"category\":\"watching\",\"sector\":\"Autonomous / Lidar\",\"tags\":[\"lidar\",\"sensors\",\"speculative\"],\"priority\":\"medium\",\"thesis\":\"Digital lidar for robotics, AV, and industrial sensing — on radar for the autonomy stack.\",\"addedBy\":\"J\"},{\"id\":\"vpg-watching\",\"symbol\":\"VPG\",\"name\":\"Vishay Precision Group\",\"category\":\"watching\",\"sector\":\"Industrial / Sensors\",\"tags\":[\"sensors\",\"industrial\"],\"priority\":\"medium\",\"thesis\":\"Precision resistors, sensors, and weighing — industrial quality compounder in the sensing chain.\",\"addedBy\":\"J\"},{\"id\":\"amba-watching\",\"symbol\":\"AMBA\",\"name\":\"Ambarella\",\"category\":\"watching\",\"sector\":\"Semiconductors\",\"tags\":[\"semi\",\"edge-ai\",\"video\"],\"priority\":\"medium\",\"thesis\":\"Low-power vision and edge AI silicon — video processing for cameras, drones, and automotive.\",\"addedBy\":\"J\"},{\"id\":\"syna-watching\",\"symbol\":\"SYNA\",\"name\":\"Synaptics\",\"category\":\"watching\",\"sector\":\"Semiconductors\",\"tags\":[\"semi\",\"iot\"],\"priority\":\"medium\",\"thesis\":\"Human-interface and connectivity ICs — touch, display, and IoT edge exposure.\",\"addedBy\":\"J\"},{\"id\":\"inod-watching\",\"symbol\":\"INOD\",\"name\":\"Innodata\",\"category\":\"watching\",\"sector\":\"AI / Data Services\",\"tags\":[\"ai\",\"data\"],\"priority\":\"medium\",\"thesis\":\"AI data engineering and digital transformation services — picks-and-shovels for model training workflows.\",\"addedBy\":\"J\"},{\"id\":\"pltr-targets\",\"symbol\":\"PLTR\",\"name\":\"Palantir\",\"category\":\"targets\",\"sector\":\"Software\",\"tags\":[\"ai\",\"gov\"],\"priority\":\"medium\",\"targetPrice\":18,\"targetNote\":\"Want a better entry — watching for pullback to this level.\",\"thesis\":\"AI + gov platform — on PT list until price comes in.\",\"addedBy\":\"J\"}]";
+
+  window.__STOCKS_RADAR_DATA__ = stocksJson;
+})();</script> <script defer src="/watchlist-board.mjs"></script> </div>  </main> <footer class="site-footer"> <div class="container"> <p>
+Built for friends who talk stocks — not financial advice.
+<a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a> </p> <p class="disclaimer">
+New submissions save in your browser until committed to the shared watchlist in git.
+</p> </div> </footer> </body></html>
