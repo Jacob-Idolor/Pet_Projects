@@ -56,11 +56,20 @@ npm run import-csv -- my-tickers.csv
 - **Theme chips** — filter one tag at a time
 - **+** on a row — expand full thesis, sector, Yahoo link
 
-## Go live
+## Go live (pick one — both stay under $5/mo)
+
+| Option | Cost | URL |
+|--------|------|-----|
+| **GitHub Pages** (default) | **$0/mo** | `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/` |
+| **AWS S3 + CloudFront** | **~$0.50–3/mo** | CloudFront URL from Terraform |
+
+**GitHub Pages (free):**
 
 1. Merge to `main`
 2. GitHub → Settings → Pages → Source: **GitHub Actions**
-3. URL: https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
+3. Push to `main` triggers deploy (or run the workflow manually)
+
+**AWS (optional):** infra lives in [`infra/`](infra/README.md) — Terraform + `./deploy.sh`. Does not touch app code; local dev is unchanged.
 
 Prices refresh on deploy + every 15 min on weekdays (scheduled CI). Page polls every 60s while open.
 
@@ -72,6 +81,7 @@ stocks/radar/
   src/scripts/watchlist-board.ts   # table, filters, buckets UI
   scripts/csv-to-watchlist.mjs
   scripts/fetch-quotes.mjs
+  infra/                           # AWS only — see infra/README.md
 ```
 
 ## License
