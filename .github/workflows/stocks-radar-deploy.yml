@@ -5,15 +5,15 @@ on:
     branches: [main]
     paths:
       - "stocks/radar/**"
+      - ".github/workflows/stocks-radar-deploy.yml"
   schedule:
-    # Every 15 min on weekdays — refresh live quotes during market hours
+    # Weekdays — refresh live quotes during market hours
     - cron: "*/15 * * * 1-5"
   workflow_dispatch:
 
+# peaceiris pushes to gh-pages branch — no configure-pages / Pages API needed
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: stocks-radar-deploy
@@ -22,15 +22,12 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
 
@@ -43,14 +40,13 @@ jobs:
           npm ci
           npm run build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: stocks/radar/dist
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: stocks/radar/dist
+          destination_dir: stocks-radar
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "deploy: stocks-radar @ ${{ github.sha }}"

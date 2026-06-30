@@ -85,17 +85,37 @@ const seedJson = JSON.stringify(seed.submissions);
       return Array.from(found);
     }
 
+    function parseTargetFromContent(content, symbol) {
+      var sym = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      var patterns = [
+        new RegExp(sym + "[^\\d]{0,24}(?:\\$|@|under|below|at|to)?\\s*(\\d+(?:\\.\\d+)?)", "i"),
+        new RegExp("(?:\\$|@|target|pt|under|below)\\s*(\\d+(?:\\.\\d+)?)[^\\d]{0,24}" + sym, "i"),
+      ];
+      for (var i = 0; i < patterns.length; i++) {
+        var m = content.match(patterns[i]);
+        if (m) return parseFloat(m[1]);
+      }
+      return null;
+    }
+
     function stocksFromSubmission(sub) {
       return sub.symbols.map(function (sym) {
-        return {
-          id: "sub-" + sym.toLowerCase() + "-" + sub.id,
+        var tp = parseTargetFromContent(sub.content, sym);
+        var cat = tp != null ? "targets" : "watching";
+        var stock = {
+          id: "sub-" + sym.toLowerCase() + "-" + cat + "-" + sub.id,
           symbol: sym,
           name: sym,
-          category: "watching",
+          category: cat,
           thesis: sub.content,
           addedBy: sub.author,
           custom: true,
         };
+        if (tp != null) {
+          stock.targetPrice = tp;
+          stock.targetNote = sub.content;
+        }
+        return stock;
       });
     }
 

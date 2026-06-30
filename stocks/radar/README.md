@@ -14,6 +14,7 @@ A robust single-page watchlist for you and your friends — holdings, price targ
 - **Overview stats** — at target, within 5%/10%, counts by bucket
 - **CSV import/export** — bulk load your full watchlist
 - **Live prices** — free quote fetch on deploy + browser refresh (no paid APIs)
+- **Technical view** — SMA 20/50/200, RSI(14), 52-week range, trend badges, volume vs 20d avg
 
 ## Quick start
 
@@ -50,13 +51,33 @@ npm run import-csv -- my-tickers.csv
 
 ## Using the page
 
+- **Add PT** button — send a ticker to the price-target list (e.g. PLTR @ $18)
+- Expand any row (**+**) — set or update a target inline
+- Group feed — post `PLTR @ 18` or `Watching NVDA under $120` to auto-detect PTs
 - **By bucket** (default) — three collapsible sections for the full picture
 - **All tickers** — paginated master table for 100+ names
 - **/** — focus search
+- **Technical** tab — moving averages, RSI, 52-week range position, trend
+- **Technicals filters** — above/below MAs, bullish/bearish, near 52w high/low, RSI oversold
 - **Theme chips** — filter one tag at a time
 - **+** on a row — expand full thesis, sector, Yahoo link
 
 ## Go live (pick one — both stay under $5/mo)
+
+**Live URL (after setup):** https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
+
+### Deploy in ~3 minutes (GitHub Pages, free)
+
+1. **Merge** the stocks-radar PR to `main`
+2. **Enable Pages** (once): [Settings → Pages](https://github.com/Jacob-Idolor/Pet_Projects/settings/pages) → Source: **Deploy from a branch** → Branch **`gh-pages`** → **`/ (root)`** → Save
+3. **Run deploy:** Actions → **Stocks Radar — live deploy** → **Run workflow**
+4. **Open on phone:** bookmark the URL above — works on mobile (responsive layout, touch-friendly tables)
+
+Full troubleshooting: [`.github/PAGES_SETUP.md`](../../.github/PAGES_SETUP.md)
+
+### Mobile
+
+The page is built for phone and desktop: responsive grids, horizontal scroll on wide tables, touch-sized buttons, safe-area padding for notched phones. Add to home screen from Safari/Chrome for quick access.
 
 | Option | Cost | URL |
 |--------|------|-----|
@@ -65,9 +86,9 @@ npm run import-csv -- my-tickers.csv
 
 **GitHub Pages (free):**
 
-1. Merge to `main`
-2. GitHub → Settings → Pages → Source: **GitHub Actions**
-3. Push to `main` triggers deploy (or run the workflow manually)
+1. **One-time:** enable Pages → [setup guide](../../.github/PAGES_SETUP.md) (branch `gh-pages`, folder `/`)
+2. Merge to `main` — deploy workflow runs automatically
+3. URL: `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/`
 
 **AWS (optional):** infra lives in [`infra/`](infra/README.md) — Terraform + `./deploy.sh`. Does not touch app code; local dev is unchanged.
 

@@ -1,6 +1,17 @@
 import { escapeHtml, yahooUrl } from "../lib/format";
-
-export type QuoteMap = Record<string, { price: number; changePct: number | null; prevClose?: number | null }>;
+import {
+  type QuoteData,
+  type QuoteMap,
+  fmtPrice,
+  trendBadge,
+  maCell,
+  rangeBar,
+  renderMaStrip,
+  renderTechnicalDetail,
+  hasTechnical,
+  matchesTechnicalFilter,
+  rsiLabel,
+} from "../lib/market-display";
 
 export interface StockRow {
   id: string;
@@ -37,13 +48,13 @@ let tagFilter: string | null = null;
 let search = "";
 let sortKey = "distance";
 let sortDir = 1;
-let viewMode: "table" | "buckets" = "buckets";
+let viewMode: "table" | "buckets" | "technical" = "buckets";
 let page = 1;
 let pageSize = 50;
 let expandedId: string | null = null;
 
 interface Prefs {
-  viewMode?: "table" | "buckets";
+  viewMode?: "table" | "buckets" | "technical";
   pageSize?: number;
   sortKey?: string;
   filter?: string;
@@ -108,9 +119,46 @@ function mergeStocks(base: StockRow[], custom: StockRow[]) {
   return [...map.values()];
 }
 
-function fmtPrice(v: number | null | undefined) {
-  if (v == null || Number.isNaN(v)) return "—";
-  return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+async function savePriceTarget(
+  symbol: string,
+  targetPrice: number,
+  opts?: { note?: string; addedBy?: string; name?: string }
+) {
+  const sym = symbol.toUpperCase().replace(/^\$/, "");
+  if (!sym || !targetPrice || targetPrice <= 0) return false;
+
+  const existing = allStocks.find((s) => s.symbol === sym && s.category === "targets");
+  const q = quotes[sym];
+  const stock: StockRow = {
+    id: `custom-${sym.toLowerCase()}-targets`,
+    symbol: sym,
+    name: opts?.name ?? q?.name ?? existing?.name ?? sym,
+    category: "targets",
+    targetPrice,
+    custom: true,
+    sector: existing?.sector,
+    tags: existing?.tags,
+    priority: existing?.priority ?? "medium",
+  };
+  if (opts?.note) {
+    stock.thesis = opts.note;
+    stock.targetNote = opts.note;
+  } else if (existing?.thesis) {
+    stock.thesis = existing.thesis;
+    stock.targetNote = existing.targetNote;
+  }
+  if (opts?.addedBy) stock.addedBy = opts.addedBy;
+  else if (existing?.addedBy) stock.addedBy = existing.addedBy;
+
+  const custom = await getCustomStocks();
+  const merged = mergeStocks(custom, [stock]);
+  await setCustomStocks(merged);
+  allStocks = mergeStocks(baseStocks, merged);
+  return true;
+}
+
+function getQuote(stock: StockRow): QuoteData | undefined {
+  return quotes[stock.symbol];
 }
 
 function getPrice(stock: StockRow) {
@@ -164,6 +212,9 @@ function matchesFilter(stock: StockRow) {
     case "high-priority":
       return stock.priority === "high";
     default:
+      if (filter.startsWith("tech-")) {
+        return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
+      }
       return true;
   }
 }
@@ -219,6 +270,32 @@ function sortStocks(list: StockRow[]) {
       }
       case "by":
         return sortDir * (a.holder ?? a.addedBy ?? "").localeCompare(b.holder ?? b.addedBy ?? "");
+      case "vs50":
+        av = getQuote(a)?.vsSma?.[50] ?? -Infinity;
+        bv = getQuote(b)?.vsSma?.[50] ?? -Infinity;
+        return sortDir * ((av as number) - (bv as number));
+      case "vs20":
+        av = getQuote(a)?.vsSma?.[20] ?? -Infinity;
+        bv = getQuote(b)?.vsSma?.[20] ?? -Infinity;
+        return sortDir * ((av as number) - (bv as number));
+      case "vs200":
+        av = getQuote(a)?.vsSma?.[200] ?? -Infinity;
+        bv = getQuote(b)?.vsSma?.[200] ?? -Infinity;
+        return sortDir * ((av as number) - (bv as number));
+      case "range52":
+        av = getQuote(a)?.range52Pct ?? -Infinity;
+        bv = getQuote(b)?.range52Pct ?? -Infinity;
+        return sortDir * ((av as number) - (bv as number));
+      case "rsi":
+        av = getQuote(a)?.rsi14 ?? -Infinity;
+        bv = getQuote(b)?.rsi14 ?? -Infinity;
+        return sortDir * ((av as number) - (bv as number));
+      case "trend": {
+        const order: Record<string, number> = { bullish: 0, mixed: 1, bearish: 2, unknown: 3 };
+        av = order[getQuote(a)?.trend ?? "unknown"] ?? 4;
+        bv = order[getQuote(b)?.trend ?? "unknown"] ?? 4;
+        return sortDir * ((av as number) - (bv as number));
+      }
       default:
         return 0;
     }
@@ -242,8 +319,9 @@ function renderPriority(stock: StockRow) {
   return `<span class="priority priority-${stock.priority}">${stock.priority}</span>`;
 }
 
-function renderRow(stock: StockRow, compact = false) {
+function renderRow(stock: StockRow, compact = false, mode: "default" | "technical" = "default") {
   const price = getPrice(stock);
+  const q = getQuote(stock);
   const chg = getChange(stock);
   const dist = getDistance(stock);
   const { text: distText, cls: distCls } = distanceLabel(dist);
@@ -253,6 +331,32 @@ function renderRow(stock: StockRow, compact = false) {
       : `<span class="chg dim">—</span>`;
   const expanded = expandedId === stock.id;
   const atTarget = dist != null && Math.abs(dist) < 0.5;
+
+  if (mode === "technical") {
+    const rsi = rsiLabel(q?.rsi14);
+    return `
+    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${expanded ? "expanded" : ""}">
+      <td class="mono sym">
+        <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
+        ${renderMaStrip(q, price)}
+      </td>
+      <td class="name-cell">${escapeHtml(stock.name)}</td>
+      <td><span class="cat-badge cat-${stock.category}">${CAT_LABEL[stock.category] ?? stock.category}</span></td>
+      <td class="num mono">${fmtPrice(price)}</td>
+      <td class="num">${chgHtml}</td>
+      <td>${trendBadge(q?.trend)}</td>
+      <td class="num">${maCell(price, q?.sma?.[20], q?.vsSma?.[20])}</td>
+      <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
+      <td class="num">${maCell(price, q?.sma?.[200], q?.vsSma?.[200])}</td>
+      <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
+      <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
+      <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
+      <td class="row-actions">
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
+      </td>
+    </tr>
+    ${expanded ? renderDetailRow(stock, price, q, 13) : ""}`;
+  }
 
   return `
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${expanded ? "expanded" : ""}">
@@ -278,27 +382,40 @@ function renderRow(stock: StockRow, compact = false) {
     </tr>
     ${
       expanded
-        ? `<tr class="detail-row" data-detail-for="${stock.id}">
-        <td colspan="11">
-          <div class="detail-panel">
-            ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
-            ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
-            ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
-            <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "—")}</p>
-            <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
-          </div>
-        </td>
-      </tr>`
+        ? renderDetailRow(stock, price, getQuote(stock), 11)
         : ""
     }
   `;
 }
 
-function renderTableHtml(stocks: StockRow[]) {
+function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
+  const ptVal = stock.targetPrice != null ? String(stock.targetPrice) : "";
+  return `<tr class="detail-row" data-detail-for="${stock.id}">
+        <td colspan="${colspan}">
+          <div class="detail-panel">
+            ${renderTechnicalDetail(q, price)}
+            ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
+            ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
+            ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            <div class="pt-inline" data-pt-inline="${stock.symbol}">
+              <strong>Price target:</strong>
+              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${escapeHtml(stock.symbol)}" />
+              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${stock.symbol}">Save to PT list</button>
+              ${stock.category === "targets" && stock.targetPrice != null ? `<span class="pt-current">In Targets @ ${fmtPrice(stock.targetPrice)}</span>` : ""}
+            </div>
+            <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "—")}</p>
+            <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
+          </div>
+        </td>
+      </tr>`;
+}
+
+function renderTableHtml(stocks: StockRow[], mode: "default" | "technical" = "default") {
   if (!stocks.length) {
-    return `<tr><td colspan="11" class="empty-row">No tickers match your filters.</td></tr>`;
+    const cols = mode === "technical" ? 13 : 11;
+    return `<tr><td colspan="${cols}" class="empty-row">No tickers match your filters.</td></tr>`;
   }
-  return stocks.map((s) => renderRow(s)).join("");
+  return stocks.map((s) => renderRow(s, false, mode)).join("");
 }
 
 function renderOverview() {
@@ -322,6 +439,28 @@ function renderOverview() {
   const tags = new Set<string>();
   allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
 
+  let techHtml = "";
+  const withTech = allStocks.filter((s) => hasTechnical(getQuote(s)));
+  if (withTech.length) {
+    let above50 = 0;
+    let above200 = 0;
+    let bullish = 0;
+    let nearLow = 0;
+    for (const s of withTech) {
+      const q = getQuote(s);
+      const p = getPrice(s);
+      if (q?.sma?.[50] != null && p != null && p > q.sma[50]) above50++;
+      if (q?.sma?.[200] != null && p != null && p > q.sma[200]) above200++;
+      if (q?.trend === "bullish") bullish++;
+      if (q?.range52Pct != null && q.range52Pct <= 20) nearLow++;
+    }
+    techHtml = `
+    <div class="overview-card tech"><span class="ov-value">${above50}</span><span class="ov-label">Above 50 MA</span></div>
+    <div class="overview-card tech"><span class="ov-value">${above200}</span><span class="ov-label">Above 200 MA</span></div>
+    <div class="overview-card tech highlight"><span class="ov-value">${bullish}</span><span class="ov-label">Bullish trend</span></div>
+    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>`;
+  }
+
   el.innerHTML = `
     <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Total</span></div>
     <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "owned").length}</span><span class="ov-label">Owned</span></div>
@@ -331,6 +470,7 @@ function renderOverview() {
     <div class="overview-card highlight"><span class="ov-value">${within5}</span><span class="ov-label">Within 5%</span></div>
     <div class="overview-card"><span class="ov-value">${within10}</span><span class="ov-label">Within 10%</span></div>
     <div class="overview-card"><span class="ov-value">${tags.size}</span><span class="ov-label">Themes</span></div>
+    ${techHtml}
   `;
 }
 
@@ -400,15 +540,18 @@ function renderHeldStrip() {
     .map((stock) => {
       const price = getPrice(stock);
       const chg = getChange(stock);
+      const q = getQuote(stock);
       const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
       const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
       return `<article class="held-card" data-symbol="${stock.symbol}">
         <div class="held-top">
           <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="held-sym">${stock.symbol}</a>
+          ${q?.trend ? trendBadge(q.trend) : ""}
           ${stock.priority === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
         </div>
         <div class="held-name">${escapeHtml(stock.name)}</div>
         <div class="held-price mono">${fmtPrice(price)} <span class="chg ${chgCls}">${chgTxt}</span></div>
+        ${renderMaStrip(q, price)}
         <p class="held-thesis">${escapeHtml(stock.thesis ?? "")}</p>
         <div class="held-tags">${renderTagsHtml(stock)}</div>
       </article>`;
@@ -417,7 +560,7 @@ function renderHeldStrip() {
 }
 
 function renderPagination(total: number) {
-  const el = document.getElementById("pagination");
+  const el = document.getElementById(viewMode === "technical" ? "technical-pagination" : "pagination");
   if (!el) return;
 
   const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -442,10 +585,12 @@ function renderPagination(total: number) {
 function renderBucketView(list: StockRow[]) {
   const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
   if (!wrap || !tableWrap) return;
 
   wrap.hidden = false;
   tableWrap.hidden = true;
+  if (techWrap) techWrap.hidden = true;
 
   for (const cat of ["owned", "targets", "watching"]) {
     const body = document.querySelector(`[data-bucket-body="${cat}"]`);
@@ -461,7 +606,15 @@ function renderBucketView(list: StockRow[]) {
   }
 }
 
-function tableHead() {
+function tableHead(mode: "default" | "technical" = "default") {
+  if (mode === "technical") {
+    return `<tr>
+      <th>Symbol</th><th>Name</th><th>Bucket</th>
+      <th class="num">Price</th><th class="num">Chg</th><th>Trend</th>
+      <th class="num">SMA 20</th><th class="num">SMA 50</th><th class="num">SMA 200</th>
+      <th>52W range</th><th class="num">RSI</th><th class="num">Target</th><th></th>
+    </tr>`;
+  }
   return `<tr>
     <th>Symbol</th><th>Name</th><th>Bucket</th><th>Tags</th>
     <th class="num">Price</th><th class="num">Chg</th><th class="num">Target</th>
@@ -469,14 +622,48 @@ function tableHead() {
   </tr>`;
 }
 
+function renderTechnicalView(list: StockRow[]) {
+  const wrap = document.getElementById("bucket-view");
+  const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
+  const tbody = document.getElementById("technical-tbody");
+  const countEl = document.getElementById("result-count");
+  if (!tbody || !techWrap) return;
+
+  if (wrap) wrap.hidden = true;
+  if (tableWrap) tableWrap.hidden = true;
+  techWrap.hidden = false;
+
+  const total = list.length;
+  const start = (page - 1) * pageSize;
+  const pageItems = list.slice(start, start + pageSize);
+
+  if (countEl) {
+    countEl.textContent =
+      total === allStocks.length
+        ? `Technical view · ${start + 1}–${Math.min(start + pageSize, total)} of ${total}`
+        : `Technical view · ${start + 1}–${Math.min(start + pageSize, total)} of ${total} (filtered from ${allStocks.length})`;
+  }
+
+  tbody.innerHTML = renderTableHtml(pageItems, "technical");
+  renderPagination(total);
+
+  document.querySelectorAll("#technical-view th.sortable").forEach((th) => {
+    th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === sortKey && sortDir === 1);
+    th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
+  });
+}
+
 function renderTableView(list: StockRow[]) {
   const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
   const tbody = document.getElementById("watchlist-tbody");
   const countEl = document.getElementById("result-count");
   if (!tbody || !tableWrap) return;
 
   if (wrap) wrap.hidden = true;
+  if (techWrap) techWrap.hidden = true;
   tableWrap.hidden = false;
 
   const total = list.length;
@@ -508,6 +695,8 @@ function renderAll() {
 
   if (viewMode === "buckets") {
     renderBucketView(list);
+  } else if (viewMode === "technical") {
+    renderTechnicalView(list);
   } else {
     renderTableView(list);
   }
@@ -613,6 +802,12 @@ function exportCsv() {
   a.click();
 }
 
+function setViewToggle(activeId: string) {
+  ["view-buckets", "view-table", "view-technical"].forEach((id) => {
+    document.getElementById(id)?.classList.toggle("active", id === activeId);
+  });
+}
+
 function bindEvents() {
   document.getElementById("search-input")?.addEventListener("input", (e) => {
     search = (e.target as HTMLInputElement).value.trim();
@@ -620,15 +815,17 @@ function bindEvents() {
     renderAll();
   });
 
-  document.getElementById("filter-chips")?.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest("[data-filter]");
-    if (!btn) return;
-    filter = btn.getAttribute("data-filter") ?? "all";
-    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
-    btn.classList.add("active");
-    page = 1;
-    savePrefs();
-    renderAll();
+  document.querySelectorAll(".filter-chips").forEach((container) => {
+    container.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest("[data-filter]");
+      if (!btn) return;
+      filter = btn.getAttribute("data-filter") ?? "all";
+      document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      page = 1;
+      savePrefs();
+      renderAll();
+    });
   });
 
   document.getElementById("tag-filters")?.addEventListener("click", (e) => {
@@ -653,25 +850,89 @@ function bindEvents() {
     });
   });
 
+  document.getElementById("technical-view")?.addEventListener("click", (e) => {
+    const th = (e.target as HTMLElement).closest("th.sortable");
+    if (!th) return;
+    const key = th.getAttribute("data-sort")!;
+    if (sortKey === key) sortDir *= -1;
+    else {
+      sortKey = key;
+      sortDir = 1;
+    }
+    savePrefs();
+    renderAll();
+  });
+
   document.getElementById("view-table")?.addEventListener("click", () => {
     viewMode = "table";
-    document.getElementById("view-table")?.classList.add("active");
-    document.getElementById("view-buckets")?.classList.remove("active");
+    setViewToggle("view-table");
     savePrefs();
     renderAll();
   });
 
   document.getElementById("view-buckets")?.addEventListener("click", () => {
     viewMode = "buckets";
-    document.getElementById("view-buckets")?.classList.add("active");
-    document.getElementById("view-table")?.classList.remove("active");
+    setViewToggle("view-buckets");
     savePrefs();
     renderAll();
   });
 
+  document.getElementById("view-technical")?.addEventListener("click", () => {
+    viewMode = "technical";
+    setViewToggle("view-technical");
+    if (sortKey === "distance") sortKey = "vs50";
+    savePrefs();
+    renderAll();
+  });
+
+  document.getElementById("toggle-pt")?.addEventListener("click", () => {
+    const panel = document.getElementById("pt-panel");
+    const importPanel = document.getElementById("import-panel");
+    if (importPanel) importPanel.hidden = true;
+    if (panel) {
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) {
+        (document.getElementById("pt-symbol") as HTMLInputElement)?.focus();
+      }
+    }
+  });
+
   document.getElementById("toggle-import")?.addEventListener("click", () => {
     const panel = document.getElementById("import-panel");
+    const ptPanel = document.getElementById("pt-panel");
+    if (ptPanel) ptPanel.hidden = true;
     if (panel) panel.hidden = !panel.hidden;
+  });
+
+  document.getElementById("pt-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const sym = (document.getElementById("pt-symbol") as HTMLInputElement).value.trim();
+    const price = Number((document.getElementById("pt-price") as HTMLInputElement).value);
+    const note = (document.getElementById("pt-note") as HTMLInputElement).value.trim();
+    const author = (document.getElementById("pt-author") as HTMLInputElement).value.trim();
+    if (!sym || !price || price <= 0) {
+      alert("Enter a symbol and target price.");
+      return;
+    }
+    if (author) localStorage.setItem("radar-author", author.toUpperCase());
+    const ok = await savePriceTarget(sym, price, {
+      note: note || undefined,
+      addedBy: author ? author.toUpperCase() : undefined,
+    });
+    if (!ok) return;
+    filter = "targets";
+    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+      c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
+    });
+    search = sym.toUpperCase().replace(/^\$/, "");
+    (document.getElementById("search-input") as HTMLInputElement).value = search;
+    viewMode = "buckets";
+    setViewToggle("view-buckets");
+    (document.getElementById("pt-symbol") as HTMLInputElement).value = "";
+    (document.getElementById("pt-price") as HTMLInputElement).value = "";
+    (document.getElementById("pt-note") as HTMLInputElement).value = "";
+    renderAll();
+    document.querySelector(`tr[data-symbol="${search}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   document.getElementById("import-apply")?.addEventListener("click", async () => {
@@ -726,6 +987,27 @@ function bindEvents() {
   });
 
   document.getElementById("watchlist-board")?.addEventListener("click", (e) => {
+    const ptSave = (e.target as HTMLElement).closest("[data-pt-save]");
+    if (ptSave) {
+      const sym = ptSave.getAttribute("data-pt-save")!;
+      const row = ptSave.closest(".pt-inline");
+      const input = row?.querySelector(".pt-inline-price") as HTMLInputElement | null;
+      const price = Number(input?.value);
+      if (!price || price <= 0) {
+        alert("Enter a valid target price.");
+        return;
+      }
+      savePriceTarget(sym, price).then((ok) => {
+        if (!ok) return;
+        filter = "targets";
+        document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+          c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
+        });
+        renderAll();
+      });
+      return;
+    }
+
     const expand = (e.target as HTMLElement).closest("[data-expand]");
     if (expand) {
       const id = expand.getAttribute("data-expand")!;
@@ -736,11 +1018,28 @@ function bindEvents() {
 
     const pag = (e.target as HTMLElement).closest("#page-prev, #page-next, #page-size-select");
     if (pag) {
-    if ((pag as HTMLElement).id === "page-prev" && page > 1) page--;
-    else if ((pag as HTMLElement).id === "page-next") page++;
-    else return;
+      if ((pag as HTMLElement).id === "page-prev" && page > 1) page--;
+      else if ((pag as HTMLElement).id === "page-next") page++;
+      else return;
       renderAll();
       return;
+    }
+  });
+
+  document.getElementById("technical-view")?.addEventListener("click", (e) => {
+    const expand = (e.target as HTMLElement).closest("[data-expand]");
+    if (expand) {
+      const id = expand.getAttribute("data-expand")!;
+      expandedId = expandedId === id ? null : id;
+      renderAll();
+      return;
+    }
+
+    const pag = (e.target as HTMLElement).closest("#page-prev, #page-next, #page-size-select");
+    if (pag) {
+      if ((pag as HTMLElement).id === "page-prev" && page > 1) page--;
+      else if ((pag as HTMLElement).id === "page-next") page++;
+      renderAll();
     }
   });
 
@@ -783,11 +1082,11 @@ export async function initWatchlistBoard(stocksJson: string) {
   allStocks = mergeStocks(baseStocks, custom);
 
   if (viewMode === "buckets") {
-    document.getElementById("view-buckets")?.classList.add("active");
-    document.getElementById("view-table")?.classList.remove("active");
+    setViewToggle("view-buckets");
+  } else if (viewMode === "technical") {
+    setViewToggle("view-technical");
   } else {
-    document.getElementById("view-table")?.classList.add("active");
-    document.getElementById("view-buckets")?.classList.remove("active");
+    setViewToggle("view-table");
   }
 
   if (prefs.filter) {
@@ -797,6 +1096,10 @@ export async function initWatchlistBoard(stocksJson: string) {
   }
 
   bindEvents();
+  const ptAuthor = document.getElementById("pt-author") as HTMLInputElement | null;
+  const savedAuthor = localStorage.getItem("radar-author");
+  if (ptAuthor && savedAuthor) ptAuthor.value = savedAuthor;
+
   renderAll();
   startQuoteLoader();
 }
