@@ -6,6 +6,127 @@ function yahooUrl(symbol) {
   return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
 }
 
+// src/lib/market-display.ts
+function fmtPrice(v) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
+  return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+}
+function fmtPct(v, signed = true) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
+  const sign = signed && v > 0 ? "+" : "";
+  return `${sign}${v.toFixed(1)}%`;
+}
+function fmtVolume(v) {
+  if (v == null) return "\u2014";
+  if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
+  if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+  if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+  return String(Math.round(v));
+}
+function rsiLabel(rsi) {
+  if (rsi == null) return { text: "\u2014", cls: "neutral" };
+  if (rsi >= 70) return { text: `${rsi.toFixed(0)} overbought`, cls: "hot" };
+  if (rsi <= 30) return { text: `${rsi.toFixed(0)} oversold`, cls: "cold" };
+  return { text: rsi.toFixed(0), cls: "neutral" };
+}
+function trendBadge(trend) {
+  const t = trend ?? "unknown";
+  const labels = {
+    bullish: "Bullish",
+    bearish: "Bearish",
+    mixed: "Mixed",
+    unknown: "\u2014"
+  };
+  return `<span class="trend-badge trend-${t}">${labels[t]}</span>`;
+}
+function maCell(price, ma, vs) {
+  if (ma == null) return `<span class="dim">\u2014</span>`;
+  const above = price != null && price >= ma;
+  const cls = above ? "ma-above" : "ma-below";
+  const vsTxt = vs != null ? `<span class="ma-vs ${cls}">${fmtPct(vs)}</span>` : "";
+  return `<span class="mono ${cls}">${fmtPrice(ma)}</span>${vsTxt ? ` ${vsTxt}` : ""}`;
+}
+function rangeBar(range52Pct, low, high) {
+  if (range52Pct == null) return "";
+  const pos = Math.max(0, Math.min(100, range52Pct));
+  let zone = "mid";
+  if (pos <= 15) zone = "low";
+  else if (pos >= 85) zone = "high";
+  const hint = low != null && high != null ? `${fmtPrice(low)} \u2013 ${fmtPrice(high)} \xB7 ${pos.toFixed(0)}% of range` : `${pos.toFixed(0)}% of 52w range`;
+  return `<div class="range-bar" title="${escapeHtml(hint)}"><div class="range-bar-track"><div class="range-bar-marker zone-${zone}" style="left:${pos}%"></div></div><span class="range-bar-label">${pos.toFixed(0)}%</span></div>`;
+}
+function renderMaStrip(q, price) {
+  if (!q?.sma) return "";
+  const items = [20, 50, 200].map((p) => {
+    const ma = q.sma?.[p];
+    if (ma == null || price == null) return null;
+    const above = price >= ma;
+    return `<span class="ma-pill ${above ? "above" : "below"}" title="SMA ${p}: ${fmtPrice(ma)}">${p}${above ? "\u2191" : "\u2193"}</span>`;
+  }).filter(Boolean);
+  return items.length ? `<div class="ma-strip">${items.join("")}</div>` : "";
+}
+function renderTechnicalDetail(q, price) {
+  if (!q?.sma && q?.range52Pct == null && q?.rsi14 == null) {
+    return `<p class="tech-unavailable">Technical data refreshes on deploy \u2014 run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
+  }
+  const rsi = rsiLabel(q?.rsi14);
+  const volNote = q?.volRatio != null ? `${fmtVolume(q.volume)} (${q.volRatio.toFixed(1)}\xD7 20d avg)` : q?.volume != null ? fmtVolume(q.volume) : "\u2014";
+  const rows = [20, 50, 200].map((p) => {
+    const ma = q?.sma?.[p];
+    const vs = q?.vsSma?.[p];
+    if (ma == null) return "";
+    const above = price != null && price >= ma;
+    return `<tr><td>SMA ${p}</td><td class="mono">${fmtPrice(ma)}</td><td class="${above ? "ma-above" : "ma-below"}">${vs != null ? fmtPct(vs) : "\u2014"}</td></tr>`;
+  }).filter(Boolean).join("");
+  return `
+    <div class="tech-detail">
+      <h4>Technical snapshot</h4>
+      <div class="tech-summary-row">
+        ${trendBadge(q?.trend)}
+        <span class="rsi-badge rsi-${rsi.cls}">RSI(14) ${escapeHtml(rsi.text)}</span>
+        ${q?.signals?.length ? `<span class="signal-tags">${q.signals.slice(0, 4).map((s) => `<span class="signal-tag">${escapeHtml(s.replace(/-/g, " "))}</span>`).join("")}</span>` : ""}
+      </div>
+      <table class="tech-table"><tbody>${rows}</tbody></table>
+      <div class="tech-range">
+        <span class="tech-label">52-week range</span>
+        ${rangeBar(q?.range52Pct, q?.low52, q?.high52)}
+        <span class="tech-range-bounds">${fmtPrice(q?.low52)} \u2013 ${fmtPrice(q?.high52)}</span>
+      </div>
+      <p class="tech-vol"><strong>Volume:</strong> ${volNote}</p>
+    </div>`;
+}
+function hasTechnical(q) {
+  return Boolean(q?.sma?.[50] != null || q?.range52Pct != null);
+}
+function matchesTechnicalFilter(filter2, q, price) {
+  if (!filter2.startsWith("tech-")) return true;
+  if (!q) return false;
+  switch (filter2) {
+    case "tech-above-50":
+      return q.sma?.[50] != null && price != null && price > q.sma[50];
+    case "tech-below-50":
+      return q.sma?.[50] != null && price != null && price < q.sma[50];
+    case "tech-above-200":
+      return q.sma?.[200] != null && price != null && price > q.sma[200];
+    case "tech-below-200":
+      return q.sma?.[200] != null && price != null && price < q.sma[200];
+    case "tech-bullish":
+      return q.trend === "bullish";
+    case "tech-bearish":
+      return q.trend === "bearish";
+    case "tech-near-low":
+      return q.range52Pct != null && q.range52Pct <= 20;
+    case "tech-near-high":
+      return q.range52Pct != null && q.range52Pct >= 80;
+    case "tech-oversold":
+      return q.rsi14 != null && q.rsi14 <= 35;
+    case "tech-overbought":
+      return q.rsi14 != null && q.rsi14 >= 65;
+    default:
+      return true;
+  }
+}
+
 // src/scripts/watchlist-board.ts
 var CUSTOM_STORE = "stocks-radar-custom";
 var CUSTOM_KEY = "entries";
@@ -80,9 +201,8 @@ function mergeStocks(base, custom) {
   for (const s of custom) map.set(`${s.symbol}:${s.category}`, s);
   return [...map.values()];
 }
-function fmtPrice(v) {
-  if (v == null || Number.isNaN(v)) return "\u2014";
-  return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+function getQuote(stock) {
+  return quotes[stock.symbol];
 }
 function getPrice(stock) {
   return quotes[stock.symbol]?.price ?? stock.lastPrice ?? null;
@@ -130,6 +250,9 @@ function matchesFilter(stock) {
     case "high-priority":
       return stock.priority === "high";
     default:
+      if (filter.startsWith("tech-")) {
+        return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
+      }
       return true;
   }
 }
@@ -176,6 +299,32 @@ function sortStocks(list) {
       }
       case "by":
         return sortDir * (a.holder ?? a.addedBy ?? "").localeCompare(b.holder ?? b.addedBy ?? "");
+      case "vs50":
+        av = getQuote(a)?.vsSma?.[50] ?? -Infinity;
+        bv = getQuote(b)?.vsSma?.[50] ?? -Infinity;
+        return sortDir * (av - bv);
+      case "vs20":
+        av = getQuote(a)?.vsSma?.[20] ?? -Infinity;
+        bv = getQuote(b)?.vsSma?.[20] ?? -Infinity;
+        return sortDir * (av - bv);
+      case "vs200":
+        av = getQuote(a)?.vsSma?.[200] ?? -Infinity;
+        bv = getQuote(b)?.vsSma?.[200] ?? -Infinity;
+        return sortDir * (av - bv);
+      case "range52":
+        av = getQuote(a)?.range52Pct ?? -Infinity;
+        bv = getQuote(b)?.range52Pct ?? -Infinity;
+        return sortDir * (av - bv);
+      case "rsi":
+        av = getQuote(a)?.rsi14 ?? -Infinity;
+        bv = getQuote(b)?.rsi14 ?? -Infinity;
+        return sortDir * (av - bv);
+      case "trend": {
+        const order = { bullish: 0, mixed: 1, bearish: 2, unknown: 3 };
+        av = order[getQuote(a)?.trend ?? "unknown"] ?? 4;
+        bv = order[getQuote(b)?.trend ?? "unknown"] ?? 4;
+        return sortDir * (av - bv);
+      }
       default:
         return 0;
     }
@@ -193,14 +342,40 @@ function renderPriority(stock) {
   if (!stock.priority) return "\u2014";
   return `<span class="priority priority-${stock.priority}">${stock.priority}</span>`;
 }
-function renderRow(stock, compact = false) {
+function renderRow(stock, compact = false, mode = "default") {
   const price = getPrice(stock);
+  const q = getQuote(stock);
   const chg = getChange(stock);
   const dist = getDistance(stock);
   const { text: distText, cls: distCls } = distanceLabel(dist);
   const chgHtml = chg != null ? `<span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>` : `<span class="chg dim">\u2014</span>`;
   const expanded = expandedId === stock.id;
   const atTarget = dist != null && Math.abs(dist) < 0.5;
+  if (mode === "technical") {
+    const rsi = rsiLabel(q?.rsi14);
+    return `
+    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${expanded ? "expanded" : ""}">
+      <td class="mono sym">
+        <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
+        ${renderMaStrip(q, price)}
+      </td>
+      <td class="name-cell">${escapeHtml(stock.name)}</td>
+      <td><span class="cat-badge cat-${stock.category}">${CAT_LABEL[stock.category] ?? stock.category}</span></td>
+      <td class="num mono">${fmtPrice(price)}</td>
+      <td class="num">${chgHtml}</td>
+      <td>${trendBadge(q?.trend)}</td>
+      <td class="num">${maCell(price, q?.sma?.[20], q?.vsSma?.[20])}</td>
+      <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
+      <td class="num">${maCell(price, q?.sma?.[200], q?.vsSma?.[200])}</td>
+      <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
+      <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
+      <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
+      <td class="row-actions">
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
+      </td>
+    </tr>
+    ${expanded ? renderDetailRow(stock, price, q, 13) : ""}`;
+  }
   return `
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${expanded ? "expanded" : ""}">
       <td class="mono sym">
@@ -223,9 +398,14 @@ function renderRow(stock, compact = false) {
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? `<tr class="detail-row" data-detail-for="${stock.id}">
-        <td colspan="11">
+    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 11) : ""}
+  `;
+}
+function renderDetailRow(stock, price, q, colspan) {
+  return `<tr class="detail-row" data-detail-for="${stock.id}">
+        <td colspan="${colspan}">
           <div class="detail-panel">
+            ${renderTechnicalDetail(q, price)}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
@@ -233,14 +413,14 @@ function renderRow(stock, compact = false) {
             <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance \u2192</a>
           </div>
         </td>
-      </tr>` : ""}
-  `;
+      </tr>`;
 }
-function renderTableHtml(stocks) {
+function renderTableHtml(stocks, mode = "default") {
   if (!stocks.length) {
-    return `<tr><td colspan="11" class="empty-row">No tickers match your filters.</td></tr>`;
+    const cols = mode === "technical" ? 13 : 11;
+    return `<tr><td colspan="${cols}" class="empty-row">No tickers match your filters.</td></tr>`;
   }
-  return stocks.map((s) => renderRow(s)).join("");
+  return stocks.map((s) => renderRow(s, false, mode)).join("");
 }
 function renderOverview() {
   const el = document.getElementById("overview-grid");
@@ -259,6 +439,27 @@ function renderOverview() {
   }
   const tags = /* @__PURE__ */ new Set();
   allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
+  let techHtml = "";
+  const withTech = allStocks.filter((s) => hasTechnical(getQuote(s)));
+  if (withTech.length) {
+    let above50 = 0;
+    let above200 = 0;
+    let bullish = 0;
+    let nearLow = 0;
+    for (const s of withTech) {
+      const q = getQuote(s);
+      const p = getPrice(s);
+      if (q?.sma?.[50] != null && p != null && p > q.sma[50]) above50++;
+      if (q?.sma?.[200] != null && p != null && p > q.sma[200]) above200++;
+      if (q?.trend === "bullish") bullish++;
+      if (q?.range52Pct != null && q.range52Pct <= 20) nearLow++;
+    }
+    techHtml = `
+    <div class="overview-card tech"><span class="ov-value">${above50}</span><span class="ov-label">Above 50 MA</span></div>
+    <div class="overview-card tech"><span class="ov-value">${above200}</span><span class="ov-label">Above 200 MA</span></div>
+    <div class="overview-card tech highlight"><span class="ov-value">${bullish}</span><span class="ov-label">Bullish trend</span></div>
+    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>`;
+  }
   el.innerHTML = `
     <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Total</span></div>
     <div class="overview-card"><span class="ov-value">${allStocks.filter((s) => s.category === "owned").length}</span><span class="ov-label">Owned</span></div>
@@ -268,6 +469,7 @@ function renderOverview() {
     <div class="overview-card highlight"><span class="ov-value">${within5}</span><span class="ov-label">Within 5%</span></div>
     <div class="overview-card"><span class="ov-value">${within10}</span><span class="ov-label">Within 10%</span></div>
     <div class="overview-card"><span class="ov-value">${tags.size}</span><span class="ov-label">Themes</span></div>
+    ${techHtml}
   `;
 }
 function renderTagFilters() {
@@ -313,22 +515,25 @@ function renderHeldStrip() {
   el.innerHTML = owned.map((stock) => {
     const price = getPrice(stock);
     const chg = getChange(stock);
+    const q = getQuote(stock);
     const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
     const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
     return `<article class="held-card" data-symbol="${stock.symbol}">
         <div class="held-top">
           <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="held-sym">${stock.symbol}</a>
+          ${q?.trend ? trendBadge(q.trend) : ""}
           ${stock.priority === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
         </div>
         <div class="held-name">${escapeHtml(stock.name)}</div>
         <div class="held-price mono">${fmtPrice(price)} <span class="chg ${chgCls}">${chgTxt}</span></div>
+        ${renderMaStrip(q, price)}
         <p class="held-thesis">${escapeHtml(stock.thesis ?? "")}</p>
         <div class="held-tags">${renderTagsHtml(stock)}</div>
       </article>`;
   }).join("");
 }
 function renderPagination(total) {
-  const el = document.getElementById("pagination");
+  const el = document.getElementById(viewMode === "technical" ? "technical-pagination" : "pagination");
   if (!el) return;
   const pages = Math.max(1, Math.ceil(total / pageSize));
   if (page > pages) page = pages;
@@ -350,9 +555,11 @@ function renderPagination(total) {
 function renderBucketView(list) {
   const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
   if (!wrap || !tableWrap) return;
   wrap.hidden = false;
   tableWrap.hidden = true;
+  if (techWrap) techWrap.hidden = true;
   for (const cat of ["owned", "targets", "watching"]) {
     const body = document.querySelector(`[data-bucket-body="${cat}"]`);
     const countEl = document.querySelector(`[data-bucket-count="${cat}"]`);
@@ -363,20 +570,53 @@ function renderBucketView(list) {
     }
   }
 }
-function tableHead() {
+function tableHead(mode = "default") {
+  if (mode === "technical") {
+    return `<tr>
+      <th>Symbol</th><th>Name</th><th>Bucket</th>
+      <th class="num">Price</th><th class="num">Chg</th><th>Trend</th>
+      <th class="num">SMA 20</th><th class="num">SMA 50</th><th class="num">SMA 200</th>
+      <th>52W range</th><th class="num">RSI</th><th class="num">Target</th><th></th>
+    </tr>`;
+  }
   return `<tr>
     <th>Symbol</th><th>Name</th><th>Bucket</th><th>Tags</th>
     <th class="num">Price</th><th class="num">Chg</th><th class="num">Target</th>
     <th class="num">Distance</th><th>Thesis</th><th>Priority</th><th></th>
   </tr>`;
 }
+function renderTechnicalView(list) {
+  const wrap = document.getElementById("bucket-view");
+  const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
+  const tbody = document.getElementById("technical-tbody");
+  const countEl = document.getElementById("result-count");
+  if (!tbody || !techWrap) return;
+  if (wrap) wrap.hidden = true;
+  if (tableWrap) tableWrap.hidden = true;
+  techWrap.hidden = false;
+  const total = list.length;
+  const start = (page - 1) * pageSize;
+  const pageItems = list.slice(start, start + pageSize);
+  if (countEl) {
+    countEl.textContent = total === allStocks.length ? `Technical view \xB7 ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total}` : `Technical view \xB7 ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total} (filtered from ${allStocks.length})`;
+  }
+  tbody.innerHTML = renderTableHtml(pageItems, "technical");
+  renderPagination(total);
+  document.querySelectorAll("#technical-view th.sortable").forEach((th) => {
+    th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === sortKey && sortDir === 1);
+    th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
+  });
+}
 function renderTableView(list) {
   const wrap = document.getElementById("bucket-view");
   const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
   const tbody = document.getElementById("watchlist-tbody");
   const countEl = document.getElementById("result-count");
   if (!tbody || !tableWrap) return;
   if (wrap) wrap.hidden = true;
+  if (techWrap) techWrap.hidden = true;
   tableWrap.hidden = false;
   const total = list.length;
   const start = (page - 1) * pageSize;
@@ -399,6 +639,8 @@ function renderAll() {
   renderHeldStrip();
   if (viewMode === "buckets") {
     renderBucketView(list);
+  } else if (viewMode === "technical") {
+    renderTechnicalView(list);
   } else {
     renderTableView(list);
   }
@@ -500,21 +742,28 @@ function exportCsv() {
   a.download = "watchlist-export.csv";
   a.click();
 }
+function setViewToggle(activeId) {
+  ["view-buckets", "view-table", "view-technical"].forEach((id) => {
+    document.getElementById(id)?.classList.toggle("active", id === activeId);
+  });
+}
 function bindEvents() {
   document.getElementById("search-input")?.addEventListener("input", (e) => {
     search = e.target.value.trim();
     page = 1;
     renderAll();
   });
-  document.getElementById("filter-chips")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-filter]");
-    if (!btn) return;
-    filter = btn.getAttribute("data-filter") ?? "all";
-    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
-    btn.classList.add("active");
-    page = 1;
-    savePrefs();
-    renderAll();
+  document.querySelectorAll(".filter-chips").forEach((container) => {
+    container.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-filter]");
+      if (!btn) return;
+      filter = btn.getAttribute("data-filter") ?? "all";
+      document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      page = 1;
+      savePrefs();
+      renderAll();
+    });
   });
   document.getElementById("tag-filters")?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-tag]");
@@ -536,17 +785,34 @@ function bindEvents() {
       renderAll();
     });
   });
+  document.getElementById("technical-view")?.addEventListener("click", (e) => {
+    const th = e.target.closest("th.sortable");
+    if (!th) return;
+    const key = th.getAttribute("data-sort");
+    if (sortKey === key) sortDir *= -1;
+    else {
+      sortKey = key;
+      sortDir = 1;
+    }
+    savePrefs();
+    renderAll();
+  });
   document.getElementById("view-table")?.addEventListener("click", () => {
     viewMode = "table";
-    document.getElementById("view-table")?.classList.add("active");
-    document.getElementById("view-buckets")?.classList.remove("active");
+    setViewToggle("view-table");
     savePrefs();
     renderAll();
   });
   document.getElementById("view-buckets")?.addEventListener("click", () => {
     viewMode = "buckets";
-    document.getElementById("view-buckets")?.classList.add("active");
-    document.getElementById("view-table")?.classList.remove("active");
+    setViewToggle("view-buckets");
+    savePrefs();
+    renderAll();
+  });
+  document.getElementById("view-technical")?.addEventListener("click", () => {
+    viewMode = "technical";
+    setViewToggle("view-technical");
+    if (sortKey === "distance") sortKey = "vs50";
     savePrefs();
     renderAll();
   });
@@ -617,6 +883,21 @@ function bindEvents() {
       return;
     }
   });
+  document.getElementById("technical-view")?.addEventListener("click", (e) => {
+    const expand = e.target.closest("[data-expand]");
+    if (expand) {
+      const id = expand.getAttribute("data-expand");
+      expandedId = expandedId === id ? null : id;
+      renderAll();
+      return;
+    }
+    const pag = e.target.closest("#page-prev, #page-next, #page-size-select");
+    if (pag) {
+      if (pag.id === "page-prev" && page > 1) page--;
+      else if (pag.id === "page-next") page++;
+      renderAll();
+    }
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
       e.preventDefault();
@@ -651,11 +932,11 @@ async function initWatchlistBoard(stocksJson) {
   const custom = await getCustomStocks();
   allStocks = mergeStocks(baseStocks, custom);
   if (viewMode === "buckets") {
-    document.getElementById("view-buckets")?.classList.add("active");
-    document.getElementById("view-table")?.classList.remove("active");
+    setViewToggle("view-buckets");
+  } else if (viewMode === "technical") {
+    setViewToggle("view-technical");
   } else {
-    document.getElementById("view-table")?.classList.add("active");
-    document.getElementById("view-buckets")?.classList.remove("active");
+    setViewToggle("view-table");
   }
   if (prefs.filter) {
     document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {

@@ -1457,3 +1457,226 @@ kbd {
   border-radius: 4px;
   background: var(--bg-elevated);
 }
+
+/* Technical / market metrics */
+.tech-filters {
+  margin-top: 0.35rem;
+}
+
+.overview-card.tech {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.trend-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
+.trend-bullish {
+  background: color-mix(in srgb, #22c55e 18%, transparent);
+  color: #86efac;
+}
+
+.trend-bearish {
+  background: color-mix(in srgb, #ef4444 18%, transparent);
+  color: #fca5a5;
+}
+
+.trend-mixed,
+.trend-unknown {
+  background: color-mix(in srgb, var(--dim) 20%, transparent);
+  color: var(--dim);
+}
+
+.ma-above {
+  color: #86efac;
+}
+
+.ma-below {
+  color: #fca5a5;
+}
+
+.ma-vs {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.ma-strip {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.ma-pill {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.ma-pill.above {
+  color: #86efac;
+  border-color: color-mix(in srgb, #22c55e 40%, var(--border));
+}
+
+.ma-pill.below {
+  color: #fca5a5;
+  border-color: color-mix(in srgb, #ef4444 40%, var(--border));
+}
+
+.range-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 88px;
+}
+
+.range-bar-track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #fca5a5 0%, var(--border) 50%, #86efac 100%);
+}
+
+.range-bar-marker {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--text);
+  border: 1px solid var(--bg);
+}
+
+.range-bar-label {
+  font-size: 0.7rem;
+  color: var(--dim);
+  min-width: 2rem;
+}
+
+.range-cell {
+  min-width: 110px;
+}
+
+.rsi-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.rsi-badge.rsi-hot {
+  color: #fca5a5;
+}
+
+.rsi-badge.rsi-cold {
+  color: #86efac;
+}
+
+.rsi-badge.rsi-neutral {
+  color: var(--dim);
+}
+
+.tech-detail {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tech-detail h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dim);
+}
+
+.tech-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.tech-table {
+  width: 100%;
+  max-width: 360px;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.tech-table td {
+  padding: 0.2rem 0.5rem 0.2rem 0;
+}
+
+.tech-table td:last-child {
+  text-align: right;
+}
+
+.tech-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.tech-label {
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.tech-range-bounds {
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+
+.tech-vol {
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0;
+}
+
+.tech-unavailable {
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+
+.signal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.signal-tag {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  text-transform: capitalize;
+}
+
+.held-top .trend-badge {
+  margin-left: auto;
+}
+
+.technical-table th,
+.technical-table td {
+  white-space: nowrap;
+}
+
+.technical-table .name-cell {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

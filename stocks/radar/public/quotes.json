@@ -1,68 +1,315 @@
 {
-  "updatedAt": "2026-06-30T15:56:42.545Z",
+  "updatedAt": "2026-06-30T18:13:52.257Z",
   "marketTime": "US/Eastern",
+  "schemaVersion": 2,
   "count": 10,
   "total": 10,
   "quotes": {
     "SMH": {
-      "price": 652.14,
-      "changePct": null,
-      "prevClose": 631.98,
-      "currency": "USD"
+      "price": 654.59,
+      "changePct": 3.5776480632313397,
+      "prevClose": 631.97998046875,
+      "currency": "USD",
+      "name": "VanEck Semiconductor ETF",
+      "high52": 671.83,
+      "low52": 272.16,
+      "range52Pct": 95.68644131408412,
+      "sma": {
+        "20": 622.435498046875,
+        "50": 573.7961999511718,
+        "200": 423.0893998718262
+      },
+      "vsSma": {
+        "20": 5.165917119769341,
+        "50": 14.080574262378084,
+        "200": 54.71671003771458
+      },
+      "trend": "bullish",
+      "rsi14": 60.04423457011299,
+      "volume": 5708648,
+      "avgVolume20": 12203942.4,
+      "volRatio": 0.46777080822669237,
+      "signals": [
+        "above-sma20",
+        "above-sma50",
+        "above-sma200",
+        "extended-above-50",
+        "near-52w-high"
+      ]
     },
     "NBIS": {
-      "price": 281.705,
-      "changePct": null,
-      "prevClose": 261.15,
-      "currency": "USD"
+      "price": 280.29,
+      "changePct": 7.329123703178195,
+      "prevClose": 261.1499938964844,
+      "currency": "USD",
+      "name": "Nebius Group N.V.",
+      "high52": 299.86,
+      "low52": 43.89,
+      "range52Pct": 92.35457280150018,
+      "sma": {
+        "20": 252.69050064086915,
+        "50": 212.59160064697267,
+        "200": 131.63952560424804
+      },
+      "vsSma": {
+        "20": 10.922254413653665,
+        "50": 31.844343401622243,
+        "200": 112.92237169149675
+      },
+      "trend": "bullish",
+      "rsi14": 67.71686422849527,
+      "volume": 9729587,
+      "avgVolume20": 16749964.35,
+      "volRatio": 0.5808721019755484,
+      "signals": [
+        "above-sma20",
+        "above-sma50",
+        "above-sma200",
+        "extended-above-50",
+        "near-52w-high"
+      ]
     },
     "SIVEF": {
-      "price": 6.61,
-      "changePct": null,
-      "prevClose": 6.78,
-      "currency": "USD"
+      "price": 6.69,
+      "changePct": -6.433567681565076,
+      "prevClose": 7.150000095367432,
+      "currency": "USD",
+      "name": "Sivers Semiconductors AB (publ)",
+      "high52": 11.25,
+      "low52": 0.96,
+      "range52Pct": 55.68513119533529,
+      "sma": {
+        "20": 8.80809497833252,
+        "50": 6.780258016586304,
+        "200": null
+      },
+      "vsSma": {
+        "20": -24.047140539957034,
+        "50": -1.331188523585805,
+        "200": null
+      },
+      "trend": "unknown",
+      "rsi14": 39.07595193241009,
+      "volume": 654385,
+      "avgVolume20": 3876210.9,
+      "volRatio": 0.1688207935228705,
+      "signals": [
+        "below-sma50"
+      ]
     },
     "META": {
-      "price": 557.35,
-      "changePct": null,
-      "prevClose": 562.6,
-      "currency": "USD"
+      "price": 560.37,
+      "changePct": -0.39636965565364934,
+      "prevClose": 562.5999755859375,
+      "currency": "USD",
+      "name": "Meta Platforms, Inc.",
+      "high52": 796.25,
+      "low52": 520.26,
+      "range52Pct": 14.533135258523863,
+      "sma": {
+        "20": 577.7924957275391,
+        "50": 608.0493981933594,
+        "200": 648.1199490356445
+      },
+      "vsSma": {
+        "20": -3.0153551415722646,
+        "50": -7.84136919385575,
+        "200": -13.539152616149225
+      },
+      "trend": "bearish",
+      "rsi14": 41.89531705647284,
+      "volume": 7491660,
+      "avgVolume20": 17871148,
+      "volRatio": 0.41920418318957464,
+      "signals": [
+        "below-sma200",
+        "below-sma50",
+        "near-52w-low"
+      ]
     },
     "AAOI": {
-      "price": 146.72,
-      "changePct": null,
-      "prevClose": 150.1,
-      "currency": "USD"
+      "price": 149.76,
+      "changePct": -0.22651971331776682,
+      "prevClose": 150.10000610351562,
+      "currency": "USD",
+      "name": "Applied Optoelectronics, Inc.",
+      "high52": 233.67,
+      "low52": 18.5,
+      "range52Pct": 61.00292791746062,
+      "sma": {
+        "20": 168.704500579834,
+        "50": 169.7736001586914,
+        "200": 81.22547516822814
+      },
+      "vsSma": {
+        "20": -11.22939845393699,
+        "50": -11.788405346876212,
+        "200": 84.37565269988049
+      },
+      "trend": "mixed",
+      "rsi14": 44.96159343951747,
+      "volume": 4709345,
+      "avgVolume20": 14238237.25,
+      "volRatio": 0.3307533732801088,
+      "signals": [
+        "above-sma200",
+        "below-sma50",
+        "deep-below-50"
+      ]
     },
     "OUST": {
-      "price": 60.6,
-      "changePct": null,
-      "prevClose": 54.07,
-      "currency": "USD"
+      "price": 61.655,
+      "changePct": 14.028112350631003,
+      "prevClose": 54.06999969482422,
+      "currency": "USD",
+      "name": "Ouster, Inc.",
+      "high52": 63.79,
+      "low52": 16.4,
+      "range52Pct": 95.49483013293944,
+      "sma": {
+        "20": 44.11374988555908,
+        "50": 36.574999961853024,
+        "200": 27.504675016403198
+      },
+      "vsSma": {
+        "20": 39.76367948756758,
+        "50": 68.57142874724512,
+        "200": 124.16189234459335
+      },
+      "trend": "bullish",
+      "rsi14": 75.00810483980375,
+      "volume": 5751153,
+      "avgVolume20": 4949772.65,
+      "volRatio": 1.1619024562673599,
+      "signals": [
+        "above-sma20",
+        "above-sma50",
+        "above-sma200",
+        "extended-above-50",
+        "near-52w-high",
+        "rsi-overbought"
+      ]
     },
     "VPG": {
-      "price": 147.5,
-      "changePct": null,
-      "prevClose": 142.09,
-      "currency": "USD"
+      "price": 150.31,
+      "changePct": 5.785068529780361,
+      "prevClose": 142.08999633789062,
+      "currency": "USD",
+      "name": "Vishay Precision Group, Inc.",
+      "high52": 151.78,
+      "low52": 25.58,
+      "range52Pct": 98.8351822503962,
+      "sma": {
+        "20": 133.83399925231933,
+        "50": 103.34259941101074,
+        "200": 55.975049781799314
+      },
+      "vsSma": {
+        "20": 12.310773674646164,
+        "50": 45.4482477281146,
+        "200": 168.53035519563642
+      },
+      "trend": "bullish",
+      "rsi14": 66.02155293070805,
+      "volume": 470635,
+      "avgVolume20": 586006.75,
+      "volRatio": 0.8031221483370286,
+      "signals": [
+        "above-sma20",
+        "above-sma50",
+        "above-sma200",
+        "extended-above-50",
+        "near-52w-high"
+      ]
     },
     "AMBA": {
-      "price": 82.15,
-      "changePct": null,
-      "prevClose": 67.01,
-      "currency": "USD"
+      "price": 87.175,
+      "changePct": 30.092519356698944,
+      "prevClose": 67.01000213623047,
+      "currency": "USD",
+      "name": "Ambarella, Inc.",
+      "high52": 96.69,
+      "low52": 48.3,
+      "range52Pct": 80.33684645587932,
+      "sma": {
+        "20": 68.55875091552734,
+        "50": 72.43550064086914,
+        "200": 71.60692516326904
+      },
+      "vsSma": {
+        "20": 27.15371682808242,
+        "50": 20.348446864760987,
+        "200": 21.741018485620778
+      },
+      "trend": "bullish",
+      "rsi14": 69.27228875114146,
+      "volume": 4410255,
+      "avgVolume20": 1569107.75,
+      "volRatio": 2.8106769595650776,
+      "signals": [
+        "above-sma20",
+        "above-sma50",
+        "above-sma200",
+        "extended-above-50"
+      ]
     },
     "SYNA": {
-      "price": 122,
-      "changePct": null,
-      "prevClose": 117.38,
-      "currency": "USD"
+      "price": 123.55,
+      "changePct": 5.256434563770928,
+      "prevClose": 117.37999725341797,
+      "currency": "USD",
+      "name": "Synaptics Incorporated",
+      "high52": 149.11,
+      "low52": 58.28,
+      "range52Pct": 71.85951778046899,
+      "sma": {
+        "20": 133.5279998779297,
+        "50": 121.8516000366211,
+        "200": 86.83780021667481
+      },
+      "vsSma": {
+        "20": -7.47258993398501,
+        "50": 1.3938265585913272,
+        "200": 42.27675009238157
+      },
+      "trend": "bullish",
+      "rsi14": 44.183459573761176,
+      "volume": 1216366,
+      "avgVolume20": 1238603.3,
+      "volRatio": 0.9820464712147949,
+      "signals": [
+        "above-sma50",
+        "above-sma200"
+      ]
     },
     "INOD": {
-      "price": 74.385,
-      "changePct": null,
-      "prevClose": 76.64,
-      "currency": "USD"
+      "price": 75.07,
+      "changePct": -2.048537842056011,
+      "prevClose": 76.63999938964844,
+      "currency": "USD",
+      "name": "Innodata Inc.",
+      "high52": 125.14,
+      "low52": 34.23,
+      "range52Pct": 44.923550764492354,
+      "sma": {
+        "20": 95.84099998474122,
+        "50": 81.39420013427734,
+        "200": 63.387950057983396
+      },
+      "vsSma": {
+        "20": -21.67235315579779,
+        "50": -7.769841246482195,
+        "200": 18.429449021983796
+      },
+      "trend": "mixed",
+      "rsi14": 30.02360070943604,
+      "volume": 631133,
+      "avgVolume20": 1510866.65,
+      "volRatio": 0.41772912255360195,
+      "signals": [
+        "above-sma200",
+        "below-sma50"
+      ]
     }
   }
 }

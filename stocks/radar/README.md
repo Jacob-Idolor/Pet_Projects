@@ -14,6 +14,7 @@ A robust single-page watchlist for you and your friends — holdings, price targ
 - **Overview stats** — at target, within 5%/10%, counts by bucket
 - **CSV import/export** — bulk load your full watchlist
 - **Live prices** — free quote fetch on deploy + browser refresh (no paid APIs)
+- **Technical view** — SMA 20/50/200, RSI(14), 52-week range, trend badges, volume vs 20d avg
 
 ## Quick start
 
@@ -53,6 +54,8 @@ npm run import-csv -- my-tickers.csv
 - **By bucket** (default) — three collapsible sections for the full picture
 - **All tickers** — paginated master table for 100+ names
 - **/** — focus search
+- **Technical** tab — moving averages, RSI, 52-week range position, trend
+- **Technicals filters** — above/below MAs, bullish/bearish, near 52w high/low, RSI oversold
 - **Theme chips** — filter one tag at a time
 - **+** on a row — expand full thesis, sector, Yahoo link
 
