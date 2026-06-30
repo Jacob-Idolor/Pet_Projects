@@ -686,12 +686,103 @@ function renderTableView(list: StockRow[]) {
   });
 }
 
+const BUCKET_MOBILE: Record<string, { icon: string; label: string }> = {
+  owned: { icon: "💼", label: "Owned" },
+  watching: { icon: "👀", label: "Watching" },
+  targets: { icon: "🎯", label: "Targets" },
+};
+
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 640px)").matches;
+}
+
+function syncLayoutClass() {
+  document.body.classList.toggle("layout-mobile", isMobileLayout());
+}
+
+function renderMobileCard(stock: StockRow) {
+  const price = getPrice(stock);
+  const chg = getChange(stock);
+  const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
+  const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
+
+  return `<article class="stock-card-m" data-symbol="${stock.symbol}">
+    <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="scm-main">
+      <div class="scm-top">
+        <span class="scm-sym">${stock.symbol}</span>
+        <span class="scm-price mono">${fmtPrice(price)}</span>
+      </div>
+      <div class="scm-mid">
+        <span class="scm-name">${escapeHtml(stock.name)}</span>
+        <span class="chg ${chgCls}">${chgTxt}</span>
+      </div>
+      ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
+    </a>
+  </article>`;
+}
+
+function renderMobileView(list: StockRow[]) {
+  const mobileEl = document.getElementById("mobile-stock-list");
+  const bucketView = document.getElementById("bucket-view");
+  const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
+  const countEl = document.getElementById("result-count");
+  const heldStrip = document.getElementById("held-strip");
+
+  if (!mobileEl) return false;
+
+  if (!isMobileLayout()) {
+    mobileEl.hidden = true;
+    return false;
+  }
+
+  if (bucketView) bucketView.hidden = true;
+  if (tableWrap) tableWrap.hidden = true;
+  if (techWrap) techWrap.hidden = true;
+  if (heldStrip) heldStrip.hidden = true;
+  mobileEl.hidden = false;
+
+  const order = ["owned", "watching", "targets"] as const;
+  const sections = order
+    .map((cat) => {
+      const subset = list.filter((s) => s.category === cat);
+      if (!subset.length) return "";
+      const meta = BUCKET_MOBILE[cat];
+      return `<section class="mobile-bucket">
+        <h3 class="mobile-bucket-title">${meta.icon} ${meta.label} <span class="mobile-bucket-count">${subset.length}</span></h3>
+        <div class="mobile-bucket-cards">${subset.map(renderMobileCard).join("")}</div>
+      </section>`;
+    })
+    .filter(Boolean)
+    .join("");
+
+  mobileEl.innerHTML =
+    sections ||
+    `<p class="mobile-empty">No tickers match. Try clearing filters or search.</p>`;
+
+  if (countEl) {
+    countEl.textContent = `${list.length} stock${list.length === 1 ? "" : "s"}`;
+  }
+
+  return true;
+}
+
 function renderAll() {
+  syncLayoutClass();
   const list = filteredStocks();
+
+  if (isMobileLayout()) {
+    renderMobileView(list);
+    return;
+  }
+
   renderOverview();
   renderTagFilters();
   renderOpportunities();
   renderHeldStrip();
+
+  const mobileEl = document.getElementById("mobile-stock-list");
+  if (mobileEl) mobileEl.hidden = true;
 
   if (viewMode === "buckets") {
     renderBucketView(list);
@@ -1099,6 +1190,12 @@ export async function initWatchlistBoard(stocksJson: string) {
   const ptAuthor = document.getElementById("pt-author") as HTMLInputElement | null;
   const savedAuthor = localStorage.getItem("radar-author");
   if (ptAuthor && savedAuthor) ptAuthor.value = savedAuthor;
+
+  syncLayoutClass();
+  window.addEventListener("resize", () => {
+    syncLayoutClass();
+    renderAll();
+  });
 
   renderAll();
   startQuoteLoader();

@@ -11,9 +11,9 @@ const base = import.meta.env.BASE_URL;
   <div class="board-header">
     <div>
       <h2>Watchlist</h2>
-      <p class="board-subtitle">Full picture — holdings, targets, and long-term watches. Press <kbd>/</kbd> to search.</p>
+      <p class="board-subtitle desktop-only">Holdings and watches — live prices. Press <kbd>/</kbd> to search.</p>
     </div>
-    <div class="board-actions">
+    <div class="board-actions desktop-only">
       <div class="view-toggle">
         <button type="button" class="chip active" id="view-buckets">By bucket</button>
         <button type="button" class="chip" id="view-table">All tickers</button>
@@ -67,9 +67,9 @@ const base = import.meta.env.BASE_URL;
     </div>
   </div>
 
-  <div class="overview-grid" id="overview-grid" aria-live="polite"></div>
+  <div class="overview-grid desktop-only" id="overview-grid" aria-live="polite"></div>
 
-  <div class="opportunities-panel" id="opportunities-panel">
+  <div class="opportunities-panel desktop-only" id="opportunities-panel">
     <h3>Closest to entry</h3>
     <p class="panel-hint">Tickers with targets — nearest to your price level first.</p>
     <div class="opp-chips" id="opp-chips"></div>
@@ -86,13 +86,13 @@ const base = import.meta.env.BASE_URL;
     <div class="filter-chips" id="filter-chips">
       <button type="button" class="chip active" data-filter="all">All</button>
       <button type="button" class="chip" data-filter="owned">Owned</button>
-      <button type="button" class="chip" data-filter="targets">Targets</button>
       <button type="button" class="chip" data-filter="watching">Watching</button>
-      <button type="button" class="chip" data-filter="has-target">Has target</button>
-      <button type="button" class="chip" data-filter="at-target">At target</button>
-      <button type="button" class="chip" data-filter="high-priority">High priority</button>
+      <button type="button" class="chip desktop-only" data-filter="targets">Targets</button>
+      <button type="button" class="chip desktop-only" data-filter="has-target">Has target</button>
+      <button type="button" class="chip desktop-only" data-filter="at-target">At target</button>
+      <button type="button" class="chip desktop-only" data-filter="high-priority">High priority</button>
     </div>
-    <div class="filter-chips tech-filters" id="tech-filter-chips">
+    <div class="filter-chips tech-filters desktop-only" id="tech-filter-chips">
       <span class="tag-filter-label">Technicals:</span>
       <button type="button" class="chip" data-filter="tech-above-50">Above 50 MA</button>
       <button type="button" class="chip" data-filter="tech-below-200">Below 200 MA</button>
@@ -107,6 +107,8 @@ const base = import.meta.env.BASE_URL;
   <div class="tag-filters" id="tag-filters"></div>
 
   <p class="result-count" id="result-count"></p>
+
+  <div id="mobile-stock-list" class="mobile-stock-list" hidden aria-label="Stocks"></div>
 
   <div id="bucket-view">
     <section class="bucket-section">
