@@ -34,6 +34,41 @@
       "submittedAt": "2026-06-29",
       "content": "AAOI — photonics exposure alongside SIVEF. Optical / datacenter connectivity bet.",
       "symbols": ["AAOI"]
+    },
+    {
+      "id": "seed-oust",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "OUST — digital lidar for robotics, AV, and industrial sensing.",
+      "symbols": ["OUST"]
+    },
+    {
+      "id": "seed-vpg",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "VPG — precision sensors and resistors in the industrial sensing chain.",
+      "symbols": ["VPG"]
+    },
+    {
+      "id": "seed-amba",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "AMBA — low-power vision and edge AI silicon for cameras and automotive.",
+      "symbols": ["AMBA"]
+    },
+    {
+      "id": "seed-syna",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "SYNA — human-interface and connectivity ICs for touch, display, and IoT.",
+      "symbols": ["SYNA"]
+    },
+    {
+      "id": "seed-inod",
+      "author": "J",
+      "submittedAt": "2026-06-29",
+      "content": "INOD — AI data engineering and digital transformation services.",
+      "symbols": ["INOD"]
     }
   ]
 }

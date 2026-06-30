@@ -64,6 +64,61 @@
       "thesis": "High upside photonics exposure — optical/datacenter connectivity bet alongside SIVEF.",
       "addedBy": "J",
       "holder": "J"
+    },
+    {
+      "id": "oust-watching",
+      "symbol": "OUST",
+      "name": "Ouster",
+      "category": "watching",
+      "sector": "Autonomous / Lidar",
+      "tags": ["lidar", "sensors", "speculative"],
+      "priority": "medium",
+      "thesis": "Digital lidar for robotics, AV, and industrial sensing — on radar for the autonomy stack.",
+      "addedBy": "J"
+    },
+    {
+      "id": "vpg-watching",
+      "symbol": "VPG",
+      "name": "Vishay Precision Group",
+      "category": "watching",
+      "sector": "Industrial / Sensors",
+      "tags": ["sensors", "industrial"],
+      "priority": "medium",
+      "thesis": "Precision resistors, sensors, and weighing — industrial quality compounder in the sensing chain.",
+      "addedBy": "J"
+    },
+    {
+      "id": "amba-watching",
+      "symbol": "AMBA",
+      "name": "Ambarella",
+      "category": "watching",
+      "sector": "Semiconductors",
+      "tags": ["semi", "edge-ai", "video"],
+      "priority": "medium",
+      "thesis": "Low-power vision and edge AI silicon — video processing for cameras, drones, and automotive.",
+      "addedBy": "J"
+    },
+    {
+      "id": "syna-watching",
+      "symbol": "SYNA",
+      "name": "Synaptics",
+      "category": "watching",
+      "sector": "Semiconductors",
+      "tags": ["semi", "iot"],
+      "priority": "medium",
+      "thesis": "Human-interface and connectivity ICs — touch, display, and IoT edge exposure.",
+      "addedBy": "J"
+    },
+    {
+      "id": "inod-watching",
+      "symbol": "INOD",
+      "name": "Innodata",
+      "category": "watching",
+      "sector": "AI / Data Services",
+      "tags": ["ai", "data"],
+      "priority": "medium",
+      "thesis": "AI data engineering and digital transformation services — picks-and-shovels for model training workflows.",
+      "addedBy": "J"
     }
   ]
 }

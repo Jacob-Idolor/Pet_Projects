@@ -1,37 +1,67 @@
 {
-  "updatedAt": "2026-06-29T23:29:27.569Z",
+  "updatedAt": "2026-06-30T15:56:42.545Z",
   "marketTime": "US/Eastern",
-  "count": 5,
-  "total": 5,
+  "count": 10,
+  "total": 10,
   "quotes": {
     "SMH": {
-      "price": 631.98,
+      "price": 652.14,
       "changePct": null,
-      "prevClose": 611.61,
+      "prevClose": 631.98,
       "currency": "USD"
     },
     "NBIS": {
-      "price": 261.15,
+      "price": 281.705,
       "changePct": null,
-      "prevClose": 240.3,
+      "prevClose": 261.15,
       "currency": "USD"
     },
     "SIVEF": {
-      "price": 7.15,
+      "price": 6.61,
       "changePct": null,
-      "prevClose": 6.76,
+      "prevClose": 6.78,
       "currency": "USD"
     },
     "META": {
-      "price": 562.6,
+      "price": 557.35,
       "changePct": null,
-      "prevClose": 550.25,
+      "prevClose": 562.6,
       "currency": "USD"
     },
     "AAOI": {
-      "price": 150.1,
+      "price": 146.72,
       "changePct": null,
-      "prevClose": 135.69,
+      "prevClose": 150.1,
+      "currency": "USD"
+    },
+    "OUST": {
+      "price": 60.6,
+      "changePct": null,
+      "prevClose": 54.07,
+      "currency": "USD"
+    },
+    "VPG": {
+      "price": 147.5,
+      "changePct": null,
+      "prevClose": 142.09,
+      "currency": "USD"
+    },
+    "AMBA": {
+      "price": 82.15,
+      "changePct": null,
+      "prevClose": 67.01,
+      "currency": "USD"
+    },
+    "SYNA": {
+      "price": 122,
+      "changePct": null,
+      "prevClose": 117.38,
+      "currency": "USD"
+    },
+    "INOD": {
+      "price": 74.385,
+      "changePct": null,
+      "prevClose": 76.64,
       "currency": "USD"
     }
   }
