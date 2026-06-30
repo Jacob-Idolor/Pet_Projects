@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "groupName": "The Radar",
+    "tagline": "What we're in, what we're watching, and what gets added over time.",
+    "lastUpdated": "2026-06-29"
+  },
+  "stocks": [
+    {
+      "id": "smh-owned",
+      "symbol": "SMH",
+      "name": "VanEck Semiconductor ETF",
+      "category": "owned",
+      "sector": "Semiconductors",
+      "tags": ["semi", "etf", "core"],
+      "priority": "high",
+      "thesis": "Top exposure — broad semiconductor basket, core chip cycle play.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "nbis-owned",
+      "symbol": "NBIS",
+      "name": "Nebius Group",
+      "category": "owned",
+      "sector": "AI Infrastructure",
+      "tags": ["ai", "high-conviction"],
+      "priority": "high",
+      "thesis": "Favorite investment for the next few years — highest conviction name on the list.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "sivef-owned",
+      "symbol": "SIVEF",
+      "name": "Sivers Semiconductors",
+      "category": "owned",
+      "sector": "Photonics",
+      "tags": ["photonics", "speculative"],
+      "priority": "medium",
+      "thesis": "High upside photonics exposure — speculative, not highest quality but big swing potential.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "meta-owned",
+      "symbol": "META",
+      "name": "Meta Platforms",
+      "category": "owned",
+      "sector": "Technology",
+      "tags": ["mag7", "ai"],
+      "priority": "high",
+      "thesis": "Highest upside in Mag 7 outside NVDA — AI + ads + efficiency story.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "aaoi-owned",
+      "symbol": "AAOI",
+      "name": "Applied Optoelectronics",
+      "category": "owned",
+      "sector": "Photonics",
+      "tags": ["photonics", "speculative"],
+      "priority": "medium",
+      "thesis": "High upside photonics exposure — optical/datacenter connectivity bet alongside SIVEF.",
+      "addedBy": "J",
+      "holder": "J"
+    }
+  ]
+}

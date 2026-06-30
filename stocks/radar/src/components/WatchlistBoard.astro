@@ -1,0 +1,135 @@
+---
+import { stocks } from "../data/watchlist";
+
+const stocksJson = JSON.stringify(stocks);
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
+  <div id="held-strip" class="held-strip" hidden aria-label="Current holdings"></div>
+
+  <div class="board-header">
+    <div>
+      <h2>Watchlist</h2>
+      <p class="board-subtitle">Full picture — holdings, targets, and long-term watches. Press <kbd>/</kbd> to search.</p>
+    </div>
+    <div class="board-actions">
+      <div class="view-toggle">
+        <button type="button" class="chip active" id="view-buckets">By bucket</button>
+        <button type="button" class="chip" id="view-table">All tickers</button>
+      </div>
+      <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button>
+      <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="import-panel" id="import-panel" hidden>
+    <p class="import-help">
+      Paste from a spreadsheet — columns:
+      <code>symbol, name, category, sector, tags, targetPrice, thesis, priority</code>.
+      Tags use semicolons (<code>photonics;speculative</code>). Saved in your browser only.
+    </p>
+    <textarea
+      id="import-text"
+      rows="6"
+      placeholder="NVDA,NVIDIA,watching,Semiconductors,ai;semi,,Mag7 benchmark,J&#10;PLTR,Palantir,targets,Software,ai;gov,18,Waiting for dip,medium,K"
+    ></textarea>
+    <div class="import-actions">
+      <button type="button" class="btn btn-primary" id="import-apply">Add to watchlist</button>
+      <button type="button" class="btn btn-ghost" id="import-clear">Clear my imports</button>
+    </div>
+  </div>
+
+  <div class="overview-grid" id="overview-grid" aria-live="polite"></div>
+
+  <div class="opportunities-panel" id="opportunities-panel">
+    <h3>Closest to entry</h3>
+    <p class="panel-hint">Tickers with targets — nearest to your price level first.</p>
+    <div class="opp-chips" id="opp-chips"></div>
+  </div>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      id="search-input"
+      class="search-input"
+      placeholder="Search symbol, name, sector, tags, thesis…"
+      autocomplete="off"
+    />
+    <div class="filter-chips" id="filter-chips">
+      <button type="button" class="chip active" data-filter="all">All</button>
+      <button type="button" class="chip" data-filter="owned">Owned</button>
+      <button type="button" class="chip" data-filter="targets">Targets</button>
+      <button type="button" class="chip" data-filter="watching">Watching</button>
+      <button type="button" class="chip" data-filter="has-target">Has target</button>
+      <button type="button" class="chip" data-filter="at-target">At target</button>
+      <button type="button" class="chip" data-filter="high-priority">High priority</button>
+    </div>
+  </div>
+
+  <div class="tag-filters" id="tag-filters"></div>
+
+  <p class="result-count" id="result-count"></p>
+
+  <div id="bucket-view">
+    <section class="bucket-section">
+      <details class="bucket-details" open>
+        <summary class="bucket-summary">
+          <span class="bucket-icon">💼</span>
+          <div class="bucket-titles"><h3>Currently Holding</h3><p>Active positions</p></div>
+          <span class="bucket-count" data-bucket-count="owned">0</span>
+        </summary>
+        <div data-bucket-body="owned"></div>
+      </details>
+    </section>
+    <section class="bucket-section">
+      <details class="bucket-details" open>
+        <summary class="bucket-summary">
+          <span class="bucket-icon">🎯</span>
+          <div class="bucket-titles"><h3>Waiting on Price Targets</h3><p>Entry and trim levels</p></div>
+          <span class="bucket-count" data-bucket-count="targets">0</span>
+        </summary>
+        <div data-bucket-body="targets"></div>
+      </details>
+    </section>
+    <section class="bucket-section">
+      <details class="bucket-details" open>
+        <summary class="bucket-summary">
+          <span class="bucket-icon">👀</span>
+          <div class="bucket-titles"><h3>Long-Term Watchlist</h3><p>Track the thesis</p></div>
+          <span class="bucket-count" data-bucket-count="watching">0</span>
+        </summary>
+        <div data-bucket-body="watching"></div>
+      </details>
+    </section>
+  </div>
+
+  <div id="table-view" hidden>
+    <div class="table-wrap">
+      <table class="watchlist-table" id="watchlist-table">
+        <thead>
+          <tr>
+            <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
+            <th data-sort="name" class="sortable">Name</th>
+            <th data-sort="category" class="sortable">Bucket</th>
+            <th>Tags</th>
+            <th data-sort="price" class="sortable num">Price</th>
+            <th class="num">Chg</th>
+            <th data-sort="target" class="sortable num">Target</th>
+            <th data-sort="distance" class="sortable num">Distance</th>
+            <th>Thesis</th>
+            <th data-sort="priority" class="sortable">Priority</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="watchlist-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ stocksJson }}>
+  window.__STOCKS_RADAR_DATA__ = stocksJson;
+</script>
+<script is:inline defer src="/watchlist-board.mjs"></script>

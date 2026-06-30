@@ -1,0 +1,56 @@
+name: Stocks Radar — live deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "stocks/radar/**"
+  schedule:
+    # Every 15 min on weekdays — refresh live quotes during market hours
+    - cron: "*/15 * * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: stocks-radar-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: stocks/radar/package-lock.json
+
+      - name: Install & build
+        working-directory: stocks/radar
+        env:
+          STOCKS_RADAR_BASE: /Pet_Projects/stocks-radar
+          STOCKS_RADAR_SITE: https://jacob-idolor.github.io/Pet_Projects/stocks-radar
+        run: |
+          npm ci
+          npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: stocks/radar/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

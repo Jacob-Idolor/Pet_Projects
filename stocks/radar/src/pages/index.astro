@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LiveStatus from "../components/LiveStatus.astro";
+import GroupSubmissions from "../components/GroupSubmissions.astro";
+import WatchlistBoard from "../components/WatchlistBoard.astro";
+import { meta, stocks } from "../data/watchlist";
+---
+
+<BaseLayout title={meta.groupName}>
+  <LiveStatus />
+  <section class="hero container">
+    <h1>{meta.groupName}</h1>
+    <p class="tagline">{meta.tagline}</p>
+    <div class="hero-stats">
+      <span class="stat-pill"><strong>{stocks.length}</strong> tickers tracked</span>
+      <span class="stat-pill">List updated {meta.lastUpdated}</span>
+    </div>
+  </section>
+  <div class="container">
+    <GroupSubmissions />
+    <WatchlistBoard />
+  </div>
+</BaseLayout>

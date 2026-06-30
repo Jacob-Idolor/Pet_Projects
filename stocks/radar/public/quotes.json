@@ -1,0 +1,38 @@
+{
+  "updatedAt": "2026-06-29T23:29:27.569Z",
+  "marketTime": "US/Eastern",
+  "count": 5,
+  "total": 5,
+  "quotes": {
+    "SMH": {
+      "price": 631.98,
+      "changePct": null,
+      "prevClose": 611.61,
+      "currency": "USD"
+    },
+    "NBIS": {
+      "price": 261.15,
+      "changePct": null,
+      "prevClose": 240.3,
+      "currency": "USD"
+    },
+    "SIVEF": {
+      "price": 7.15,
+      "changePct": null,
+      "prevClose": 6.76,
+      "currency": "USD"
+    },
+    "META": {
+      "price": 562.6,
+      "changePct": null,
+      "prevClose": 550.25,
+      "currency": "USD"
+    },
+    "AAOI": {
+      "price": 150.1,
+      "changePct": null,
+      "prevClose": 135.69,
+      "currency": "USD"
+    }
+  }
+}
