@@ -51,6 +51,9 @@ npm run import-csv -- my-tickers.csv
 
 ## Using the page
 
+- **Add PT** button — send a ticker to the price-target list (e.g. PLTR @ $18)
+- Expand any row (**+**) — set or update a target inline
+- Group feed — post `PLTR @ 18` or `Watching NVDA under $120` to auto-detect PTs
 - **By bucket** (default) — three collapsible sections for the full picture
 - **All tickers** — paginated master table for 100+ names
 - **/** — focus search
@@ -68,7 +71,7 @@ npm run import-csv -- my-tickers.csv
 
 **GitHub Pages (free):**
 
-1. **One-time:** enable Pages → [setup guide](../.github/PAGES_SETUP.md) (branch `gh-pages`, folder `/`)
+1. **One-time:** enable Pages → [setup guide](../../.github/PAGES_SETUP.md) (branch `gh-pages`, folder `/`)
 2. Merge to `main` — deploy workflow runs automatically
 3. URL: `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/`
 

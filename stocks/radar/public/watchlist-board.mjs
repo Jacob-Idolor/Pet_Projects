@@ -201,6 +201,37 @@ function mergeStocks(base, custom) {
   for (const s of custom) map.set(`${s.symbol}:${s.category}`, s);
   return [...map.values()];
 }
+async function savePriceTarget(symbol, targetPrice, opts) {
+  const sym = symbol.toUpperCase().replace(/^\$/, "");
+  if (!sym || !targetPrice || targetPrice <= 0) return false;
+  const existing = allStocks.find((s) => s.symbol === sym && s.category === "targets");
+  const q = quotes[sym];
+  const stock = {
+    id: `custom-${sym.toLowerCase()}-targets`,
+    symbol: sym,
+    name: opts?.name ?? q?.name ?? existing?.name ?? sym,
+    category: "targets",
+    targetPrice,
+    custom: true,
+    sector: existing?.sector,
+    tags: existing?.tags,
+    priority: existing?.priority ?? "medium"
+  };
+  if (opts?.note) {
+    stock.thesis = opts.note;
+    stock.targetNote = opts.note;
+  } else if (existing?.thesis) {
+    stock.thesis = existing.thesis;
+    stock.targetNote = existing.targetNote;
+  }
+  if (opts?.addedBy) stock.addedBy = opts.addedBy;
+  else if (existing?.addedBy) stock.addedBy = existing.addedBy;
+  const custom = await getCustomStocks();
+  const merged = mergeStocks(custom, [stock]);
+  await setCustomStocks(merged);
+  allStocks = mergeStocks(baseStocks, merged);
+  return true;
+}
 function getQuote(stock) {
   return quotes[stock.symbol];
 }
@@ -402,6 +433,7 @@ function renderRow(stock, compact = false, mode = "default") {
   `;
 }
 function renderDetailRow(stock, price, q, colspan) {
+  const ptVal = stock.targetPrice != null ? String(stock.targetPrice) : "";
   return `<tr class="detail-row" data-detail-for="${stock.id}">
         <td colspan="${colspan}">
           <div class="detail-panel">
@@ -409,6 +441,12 @@ function renderDetailRow(stock, price, q, colspan) {
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            <div class="pt-inline" data-pt-inline="${stock.symbol}">
+              <strong>Price target:</strong>
+              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${escapeHtml(stock.symbol)}" />
+              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${stock.symbol}">Save to PT list</button>
+              ${stock.category === "targets" && stock.targetPrice != null ? `<span class="pt-current">In Targets @ ${fmtPrice(stock.targetPrice)}</span>` : ""}
+            </div>
             <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "\u2014")}</p>
             <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance \u2192</a>
           </div>
@@ -816,9 +854,52 @@ function bindEvents() {
     savePrefs();
     renderAll();
   });
+  document.getElementById("toggle-pt")?.addEventListener("click", () => {
+    const panel = document.getElementById("pt-panel");
+    const importPanel = document.getElementById("import-panel");
+    if (importPanel) importPanel.hidden = true;
+    if (panel) {
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) {
+        document.getElementById("pt-symbol")?.focus();
+      }
+    }
+  });
   document.getElementById("toggle-import")?.addEventListener("click", () => {
     const panel = document.getElementById("import-panel");
+    const ptPanel = document.getElementById("pt-panel");
+    if (ptPanel) ptPanel.hidden = true;
     if (panel) panel.hidden = !panel.hidden;
+  });
+  document.getElementById("pt-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const sym = document.getElementById("pt-symbol").value.trim();
+    const price = Number(document.getElementById("pt-price").value);
+    const note = document.getElementById("pt-note").value.trim();
+    const author = document.getElementById("pt-author").value.trim();
+    if (!sym || !price || price <= 0) {
+      alert("Enter a symbol and target price.");
+      return;
+    }
+    if (author) localStorage.setItem("radar-author", author.toUpperCase());
+    const ok = await savePriceTarget(sym, price, {
+      note: note || void 0,
+      addedBy: author ? author.toUpperCase() : void 0
+    });
+    if (!ok) return;
+    filter = "targets";
+    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+      c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
+    });
+    search = sym.toUpperCase().replace(/^\$/, "");
+    document.getElementById("search-input").value = search;
+    viewMode = "buckets";
+    setViewToggle("view-buckets");
+    document.getElementById("pt-symbol").value = "";
+    document.getElementById("pt-price").value = "";
+    document.getElementById("pt-note").value = "";
+    renderAll();
+    document.querySelector(`tr[data-symbol="${search}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
   document.getElementById("import-apply")?.addEventListener("click", async () => {
     const text = document.getElementById("import-text").value;
@@ -867,6 +948,26 @@ function bindEvents() {
     }
   });
   document.getElementById("watchlist-board")?.addEventListener("click", (e) => {
+    const ptSave = e.target.closest("[data-pt-save]");
+    if (ptSave) {
+      const sym = ptSave.getAttribute("data-pt-save");
+      const row = ptSave.closest(".pt-inline");
+      const input = row?.querySelector(".pt-inline-price");
+      const price = Number(input?.value);
+      if (!price || price <= 0) {
+        alert("Enter a valid target price.");
+        return;
+      }
+      savePriceTarget(sym, price).then((ok) => {
+        if (!ok) return;
+        filter = "targets";
+        document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+          c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
+        });
+        renderAll();
+      });
+      return;
+    }
     const expand = e.target.closest("[data-expand]");
     if (expand) {
       const id = expand.getAttribute("data-expand");
@@ -944,6 +1045,9 @@ async function initWatchlistBoard(stocksJson) {
     });
   }
   bindEvents();
+  const ptAuthor = document.getElementById("pt-author");
+  const savedAuthor = localStorage.getItem("radar-author");
+  if (ptAuthor && savedAuthor) ptAuthor.value = savedAuthor;
   renderAll();
   startQuoteLoader();
 }

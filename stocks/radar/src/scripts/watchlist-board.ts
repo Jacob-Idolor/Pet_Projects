@@ -119,6 +119,44 @@ function mergeStocks(base: StockRow[], custom: StockRow[]) {
   return [...map.values()];
 }
 
+async function savePriceTarget(
+  symbol: string,
+  targetPrice: number,
+  opts?: { note?: string; addedBy?: string; name?: string }
+) {
+  const sym = symbol.toUpperCase().replace(/^\$/, "");
+  if (!sym || !targetPrice || targetPrice <= 0) return false;
+
+  const existing = allStocks.find((s) => s.symbol === sym && s.category === "targets");
+  const q = quotes[sym];
+  const stock: StockRow = {
+    id: `custom-${sym.toLowerCase()}-targets`,
+    symbol: sym,
+    name: opts?.name ?? q?.name ?? existing?.name ?? sym,
+    category: "targets",
+    targetPrice,
+    custom: true,
+    sector: existing?.sector,
+    tags: existing?.tags,
+    priority: existing?.priority ?? "medium",
+  };
+  if (opts?.note) {
+    stock.thesis = opts.note;
+    stock.targetNote = opts.note;
+  } else if (existing?.thesis) {
+    stock.thesis = existing.thesis;
+    stock.targetNote = existing.targetNote;
+  }
+  if (opts?.addedBy) stock.addedBy = opts.addedBy;
+  else if (existing?.addedBy) stock.addedBy = existing.addedBy;
+
+  const custom = await getCustomStocks();
+  const merged = mergeStocks(custom, [stock]);
+  await setCustomStocks(merged);
+  allStocks = mergeStocks(baseStocks, merged);
+  return true;
+}
+
 function getQuote(stock: StockRow): QuoteData | undefined {
   return quotes[stock.symbol];
 }
@@ -351,6 +389,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
 }
 
 function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
+  const ptVal = stock.targetPrice != null ? String(stock.targetPrice) : "";
   return `<tr class="detail-row" data-detail-for="${stock.id}">
         <td colspan="${colspan}">
           <div class="detail-panel">
@@ -358,6 +397,12 @@ function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | u
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            <div class="pt-inline" data-pt-inline="${stock.symbol}">
+              <strong>Price target:</strong>
+              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${escapeHtml(stock.symbol)}" />
+              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${stock.symbol}">Save to PT list</button>
+              ${stock.category === "targets" && stock.targetPrice != null ? `<span class="pt-current">In Targets @ ${fmtPrice(stock.targetPrice)}</span>` : ""}
+            </div>
             <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "—")}</p>
             <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
           </div>
@@ -840,9 +885,54 @@ function bindEvents() {
     renderAll();
   });
 
+  document.getElementById("toggle-pt")?.addEventListener("click", () => {
+    const panel = document.getElementById("pt-panel");
+    const importPanel = document.getElementById("import-panel");
+    if (importPanel) importPanel.hidden = true;
+    if (panel) {
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) {
+        (document.getElementById("pt-symbol") as HTMLInputElement)?.focus();
+      }
+    }
+  });
+
   document.getElementById("toggle-import")?.addEventListener("click", () => {
     const panel = document.getElementById("import-panel");
+    const ptPanel = document.getElementById("pt-panel");
+    if (ptPanel) ptPanel.hidden = true;
     if (panel) panel.hidden = !panel.hidden;
+  });
+
+  document.getElementById("pt-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const sym = (document.getElementById("pt-symbol") as HTMLInputElement).value.trim();
+    const price = Number((document.getElementById("pt-price") as HTMLInputElement).value);
+    const note = (document.getElementById("pt-note") as HTMLInputElement).value.trim();
+    const author = (document.getElementById("pt-author") as HTMLInputElement).value.trim();
+    if (!sym || !price || price <= 0) {
+      alert("Enter a symbol and target price.");
+      return;
+    }
+    if (author) localStorage.setItem("radar-author", author.toUpperCase());
+    const ok = await savePriceTarget(sym, price, {
+      note: note || undefined,
+      addedBy: author ? author.toUpperCase() : undefined,
+    });
+    if (!ok) return;
+    filter = "targets";
+    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+      c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
+    });
+    search = sym.toUpperCase().replace(/^\$/, "");
+    (document.getElementById("search-input") as HTMLInputElement).value = search;
+    viewMode = "buckets";
+    setViewToggle("view-buckets");
+    (document.getElementById("pt-symbol") as HTMLInputElement).value = "";
+    (document.getElementById("pt-price") as HTMLInputElement).value = "";
+    (document.getElementById("pt-note") as HTMLInputElement).value = "";
+    renderAll();
+    document.querySelector(`tr[data-symbol="${search}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   document.getElementById("import-apply")?.addEventListener("click", async () => {
@@ -897,6 +987,27 @@ function bindEvents() {
   });
 
   document.getElementById("watchlist-board")?.addEventListener("click", (e) => {
+    const ptSave = (e.target as HTMLElement).closest("[data-pt-save]");
+    if (ptSave) {
+      const sym = ptSave.getAttribute("data-pt-save")!;
+      const row = ptSave.closest(".pt-inline");
+      const input = row?.querySelector(".pt-inline-price") as HTMLInputElement | null;
+      const price = Number(input?.value);
+      if (!price || price <= 0) {
+        alert("Enter a valid target price.");
+        return;
+      }
+      savePriceTarget(sym, price).then((ok) => {
+        if (!ok) return;
+        filter = "targets";
+        document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+          c.classList.toggle("active", c.getAttribute("data-filter") === "targets");
+        });
+        renderAll();
+      });
+      return;
+    }
+
     const expand = (e.target as HTMLElement).closest("[data-expand]");
     if (expand) {
       const id = expand.getAttribute("data-expand")!;
@@ -985,6 +1096,10 @@ export async function initWatchlistBoard(stocksJson: string) {
   }
 
   bindEvents();
+  const ptAuthor = document.getElementById("pt-author") as HTMLInputElement | null;
+  const savedAuthor = localStorage.getItem("radar-author");
+  if (ptAuthor && savedAuthor) ptAuthor.value = savedAuthor;
+
   renderAll();
   startQuoteLoader();
 }

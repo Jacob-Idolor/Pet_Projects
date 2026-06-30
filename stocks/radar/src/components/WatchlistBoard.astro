@@ -19,9 +19,35 @@ const base = import.meta.env.BASE_URL;
         <button type="button" class="chip" id="view-table">All tickers</button>
         <button type="button" class="chip" id="view-technical">Technical</button>
       </div>
+      <button type="button" class="btn btn-ghost" id="toggle-pt">Add PT</button>
       <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button>
       <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button>
     </div>
+  </div>
+
+  <div class="pt-panel" id="pt-panel" hidden>
+    <h3>Add price target</h3>
+    <p class="panel-hint">Send a ticker to the PT list — shows under <strong>Targets</strong> and in <strong>Closest to entry</strong>.</p>
+    <form class="pt-form" id="pt-form">
+      <label>
+        Symbol
+        <input type="text" id="pt-symbol" maxlength="6" placeholder="PLTR" required autocomplete="off" />
+      </label>
+      <label>
+        Target $
+        <input type="number" id="pt-price" step="0.01" min="0.01" placeholder="18.00" required />
+      </label>
+      <label>
+        Note
+        <input type="text" id="pt-note" placeholder="Want better entry (optional)" />
+      </label>
+      <label>
+        You
+        <input type="text" id="pt-author" maxlength="8" placeholder="Initials" />
+      </label>
+      <button type="submit" class="btn btn-primary">Add to PT list</button>
+    </form>
+    <p class="pt-hint">Tip: in the group feed try <code>PLTR @ 18</code> or <code>Watching NVDA under $120</code> — we auto-detect PTs.</p>
   </div>
 
   <div class="import-panel" id="import-panel" hidden>

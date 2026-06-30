@@ -986,6 +986,80 @@ body[data-day-mood="mixed"] .site-header {
   margin-bottom: 1.25rem;
 }
 
+.pt-panel {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.pt-panel h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.pt-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+
+.pt-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pt-form input {
+  font-size: 0.95rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.pt-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.pt-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.pt-inline-price {
+  width: 6rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.pt-current {
+  font-size: 0.8rem;
+  color: var(--green);
+}
+
 .opportunities-panel h3 {
   margin: 0 0 0.25rem;
   font-size: 1rem;
