@@ -64,6 +64,21 @@ npm run import-csv -- my-tickers.csv
 
 ## Go live (pick one — both stay under $5/mo)
 
+**Live URL (after setup):** https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
+
+### Deploy in ~3 minutes (GitHub Pages, free)
+
+1. **Merge** the stocks-radar PR to `main`
+2. **Enable Pages** (once): [Settings → Pages](https://github.com/Jacob-Idolor/Pet_Projects/settings/pages) → Source: **Deploy from a branch** → Branch **`gh-pages`** → **`/ (root)`** → Save
+3. **Run deploy:** Actions → **Stocks Radar — live deploy** → **Run workflow**
+4. **Open on phone:** bookmark the URL above — works on mobile (responsive layout, touch-friendly tables)
+
+Full troubleshooting: [`.github/PAGES_SETUP.md`](../../.github/PAGES_SETUP.md)
+
+### Mobile
+
+The page is built for phone and desktop: responsive grids, horizontal scroll on wide tables, touch-sized buttons, safe-area padding for notched phones. Add to home screen from Safari/Chrome for quick access.
+
 | Option | Cost | URL |
 |--------|------|-----|
 | **GitHub Pages** (default) | **$0/mo** | `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/` |
