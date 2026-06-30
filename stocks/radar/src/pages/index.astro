@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LiveStatus from "../components/LiveStatus.astro";
+import DayMoodBanner from "../components/DayMoodBanner.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import { meta, stocks } from "../data/watchlist";
@@ -8,6 +9,7 @@ import { meta, stocks } from "../data/watchlist";
 
 <BaseLayout title={meta.groupName}>
   <LiveStatus />
+  <DayMoodBanner />
   <section class="hero container">
     <h1>{meta.groupName}</h1>
     <p class="tagline">{meta.tagline}</p>
