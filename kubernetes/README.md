@@ -7,10 +7,13 @@ A **dual-path** practice environment for containers and Kubernetes:
 | **Browser** | Interactive site — Docker + kubectl simulators, modules, troubleshoot hub | Learn concepts anywhere, zero install |
 | **Localhost** | kind cluster + Docker lab + hands-on labs | Build muscle memory with real commands |
 | **AWS** | Terraform → S3 + CloudFront (~$1–5/mo) | Share the learning site publicly |
+| **GitHub Pages** | $0 workflow | Cheapest public hosting |
 
 Start here: run `make site-dev` → **Lab Hub** at http://localhost:4321
 
-Full learning guide: **[LEARNING-PATH.md](LEARNING-PATH.md)**
+- **Learning guide:** [LEARNING-PATH.md](LEARNING-PATH.md)
+- **Testing / CI:** [TESTING.md](TESTING.md)
+- **Public deploy (cheap):** [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
@@ -23,7 +26,8 @@ make help          # all targets
 make site-dev      # browser learning @ localhost:4321
 make docker-lab    # build & run sample container
 make local-lab     # kind cluster + Lab instructions
-make aws-deploy    # build site → S3 (after terraform apply)
+make aws-deploy    # test + build site → S3 (after terraform apply)
+make ci            # full regression suite (matches GitHub Actions)
 ```
 
 ---

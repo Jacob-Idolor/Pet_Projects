@@ -2,6 +2,10 @@
 # Build Astro site and deploy to S3 + CloudFront.
 # Usage: AWS_PROFILE=pet-projects ./deploy-site.sh
 # Or from kubernetes/: make aws-deploy
+#
+# Env:
+#   SKIP_TESTS=1     Skip npm test:ci before deploy
+#   SKIP_INVALIDATION=1  Never invalidate CloudFront (not recommended)
 
 set -euo pipefail
 
@@ -26,12 +30,18 @@ if [[ -z "$BUCKET" || -z "$DISTRIBUTION_ID" ]]; then
   exit 1
 fi
 
-echo "Building site..."
 pushd "$SITE_DIR" >/dev/null
 if [[ ! -d node_modules ]]; then
   npm install
 fi
-npm run build
+
+if [[ "${SKIP_TESTS:-}" != "1" ]]; then
+  echo "Running regression tests (test:ci)..."
+  npm run test:ci
+else
+  echo "SKIP_TESTS=1 — building without test suite"
+  npm run build
+fi
 popd >/dev/null
 
 DIST_PATH="$SITE_DIR/dist"
@@ -41,12 +51,24 @@ if [[ ! -d "$DIST_PATH" ]]; then
 fi
 
 echo "Syncing to s3://$BUCKET ..."
-aws s3 sync "$DIST_PATH" "s3://$BUCKET" --delete --profile "$PROFILE"
+SYNC_OUTPUT=$(aws s3 sync "$DIST_PATH" "s3://$BUCKET" --delete --profile "$PROFILE" 2>&1)
+echo "$SYNC_OUTPUT"
 
-echo "Invalidating CloudFront cache..."
-aws cloudfront create-invalidation \
-  --distribution-id "$DISTRIBUTION_ID" \
-  --paths "/*" \
-  --profile "$PROFILE" >/dev/null
+CHANGED=false
+if echo "$SYNC_OUTPUT" | grep -qE 'upload:|delete:'; then
+  CHANGED=true
+fi
+
+if [[ "$CHANGED" == "true" && "${SKIP_INVALIDATION:-}" != "1" ]]; then
+  echo "Content changed — invalidating CloudFront cache..."
+  aws cloudfront create-invalidation \
+    --distribution-id "$DISTRIBUTION_ID" \
+    --paths "/*" \
+    --profile "$PROFILE" >/dev/null
+elif [[ "$CHANGED" == "false" ]]; then
+  echo "No changes detected — skipping CloudFront invalidation (saves cost)."
+else
+  echo "SKIP_INVALIDATION=1 — cache not invalidated."
+fi
 
 echo "Done. Site: $URL"

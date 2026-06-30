@@ -1,11 +1,21 @@
-name: Site deploy (manual)
+name: Site deploy AWS (manual)
 
-# Manual only — avoids surprise AWS charges on every push
+# Manual only — avoids surprise AWS charges on every push.
+# Estimated cost: ~$1–5/month at low traffic (S3 + CloudFront).
 on:
   workflow_dispatch:
+    inputs:
+      skip_e2e:
+        description: "Skip E2E tests (not recommended)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 jobs:
-  deploy:
+  test-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -15,12 +25,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
+          cache-dependency-path: kubernetes/site/package-lock.json
 
-      - name: Build site
+      - name: Install + regression tests
         working-directory: kubernetes/site
         run: |
-          npm install
-          npm run build
+          npm ci
+          npm run test:ci
+
+      - name: E2E smoke tests
+        if: inputs.skip_e2e != 'true'
+        working-directory: kubernetes/site
+        run: |
+          npx playwright install chromium --with-deps
+          npm run test:e2e
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -29,12 +48,29 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Sync to S3
+      - name: Sync to S3 (only if changed)
+        id: sync
         run: |
-          aws s3 sync kubernetes/site/dist s3://${{ secrets.S3_BUCKET }} --delete
+          set -euo pipefail
+          OUT=$(aws s3 sync kubernetes/site/dist "s3://${{ secrets.S3_BUCKET }}" --delete 2>&1) || true
+          echo "$OUT"
+          if echo "$OUT" | grep -qE 'upload:|delete:'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Invalidate CloudFront
+      - name: Invalidate CloudFront (only when content changed)
+        if: steps.sync.outputs.changed == 'true'
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
+
+      - name: Deploy summary
+        run: |
+          if [ "${{ steps.sync.outputs.changed }}" = "true" ]; then
+            echo "Deployed new content and invalidated CloudFront cache."
+          else
+            echo "No file changes — skipped CloudFront invalidation (saves cost)."
+          fi
