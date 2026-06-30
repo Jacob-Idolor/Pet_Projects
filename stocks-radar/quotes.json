@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-06-30T21:59:48.324Z",
+  "updatedAt": "2026-06-30T22:47:13.324Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
-  "count": 11,
-  "total": 11,
+  "count": 10,
+  "total": 10,
   "quotes": {
     "SMH": {
       "price": 655.89,
@@ -308,37 +308,6 @@
       "signals": [
         "above-sma200",
         "below-sma50"
-      ]
-    },
-    "PLTR": {
-      "price": 116.67,
-      "changePct": 0.8383777677986805,
-      "prevClose": 115.69999694824219,
-      "currency": "USD",
-      "name": "Palantir Technologies Inc.",
-      "high52": 207.52,
-      "low52": 106.37,
-      "range52Pct": 10.182896688086997,
-      "sma": {
-        "20": 127.93750038146973,
-        "50": 135.32089981079102,
-        "200": 158.352799949646
-      },
-      "vsSma": {
-        "20": -8.807034956813723,
-        "50": -13.782719326334039,
-        "200": -26.32274261200342
-      },
-      "trend": "bearish",
-      "rsi14": 34.406639455479606,
-      "volume": 35240249,
-      "avgVolume20": 41695467.45,
-      "volRatio": 0.8451817704708332,
-      "signals": [
-        "below-sma200",
-        "below-sma50",
-        "deep-below-50",
-        "near-52w-low"
       ]
     }
   }
