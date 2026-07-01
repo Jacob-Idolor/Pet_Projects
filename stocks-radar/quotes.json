@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-01T10:15:33.959Z",
+  "updatedAt": "2026-07-01T13:17:09.099Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -12,8 +12,8 @@
       "currency": "USD",
       "name": "VanEck Semiconductor ETF",
       "high52": 671.83,
-      "low52": 272.16,
-      "range52Pct": 96.01170966046988,
+      "low52": 274.66,
+      "range52Pct": 95.98660523201652,
       "sma": {
         "20": 622.5004974365235,
         "50": 573.8221997070312,
