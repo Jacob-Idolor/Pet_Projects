@@ -55,6 +55,20 @@ function rangeBar(range52Pct, low, high) {
   const hint = low != null && high != null ? `${fmtPrice(low)} \u2013 ${fmtPrice(high)} \xB7 ${pos.toFixed(0)}% of range` : `${pos.toFixed(0)}% of 52w range`;
   return `<div class="range-bar" title="${escapeHtml(hint)}"><div class="range-bar-track"><div class="range-bar-marker zone-${zone}" style="left:${pos}%"></div></div><span class="range-bar-label">${pos.toFixed(0)}%</span></div>`;
 }
+function athIndicator(q) {
+  if (q?.athHigh == null || q?.pctFromAth == null) {
+    return `<span class="dim">\u2014</span>`;
+  }
+  const pct = q.pctFromAth;
+  const athTitle = q.athDate ? `All-time high ${fmtPrice(q.athHigh)} (${q.athDate})` : `All-time high ${fmtPrice(q.athHigh)}`;
+  if (pct >= -0.5) {
+    return `<span class="ath-badge ath-at" title="${escapeHtml(athTitle)}">ATH</span>`;
+  }
+  if (pct >= -5) {
+    return `<span class="ath-badge ath-near" title="${escapeHtml(athTitle)}">Near ATH</span>`;
+  }
+  return `<span class="ath-badge ath-below" title="${escapeHtml(athTitle)}">${fmtPct(pct)} from ATH</span>`;
+}
 function renderTechnicalDetail(q, price) {
   if (!q?.sma && q?.range52Pct == null && q?.rsi14 == null) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy \u2014 run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
@@ -82,6 +96,11 @@ function renderTechnicalDetail(q, price) {
         ${rangeBar(q?.range52Pct, q?.low52, q?.high52)}
         <span class="tech-range-bounds">${fmtPrice(q?.low52)} \u2013 ${fmtPrice(q?.high52)}</span>
       </div>
+      <div class="tech-ath">
+        <span class="tech-label">All-time high</span>
+        ${athIndicator(q)}
+        ${q?.athHigh != null ? `<span class="tech-ath-level">${fmtPrice(q.athHigh)}${q.athDate ? ` \xB7 ${q.athDate}` : ""}</span>` : ""}
+      </div>
       <p class="tech-vol"><strong>Volume:</strong> ${volNote}</p>
     </div>`;
 }
@@ -108,6 +127,10 @@ function matchesTechnicalFilter(filter2, q, price) {
       return q.range52Pct != null && q.range52Pct <= 20;
     case "tech-near-high":
       return q.range52Pct != null && q.range52Pct >= 80;
+    case "tech-near-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -5;
+    case "tech-at-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -0.5;
     case "tech-oversold":
       return q.rsi14 != null && q.rsi14 <= 35;
     case "tech-overbought":
@@ -321,6 +344,10 @@ function sortStocks(list) {
         av = getQuote(a)?.range52Pct ?? -Infinity;
         bv = getQuote(b)?.range52Pct ?? -Infinity;
         return sortDir * (av - bv);
+      case "ath":
+        av = getQuote(a)?.pctFromAth ?? -Infinity;
+        bv = getQuote(b)?.pctFromAth ?? -Infinity;
+        return sortDir * (av - bv);
       case "rsi":
         av = getQuote(a)?.rsi14 ?? -Infinity;
         bv = getQuote(b)?.rsi14 ?? -Infinity;
@@ -370,12 +397,13 @@ function renderRow(stock, compact = false, mode = "default") {
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
+      <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? renderDetailRow(stock, price, q, 9) : ""}`;
+    ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
   }
   return `
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${expanded ? "expanded" : ""}">
@@ -388,6 +416,7 @@ function renderRow(stock, compact = false, mode = "default") {
       <td class="tags-cell">${renderTagsHtml(stock)}</td>
       <td class="num mono">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
+      <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "\u2014")}</td>
       <td>${renderPriority(stock)}</td>
@@ -395,7 +424,7 @@ function renderRow(stock, compact = false, mode = "default") {
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 9) : ""}
+    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
   `;
 }
 function renderDetailRow(stock, price, q, colspan) {
@@ -421,7 +450,7 @@ function renderDetailRow(stock, price, q, colspan) {
 }
 function renderTableHtml(stocks, mode = "default") {
   if (!stocks.length) {
-    const cols = mode === "technical" ? 9 : 9;
+    const cols = mode === "technical" ? 10 : 10;
     return `<tr><td colspan="${cols}" class="empty-row">No tickers match your filters.</td></tr>`;
   }
   return stocks.map((s) => renderRow(s, false, mode)).join("");
@@ -450,6 +479,7 @@ function renderOverview() {
     let above200 = 0;
     let bullish = 0;
     let nearLow = 0;
+    let nearAth = 0;
     for (const s of withTech) {
       const q = getQuote(s);
       const p = getPrice(s);
@@ -457,12 +487,14 @@ function renderOverview() {
       if (q?.sma?.[200] != null && p != null && p > q.sma[200]) above200++;
       if (q?.trend === "bullish") bullish++;
       if (q?.range52Pct != null && q.range52Pct <= 20) nearLow++;
+      if (q?.pctFromAth != null && q.pctFromAth >= -5) nearAth++;
     }
     techHtml = `
     <div class="overview-card tech"><span class="ov-value">${above50}</span><span class="ov-label">Above 50 MA</span></div>
     <div class="overview-card tech"><span class="ov-value">${above200}</span><span class="ov-label">Above 200 MA</span></div>
     <div class="overview-card tech highlight"><span class="ov-value">${bullish}</span><span class="ov-label">Bullish trend</span></div>
-    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>`;
+    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>
+    <div class="overview-card tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
   el.innerHTML = `
     <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Tracking</span></div>
@@ -554,6 +586,7 @@ function syncLayoutClass() {
 function renderMobileCard(stock) {
   const price = getPrice(stock);
   const chg = getChange(stock);
+  const q = getQuote(stock);
   const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
   return `<article class="stock-card-m" data-symbol="${stock.symbol}">
@@ -566,6 +599,7 @@ function renderMobileCard(stock) {
         <span class="scm-name">${escapeHtml(stock.name)}</span>
         <span class="chg ${chgCls}">${chgTxt}</span>
       </div>
+      <div class="scm-ath">${athIndicator(q)}</div>
       ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
     </a>
   </article>`;
