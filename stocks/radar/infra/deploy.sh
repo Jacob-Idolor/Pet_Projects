@@ -27,6 +27,8 @@ echo "Building site (CloudFront URL: $URL)..."
 cd "$RADAR_DIR"
 export STOCKS_RADAR_BASE="/"
 export STOCKS_RADAR_SITE="$URL"
+export DEPLOY_PROVIDER="manual"
+export DEPLOY_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 npm ci
 npm run build

@@ -1,11 +1,7 @@
 import { defineConfig } from "astro/config";
 
 const base = process.env.STOCKS_RADAR_BASE ?? "/";
-const site =
-  process.env.STOCKS_RADAR_SITE ??
-  (base === "/"
-    ? "https://example.cloudfront.net"
-    : "https://jacob-idolor.github.io/Pet_Projects/stocks-radar");
+const site = process.env.STOCKS_RADAR_SITE ?? "https://example.cloudfront.net";
 
 export default defineConfig({
   site,

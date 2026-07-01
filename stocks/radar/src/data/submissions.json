@@ -69,6 +69,13 @@
       "submittedAt": "2026-06-29",
       "content": "INOD — AI data engineering and digital transformation services.",
       "symbols": ["INOD"]
+    },
+    {
+      "id": "seed-dram",
+      "author": "J",
+      "submittedAt": "2026-07-01",
+      "content": "DRAM — Roundhill Memory ETF. Memory / DRAM cycle exposure.",
+      "symbols": ["DRAM"]
     }
   ]
 }
