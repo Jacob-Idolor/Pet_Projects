@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-01T01:40:12.535Z",
+  "updatedAt": "2026-07-01T06:11:10.322Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -26,9 +26,9 @@
       },
       "trend": "bullish",
       "rsi14": 60.20767698464096,
-      "volume": 9269680,
-      "avgVolume20": 12383094,
-      "volRatio": 0.7485754368011742,
+      "volume": 9298100,
+      "avgVolume20": 12384515,
+      "volRatio": 0.7507843464197024,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -58,9 +58,9 @@
       },
       "trend": "bullish",
       "rsi14": 66.91412200032048,
-      "volume": 12809680,
-      "avgVolume20": 16905804,
-      "volRatio": 0.757709009284622,
+      "volume": 12832900,
+      "avgVolume20": 16906965,
+      "volRatio": 0.7590303759426958,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -70,22 +70,22 @@
       ]
     },
     "SIVEF": {
-      "price": 7.15,
-      "changePct": -0.0000013338102099766865,
+      "price": 6.7,
+      "changePct": -6.2937075435704095,
       "prevClose": 7.150000095367432,
       "currency": "USD",
       "name": "Sivers Semiconductors AB (publ)",
       "high52": 11.25,
       "low52": 0.96,
-      "range52Pct": 60.15549076773568,
+      "range52Pct": 55.782312925170075,
       "sma": {
         "20": 8.808594965934754,
         "50": 6.780458011627197,
         "200": null
       },
       "vsSma": {
-        "20": -18.829279497456675,
-        "50": 5.450103632219369,
+        "20": -23.93792624237199,
+        "50": -1.1866161768014332,
         "200": null
       },
       "trend": "unknown",
@@ -94,7 +94,7 @@
       "avgVolume20": 3981034.8,
       "volRatio": 0.6907420151162708,
       "signals": [
-        "above-sma50"
+        "below-sma50"
       ]
     },
     "META": {
@@ -118,9 +118,9 @@
       },
       "trend": "bearish",
       "rsi14": 42.79819849715172,
-      "volume": 15879159,
-      "avgVolume20": 18292047.95,
-      "volRatio": 0.868090825226598,
+      "volume": 17357000,
+      "avgVolume20": 18365940,
+      "volRatio": 0.9450646141716678,
       "signals": [
         "below-sma200",
         "below-sma50"
@@ -147,9 +147,9 @@
       },
       "trend": "mixed",
       "rsi14": 44.41578050681412,
-      "volume": 7256943,
-      "avgVolume20": 14367087.15,
-      "volRatio": 0.5051088591747005,
+      "volume": 7470700,
+      "avgVolume20": 14377775,
+      "volRatio": 0.519600564065024,
       "signals": [
         "above-sma200",
         "below-sma50",
@@ -177,9 +177,9 @@
       },
       "trend": "bullish",
       "rsi14": 75.46689155460724,
-      "volume": 7437565,
-      "avgVolume20": 5035198.25,
-      "volRatio": 1.477114629994956,
+      "volume": 7456400,
+      "avgVolume20": 5036140,
+      "volRatio": 1.480578379473168,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -210,9 +210,9 @@
       },
       "trend": "bullish",
       "rsi14": 65.86331365330304,
-      "volume": 942691,
-      "avgVolume20": 609714.55,
-      "volRatio": 1.5461185894284464,
+      "volume": 945700,
+      "avgVolume20": 609865,
+      "volRatio": 1.550671050150443,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -242,9 +242,9 @@
       },
       "trend": "bullish",
       "rsi14": 68.49290111637424,
-      "volume": 6951621,
-      "avgVolume20": 1696576.05,
-      "volRatio": 4.097441432112636,
+      "volume": 6966900,
+      "avgVolume20": 1697340,
+      "volRatio": 4.1045989607267845,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -273,9 +273,9 @@
       },
       "trend": "bullish",
       "rsi14": 44.77939734591859,
-      "volume": 2125350,
-      "avgVolume20": 1284052.5,
-      "volRatio": 1.6551893322118838,
+      "volume": 2363600,
+      "avgVolume20": 1295965,
+      "volRatio": 1.8238146863534124,
       "signals": [
         "above-sma50",
         "above-sma200"
@@ -302,9 +302,9 @@
       },
       "trend": "mixed",
       "rsi14": 30.28396634659356,
-      "volume": 1055452,
-      "avgVolume20": 1532252.6,
-      "volRatio": 0.6888237618262159,
+      "volume": 1057200,
+      "avgVolume20": 1532340,
+      "volRatio": 0.6899252124202201,
       "signals": [
         "above-sma200",
         "below-sma50"
