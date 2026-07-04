@@ -11,6 +11,8 @@ A **practice-first** path for learning OpenTelemetry — the industry-standard o
 
 Start here: run `make stack-up` → open Jaeger at http://localhost:16686
 
+**Want full conceptual depth?** Start with **[CORE-CONCEPTS.md](CORE-CONCEPTS.md)** — the master map for understanding OTel.
+
 Full learning guide: **[LEARNING-PATH.md](LEARNING-PATH.md)**
 
 ---
@@ -45,6 +47,8 @@ make check-tools    # verify docker, curl, etc.
 
 ```
 opentelemetry/
+├── CORE-CONCEPTS.md     # Master concept map — start here for full understanding
+├── teachings/           # Deep-dive guides (data model, propagation, sampling, …)
 ├── curriculum/          # Concept deep-dives (reading)
 ├── labs/                # 8 guided hands-on labs
 ├── drills/              # CLI commands, checklists, troubleshooting

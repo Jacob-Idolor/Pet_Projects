@@ -14,6 +14,7 @@ Mark items as you complete them. Add dates if you want a visible learning journa
 
 ## Curriculum (concept reading)
 
+- [ ] [CORE-CONCEPTS.md](CORE-CONCEPTS.md) — master map read
 - [ ] [00 — Overview](curriculum/00-overview.md)
 - [ ] [01 — Observability fundamentals](curriculum/01-observability-fundamentals.md)
 - [ ] [02 — OpenTelemetry concepts](curriculum/02-opentelemetry-concepts.md)
@@ -24,6 +25,27 @@ Mark items as you complete them. Add dates if you want a visible learning journa
 - [ ] [07 — Instrumentation](curriculum/07-instrumentation.md)
 - [ ] [08 — Kubernetes integration](curriculum/08-kubernetes-integration.md)
 - [ ] [09 — Production patterns](curriculum/09-production-patterns.md)
+
+## Core concepts (extended — for full understanding)
+
+- [ ] [10 — Context & propagation](curriculum/10-context-and-propagation.md)
+- [ ] [11 — Data model & OTLP](curriculum/11-data-model-and-otlp.md)
+- [ ] [12 — Semantic conventions](curriculum/12-semantic-conventions.md)
+- [ ] [13 — Baggage & correlation](curriculum/13-baggage-and-correlation.md)
+- [ ] [14 — Architecture decisions](curriculum/14-architecture-decisions.md)
+
+## Teachings (deep guides)
+
+- [ ] [01 — The complete picture](teachings/01-the-complete-picture.md)
+- [ ] [02 — Data model](teachings/02-data-model.md)
+- [ ] [03 — Context propagation](teachings/03-context-propagation.md)
+- [ ] [04 — SDK internals](teachings/04-sdk-internals.md)
+- [ ] [05 — OTLP and backends](teachings/05-otlp-and-backends.md)
+- [ ] [06 — Semantic conventions](teachings/06-semantic-conventions.md)
+- [ ] [07 — Sampling strategies](teachings/07-sampling-strategies.md)
+- [ ] [09 — History and ecosystem](teachings/09-history-and-ecosystem.md)
+- [ ] [10 — Mastery checklist](teachings/10-mastery-checklist.md) — all tiers checked
+- [ ] [Glossary](teachings/GLOSSARY.md) — reviewed
 
 ## Labs
 
@@ -40,6 +62,7 @@ Mark items as you complete them. Add dates if you want a visible learning journa
 
 - [ ] [OTel CLI & env commands](drills/otel-cli-commands.md) — 3 sessions
 - [ ] [Instrumentation checklist](drills/instrumentation-checklist.md) — applied to one app
+- [ ] [Concept self-check](drills/concept-self-check.md) — 80%+ without notes
 - [ ] [Troubleshooting scenarios](drills/troubleshooting-scenarios.md) — 5+ solved
 
 ## Integrations (optional stretch)

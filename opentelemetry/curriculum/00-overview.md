@@ -1,6 +1,8 @@
 # Curriculum overview
 
-Structured path from observability fundamentals → OpenTelemetry signals → Collector → production patterns. Do labs in order; use curriculum docs when you need concept depth.
+Structured path from observability fundamentals → OpenTelemetry signals → core concepts → production patterns. Do labs in order; use **teachings/** when you need extra depth.
+
+**Master map:** [CORE-CONCEPTS.md](../CORE-CONCEPTS.md)
 
 ## Level map
 
@@ -8,6 +10,8 @@ Structured path from observability fundamentals → OpenTelemetry signals → Co
 L1 Foundations     Three pillars, OTel architecture, local stack
        ↓
 L2 Signals           Traces, metrics, logs — each signal in depth
+       ↓
+L2b Core concepts    Context, data model, OTLP, semantic conventions
        ↓
 L3 Pipeline          Collector receivers, processors, exporters
        ↓
@@ -18,7 +22,7 @@ L5 Platform          Kubernetes, service mesh, multi-service propagation
 L6 Production        Sampling, cardinality, security, vendor export
 ```
 
-## Module index
+## Module index — fundamentals (01–09)
 
 | # | Module | Level | Lab | Drill |
 |---|--------|-------|-----|-------|
@@ -32,21 +36,36 @@ L6 Production        Sampling, cardinality, security, vendor export
 | 08 | [Kubernetes integration](08-kubernetes-integration.md) | L5 | [Lab 06](../labs/lab-06-kubernetes/) | — |
 | 09 | [Production patterns](09-production-patterns.md) | L6 | [Lab 07](../labs/lab-07-sampling/) | troubleshooting |
 
+## Module index — core concepts (10–14)
+
+| # | Module | Teaching companion |
+|---|--------|-------------------|
+| 10 | [Context & propagation](10-context-and-propagation.md) | [teaching/03](../teachings/03-context-propagation.md) |
+| 11 | [Data model & OTLP](11-data-model-and-otlp.md) | [teachings/02](../teachings/02-data-model.md), [05](../teachings/05-otlp-and-backends.md) |
+| 12 | [Semantic conventions](12-semantic-conventions.md) | [teaching/06](../teachings/06-semantic-conventions.md) |
+| 13 | [Baggage & correlation](13-baggage-and-correlation.md) | [teaching/03](../teachings/03-context-propagation.md) |
+| 14 | [Architecture decisions](14-architecture-decisions.md) | [teachings/01](../teachings/01-the-complete-picture.md), [09](../teachings/09-history-and-ecosystem.md) |
+
+## Deep teachings (optional but recommended for full understanding)
+
+See [teachings/README.md](../teachings/README.md) — 10 guides + glossary + mastery checklist.
+
 ## Suggested pace
 
 | Phase | Focus | Activities |
 |-------|-------|------------|
-| Week 1 | Stack + traces | Labs 00–01, curriculum 01–03 |
-| Week 2 | Metrics + logs | Labs 02–03, curriculum 04–05 |
-| Week 3 | Collector + auto-inst | Labs 04–05, curriculum 06–07 |
-| Week 4+ | K8s + production | Labs 06–07, vendor integration stretch |
+| Phase 1 | Stack + traces | CORE-CONCEPTS, Labs 00–01, curriculum 01–03, teaching 01–02 |
+| Phase 2 | Signals + context | Labs 02–03, curriculum 04–05, 10–11, teachings 03–05 |
+| Phase 3 | Collector + conventions | Labs 04–05, curriculum 06–07, 12–13, teachings 04–06 |
+| Phase 4 | Production + mastery | Labs 06–07, curriculum 08–09, 14, teachings 07–10, self-check |
 
 ## How to use each module
 
 1. Skim the concept doc (15 min).
-2. Run the linked lab hands-on (30–60 min).
-3. Run the drill sheet without notes (10 min).
-4. Log one takeaway in [PROGRESS.md](../PROGRESS.md).
+2. Read linked **teaching** if the topic still feels fuzzy (15–25 min).
+3. Do the linked lab hands-on (30–60 min).
+4. Answer **concept-self-check** block without notes (10 min).
+5. Log one takeaway in [PROGRESS.md](../PROGRESS.md).
 
 ## Industry context
 
@@ -65,4 +84,4 @@ OpenTelemetry graduated from the CNCF in 2024 and is supported by every major ob
 | Logs | OTel logs bridge | kubectl logs, Loki patterns | Log monitoring |
 | Golden signals | curriculum 01, 09 | curriculum 06 | Dashboards |
 
-Adjust depth based on your goals — instrumenting a real app beats reading every spec page.
+Adjust depth based on your goals — full understanding = curriculum + teachings + labs + self-check.
