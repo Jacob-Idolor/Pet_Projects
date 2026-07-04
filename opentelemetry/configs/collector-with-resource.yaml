@@ -1,0 +1,23 @@
+# Reference — Collector with resource processor
+
+Merge into `examples/stack/otel-collector-config.yaml` for Lab 04.
+
+```yaml
+processors:
+  batch:
+    timeout: 5s
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: lab
+        action: upsert
+
+service:
+  pipelines:
+    traces:
+      processors: [resource, batch]
+    metrics:
+      processors: [resource, batch]
+    logs:
+      processors: [resource, batch]
+```
