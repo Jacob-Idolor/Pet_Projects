@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-06T20:15:43.010Z",
+  "updatedAt": "2026-07-06T21:55:11.506Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -205,9 +205,9 @@
       },
       "trend": "bullish",
       "rsi14": 41.17332696327651,
-      "volume": 678809,
-      "avgVolume20": 641855.45,
-      "volRatio": 1.057573009623896,
+      "volume": 680343,
+      "avgVolume20": 641932.15,
+      "volRatio": 1.0598363082453495,
       "signals": [
         "above-sma50",
         "above-sma200",
