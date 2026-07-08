@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-08T22:44:44.187Z",
+  "updatedAt": "2026-07-08T23:52:03.313Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -85,8 +85,8 @@
       "trend": "unknown",
       "rsi14": 14.38614066684896,
       "volume": 781083,
-      "avgVolume20": 3832845.5,
-      "volRatio": 0.20378671668346662,
+      "avgVolume20": 3833331.25,
+      "volRatio": 0.2037608933483116,
       "signals": [
         "below-sma50",
         "deep-below-50",
