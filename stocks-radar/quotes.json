@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-08T20:20:45.724Z",
+  "updatedAt": "2026-07-08T21:41:49.724Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -26,9 +26,9 @@
       },
       "trend": "bullish",
       "rsi14": 46.17202639045834,
-      "volume": 9323118,
-      "avgVolume20": 12584360.9,
-      "volRatio": 0.7408495412746785,
+      "volume": 9357377,
+      "avgVolume20": 12586073.85,
+      "volRatio": 0.7434706892332433,
       "signals": [
         "above-sma50",
         "above-sma200"
@@ -114,9 +114,9 @@
       },
       "trend": "mixed",
       "rsi14": 50.655961132957984,
-      "volume": 13291122,
-      "avgVolume20": 18624791.1,
-      "volRatio": 0.7136252926885177,
+      "volume": 13311707,
+      "avgVolume20": 18625820.35,
+      "volRatio": 0.7146910444672038,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -144,9 +144,9 @@
       },
       "trend": "mixed",
       "rsi14": 24.101809210572426,
-      "volume": 6116092,
-      "avgVolume20": 13080454.6,
-      "volRatio": 0.4675748807690522,
+      "volume": 6235467,
+      "avgVolume20": 13086423.35,
+      "volRatio": 0.476483668091022,
       "signals": [
         "above-sma200",
         "below-sma50",
@@ -205,9 +205,9 @@
       },
       "trend": "mixed",
       "rsi14": 33.872846692235186,
-      "volume": 510718,
-      "avgVolume20": 653180.9,
-      "volRatio": 0.7818936530446619,
+      "volume": 510748,
+      "avgVolume20": 653182.4,
+      "volRatio": 0.7819377864437254,
       "signals": [
         "above-sma200",
         "below-sma50"
