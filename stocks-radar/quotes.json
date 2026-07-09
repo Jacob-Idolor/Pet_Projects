@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-09T20:19:09.314Z",
+  "updatedAt": "2026-07-09T21:57:35.522Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -26,9 +26,9 @@
       },
       "trend": "bullish",
       "rsi14": 47.356600788660394,
-      "volume": 8846701,
-      "avgVolume20": 12020120.05,
-      "volRatio": 0.7359910685750597,
+      "volume": 8897552,
+      "avgVolume20": 12022662.6,
+      "volRatio": 0.7400650168790398,
       "signals": [
         "above-sma50",
         "above-sma200"
@@ -205,9 +205,9 @@
       },
       "trend": "bullish",
       "rsi14": 39.50357914640193,
-      "volume": 432779,
-      "avgVolume20": 644758.95,
-      "volRatio": 0.671226045020391,
+      "volume": 438523,
+      "avgVolume20": 645046.15,
+      "volRatio": 0.6798319779135182,
       "signals": [
         "above-sma50",
         "above-sma200"
