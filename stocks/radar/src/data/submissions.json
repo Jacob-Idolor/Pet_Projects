@@ -15,13 +15,6 @@
       "symbols": ["NBIS"]
     },
     {
-      "id": "seed-sivef",
-      "author": "J",
-      "submittedAt": "2026-06-29",
-      "content": "SIVEF — high upside photonics. Speculative swing, not the highest quality but big potential.",
-      "symbols": ["SIVEF"]
-    },
-    {
       "id": "seed-meta",
       "author": "J",
       "submittedAt": "2026-06-29",
@@ -29,11 +22,39 @@
       "symbols": ["META"]
     },
     {
+      "id": "seed-photonics-landscape",
+      "author": "J",
+      "submittedAt": "2026-07-10",
+      "content": "COHR all around most diversified, TSEM the foundry compounder, AAOI the pluggable transceiver play that is being highly disrespected, and SIVEF the laser supplier for a bottleneck that NVDA has shined a spotlight on — highest risk/reward torque. Position accordingly.",
+      "symbols": ["COHR", "TSEM", "AAOI", "SIVEF"]
+    },
+    {
+      "id": "seed-cohr",
+      "author": "J",
+      "submittedAt": "2026-07-10",
+      "content": "COHR — most diversified name in the photonics/laser landscape.",
+      "symbols": ["COHR"]
+    },
+    {
+      "id": "seed-tsem",
+      "author": "J",
+      "submittedAt": "2026-07-10",
+      "content": "TSEM — the foundry compounder.",
+      "symbols": ["TSEM"]
+    },
+    {
       "id": "seed-aaoi",
       "author": "J",
-      "submittedAt": "2026-06-29",
-      "content": "AAOI — photonics exposure alongside SIVEF. Optical / datacenter connectivity bet.",
+      "submittedAt": "2026-07-10",
+      "content": "AAOI — pluggable transceiver play, highly disrespected by the market.",
       "symbols": ["AAOI"]
+    },
+    {
+      "id": "seed-sivef",
+      "author": "J",
+      "submittedAt": "2026-07-10",
+      "content": "SIVEF — laser supplier for an NVDA-highlighted bottleneck. Highest risk/reward torque.",
+      "symbols": ["SIVEF"]
     },
     {
       "id": "seed-oust",
