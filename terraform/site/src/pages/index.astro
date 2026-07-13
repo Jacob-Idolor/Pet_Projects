@@ -1,0 +1,85 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LabCard from "../components/LabCard.astro";
+import { labs, filters } from "../data/lab-hub";
+---
+
+<BaseLayout title="Lab Hub" description="Choose a Terraform lab — fundamentals, production, troubleshooting, or local practice.">
+  <section class="hero container hub-hero">
+    <h1>Terraform Lab Hub</h1>
+    <p class="lead">Pick a lab and start practicing — or follow <a href="/learn.html">12 step-by-step lessons</a> from IaC fundamentals to production patterns.</p>
+    <p class="hub-stats" id="hub-stats">{labs.length} labs · Browser or local · <a href="/learn.html">Learn</a> · <a href="/progress.html">Tracker</a> · <a href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/terraform/LEARNING-PATH.md" target="_blank" rel="noopener">Learning path</a></p>
+    <div class="hub-progress" id="hub-progress" hidden>
+      <div class="hub-progress-bar"><div class="hub-progress-fill" id="hub-progress-fill"></div></div>
+      <span class="hub-progress-text" id="hub-progress-text"></span>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="filter-bar" role="tablist">
+      {filters.map((f, i) => (
+        <button type="button" class={`filter-btn${i === 0 ? " active" : ""}`} data-filter={f.id} role="tab">{f.label}</button>
+      ))}
+    </div>
+    <div class="lab-grid" id="lab-grid">
+      {labs.map((lab) => <LabCard lab={lab} />)}
+    </div>
+    <p class="empty-msg" id="empty-msg" hidden>No labs in this category.</p>
+  </section>
+
+  <section class="container hub-footer">
+    <div class="callout">
+      <p><strong>How to learn:</strong> <a href="/learn.html">Lessons</a> → simulator → local lab → mark done in Tracker.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { loadProgress, isComplete, syncAutoCompletions, saveProgress } from "../lib/progress-store";
+  const buttons = document.querySelectorAll(".filter-btn");
+  const cards = document.querySelectorAll(".lab-card");
+  const emptyMsg = document.getElementById("empty-msg")!;
+  let progress = syncAutoCompletions(loadProgress());
+  saveProgress(progress);
+  const totalLabs = cards.length;
+  const doneLabs = [...cards].filter((c) => isComplete(progress, (c as HTMLElement).dataset.labId!)).length;
+  const pct = totalLabs ? Math.round((doneLabs / totalLabs) * 100) : 0;
+  const hubProgress = document.getElementById("hub-progress")!;
+  hubProgress.hidden = false;
+  document.getElementById("hub-progress-fill")!.style.width = `${pct}%`;
+  document.getElementById("hub-progress-text")!.textContent = `${doneLabs} / ${totalLabs} labs complete (${pct}%)`;
+  cards.forEach((card) => {
+    const id = (card as HTMLElement).dataset.labId!;
+    if (isComplete(progress, id)) card.classList.add("task-complete");
+  });
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const filter = (btn as HTMLElement).dataset.filter!;
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      let visible = 0;
+      cards.forEach((card) => {
+        const cat = (card as HTMLElement).dataset.category;
+        const show = filter === "all" || cat === filter;
+        (card as HTMLElement).style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+      emptyMsg.hidden = visible > 0;
+    });
+  });
+</script>
+
+<style>
+  .hub-hero { padding: 3rem 0 2rem; text-align: center; }
+  .hub-hero h1 { font-size: clamp(2rem, 5vw, 2.75rem); margin: 0 0 0.75rem; }
+  .hub-hero .lead { max-width: 36rem; margin: 0 auto 0.5rem; color: var(--muted); font-size: 1.1rem; }
+  .hub-stats { font-size: 0.85rem; color: var(--muted); margin: 0; }
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 0.45rem 1rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; padding-bottom: 3rem; }
+  .hub-progress { max-width: 320px; margin: 1rem auto 0; text-align: center; }
+  .hub-progress-bar { height: 6px; background: #0a0e12; border-radius: 3px; overflow: hidden; margin-bottom: 0.35rem; }
+  .hub-progress-fill { height: 100%; background: var(--success); border-radius: 3px; transition: width 0.3s; }
+  .hub-progress-text { font-size: 0.8rem; color: var(--muted); }
+</style>

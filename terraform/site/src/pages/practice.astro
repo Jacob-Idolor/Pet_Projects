@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerraformTerminal from "../components/TerraformTerminal.astro";
+---
+
+<BaseLayout title="Terraform sandbox" description="Free practice — no scenario, just the simulator.">
+  <section class="hero container">
+    <h1>Terraform sandbox</h1>
+    <p class="lead">Open playground. Try init → plan → apply → destroy. Progress saves in your browser.</p>
+  </section>
+  <section class="container"><TerraformTerminal scenario="default" height="420px" /></section>
+</BaseLayout>

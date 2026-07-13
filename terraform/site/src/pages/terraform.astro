@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerraformTerminal from "../components/TerraformTerminal.astro";
+import TerraformWorkflowDiagram from "../components/TerraformWorkflowDiagram.astro";
+import ConceptDiagram from "../components/ConceptDiagram.astro";
+import { terraformMissions, terraformBestPractices } from "../lib/terraform-sim";
+---
+
+<BaseLayout title="Terraform fundamentals" description="Learn Terraform IaC — simulated terminal, workflow diagram, and best practices.">
+  <section class="hero container">
+    <span class="badge">Module 0 · IaC first</span>
+    <h1>Terraform fundamentals</h1>
+    <p class="lead">Master init, plan, apply, and state before touching real cloud APIs. Practice in the simulator — then run <code>make lab-00</code> locally.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/learn.html">Start Part 1 lessons</a>
+      <a class="btn btn-secondary" href="/troubleshoot.html">Troubleshooting scenarios</a>
+    </div>
+  </section>
+
+  <section class="container"><ConceptDiagram /></section>
+  <section class="container"><TerraformWorkflowDiagram animated /></section>
+  <section class="container"><TerraformTerminal scenario="default" height="380px" /></section>
+
+  <section class="container prose">
+    <h2>Guided missions</h2>
+    <div class="card-grid">
+      {terraformMissions.map((m) => (
+        <article class="card"><h3>{m.title}</h3><p>{m.hint}</p></article>
+      ))}
+    </div>
+
+    <h2>IaC best practices</h2>
+    <div class="card-grid">
+      {terraformBestPractices.map((p) => (
+        <article class="card"><span style="font-size:1.5rem">{p.icon}</span><h3>{p.title}</h3><p>{p.body}</p></article>
+      ))}
+    </div>
+
+    <h2>Real hands-on</h2>
+    <div class="callout">
+      <p><strong>Lab 00:</strong> From repo root: <code>cd terraform && make lab-00</code> — init, validate, plan, apply the minimal example.</p>
+    </div>
+  </section>
+</BaseLayout>

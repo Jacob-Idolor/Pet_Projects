@@ -1,0 +1,135 @@
+---
+import type { QuizQ } from "../data/modules";
+
+interface Props {
+  questions: QuizQ[];
+  moduleId: string;
+  compact?: boolean;
+}
+
+const { questions, moduleId, compact = false } = Astro.props;
+---
+
+<div class={`quiz ${compact ? "quiz-compact" : ""}`} data-quiz data-module={moduleId} data-answers={JSON.stringify(questions)}>
+  {questions.map((q, qi) => (
+    <fieldset class="quiz-item" data-q={qi}>
+      <legend>{q.question}</legend>
+      <div class="quiz-options">
+        {q.options.map((opt, oi) => (
+          <label class="quiz-option">
+            <input type="radio" name={`q-${moduleId}-${qi}`} value={oi} />
+            {opt}
+          </label>
+        ))}
+      </div>
+      <p class="quiz-feedback" hidden data-feedback></p>
+    </fieldset>
+  ))}
+  <button type="button" class="btn btn-primary btn-check" data-check>Check</button>
+  <p class="quiz-score" data-score hidden></p>
+</div>
+
+<script>
+  document.querySelectorAll("[data-quiz]").forEach((root) => {
+    const moduleId = (root as HTMLElement).dataset.module!;
+    const key = `tf-quiz-${moduleId}`;
+    const btn = root.querySelector("[data-check]") as HTMLButtonElement;
+    const scoreEl = root.querySelector("[data-score]") as HTMLElement;
+
+    btn.addEventListener("click", () => {
+      const items = root.querySelectorAll(".quiz-item");
+      let correct = 0;
+      items.forEach((item) => {
+        const qi = Number((item as HTMLElement).dataset.q);
+        const selected = item.querySelector("input:checked") as HTMLInputElement | null;
+        const feedback = item.querySelector("[data-feedback]") as HTMLElement;
+        feedback.hidden = false;
+        if (!selected) {
+          feedback.textContent = "Pick an answer.";
+          feedback.className = "quiz-feedback wrong";
+          return;
+        }
+        const questions = JSON.parse(root.getAttribute("data-answers") || "[]");
+        const q = questions[qi];
+        if (Number(selected.value) === q.correct) {
+          correct++;
+          feedback.textContent = q.explain;
+          feedback.className = "quiz-feedback right";
+        } else {
+          feedback.textContent = q.explain;
+          feedback.className = "quiz-feedback wrong";
+        }
+      });
+      scoreEl.hidden = false;
+      if (correct === items.length) {
+        localStorage.setItem(key, "passed");
+        scoreEl.textContent = "✓ Passed — saved to progress";
+        scoreEl.className = "quiz-score pass";
+        root.classList.add("quiz-passed");
+      } else {
+        scoreEl.textContent = `${correct}/${items.length} — read the feedback and try again`;
+        scoreEl.className = "quiz-score fail";
+      }
+    });
+  });
+</script>
+
+<style>
+  .quiz { margin: 1rem 0 2rem; }
+  .quiz-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.75rem;
+    background: var(--surface);
+  }
+  .quiz-compact .quiz-item {
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+  .quiz-item legend {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .quiz-compact .quiz-options {
+    gap: 0.15rem;
+  }
+  .quiz-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .quiz-compact .quiz-option { font-size: 0.85rem; padding: 0.25rem 0; }
+  .quiz-option:hover { color: var(--accent); }
+  .quiz-option input { margin-top: 0.2rem; flex-shrink: 0; }
+  .quiz-feedback {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 6px;
+    background: #0a0e12;
+  }
+  .quiz-feedback.right { color: var(--success); border-left: 2px solid var(--success); }
+  .quiz-feedback.wrong { color: #fca5a5; border-left: 2px solid #f87171; }
+  .btn-check {
+    font-size: 0.9rem;
+    padding: 0.5rem 1.25rem;
+  }
+  .quiz-score {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .quiz-score.pass { color: var(--success); }
+  .quiz-score.fail { color: var(--muted); }
+</style>

@@ -12,6 +12,7 @@ This repo is also a **build-in-the-open journal**. Alongside the code, I documen
 | ♠️ Poker | [`poker/`](poker/) | Tools to practice and sharpen my poker skills (trainers, solvers, drills) |
 | 📊 Dynatrace | [`dynatrace/`](dynatrace/) | Dashboards, scripts, workflows, and everything I learn about Dynatrace |
 | ☸️ Kubernetes | [`kubernetes/`](kubernetes/) | My Kubernetes learning journey — manifests, clusters, experiments, notes |
+| 🏗️ Terraform | [`terraform/`](terraform/) | Infrastructure as Code — curriculum, simulator, labs, production examples |
 | 📈 Stocks | [`stocks/`](stocks/) | Trading tools — TradingView Pine Scripts, research, screeners, and bots |
 
 ## Deployability standards
@@ -31,6 +32,7 @@ Every project in this repo aims to meet this bar:
 |---------|-------|--------|----------|
 | [Stocks Radar](stocks/radar/) | 📈 Stocks | Active | [GitHub Pages](https://jacob-idolor.github.io/Pet_Projects/stocks-radar/) (after setup) |
 | [K8s Practice Lab](kubernetes/site/) | ☸️ Kubernetes | Active | S3 + CloudFront |
+| [Terraform Practice Lab](terraform/site/) | 🏗️ Terraform | Active | Local / optional AWS |
 
 > Previous projects (BallStats, stock-buy-bot, PokerGTO, and more) are preserved in git history — see the [`pre-reset-archive`](../../tree/pre-reset-archive) tag.
 

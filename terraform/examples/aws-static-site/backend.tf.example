@@ -1,0 +1,12 @@
+# Remote state — copy to backend.tf and customize before use
+# Bootstrap S3 bucket + DynamoDB table first (one-time, can use a separate bootstrap stack)
+
+terraform {
+  backend "s3" {
+    bucket         = "your-terraform-state-bucket"
+    key            = "tf-lab/aws-static-site/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}

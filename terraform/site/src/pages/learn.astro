@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CurriculumMap from "../components/CurriculumMap.astro";
+import { modules, getModulesByPhase, phaseLabels } from "../data/modules";
+---
+
+<BaseLayout title="Learn" description="Step-by-step Terraform lessons — fundamentals first, then production patterns.">
+  <section class="hero container">
+    <h1>Learn step by step</h1>
+    <p class="lead"><strong>Part 1</strong> builds IaC fundamentals. <strong>Part 2</strong> covers production patterns. Short lessons, try-it commands, one quick quiz each.</p>
+  </section>
+
+  <section class="container"><CurriculumMap /></section>
+
+  {(["fundamentals", "production"] as const).map((phase) => {
+    const lessons = getModulesByPhase(phase);
+    const info = phaseLabels[phase];
+    return (
+      <section class="container phase-section" id={phase}>
+        <div class="phase-header">
+          <h2>{info.title}</h2>
+          <p>{info.desc}</p>
+          <span class="phase-count">{lessons.length} lessons</span>
+        </div>
+        <ol class="lesson-list">
+          {lessons.map((m, i) => (
+            <li class="lesson-item">
+              <span class="lesson-num">{phase === "fundamentals" ? i + 1 : i + 7}</span>
+              <div class="lesson-body">
+                <h3>{m.title}</h3>
+                <p>{m.subtitle}</p>
+                <span class="lesson-meta">{m.time}</span>
+              </div>
+              <a class="btn btn-primary" href={`/modules/${m.id}.html`}>Start →</a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  })}
+</BaseLayout>
+
+<style>
+  .hero { padding: 2.5rem 0 1.5rem; text-align: center; }
+  .lead { color: var(--muted); max-width: 36rem; margin: 0 auto; }
+  .phase-section { margin-bottom: 3rem; }
+  .phase-header { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .lesson-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+  .lesson-item { display: flex; align-items: center; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
+  .lesson-num { font-weight: 700; color: var(--accent); min-width: 1.5rem; }
+  .lesson-body { flex: 1; }
+  .lesson-body h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+  .lesson-body p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .lesson-meta { font-size: 0.8rem; color: var(--muted); }
+</style>

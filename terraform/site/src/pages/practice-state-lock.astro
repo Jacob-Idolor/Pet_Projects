@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerraformTerminal from "../components/TerraformTerminal.astro";
+---
+
+<BaseLayout title="State lock" description="Diagnose and resolve Terraform state lock.">
+  <section class="hero container">
+    <span class="badge">Troubleshoot</span>
+    <h1>State lock</h1>
+    <p class="lead">Another process holds the state lock. Confirm no other apply is running, then use <code>terraform force-unlock</code> only when safe.</p>
+    <p><strong>Goal:</strong> Try <code>terraform plan</code> (fails), then <code>terraform force-unlock sim-lock-7f3a9b2c</code>.</p>
+  </section>
+  <section class="container"><TerraformTerminal scenario="state-lock" height="400px" /></section>
+</BaseLayout>

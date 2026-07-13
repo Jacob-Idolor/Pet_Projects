@@ -1,0 +1,60 @@
+---
+// Terraform object model — config, state, providers
+---
+
+<section class="diagram-section">
+  <h3>Terraform architecture</h3>
+  <p class="diagram-caption">How configuration, state, and providers work together.</p>
+  <svg viewBox="0 0 720 280" class="tf-diagram" role="img" aria-label="Terraform architecture">
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6" />
+      </marker>
+    </defs>
+    <rect x="20" y="40" width="120" height="50" rx="8" class="box box-accent" />
+    <text x="80" y="70" text-anchor="middle" class="label">HCL Config</text>
+    <rect x="180" y="40" width="120" height="50" rx="8" class="box" />
+    <text x="240" y="70" text-anchor="middle" class="label">Plan</text>
+    <rect x="340" y="40" width="120" height="50" rx="8" class="box box-success" />
+    <text x="400" y="70" text-anchor="middle" class="label">Apply</text>
+    <rect x="500" y="40" width="120" height="50" rx="8" class="box box-warn" />
+    <text x="560" y="70" text-anchor="middle" class="label">State</text>
+    <line x1="140" y1="65" x2="178" y2="65" class="arrow" marker-end="url(#arrow)" />
+    <line x1="300" y1="65" x2="338" y2="65" class="arrow" marker-end="url(#arrow)" />
+    <line x1="460" y1="65" x2="498" y2="65" class="arrow" marker-end="url(#arrow)" />
+    <rect x="180" y="160" width="160" height="56" rx="8" class="box box-provider" />
+    <text x="260" y="184" text-anchor="middle" class="label">Provider (AWS)</text>
+    <text x="260" y="202" text-anchor="middle" class="sublabel">API calls</text>
+    <rect x="400" y="160" width="160" height="56" rx="8" class="box box-provider" />
+    <text x="480" y="184" text-anchor="middle" class="label">Real Resources</text>
+    <text x="480" y="202" text-anchor="middle" class="sublabel">S3, VPC, etc.</text>
+    <line x1="400" y1="90" x2="260" y2="158" class="arrow" marker-end="url(#arrow)" />
+    <line x1="340" y1="90" x2="480" y2="158" class="arrow" marker-end="url(#arrow)" />
+    <line x1="560" y1="90" x2="560" y2="130" class="arrow-dashed" />
+    <text x="560" y="148" text-anchor="middle" class="hint">read/write</text>
+    <circle cx="400" cy="65" r="4" fill="#3b82f6" class="pulse-dot" />
+    <circle cx="560" cy="65" r="4" fill="#22c55e" class="pulse-dot" style="animation-delay:0.4s" />
+  </svg>
+</section>
+
+<style>
+  .diagram-section { margin: 2rem 0; }
+  .diagram-section h3 { margin: 0 0 0.35rem; }
+  .diagram-caption { color: var(--muted); font-size: 0.95rem; margin: 0 0 1rem; }
+  .tf-diagram { width: 100%; max-width: 720px; height: auto; }
+  .box { fill: #1a2332; stroke: var(--border); stroke-width: 1.5; }
+  .box-accent { stroke: #3b82f6; }
+  .box-success { stroke: #22c55e; }
+  .box-warn { stroke: #f59e0b; }
+  .box-provider { stroke: #a78bfa; }
+  .label { fill: #e8edf4; font-size: 13px; font-weight: 600; }
+  .sublabel { fill: #8b9bb4; font-size: 11px; }
+  .hint { fill: #8b9bb4; font-size: 10px; }
+  .arrow { stroke: #3b82f6; stroke-width: 1.5; }
+  .arrow-dashed { stroke: #8b9bb4; stroke-width: 1; stroke-dasharray: 4 3; }
+  .pulse-dot { animation: pulse-glow 2s ease-in-out infinite; }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+</style>

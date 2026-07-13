@@ -1,0 +1,44 @@
+name: Terraform validate
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm run build
+
+  terraform-validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example:
+          - terraform/examples/minimal
+          - terraform/examples/aws-static-site
+          - terraform/examples/modules/networking
+    defaults:
+      run:
+        working-directory: ${{ matrix.example }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - run: terraform fmt -check -recursive
