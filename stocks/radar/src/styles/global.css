@@ -227,7 +227,7 @@ body[data-day-mood="mixed"] .site-header {
 .mobile-stock-list {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -252,19 +252,25 @@ body[data-day-mood="mixed"] .site-header {
 .mobile-bucket-cards {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .stock-card-m {
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(26, 34, 45, 0.95), var(--surface));
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stock-card-m.scm-high {
+  border-color: rgba(34, 197, 94, 0.35);
+  box-shadow: inset 3px 0 0 var(--green);
 }
 
 .stock-card-m .scm-main {
   display: block;
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1rem;
   color: inherit;
   text-decoration: none;
 }
@@ -276,28 +282,53 @@ body[data-day-mood="mixed"] .site-header {
 .scm-top {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 0.75rem;
+}
+
+.scm-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
 }
 
 .scm-sym {
   font-family: "IBM Plex Mono", monospace;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.12rem;
   color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  letter-spacing: 0.01em;
 }
 
 .scm-conviction {
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--green);
   background: var(--green-glow);
-  padding: 0.1rem 0.35rem;
+  padding: 0.12rem 0.4rem;
   border-radius: 4px;
+}
+
+.scm-quote {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.scm-price {
+  display: block;
+  font-size: 1.12rem;
+  font-weight: 600;
+  font-family: "IBM Plex Mono", monospace;
+  line-height: 1.2;
+}
+
+.scm-chg {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
 }
 
 .conviction-dot {
@@ -306,21 +337,16 @@ body[data-day-mood="mixed"] .site-header {
   margin-left: 0.15rem;
 }
 
-.scm-price {
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
 .scm-mid {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.2rem;
+  margin-top: 0.35rem;
 }
 
 .scm-name {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -330,10 +356,10 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 .scm-thesis {
-  margin: 0.5rem 0 0;
+  margin: 0.55rem 0 0;
   font-size: 0.8rem;
   color: var(--dim);
-  line-height: 1.4;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -341,7 +367,8 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 .scm-ath {
-  margin-top: 0.35rem;
+  margin-top: 0;
+  flex-shrink: 0;
 }
 
 .ath-badge {
@@ -406,15 +433,6 @@ body[data-day-mood="mixed"] .site-header {
     grid-template-columns: 1fr;
   }
 
-  .hero {
-    padding: 0.75rem 0 0.5rem;
-  }
-
-  .hero h1 {
-    font-size: 1.35rem;
-    margin-bottom: 0;
-  }
-
   .site-header .container {
     padding: 0.65rem 1rem;
   }
@@ -474,8 +492,12 @@ body[data-day-mood="mixed"] .site-header {
   }
 
   .watchlist-board h2 {
-    font-size: 1rem;
-    margin: 0 0 0.65rem;
+    font-size: 1.05rem;
+    margin: 0;
+  }
+
+  .board-eyebrow {
+    display: none;
   }
 
   .board-header {
@@ -488,15 +510,21 @@ body[data-day-mood="mixed"] .site-header {
     margin-bottom: 0.5rem;
   }
 
+  .search-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
   .search-input {
     width: 100%;
     font-size: 16px;
-    padding: 0.65rem 0.85rem;
+    padding: 0.7rem 0.85rem 0.7rem 2.2rem;
   }
 
   .filter-chips {
     display: flex;
     gap: 0.35rem;
+    width: 100%;
   }
 
   .filter-chips .chip {
@@ -504,6 +532,20 @@ body[data-day-mood="mixed"] .site-header {
     min-height: 2.75rem;
     font-size: 0.85rem;
     justify-content: center;
+  }
+
+  .hero {
+    padding: 0.85rem 0 0.55rem;
+  }
+
+  .hero-brand {
+    font-size: 0.68rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .hero h1 {
+    font-size: 1.35rem;
+    margin-bottom: 0;
   }
 
   .mobile-bucket-title {
@@ -546,7 +588,22 @@ body[data-day-mood="mixed"] .site-header {
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
+  letter-spacing: -0.02em;
+}
+
+.logo:hover {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.logo-mark {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 3px;
+  background: linear-gradient(145deg, #4ade80 0%, #16a34a 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
 }
 
 .logo-icon {
@@ -578,22 +635,43 @@ body[data-day-mood="mixed"] .site-header {
 
 /* Hero */
 .hero {
-  padding: 3rem 0 2.5rem;
+  padding: 2.25rem 0 1.75rem;
+}
+
+.hero-brand {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green);
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 4.5vw, 2.75rem);
+  font-size: clamp(1.85rem, 4.2vw, 2.55rem);
   font-weight: 700;
-  line-height: 1.12;
-  margin: 0 0 0.75rem;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 0.65rem;
+  letter-spacing: -0.03em;
 }
 
 .hero .tagline {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--muted);
-  max-width: 36rem;
-  margin: 0 0 1.5rem;
+  max-width: 34rem;
+  margin: 0 0 0.85rem;
+}
+
+.hero-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+
+.hero-meta .mono {
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--text);
+  font-weight: 500;
 }
 
 .hero-stats {
@@ -609,7 +687,7 @@ body[data-day-mood="mixed"] .site-header {
   padding: 0.4rem 0.85rem;
   background: var(--surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   color: var(--muted);
 }
@@ -1187,6 +1265,18 @@ body[data-day-mood="mixed"] .site-header {
 /* Watchlist board (100+ ticker view) */
 .watchlist-board {
   margin-bottom: 3rem;
+  animation: board-in 0.45s ease both;
+}
+
+@keyframes board-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .board-header {
@@ -1195,23 +1285,35 @@ body[data-day-mood="mixed"] .site-header {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.15rem;
+}
+
+.board-eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
 }
 
 .board-header h2 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
 }
 
 .board-subtitle {
-  margin: 0.25rem 0 0;
+  margin: 0.3rem 0 0;
   color: var(--muted);
-  font-size: 0.925rem;
+  font-size: 0.9rem;
 }
 
 .board-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .import-panel {
@@ -1252,39 +1354,53 @@ body[data-day-mood="mixed"] .site-header {
   margin-top: 0.75rem;
 }
 
+.overview-strip,
 .overview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 0.65rem;
-  margin-bottom: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0;
+  margin-bottom: 1.15rem;
+  padding: 0.65rem 0.85rem;
+  background: linear-gradient(180deg, rgba(20, 26, 34, 0.9), rgba(15, 19, 25, 0.72));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  align-items: stretch;
 }
 
+.overview-metric,
 .overview-card {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.85rem;
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  padding: 0.35rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
+  border-right: 1px solid var(--border-subtle);
 }
 
-.overview-card.highlight {
-  border-color: rgba(34, 197, 94, 0.3);
-  background: rgba(34, 197, 94, 0.06);
+.overview-metric:last-child,
+.overview-card:last-child {
+  border-right: none;
+}
+
+.overview-metric.highlight .ov-value,
+.overview-card.highlight .ov-value {
+  color: var(--green);
 }
 
 .ov-value {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .ov-label {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: var(--dim);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 .opportunities-panel {
@@ -1431,41 +1547,67 @@ body[data-day-mood="mixed"] .site-header {
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.8rem;
+  color: var(--dim);
+  font-size: 0.95rem;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.search-hint {
+  position: absolute;
+  right: 0.65rem;
+  pointer-events: none;
 }
 
 .search-input {
-  flex: 1;
-  min-width: 200px;
+  width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 0.55rem 0.85rem;
+  padding: 0.62rem 2.2rem 0.62rem 2.15rem;
   font-family: inherit;
   font-size: 0.9rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--green);
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
 }
 
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+  align-items: center;
 }
 
 .chip {
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
+  padding: 0.38rem 0.72rem;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: var(--surface);
   color: var(--muted);
   font-size: 0.8rem;
   font-family: inherit;
   cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .chip:hover {
@@ -1480,9 +1622,10 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 .result-count {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
   color: var(--dim);
+  letter-spacing: 0.01em;
 }
 
 .table-wrap {
@@ -1490,6 +1633,7 @@ body[data-day-mood="mixed"] .site-header {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
 }
 
 .watchlist-table {
@@ -1500,13 +1644,13 @@ body[data-day-mood="mixed"] .site-header {
 
 .watchlist-table th {
   text-align: left;
-  padding: 0.65rem 0.85rem;
-  background: var(--bg-elevated);
+  padding: 0.7rem 0.85rem;
+  background: rgba(15, 19, 25, 0.96);
   color: var(--dim);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
   position: sticky;
@@ -1525,16 +1669,35 @@ body[data-day-mood="mixed"] .site-header {
 
 .watchlist-table th.sorted-asc::after {
   content: " ↑";
+  color: var(--green);
 }
 
 .watchlist-table th.sorted-desc::after {
   content: " ↓";
+  color: var(--green);
 }
 
 .watchlist-table td {
-  padding: 0.55rem 0.85rem;
+  padding: 0.62rem 0.85rem;
   border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
+}
+
+.watchlist-table tbody tr.data-row {
+  animation: row-in 0.28s ease both;
+}
+
+.watchlist-table tbody tr.data-row:nth-child(n + 12) {
+  animation-delay: 0s;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .watchlist-table tbody tr:hover {
@@ -1545,8 +1708,13 @@ body[data-day-mood="mixed"] .site-header {
   background: rgba(59, 130, 246, 0.08);
 }
 
+.watchlist-table tbody tr.row-high td:first-child {
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
 .watchlist-table .num {
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .watchlist-table .mono {
@@ -1555,6 +1723,11 @@ body[data-day-mood="mixed"] .site-header {
 
 .watchlist-table .sym {
   font-weight: 600;
+}
+
+.watchlist-table .price-cell {
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .custom-tag {
@@ -1687,12 +1860,38 @@ body[data-day-mood="mixed"] .site-header {
 
 /* View toggle */
 .view-toggle {
-  display: flex;
-  gap: 0.25rem;
+  display: inline-flex;
+  gap: 0;
+  padding: 0.2rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
 }
 
+.view-toggle .seg,
 .view-toggle .chip {
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.view-toggle .seg:hover,
+.view-toggle .chip:hover {
+  color: var(--text);
+}
+
+.view-toggle .seg.active,
+.view-toggle .chip.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* Tag filters & pills */
@@ -1903,6 +2102,14 @@ body[data-day-mood="mixed"] .site-header {
   background: inherit;
 }
 
+.watchlist-table tbody tr:hover .sticky-col {
+  background: var(--surface-hover);
+}
+
+.watchlist-table tbody tr.expanded .sticky-col {
+  background: var(--surface-hover);
+}
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -1952,8 +2159,9 @@ kbd {
   margin-top: 0.35rem;
 }
 
-.overview-card.tech {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+.overview-card.tech,
+.overview-metric.tech {
+  border-color: transparent;
 }
 
 .trend-badge {
@@ -2168,4 +2376,23 @@ kbd {
   max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watchlist-board,
+  .watchlist-table tbody tr.data-row,
+  .stock-card-m,
+  .chip,
+  .search-input,
+  .view-toggle .seg {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  body,
+  body[data-day-mood="bullish"],
+  body[data-day-mood="bearish"],
+  body[data-day-mood="mixed"] {
+    transition: none;
+  }
 }

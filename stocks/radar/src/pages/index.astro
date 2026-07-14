@@ -8,19 +8,35 @@ import { meta, stocks } from "../data/watchlist";
 ---
 
 <BaseLayout title={meta.groupName}>
-  <LiveStatus />
-  <DayMoodBanner />
-  <section class="hero container">
-    <h1>{meta.groupName}</h1>
-    <p class="tagline desktop-only">{meta.tagline}</p>
-    <div class="hero-stats desktop-only">
-      <span class="stat-pill"><strong>{stocks.length}</strong> tickers</span>
-    </div>
-  </section>
-  <div class="container">
-    <WatchlistBoard />
-    <div class="secondary-panels desktop-only">
-      <GroupSubmissions />
+  <div class="app-shell">
+    <LiveStatus />
+    <DayMoodBanner />
+    <section class="hero container">
+      <div class="hero-copy">
+        <p class="hero-brand">Stocks Radar</p>
+        <h1>{meta.groupName}</h1>
+        <p class="tagline desktop-only">{meta.tagline}</p>
+      </div>
+      <dl class="hero-kpis desktop-only" aria-label="Watchlist summary">
+        <div class="hero-kpi">
+          <dt>Tickers</dt>
+          <dd class="mono">{stocks.length}</dd>
+        </div>
+        <div class="hero-kpi">
+          <dt>Feed</dt>
+          <dd>Live quotes</dd>
+        </div>
+        <div class="hero-kpi">
+          <dt>Scope</dt>
+          <dd>Group list</dd>
+        </div>
+      </dl>
+    </section>
+    <div class="container board-stage">
+      <WatchlistBoard />
+      <div class="secondary-panels desktop-only">
+        <GroupSubmissions />
+      </div>
     </div>
   </div>
 </BaseLayout>
