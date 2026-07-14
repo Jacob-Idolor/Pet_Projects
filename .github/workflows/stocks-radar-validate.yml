@@ -25,4 +25,4 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          STOCKS_RADAR_BASE: /Pet_Projects/stocks-radar
+          STOCKS_RADAR_BASE: /

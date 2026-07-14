@@ -1,20 +1,18 @@
 # Stocks Radar
 
-A robust single-page watchlist for you and your friends — holdings, price targets, and long-term watches in one place. Built for **100+ tickers**, zero API keys, zero monthly cost.
+A single-page group watchlist — one tracking list, live quotes, and a clean mobile layout. Built for **100+ tickers**, zero API keys, low hosting cost.
 
-> ⚠️ Not financial advice. Personal tooling for tracking tickers and theses.
+> Not financial advice. Personal tooling for tracking tickers and theses.
 
 ## What you get
 
-- **Holdings strip** — top cards for everything you own (thesis, tags, live price)
-- **Three buckets** — Owned · Targets · Watching (collapsible sections)
-- **All-tickers table** — pagination (25–200/page), sort any column, expand rows for full detail
-- **Theme tags** — filter by photonics, semi, mag7, etc.
-- **Closest to entry** — tickers nearest their target price
-- **Overview stats** — at target, within 5%/10%, counts by bucket
-- **CSV import/export** — bulk load your full watchlist
-- **Live prices** — free quote fetch on deploy + browser refresh (no paid APIs)
-- **Technical view** — SMA 20/50/200, RSI(14), 52-week range, trend badges, volume vs 20d avg
+- **Unified tracking list** — every ticker in one place (no owned vs watching split)
+- **Live prices** — free Yahoo quotes on deploy + browser refresh
+- **Mobile-first cards** — simple price view on phone; full table + technicals on desktop
+- **Day mood banner** — quick read on how the list is doing today
+- **Theme tags** — filter by semi, photonics, ai, etc.
+- **Technical view** (desktop) — SMA 20/50/200, RSI, 52-week range, trend badges
+- **Group feed** (desktop) — post ticker notes; auto-detects symbols
 
 ## Quick start
 
@@ -24,85 +22,54 @@ npm install
 npm run dev
 ```
 
+Open http://localhost:4321
+
 ## Watchlist data
 
-Edit `src/data/watchlist.json` or import CSV:
-
-```csv
-symbol,name,category,sector,tags,targetPrice,thesis,priority,addedBy
-NBIS,Nebius Group,owned,AI Infrastructure,ai;high-conviction,,Favorite for next few years,high,J
-PLTR,Palantir,targets,Software,ai;gov,18,Want better entry,medium,K
-```
-
-```bash
-npm run import-csv -- my-tickers.csv
-```
-
-### Fields
+Edit `src/data/watchlist.json`:
 
 | Field | Purpose |
 |-------|---------|
-| `category` | `owned` · `targets` · `watching` |
-| `sector` | Grouping label (Semiconductors, Photonics, …) |
-| `tags` | Semicolon-separated themes (`photonics;speculative`) |
-| `priority` | `high` · `medium` · `low` — conviction signal |
-| `targetPrice` | Entry or trim level |
-| `thesis` | Your one-liner — shows on cards and expandable rows |
+| `category` | `tracking` (single list) |
+| `sector` | Grouping label |
+| `tags` | Themes (`semi`, `photonics`, …) |
+| `priority` | `high` · `medium` · `low` |
+| `thesis` | One-liner shown on cards and rows |
 
-## Using the page
+Bulk import via CSV: `npm run import-csv -- my-tickers.csv`
 
-- **Add PT** button — send a ticker to the price-target list (e.g. PLTR @ $18)
-- Expand any row (**+**) — set or update a target inline
-- Group feed — post `PLTR @ 18` or `Watching NVDA under $120` to auto-detect PTs
-- **By bucket** (default) — three collapsible sections for the full picture
-- **All tickers** — paginated master table for 100+ names
-- **/** — focus search
-- **Technical** tab — moving averages, RSI, 52-week range position, trend
-- **Technicals filters** — above/below MAs, bullish/bearish, near 52w high/low, RSI oversold
-- **Theme chips** — filter one tag at a time
-- **+** on a row — expand full thesis, sector, Yahoo link
+## Deploy (AWS S3 + CloudFront)
 
-## Go live (pick one — both stay under $5/mo)
+GitHub Pages is **not** used. Deploys run through **GitHub Actions → AWS** so every push shows up clearly under **Actions** with a live URL in the job summary.
 
-**Live URL (after setup):** https://jacob-idolor.github.io/Pet_Projects/stocks-radar/
+**Full setup:** [`DEPLOY.md`](DEPLOY.md)
 
-### Deploy in ~3 minutes (GitHub Pages, free)
+1. `terraform apply` in `infra/terraform/` (creates S3 + CloudFront)
+2. Add 6 GitHub secrets (AWS creds + bucket/CloudFront outputs)
+3. Push to `main` — workflow **Stocks Radar — deploy** runs automatically
 
-1. **Merge** the stocks-radar PR to `main`
-2. **Enable Pages** (once): [Settings → Pages](https://github.com/Jacob-Idolor/Pet_Projects/settings/pages) → Source: **Deploy from a branch** → Branch **`gh-pages`** → **`/ (root)`** → Save
-3. **Run deploy:** Actions → **Stocks Radar — live deploy** → **Run workflow**
-4. **Open on phone:** bookmark the URL above — works on mobile (responsive layout, touch-friendly tables)
+**Live URL:** `https://<your-cloudfront-domain>/` (root path, no repo subpath)
 
-Full troubleshooting: [`.github/PAGES_SETUP.md`](../../.github/PAGES_SETUP.md)
+Quotes refresh on deploy and every 15 minutes on weekdays (scheduled CI). The status bar shows quote age, deploy time, and commit SHA.
 
-### Mobile
+## Manual deploy
 
-The page is built for phone and desktop: responsive grids, horizontal scroll on wide tables, touch-sized buttons, safe-area padding for notched phones. Add to home screen from Safari/Chrome for quick access.
-
-| Option | Cost | URL |
-|--------|------|-----|
-| **GitHub Pages** (default) | **$0/mo** | `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/` |
-| **AWS S3 + CloudFront** | **~$0.50–3/mo** | CloudFront URL from Terraform |
-
-**GitHub Pages (free):**
-
-1. **One-time:** enable Pages → [setup guide](../../.github/PAGES_SETUP.md) (branch `gh-pages`, folder `/`)
-2. Merge to `main` — deploy workflow runs automatically
-3. URL: `https://jacob-idolor.github.io/Pet_Projects/stocks-radar/`
-
-**AWS (optional):** infra lives in [`infra/`](infra/README.md) — Terraform + `./deploy.sh`. Does not touch app code; local dev is unchanged.
-
-Prices refresh on deploy + every 15 min on weekdays (scheduled CI). Page polls every 60s while open.
+```bash
+cd stocks/radar
+npm ci && npm run build
+./infra/deploy.sh
+```
 
 ## Project layout
 
 ```
 stocks/radar/
   src/data/watchlist.json
-  src/scripts/watchlist-board.ts   # table, filters, buckets UI
-  scripts/csv-to-watchlist.mjs
+  src/scripts/watchlist-board.ts
   scripts/fetch-quotes.mjs
-  infra/                           # AWS only — see infra/README.md
+  scripts/write-build-meta.mjs
+  infra/                    # Terraform + deploy.sh
+  DEPLOY.md                 # AWS + GitHub secrets guide
 ```
 
 ## License

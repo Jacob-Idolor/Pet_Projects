@@ -1,4 +1,4 @@
-name: Stocks Radar — live deploy
+name: Stocks Radar — deploy
 
 on:
   push:
@@ -7,13 +7,9 @@ on:
       - "stocks/radar/**"
       - ".github/workflows/stocks-radar-deploy.yml"
   schedule:
-    # Weekdays — refresh live quotes during market hours
+    # Weekdays — refresh quotes + redeploy during market hours
     - cron: "*/15 * * * 1-5"
   workflow_dispatch:
-
-# peaceiris pushes to gh-pages branch — no configure-pages / Pages API needed
-permissions:
-  contents: write
 
 concurrency:
   group: stocks-radar-deploy
@@ -22,7 +18,34 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: production
+      url: ${{ steps.site.outputs.url }}
+    env:
+      SITE_URL: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
     steps:
+      - name: Require AWS deploy secrets
+        run: |
+          missing=0
+          for key in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION \
+            STOCKS_RADAR_S3_BUCKET STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID \
+            STOCKS_RADAR_CLOUDFRONT_DOMAIN; do
+            if [ -z "${!key}" ]; then
+              echo "::error title=Missing secret::$key — see stocks/radar/DEPLOY.md"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          STOCKS_RADAR_S3_BUCKET: ${{ secrets.STOCKS_RADAR_S3_BUCKET }}
+          STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
+          STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
@@ -31,22 +54,50 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Install & build
         working-directory: stocks/radar
         env:
-          STOCKS_RADAR_BASE: /Pet_Projects/stocks-radar
-          STOCKS_RADAR_SITE: https://jacob-idolor.github.io/Pet_Projects/stocks-radar
+          STOCKS_RADAR_BASE: /
+          STOCKS_RADAR_SITE: ${{ env.SITE_URL }}
+          DEPLOY_PROVIDER: github-actions
+          DEPLOY_TIME: ${{ github.event.head_commit.timestamp || github.run_started_at }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
         run: |
           npm ci
           npm run build
 
-      - name: Deploy to GitHub Pages (gh-pages branch)
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: stocks/radar/dist
-          destination_dir: stocks-radar
-          keep_files: true
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
-          commit_message: "deploy: stocks-radar @ ${{ github.sha }}"
+      - name: Sync to S3
+        run: |
+          aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
+            --cache-control "public,max-age=60" \
+            --exclude "quotes.json" --exclude "build-meta.json"
+          aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
+            --cache-control "public,max-age=0,no-cache" \
+            --exclude "*" --include "quotes.json" --include "build-meta.json"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
+
+      - id: site
+        name: Live site URL
+        run: echo "url=${SITE_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Deployment summary
+        run: |
+          echo "## Stocks Radar deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**URL:** ${SITE_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Commit:** \`${GITHUB_SHA::7}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> "$GITHUB_STEP_SUMMARY"

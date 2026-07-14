@@ -11,6 +11,7 @@ import {
   hasTechnical,
   matchesTechnicalFilter,
   rsiLabel,
+  athIndicator,
 } from "../lib/market-display";
 
 export interface StockRow {
@@ -283,6 +284,10 @@ function sortStocks(list: StockRow[]) {
         av = getQuote(a)?.range52Pct ?? -Infinity;
         bv = getQuote(b)?.range52Pct ?? -Infinity;
         return sortDir * ((av as number) - (bv as number));
+      case "ath":
+        av = getQuote(a)?.pctFromAth ?? -Infinity;
+        bv = getQuote(b)?.pctFromAth ?? -Infinity;
+        return sortDir * ((av as number) - (bv as number));
       case "rsi":
         av = getQuote(a)?.rsi14 ?? -Infinity;
         bv = getQuote(b)?.rsi14 ?? -Infinity;
@@ -342,12 +347,13 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
+      <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? renderDetailRow(stock, price, q, 9) : ""}`;
+    ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
   }
 
   return `
@@ -361,6 +367,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="tags-cell">${renderTagsHtml(stock)}</td>
       <td class="num mono">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
+      <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
       <td>${renderPriority(stock)}</td>
@@ -368,7 +375,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
-    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 9) : ""}
+    ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
   `;
 }
 
@@ -396,7 +403,7 @@ function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | u
 
 function renderTableHtml(stocks: StockRow[], mode: "default" | "technical" = "default") {
   if (!stocks.length) {
-    const cols = mode === "technical" ? 9 : 9;
+    const cols = mode === "technical" ? 10 : 10;
     return `<tr><td colspan="${cols}" class="empty-row">No tickers match your filters.</td></tr>`;
   }
   return stocks.map((s) => renderRow(s, false, mode)).join("");
@@ -430,6 +437,7 @@ function renderOverview() {
     let above200 = 0;
     let bullish = 0;
     let nearLow = 0;
+    let nearAth = 0;
     for (const s of withTech) {
       const q = getQuote(s);
       const p = getPrice(s);
@@ -437,12 +445,14 @@ function renderOverview() {
       if (q?.sma?.[200] != null && p != null && p > q.sma[200]) above200++;
       if (q?.trend === "bullish") bullish++;
       if (q?.range52Pct != null && q.range52Pct <= 20) nearLow++;
+      if (q?.pctFromAth != null && q.pctFromAth >= -5) nearAth++;
     }
     techHtml = `
     <div class="overview-card tech"><span class="ov-value">${above50}</span><span class="ov-label">Above 50 MA</span></div>
     <div class="overview-card tech"><span class="ov-value">${above200}</span><span class="ov-label">Above 200 MA</span></div>
     <div class="overview-card tech highlight"><span class="ov-value">${bullish}</span><span class="ov-label">Bullish trend</span></div>
-    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>`;
+    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>
+    <div class="overview-card tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
 
   el.innerHTML = `
@@ -590,7 +600,7 @@ function tableHead(mode: "default" | "technical" = "default") {
       <th>Symbol</th><th>Name</th><th>Bucket</th>
       <th class="num">Price</th><th class="num">Chg</th><th>Trend</th>
       <th class="num">SMA 20</th><th class="num">SMA 50</th><th class="num">SMA 200</th>
-      <th>52W range</th><th class="num">RSI</th><th class="num">Target</th><th></th>
+      <th>52W range</th><th data-sort="ath" class="sortable">ATH</th><th class="num">RSI</th><th class="num">Target</th><th></th>
     </tr>`;
   }
   return `<tr>
@@ -671,6 +681,7 @@ function syncLayoutClass() {
 function renderMobileCard(stock: StockRow) {
   const price = getPrice(stock);
   const chg = getChange(stock);
+  const q = getQuote(stock);
   const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
 
@@ -684,6 +695,7 @@ function renderMobileCard(stock: StockRow) {
         <span class="scm-name">${escapeHtml(stock.name)}</span>
         <span class="chg ${chgCls}">${chgTxt}</span>
       </div>
+      <div class="scm-ath">${athIndicator(q)}</div>
       ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
     </a>
   </article>`;

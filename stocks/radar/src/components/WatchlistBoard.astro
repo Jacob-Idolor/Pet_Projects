@@ -58,6 +58,7 @@ const base = import.meta.env.BASE_URL;
       <button type="button" class="chip" data-filter="tech-above-50">Above 50 MA</button>
       <button type="button" class="chip" data-filter="tech-bullish">Bullish</button>
       <button type="button" class="chip" data-filter="tech-near-low">Near 52w low</button>
+      <button type="button" class="chip" data-filter="tech-near-ath">Near ATH</button>
     </div>
   </div>
 
@@ -77,6 +78,7 @@ const base = import.meta.env.BASE_URL;
             <th>Tags</th>
             <th data-sort="price" class="sortable num">Price</th>
             <th class="num">Chg</th>
+            <th data-sort="ath" class="sortable">ATH</th>
             <th data-sort="target" class="sortable num">Target</th>
             <th>Thesis</th>
             <th data-sort="priority" class="sortable">Priority</th>
@@ -101,6 +103,7 @@ const base = import.meta.env.BASE_URL;
             <th data-sort="trend" class="sortable">Trend</th>
             <th data-sort="vs50" class="sortable num">SMA 50</th>
             <th data-sort="range52" class="sortable">52W range</th>
+            <th data-sort="ath" class="sortable">ATH</th>
             <th data-sort="rsi" class="sortable num">RSI</th>
             <th></th>
           </tr>

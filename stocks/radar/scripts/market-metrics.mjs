@@ -62,10 +62,37 @@ export function deriveSignals(price, metrics) {
   if (rsi14 != null && rsi14 >= 70) signals.push("rsi-overbought");
   if (rsi14 != null && rsi14 <= 30) signals.push("rsi-oversold");
 
+  if (metrics.pctFromAth != null && metrics.pctFromAth >= -0.5) signals.push("at-ath");
+  if (metrics.pctFromAth != null && metrics.pctFromAth >= -5 && metrics.pctFromAth < -0.5) {
+    signals.push("near-ath");
+  }
+
   return signals;
 }
 
-export function buildMetrics(price, closes, meta, volumes) {
+export function computeAth(highs, timestamps) {
+  if (!highs?.length) return { athHigh: null, athDate: null };
+
+  let max = null;
+  let maxIdx = -1;
+  for (let i = 0; i < highs.length; i++) {
+    const h = highs[i];
+    if (h != null && (max == null || h > max)) {
+      max = h;
+      maxIdx = i;
+    }
+  }
+
+  if (max == null) return { athHigh: null, athDate: null };
+
+  const ts = timestamps?.[maxIdx];
+  const athDate =
+    ts != null ? new Date(ts * 1000).toISOString().slice(0, 10) : null;
+
+  return { athHigh: max, athDate };
+}
+
+export function buildMetrics(price, closes, meta, volumes, highs, timestamps) {
   const high52 = meta?.fiftyTwoWeekHigh ?? null;
   const low52 = meta?.fiftyTwoWeekLow ?? null;
   const sma20 = sma(closes, 20);
@@ -87,11 +114,16 @@ export function buildMetrics(price, closes, meta, volumes) {
   };
 
   const trend = deriveTrend(price, sma50, sma200);
+  const { athHigh, athDate } = computeAth(highs, timestamps);
+  const pctFromAth = pctVs(price, athHigh);
 
   const base = {
     high52,
     low52,
     range52Pct,
+    athHigh,
+    athDate,
+    pctFromAth,
     sma: { 20: sma20, 50: sma50, 200: sma200 },
     vsSma,
     trend,

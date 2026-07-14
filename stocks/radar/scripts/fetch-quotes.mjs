@@ -21,7 +21,7 @@ const HEADERS = { Accept: "application/json", "User-Agent": "stocks-radar/1.0" }
 
 async function fetchSymbol(symbol) {
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=max`;
     const res = await fetch(url, { headers: HEADERS });
     if (!res.ok) return null;
 
@@ -33,6 +33,8 @@ async function fetchSymbol(symbol) {
     const quote = result?.indicators?.quote?.[0] ?? {};
     const closes = (quote.close ?? []).filter((c) => c != null);
     const volumes = quote.volume ?? [];
+    const highs = quote.high ?? [];
+    const timestamps = result?.timestamp ?? [];
 
     const price = meta.regularMarketPrice;
     const prevClose =
@@ -40,7 +42,7 @@ async function fetchSymbol(symbol) {
     const changePct =
       prevClose != null && prevClose !== 0 ? ((price - prevClose) / prevClose) * 100 : null;
 
-    const metrics = buildMetrics(price, closes, meta, volumes);
+    const metrics = buildMetrics(price, closes, meta, volumes, highs, timestamps);
 
     return {
       price,
@@ -85,7 +87,7 @@ const quotes = await fetchAll(symbols);
 const payload = {
   updatedAt: new Date().toISOString(),
   marketTime: "US/Eastern",
-  schemaVersion: 2,
+  schemaVersion: 3,
   count: Object.keys(quotes).length,
   total: symbols.length,
   quotes,
