@@ -1,8 +1,8 @@
 {
-  "builtAt": "2026-07-01T18:43:26.972Z",
+  "builtAt": "2026-07-14T22:15:30Z",
   "gitSha": "local",
   "gitRef": "local",
-  "siteUrl": "",
-  "deployProvider": "local",
+  "siteUrl": "https://d2stjcqx4wkpwu.cloudfront.net",
+  "deployProvider": "manual",
   "workflowRun": null
 }

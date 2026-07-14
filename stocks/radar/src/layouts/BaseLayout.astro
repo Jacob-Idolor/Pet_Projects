@@ -41,6 +41,11 @@ const ads = getAdSenseConfig();
     <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     {
+      ads.verifyMeta && (
+        <meta name="google-adsense-account" content={ads.verifyMeta} />
+      )
+    }
+    {
       ads.enabled && ads.client && (
         <script
           async
@@ -72,7 +77,8 @@ const ads = getAdSenseConfig();
           <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
         <p class="disclaimer">
-          New submissions save in your browser until committed to the shared watchlist in git.
+          Friend suggestions stay pending in the browser until an owner adds them to the master list in git.
+          Radar scores are educational guides from technical rules — not financial advice or AI guarantees.
         </p>
       </div>
     </footer>

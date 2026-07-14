@@ -1,0 +1,57 @@
+---
+---
+
+<section class="checkin-pulse" id="checkin" aria-labelledby="checkin-title">
+  <div class="checkin-header">
+    <div>
+      <p class="board-eyebrow">Friend check-in</p>
+      <h2 id="checkin-title">Today’s pulse</h2>
+      <p class="checkin-lede">
+        Open this before or after the group chat. Movers show what’s hot;
+        setups flag where the radar score leans buy — for discussion, not advice.
+      </p>
+    </div>
+    <nav class="checkin-jump" aria-label="Jump to sections">
+      <a href="#checkin">Pulse</a>
+      <a href="#watchlist-board">Master list</a>
+      <a href="#submissions">Suggest</a>
+    </nav>
+  </div>
+
+  <p class="checkin-method">
+    <strong>How signals work:</strong> RSI · 52-week range · trend · SMA stretch —
+    scored into Lean buy / Watch / Lean sell. Same playbook for every ticker on the master list.
+  </p>
+
+  <div class="checkin-grid">
+    <article class="checkin-panel" aria-labelledby="movers-title">
+      <header class="checkin-panel__head">
+        <h3 id="movers-title">Top movers</h3>
+        <p>Biggest % moves on our list</p>
+      </header>
+      <ol class="checkin-rank" id="checkin-movers" aria-live="polite">
+        <li class="checkin-rank__empty">Loading quotes…</li>
+      </ol>
+    </article>
+
+    <article class="checkin-panel checkin-panel--buy" aria-labelledby="setups-title">
+      <header class="checkin-panel__head">
+        <h3 id="setups-title">Buy setups</h3>
+        <p>Highest radar score (lean buy first)</p>
+      </header>
+      <ol class="checkin-rank" id="checkin-setups" aria-live="polite">
+        <li class="checkin-rank__empty">Scoring master list…</li>
+      </ol>
+    </article>
+
+    <article class="checkin-panel" aria-labelledby="watch-title">
+      <header class="checkin-panel__head">
+        <h3 id="watch-title">Caution / trim leans</h3>
+        <p>Extended or lean-sell names</p>
+      </header>
+      <ol class="checkin-rank" id="checkin-caution" aria-live="polite">
+        <li class="checkin-rank__empty">Scoring master list…</li>
+      </ol>
+    </article>
+  </div>
+</section>

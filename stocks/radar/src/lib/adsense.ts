@@ -18,6 +18,7 @@ export interface AdSenseConfig {
     board: string;
     footer: string;
   };
+  verifyMeta: string;
 }
 
 function env(name: string): string {
@@ -44,6 +45,8 @@ export function getAdSenseConfig(): AdSenseConfig {
       board: env("PUBLIC_ADSENSE_SLOT_BOARD"),
       footer: env("PUBLIC_ADSENSE_SLOT_FOOTER"),
     },
+    /** AdSense site verification meta content=… from Sites → Get code */
+    verifyMeta: env("PUBLIC_ADSENSE_VERIFY_META"),
   };
 }
 

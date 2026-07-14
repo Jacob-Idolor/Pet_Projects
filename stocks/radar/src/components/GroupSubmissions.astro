@@ -7,8 +7,12 @@ const seedJson = JSON.stringify(seed.submissions);
 <section class="submissions-panel" id="submissions">
   <div class="submissions-header">
     <div>
-      <h2>Group radar feed</h2>
-      <p class="subtitle">Tickers, notes, paste from chat — anything you want on the list. Grows as you submit.</p>
+      <p class="board-eyebrow">Friend suggestions</p>
+      <h2>Drop a ticker for the group</h2>
+      <p class="subtitle">
+        Paste what you’d text us — tickers land in a <strong>pending queue</strong>.
+        They do not join the master list until an owner adds them in git.
+      </p>
     </div>
     <span class="submission-count" id="submission-count"></span>
   </div>
@@ -21,15 +25,15 @@ const seedJson = JSON.stringify(seed.submissions);
       </label>
     </div>
     <label class="full-width">
-      Add to the radar
+      Note from the chat
       <textarea
         id="submission-content"
         rows="3"
-        placeholder="SMH top semi exposure&#10;Watching PLTR under $18&#10;Paste a few tickers or a quick note — whatever you use in the group chat"
+        placeholder="Watching PLTR under $18&#10;SMH still the core semi basket&#10;Paste a ticker or a quick thesis like the group chat"
         required
       ></textarea>
     </label>
-    <button type="submit" class="btn btn-primary">Add to feed</button>
+    <button type="submit" class="btn btn-primary">Suggest for master list</button>
   </form>
 
   <ul class="submission-list" id="submission-list" aria-live="polite"></ul>
@@ -85,48 +89,13 @@ const seedJson = JSON.stringify(seed.submissions);
       return Array.from(found);
     }
 
-    function parseTargetFromContent(content, symbol) {
-      var sym = symbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      var patterns = [
-        new RegExp(sym + "[^\\d]{0,24}(?:\\$|@|under|below|at|to)?\\s*(\\d+(?:\\.\\d+)?)", "i"),
-        new RegExp("(?:\\$|@|target|pt|under|below)\\s*(\\d+(?:\\.\\d+)?)[^\\d]{0,24}" + sym, "i"),
-      ];
-      for (var i = 0; i < patterns.length; i++) {
-        var m = content.match(patterns[i]);
-        if (m) return parseFloat(m[1]);
-      }
-      return null;
-    }
-
-    function stocksFromSubmission(sub) {
-      return sub.symbols.map(function (sym) {
-        var tp = parseTargetFromContent(sub.content, sym);
-        var stock = {
-          id: "sub-" + sym.toLowerCase() + "-" + sub.id,
-          symbol: sym,
-          name: sym,
-          category: "tracking",
-          thesis: sub.content,
-          addedBy: sub.author,
-          custom: true,
-        };
-        if (tp != null) {
-          stock.targetPrice = tp;
-          stock.targetNote = sub.content;
-        }
-        return stock;
-      });
-    }
-
-    function mergeById(a, b) {
-      var map = {};
-      a.concat(b).forEach(function (s) { map[s.id] = s; });
-      return Object.keys(map).map(function (k) { return map[k]; });
-    }
-
     function formatDate(iso) {
       try {
-        return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        return new Date(iso).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
       } catch {
         return iso;
       }
@@ -152,34 +121,68 @@ const seedJson = JSON.stringify(seed.submissions);
 
     function allSubmissions(local) {
       var map = {};
-      seed.forEach(function (s) { map[s.id] = s; });
+      seed.forEach(function (s) { map[s.id] = Object.assign({ status: "noted" }, s); });
       local.forEach(function (s) { map[s.id] = s; });
-      return Object.keys(map).map(function (k) { return map[k]; })
-        .sort(function (a, b) { return String(b.submittedAt).localeCompare(String(a.submittedAt)); });
+      return Object.keys(map)
+        .map(function (k) { return map[k]; })
+        .sort(function (a, b) {
+          return String(b.submittedAt).localeCompare(String(a.submittedAt));
+        });
+    }
+
+    function statusLabel(sub) {
+      if (sub.status === "pending" || (sub.id && String(sub.id).indexOf("local-") === 0 && sub.status !== "noted")) {
+        return '<span class="sub-status sub-status--pending">Pending master list</span>';
+      }
+      return '<span class="sub-status sub-status--noted">On the record</span>';
     }
 
     function render(local) {
       var all = allSubmissions(local);
-      if (countEl) countEl.textContent = all.length + " on the feed";
+      var pending = all.filter(function (s) {
+        return s.status === "pending" || String(s.id).indexOf("local-") === 0;
+      }).length;
+      if (countEl) {
+        countEl.textContent =
+          pending > 0
+            ? pending + " pending · " + all.length + " notes"
+            : all.length + " notes";
+      }
 
       if (!listEl) return;
-      listEl.innerHTML = all.map(function (sub) {
-        var chips = (sub.symbols || []).map(function (s) {
-          return '<span class="sub-symbol">' + escapeHtml(s) + '</span>';
-        }).join("");
-        var localTag = sub.id.indexOf("local-") === 0 ? ' <span class="local-tag">new</span>' : "";
-        return '<li class="submission-item" data-id="' + escapeHtml(sub.id) + '">' +
-          '<div class="submission-meta">' +
-          '<strong>' + escapeHtml(sub.author) + '</strong>' +
-          '<time>' + formatDate(sub.submittedAt) + '</time>' + localTag +
-          '</div>' +
-          (chips ? '<div class="submission-symbols">' + chips + '</div>' : "") +
-          '<p class="submission-text">' + escapeHtml(sub.content) + '</p>' +
-          (sub.id.indexOf("local-") === 0
-            ? '<button type="button" class="btn-text delete-sub" data-id="' + escapeHtml(sub.id) + '">Remove</button>'
-            : "") +
-          '</li>';
-      }).join("");
+      listEl.innerHTML = all
+        .map(function (sub) {
+          var chips = (sub.symbols || [])
+            .map(function (s) {
+              return '<span class="sub-symbol">' + escapeHtml(s) + "</span>";
+            })
+            .join("");
+          return (
+            '<li class="submission-item" data-id="' +
+            escapeHtml(sub.id) +
+            '">' +
+            '<div class="submission-meta">' +
+            "<strong>" +
+            escapeHtml(sub.author) +
+            "</strong>" +
+            "<time>" +
+            formatDate(sub.submittedAt) +
+            "</time>" +
+            statusLabel(sub) +
+            "</div>" +
+            (chips ? '<div class="submission-symbols">' + chips + "</div>" : "") +
+            '<p class="submission-text">' +
+            escapeHtml(sub.content) +
+            "</p>" +
+            (String(sub.id).indexOf("local-") === 0
+              ? '<button type="button" class="btn-text delete-sub" data-id="' +
+                escapeHtml(sub.id) +
+                '">Remove suggestion</button>'
+              : "") +
+            "</li>"
+          );
+        })
+        .join("");
 
       listEl.querySelectorAll(".delete-sub").forEach(function (btn) {
         btn.addEventListener("click", async function () {
@@ -192,17 +195,7 @@ const seedJson = JSON.stringify(seed.submissions);
     }
 
     async function init() {
-      var local = await getLocal();
-      render(local);
-
-      var all = allSubmissions(local);
-      var stocks = [];
-      all.forEach(function (sub) {
-        stocks = mergeById(stocks, stocksFromSubmission(sub));
-      });
-      if (stocks.length) {
-        document.dispatchEvent(new CustomEvent("radar:submission-added", { detail: { stocks: stocks } }));
-      }
+      render(await getLocal());
     }
 
     form?.addEventListener("submit", async function (e) {
@@ -219,6 +212,7 @@ const seedJson = JSON.stringify(seed.submissions);
         submittedAt: new Date().toISOString().slice(0, 10),
         content: content,
         symbols: parseSymbols(content),
+        status: "pending",
       };
 
       var local = await getLocal();
@@ -227,11 +221,7 @@ const seedJson = JSON.stringify(seed.submissions);
 
       if (contentInput) contentInput.value = "";
       render(local);
-
-      var stocks = stocksFromSubmission(sub);
-      if (stocks.length) {
-        document.dispatchEvent(new CustomEvent("radar:submission-added", { detail: { stocks: stocks } }));
-      }
+      // Master list stays git-owned — no auto-merge into the board
     });
 
     init();

@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LiveStatus from "../components/LiveStatus.astro";
 import DayMoodBanner from "../components/DayMoodBanner.astro";
+import CheckInPulse from "../components/CheckInPulse.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
 import AdSlot from "../components/AdSlot.astro";
@@ -9,7 +10,7 @@ import { meta, stocks } from "../data/watchlist";
 
 const description =
   meta.tagline ||
-  "Group watchlist with live quotes, technicals, and a clean mobile layout — Stocks Radar.";
+  "Group check-in: master watchlist, movers, and buy setups from our radar score.";
 ---
 
 <BaseLayout title={meta.groupName} description={description}>
@@ -20,20 +21,20 @@ const description =
       <div class="hero-copy">
         <p class="hero-brand">Stocks Radar</p>
         <h1>{meta.groupName}</h1>
-        <p class="tagline desktop-only">{meta.tagline}</p>
+        <p class="tagline">{meta.tagline}</p>
       </div>
-      <dl class="hero-kpis desktop-only" aria-label="Watchlist summary">
+      <dl class="hero-kpis" aria-label="Watchlist summary">
         <div class="hero-kpi">
-          <dt>Tickers</dt>
+          <dt>Master list</dt>
           <dd class="mono">{stocks.length}</dd>
         </div>
         <div class="hero-kpi">
-          <dt>Feed</dt>
-          <dd>Live quotes</dd>
+          <dt>Purpose</dt>
+          <dd>Check-in</dd>
         </div>
-        <div class="hero-kpi">
-          <dt>Scope</dt>
-          <dd>Group list</dd>
+        <div class="hero-kpi desktop-only">
+          <dt>Signals</dt>
+          <dd>Buy / watch</dd>
         </div>
       </dl>
     </section>
@@ -41,11 +42,10 @@ const description =
       <AdSlot placement="hero" label="Sponsored — top" />
     </div>
     <div class="container board-stage">
-      <WatchlistBoard />
+      <CheckInPulse />
       <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
-      <div class="secondary-panels desktop-only">
-        <GroupSubmissions />
-      </div>
+      <WatchlistBoard />
+      <GroupSubmissions />
       <AdSlot placement="footer" label="Sponsored — footer" />
     </div>
   </div>

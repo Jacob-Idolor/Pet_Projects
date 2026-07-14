@@ -11,21 +11,24 @@ const deployLabel =
   buildMeta.deployProvider === "github-actions"
     ? "GitHub Actions → AWS"
     : buildMeta.deployProvider;
+const base = import.meta.env.BASE_URL;
+const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
 ---
 
-<div class="live-status" id="live-status">
+<div class="live-status" id="live-status" data-quotes-url={quotesUrl}>
   <span class="live-status__dot" aria-hidden="true"></span>
   <span id="live-status-text">
     Deployed {buildLabel} · {deployLabel} · <code>{shortSha}</code>
   </span>
 </div>
 
-<script define:vars={{ buildMeta }}>
+<script define:vars={{ buildMeta, quotesUrl }}>
   const statusEl = document.getElementById("live-status-text");
+  const dot = document.querySelector(".live-status__dot");
 
   async function refreshStatus() {
     try {
-      const res = await fetch(`/quotes.json?t=${Date.now()}`, { cache: "no-store" });
+      const res = await fetch(`${quotesUrl}?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("quotes fetch failed");
       const data = await res.json();
       const fetchedAt = new Date(data.fetchedAt);
@@ -40,11 +43,12 @@ const deployLabel =
       if (statusEl) {
         statusEl.innerHTML = `Quotes ${ageLabel} · Deploy ${new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · ${deployLabel} · <code>${shortSha}</code>`;
       }
+      dot?.classList.add("live");
     } catch {
       /* keep build-time label */
     }
   }
 
   refreshStatus();
-  setInterval(refreshStatus, 120_000);
+  setInterval(refreshStatus, 60_000);
 </script>

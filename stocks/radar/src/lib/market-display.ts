@@ -116,8 +116,12 @@ export function renderMaStrip(q: QuoteData | undefined, price: number | null) {
   return items.length ? `<div class="ma-strip">${items.join("")}</div>` : "";
 }
 
+export function hasTechnical(q: QuoteData | undefined) {
+  return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
+}
+
 export function renderTechnicalDetail(q: QuoteData | undefined, price: number | null) {
-  if (!q?.sma && q?.range52Pct == null && q?.rsi14 == null) {
+  if (!hasTechnical(q)) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy — run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
   }
 
@@ -140,14 +144,17 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
     .filter(Boolean)
     .join("");
 
+  const action = actionBias(q);
   return `
     <div class="tech-detail">
       <h4>Technical snapshot</h4>
       <div class="tech-summary-row">
+        ${actionBadge(q)}
         ${trendBadge(q?.trend)}
         <span class="rsi-badge rsi-${rsi.cls}">RSI(14) ${escapeHtml(rsi.text)}</span>
         ${q?.signals?.length ? `<span class="signal-tags">${q.signals.slice(0, 4).map((s) => `<span class="signal-tag">${escapeHtml(s.replace(/-/g, " "))}</span>`).join("")}</span>` : ""}
       </div>
+      <p class="action-reason">${escapeHtml(action.reason)}</p>
       <table class="tech-table"><tbody>${rows}</tbody></table>
       <div class="tech-range">
         <span class="tech-label">52-week range</span>
@@ -163,8 +170,72 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
     </div>`;
 }
 
-export function hasTechnical(q: QuoteData | undefined) {
-  return Boolean(q?.sma?.[50] != null || q?.range52Pct != null);
+export function actionBias(q: QuoteData | undefined): {
+  label: string;
+  cls: "buy" | "sell" | "watch" | "idle";
+  reason: string;
+  score: number;
+} {
+  if (!q || q.price == null) {
+    return { label: "—", cls: "idle", reason: "Waiting on quotes", score: 0 };
+  }
+
+  let score = 0;
+  const bits: string[] = [];
+
+  if (q.rsi14 != null && q.rsi14 <= 30) {
+    score += 2;
+    bits.push("RSI oversold");
+  } else if (q.rsi14 != null && q.rsi14 <= 40) {
+    score += 1;
+    bits.push("RSI soft");
+  } else if (q.rsi14 != null && q.rsi14 >= 70) {
+    score -= 2;
+    bits.push("RSI overbought");
+  } else if (q.rsi14 != null && q.rsi14 >= 65) {
+    score -= 1;
+    bits.push("RSI elevated");
+  }
+
+  if (q.range52Pct != null && q.range52Pct <= 20) {
+    score += 1;
+    bits.push("near 52w low");
+  } else if (q.range52Pct != null && q.range52Pct >= 85) {
+    score -= 1;
+    bits.push("near 52w high");
+  }
+
+  if (q.pctFromAth != null && q.pctFromAth >= -3) {
+    score -= 1;
+    bits.push("near ATH");
+  }
+
+  if (q.trend === "bullish") {
+    score += 1;
+    bits.push("bullish trend");
+  } else if (q.trend === "bearish") {
+    score -= 1;
+    bits.push("bearish trend");
+  }
+
+  if (q.signals?.includes("deep-below-50")) {
+    score += 1;
+    bits.push("deep below SMA50");
+  }
+  if (q.signals?.includes("extended-above-50")) {
+    score -= 1;
+    bits.push("extended above SMA50");
+  }
+
+  const reason = bits.length ? bits.slice(0, 3).join(" · ") : "Neutral setup";
+  if (score >= 2) return { label: "Lean buy", cls: "buy", reason, score };
+  if (score <= -2) return { label: "Lean sell", cls: "sell", reason, score };
+  return { label: "Watch", cls: "watch", reason, score };
+}
+
+export function actionBadge(q: QuoteData | undefined) {
+  const a = actionBias(q);
+  return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
 
 export function matchesTechnicalFilter(filter: string, q: QuoteData | undefined, price: number | null) {

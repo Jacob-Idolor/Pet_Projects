@@ -12,6 +12,8 @@ import {
   matchesTechnicalFilter,
   rsiLabel,
   athIndicator,
+  actionBadge,
+  actionBias,
 } from "../lib/market-display";
 
 export interface StockRow {
@@ -209,6 +211,10 @@ function matchesFilter(stock: StockRow) {
       return dist != null && Math.abs(dist) < 0.5;
     case "high-priority":
       return stock.priority === "high";
+    case "lean-buy":
+      return actionBias(getQuote(stock)).cls === "buy";
+    case "lean-sell":
+      return actionBias(getQuote(stock)).cls === "sell";
     default:
       if (filter.startsWith("tech-")) {
         return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
@@ -298,9 +304,15 @@ function sortStocks(list: StockRow[]) {
         bv = order[getQuote(b)?.trend ?? "unknown"] ?? 4;
         return sortDir * ((av as number) - (bv as number));
       }
+      case "action": {
+        const order: Record<string, number> = { buy: 0, watch: 1, sell: 2, idle: 3 };
+        av = order[actionBias(getQuote(a)).cls] ?? 4;
+        bv = order[actionBias(getQuote(b)).cls] ?? 4;
+        return sortDir * ((av as number) - (bv as number));
+      }
       default:
         return 0;
-    }
+      }
   });
   return sorted;
 }
@@ -342,12 +354,12 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="num mono price-cell">${fmtPrice(price)}</td>
+      <td class="num mono price-cell" data-price-for="${stock.symbol}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
+      <td>${actionBadge(q)}</td>
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
-      <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
         <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
@@ -361,12 +373,12 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="mono sym sticky-col">
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
         ${stock.priority === "high" ? '<span class="conviction-dot" title="High conviction">●</span>' : ""}
-        ${stock.custom ? '<span class="custom-tag" title="Browser import">★</span>' : ""}
+        ${stock.custom ? '<span class="custom-tag" title="From group notes">★</span>' : ""}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="tags-cell">${renderTagsHtml(stock)}</td>
-      <td class="num mono price-cell">${fmtPrice(price)}</td>
+      <td class="num mono price-cell" data-price-for="${stock.symbol}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
+      <td>${actionBadge(q)}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
@@ -455,11 +467,96 @@ function renderOverview() {
     <div class="overview-metric tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
 
+  const leanBuy = allStocks.filter((s) => actionBias(getQuote(s)).cls === "buy").length;
+
   el.innerHTML = `
-    <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Tracking</span></div>
+    <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">On master list</span></div>
     <div class="overview-metric highlight"><span class="ov-value">${allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
+    <div class="overview-metric highlight"><span class="ov-value">${leanBuy}</span><span class="ov-label">Lean buy now</span></div>
     ${techHtml}
   `;
+}
+
+function renderCheckIn() {
+  const moversEl = document.getElementById("checkin-movers");
+  const setupsEl = document.getElementById("checkin-setups");
+  const cautionEl = document.getElementById("checkin-caution");
+  if (!moversEl && !setupsEl && !cautionEl) return;
+
+  const priced = allStocks
+    .map((s) => {
+      const q = getQuote(s);
+      const price = getPrice(s);
+      const chg = q?.changePct ?? null;
+      const bias = actionBias(q);
+      return { stock: s, q, price, chg, bias };
+    })
+    .filter((x) => x.price != null);
+
+  if (!priced.length) {
+    const empty = `<li class="checkin-rank__empty">Waiting on quotes for the master list…</li>`;
+    if (moversEl) moversEl.innerHTML = empty;
+    if (setupsEl) setupsEl.innerHTML = empty;
+    if (cautionEl) cautionEl.innerHTML = empty;
+    return;
+  }
+
+  const movers = [...priced]
+    .filter((x) => x.chg != null)
+    .sort((a, b) => Math.abs(b.chg!) - Math.abs(a.chg!))
+    .slice(0, 10);
+
+  if (moversEl) {
+    moversEl.innerHTML = movers.length
+      ? movers
+          .map((x, i) => {
+            const up = (x.chg ?? 0) >= 0;
+            return `<li class="checkin-rank__row">
+              <span class="checkin-rank__n">${i + 1}</span>
+              <button type="button" class="checkin-rank__sym" data-jump="${escapeHtml(x.stock.symbol)}">${escapeHtml(x.stock.symbol)}</button>
+              <span class="checkin-rank__meta">${escapeHtml(x.stock.name)}</span>
+              <span class="checkin-rank__val mono ${up ? "up" : "down"}">${up ? "+" : ""}${(x.chg ?? 0).toFixed(1)}%</span>
+            </li>`;
+          })
+          .join("")
+      : `<li class="checkin-rank__empty">No % moves yet — refresh quotes.</li>`;
+  }
+
+  const setups = [...priced]
+    .filter((x) => x.bias.cls === "buy" || x.bias.score > 0)
+    .sort((a, b) => b.bias.score - a.bias.score || (b.chg ?? 0) - (a.chg ?? 0))
+    .slice(0, 10);
+
+  if (setupsEl) {
+    setupsEl.innerHTML = setups.length
+      ? setups
+          .map((x, i) => `<li class="checkin-rank__row">
+            <span class="checkin-rank__n">${i + 1}</span>
+            <button type="button" class="checkin-rank__sym" data-jump="${escapeHtml(x.stock.symbol)}">${escapeHtml(x.stock.symbol)}</button>
+            <span class="checkin-rank__meta">${escapeHtml(x.bias.reason)}</span>
+            <span class="checkin-rank__val">${actionBadge(x.q)} <span class="mono dim">score ${x.bias.score > 0 ? "+" : ""}${x.bias.score}</span></span>
+          </li>`)
+          .join("")
+      : `<li class="checkin-rank__empty">No lean-buy setups on the list right now — check Watch names below.</li>`;
+  }
+
+  const caution = [...priced]
+    .filter((x) => x.bias.cls === "sell" || x.bias.score < 0)
+    .sort((a, b) => a.bias.score - b.bias.score)
+    .slice(0, 10);
+
+  if (cautionEl) {
+    cautionEl.innerHTML = caution.length
+      ? caution
+          .map((x, i) => `<li class="checkin-rank__row">
+            <span class="checkin-rank__n">${i + 1}</span>
+            <button type="button" class="checkin-rank__sym" data-jump="${escapeHtml(x.stock.symbol)}">${escapeHtml(x.stock.symbol)}</button>
+            <span class="checkin-rank__meta">${escapeHtml(x.bias.reason)}</span>
+            <span class="checkin-rank__val">${actionBadge(x.q)} <span class="mono dim">score ${x.bias.score}</span></span>
+          </li>`)
+          .join("")
+      : `<li class="checkin-rank__empty">Nothing flagged lean-sell — list looks calm on stretch risk.</li>`;
+  }
 }
 
 function renderTagFilters() {
@@ -686,15 +783,17 @@ function renderMobileCard(stock: StockRow) {
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
 
   const high = stock.priority === "high";
-  return `<article class="stock-card-m ${high ? "scm-high" : ""}" data-symbol="${stock.symbol}">
+  const action = actionBias(q);
+  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${action.cls}" data-symbol="${stock.symbol}">
     <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="scm-main">
       <div class="scm-top">
         <div class="scm-identity">
           <span class="scm-sym">${stock.symbol}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
+          ${actionBadge(q)}
         </div>
         <div class="scm-quote">
-          <span class="scm-price mono">${fmtPrice(price)}</span>
+          <span class="scm-price mono" data-price-for="${stock.symbol}">${fmtPrice(price)}</span>
           <span class="scm-chg chg ${chgCls}">${chgTxt}</span>
         </div>
       </div>
@@ -703,6 +802,7 @@ function renderMobileCard(stock: StockRow) {
         <span class="scm-ath">${athIndicator(q)}</span>
       </div>
       ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
+      <p class="scm-signal-reason">${escapeHtml(action.reason)}</p>
     </a>
   </article>`;
 }
@@ -741,6 +841,8 @@ function renderAll() {
   syncLayoutClass();
   const list = filteredStocks();
 
+  renderCheckIn();
+
   if (isMobileLayout()) {
     renderMobileView(list);
     return;
@@ -757,106 +859,6 @@ function renderAll() {
   } else {
     renderTableView(list);
   }
-}
-
-function parseImportCsv(text: string): StockRow[] {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (!lines.length) return [];
-
-  const first = lines[0].toLowerCase();
-  const hasHeader = first.includes("symbol");
-  const dataLines = hasHeader ? lines.slice(1) : lines;
-
-  const split = (line: string) => {
-    const out: string[] = [];
-    let cur = "";
-    let q = false;
-    for (const ch of line) {
-      if (ch === '"') { q = !q; continue; }
-      if (ch === "," && !q) { out.push(cur); cur = ""; continue; }
-      cur += ch;
-    }
-    out.push(cur);
-    return out.map((s) => s.trim());
-  };
-
-  const rows = hasHeader
-    ? (() => {
-        const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-        return dataLines.map((line) => {
-          const cols = split(line);
-          const row: Record<string, string> = {};
-          headers.forEach((h, i) => { row[h] = cols[i] ?? ""; });
-          return row;
-        });
-      })()
-    : dataLines.map((line) => {
-        const cols = split(line);
-        if (cols.length === 1) return { symbol: cols[0] };
-        return {
-          symbol: cols[0],
-          name: cols[1],
-          category: cols[2],
-          targetprice: cols[3],
-          thesis: cols[4],
-          addedby: cols[5],
-        };
-      });
-
-  const cats = new Set(["tracking", "owned", "targets", "watching"]);
-  return rows
-    .map((row) => {
-      const symbol = (row.symbol ?? "").toUpperCase();
-      if (!symbol) return null;
-      const category = (row.category ?? "tracking").toLowerCase();
-      const cat = cats.has(category) ? category : "tracking";
-      const tp = row.targetprice ?? row.target_price;
-      const stock: StockRow = {
-        id: `custom-${symbol.toLowerCase()}`,
-        symbol,
-        name: row.name || symbol,
-        category: cat,
-        custom: true,
-      };
-      if (tp !== "" && tp != null) stock.targetPrice = Number(tp);
-      if (row.thesis) stock.thesis = row.thesis;
-      if (row.targetnote) stock.targetNote = row.targetnote;
-      if (row.addedby) stock.addedBy = row.addedby;
-      if (row.holder) stock.holder = row.holder;
-      if (row.sector) stock.sector = row.sector;
-      if (row.priority) stock.priority = row.priority;
-      if (row.tags) {
-        stock.tags = row.tags.split(/[;|]/).map((t) => t.trim()).filter(Boolean);
-      }
-      return stock;
-    })
-    .filter(Boolean) as StockRow[];
-}
-
-function exportCsv() {
-  const header = "symbol,name,category,sector,tags,targetPrice,targetNote,thesis,priority,addedBy,holder";
-  const rows = allStocks.map((s) =>
-    [
-      s.symbol,
-      s.name,
-      s.category,
-      s.sector ?? "",
-      (s.tags ?? []).join(";"),
-      s.targetPrice ?? "",
-      s.targetNote ?? "",
-      s.thesis ?? "",
-      s.priority ?? "",
-      s.addedBy ?? "",
-      s.holder ?? "",
-    ]
-      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-      .join(",")
-  );
-  const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "watchlist-export.csv";
-  a.click();
 }
 
 function setViewToggle(activeId: string) {
@@ -934,39 +936,7 @@ function bindEvents() {
     renderAll();
   });
 
-  document.getElementById("toggle-import")?.addEventListener("click", () => {
-    const panel = document.getElementById("import-panel");
-    if (panel) panel.hidden = !panel.hidden;
-  });
-
-  document.getElementById("import-apply")?.addEventListener("click", async () => {
-    const text = (document.getElementById("import-text") as HTMLTextAreaElement).value;
-    const parsed = parseImportCsv(text).map((s) => ({ ...s, custom: true }));
-    if (!parsed.length) {
-      alert("Nothing to import — check your format.");
-      return;
-    }
-    const existing = await getCustomStocks();
-    const merged = mergeStocks(existing, parsed);
-    await setCustomStocks(merged);
-    allStocks = mergeStocks(baseStocks, merged);
-    (document.getElementById("import-text") as HTMLTextAreaElement).value = "";
-    renderAll();
-  });
-
-  document.getElementById("import-clear")?.addEventListener("click", async () => {
-    if (!confirm("Remove all tickers you imported in this browser?")) return;
-    await setCustomStocks([]);
-    allStocks = mergeStocks(baseStocks, []);
-    renderAll();
-  });
-
-  document.getElementById("export-csv")?.addEventListener("click", exportCsv);
-
-  document.getElementById("opp-chips")?.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest("[data-jump]");
-    if (!btn) return;
-    const sym = btn.getAttribute("data-jump")!;
+  function jumpToSymbol(sym: string) {
     search = sym;
     const input = document.getElementById("search-input") as HTMLInputElement;
     if (input) input.value = sym;
@@ -978,7 +948,23 @@ function bindEvents() {
     viewMode = "table";
     page = 1;
     renderAll();
-    document.querySelector(`tr[data-symbol="${sym}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.getElementById("watchlist-board")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() => {
+      document.querySelector(`tr[data-symbol="${sym}"], .stock-card-m[data-symbol="${sym}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  document.getElementById("opp-chips")?.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest("[data-jump]");
+    if (!btn) return;
+    jumpToSymbol(btn.getAttribute("data-jump")!);
+  });
+
+  document.getElementById("checkin")?.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest("[data-jump]");
+    if (!btn) return;
+    jumpToSymbol(btn.getAttribute("data-jump")!);
   });
 
   document.getElementById("watchlist-board")?.addEventListener("change", (e) => {
@@ -1051,8 +1037,25 @@ function bindEvents() {
   });
 
   document.addEventListener("radar:quotes", ((e: CustomEvent) => {
-    quotes = { ...quotes, ...e.detail };
+    const incoming = e.detail as QuoteMap;
+    const changed = new Map<string, "up" | "down">();
+    for (const [sym, q] of Object.entries(incoming || {})) {
+      const prev = quotes[sym]?.price;
+      if (prev != null && q?.price != null && prev !== q.price) {
+        changed.set(sym, q.price > prev ? "up" : "down");
+      }
+    }
+    quotes = { ...quotes, ...incoming };
     renderAll();
+    requestAnimationFrame(() => {
+      for (const [sym, dir] of changed) {
+        document.querySelectorAll(`[data-price-for="${sym}"]`).forEach((el) => {
+          el.classList.remove("price-flash", "up", "down");
+          void (el as HTMLElement).offsetWidth;
+          el.classList.add("price-flash", dir);
+        });
+      }
+    });
   }) as EventListener);
 
   document.addEventListener("radar:submission-added", (async (e: Event) => {

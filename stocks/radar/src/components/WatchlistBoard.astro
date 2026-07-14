@@ -3,16 +3,18 @@ import { stocks } from "../data/watchlist";
 
 const stocksJson = JSON.stringify(stocks);
 const base = import.meta.env.BASE_URL;
+const boardScript = `${base}watchlist-board.mjs`.replace(/\/{2,}/g, "/").replace(":/", "://");
 ---
 
 <section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
   <div class="board-chrome">
     <div class="board-header">
       <div class="board-heading">
-        <p class="board-eyebrow">Watchlist</p>
-        <h2>Tracking list</h2>
-        <p class="board-subtitle desktop-only">
-          Live prices · press <kbd>/</kbd> to search
+        <p class="board-eyebrow">Master list</p>
+        <h2>What we’re watching</h2>
+        <p class="board-subtitle">
+          The group’s committed tickers — theses from the chat, priced and scored.
+          Press <kbd>/</kbd> to search. Signals are a guide for discussion, not advice.
         </p>
       </div>
       <div class="board-actions desktop-only">
@@ -20,25 +22,6 @@ const base = import.meta.env.BASE_URL;
           <button type="button" class="seg active" id="view-table">List</button>
           <button type="button" class="seg" id="view-technical">Technical</button>
         </div>
-        <button type="button" class="btn btn-ghost" id="toggle-import">Import</button>
-        <button type="button" class="btn btn-ghost" id="export-csv">Export</button>
-      </div>
-    </div>
-
-    <div class="import-panel desktop-only" id="import-panel" hidden>
-      <p class="import-help">
-        Paste CSV — columns:
-        <code>symbol, name, sector, tags, targetPrice, thesis, priority</code>.
-        Tags use semicolons. Saved in your browser only.
-      </p>
-      <textarea
-        id="import-text"
-        rows="6"
-        placeholder="NVDA,NVIDIA,Semiconductors,ai;semi,,Mag7 benchmark,high&#10;PLTR,Palantir,Software,ai;gov,18,Want better entry,medium"
-      ></textarea>
-      <div class="import-actions">
-        <button type="button" class="btn btn-primary" id="import-apply">Add to list</button>
-        <button type="button" class="btn btn-ghost" id="import-clear">Clear my imports</button>
       </div>
     </div>
 
@@ -61,6 +44,8 @@ const base = import.meta.env.BASE_URL;
           <button type="button" class="chip active" data-filter="all">All</button>
           <button type="button" class="chip" data-filter="high-priority">High conviction</button>
           <button type="button" class="chip desktop-only" data-filter="has-target">Has target</button>
+          <button type="button" class="chip desktop-only" data-filter="lean-buy">Lean buy</button>
+          <button type="button" class="chip desktop-only" data-filter="lean-sell">Lean sell</button>
         </div>
       </div>
       <div class="filter-chips tech-filters desktop-only" id="tech-filter-chips" aria-label="Technical filters">
@@ -69,6 +54,8 @@ const base = import.meta.env.BASE_URL;
         <button type="button" class="chip" data-filter="tech-bullish">Bullish</button>
         <button type="button" class="chip" data-filter="tech-near-low">Near 52w low</button>
         <button type="button" class="chip" data-filter="tech-near-ath">Near ATH</button>
+        <button type="button" class="chip" data-filter="tech-oversold">Oversold</button>
+        <button type="button" class="chip" data-filter="tech-overbought">Overbought</button>
       </div>
       <div class="tag-filters desktop-only" id="tag-filters"></div>
       <div class="board-meta-row">
@@ -86,9 +73,9 @@ const base = import.meta.env.BASE_URL;
           <tr>
             <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
             <th data-sort="name" class="sortable">Name</th>
-            <th>Tags</th>
             <th data-sort="price" class="sortable num">Price</th>
             <th class="num">Chg</th>
+            <th data-sort="action" class="sortable">Signal</th>
             <th data-sort="ath" class="sortable">ATH</th>
             <th data-sort="target" class="sortable num">Target</th>
             <th>Thesis</th>
@@ -111,10 +98,10 @@ const base = import.meta.env.BASE_URL;
             <th data-sort="name" class="sortable">Name</th>
             <th data-sort="price" class="sortable num">Price</th>
             <th class="num">Chg</th>
+            <th data-sort="action" class="sortable">Signal</th>
             <th data-sort="trend" class="sortable">Trend</th>
             <th data-sort="vs50" class="sortable num">SMA 50</th>
             <th data-sort="range52" class="sortable">52W range</th>
-            <th data-sort="ath" class="sortable">ATH</th>
             <th data-sort="rsi" class="sortable num">RSI</th>
             <th></th>
           </tr>
@@ -129,4 +116,5 @@ const base = import.meta.env.BASE_URL;
 <script is:inline define:vars={{ stocksJson }}>
   window.__STOCKS_RADAR_DATA__ = stocksJson;
 </script>
-<script is:inline defer src="/watchlist-board.mjs"></script>
+{/* ESM bundle — must use type=module or the board never initializes */}
+<script is:inline type="module" src={boardScript}></script>

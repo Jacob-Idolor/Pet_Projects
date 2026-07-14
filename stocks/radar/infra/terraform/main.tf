@@ -102,6 +102,18 @@ resource "aws_cloudfront_distribution" "site" {
     origin_access_control_id = aws_cloudfront_origin_access_control.site.id
   }
 
+  # Quotes must bypass long cache so price/signal polls see fresh deploys.
+  # Cost: negligible — more origin GETs only when visitors poll quotes.json.
+  ordered_cache_behavior {
+    path_pattern           = "/quotes.json"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS managed-CachingDisabled
+  }
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
@@ -112,9 +124,17 @@ resource "aws_cloudfront_distribution" "site" {
   }
 
   custom_error_response {
-    error_code         = 404
-    response_code      = 404
-    response_page_path = "/404.html"
+    error_code            = 403
+    response_code         = 404
+    response_page_path    = "/404.html"
+    error_caching_min_ttl = 60
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_code         = 404
+    response_page_path    = "/404.html"
+    error_caching_min_ttl = 60
   }
 
   restrictions {
