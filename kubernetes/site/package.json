@@ -6,9 +6,23 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "npm run test:unit && npm run test:postbuild",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:links": "node scripts/check-links.mjs",
+    "test:dist-security": "node scripts/check-dist-security.mjs",
+    "test:audit": "npm audit --audit-level=critical",
+    "test:postbuild": "npm run test:links && npm run test:dist-security",
+    "test:ci": "npm run build && npm run test:unit && npm run test:postbuild && npm run test:audit",
+    "test:all": "npm run test:ci && npm run test:e2e"
   },
   "dependencies": {
     "astro": "^5.7.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
   }
 }

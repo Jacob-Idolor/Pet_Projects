@@ -1,0 +1,32 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "title": "HTTP request rate (approx)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_request_duration_seconds_count[5m]))",
+          "legendFormat": "req/s"
+        }
+      ],
+      "datasource": { "type": "prometheus", "uid": "Prometheus" }
+    },
+    {
+      "title": "Search metrics — type http_ in Explore",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "options": {
+        "content": "Open **Explore**, select Prometheus, and autocomplete `http_` to find OTel HTTP metrics exported by the Collector.\n\nHit `/error` on the Go app to observe error paths."
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["opentelemetry", "lab"],
+  "title": "HTTP RED Overview",
+  "uid": "otel-lab-red",
+  "version": 1
+}

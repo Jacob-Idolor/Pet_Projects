@@ -5,7 +5,7 @@ resource "aws_s3_bucket" "site" {
   bucket = var.site_bucket_name
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
     # AWS provider v4+ moved these to separate resources — ignore legacy inline
     # attributes so Terraform does not try to replace the bucket on migration.
     ignore_changes = [
@@ -133,7 +133,7 @@ resource "aws_cloudfront_distribution" "site" {
   aliases = var.enable_custom_domain ? [var.domain_name] : []
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
 
@@ -246,6 +246,6 @@ resource "aws_budgets_budget" "monthly" {
   }
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
