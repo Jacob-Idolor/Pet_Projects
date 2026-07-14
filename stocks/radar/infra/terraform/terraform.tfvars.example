@@ -12,18 +12,25 @@ site_bucket_name       = "pet-projects-jacob-stocks-radar"
 # Lock to YOUR account: aws sts get-caller-identity --profile pet-projects
 allowed_account_ids = ["123456789012"]
 
-# Cheapest: CloudFront URL only (no Route53 / domain fees)
+# Cheapest: CloudFront URL only first (no domain fee while testing)
 enable_custom_domain = false
+dns_management       = "external" # Cloudflare Free DNS — no Route53 (~$0.50/mo saved)
+
+# After you buy a domain (Porkbun/Cloudflare Registrar), see DOMAIN.md:
+# enable_custom_domain = true
+# domain_name          = "yourdomain.com"
+# dns_management       = "external"
+# # route53_zone_id  = ""   # only if dns_management = "route53"
 
 # Budget alarms — keep low while friends test
 enable_budget          = true
-budget_alert_email     = "jacob.idolor@outlook.com"
+budget_alert_email     = "you@example.com"
 monthly_budget_usd     = 3
 max_monthly_budget_usd = 5
 
-# Daily viewer + watchlist mood email (SNS, ~free). Confirm the AWS subscription email!
-enable_daily_digest = true
-digest_email        = "jacob.idolor@outlook.com"
+# Daily viewer email (SNS). Needs IAM sns permissions — leave false if CreateTopic is denied.
+enable_daily_digest = false
+digest_email        = "you@example.com"
 
 # Cheapest CloudFront edges only (enforced in variables.tf)
 cloudfront_price_class = "PriceClass_100"

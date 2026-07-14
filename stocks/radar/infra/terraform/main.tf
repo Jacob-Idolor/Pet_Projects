@@ -145,7 +145,7 @@ resource "aws_cloudfront_distribution" "site" {
 
   viewer_certificate {
     cloudfront_default_certificate = !var.enable_custom_domain
-    acm_certificate_arn            = var.enable_custom_domain ? aws_acm_certificate.site[0].arn : null
+    acm_certificate_arn            = var.enable_custom_domain ? local.custom_domain_cert_arn : null
     ssl_support_method             = var.enable_custom_domain ? "sni-only" : null
     minimum_protocol_version       = var.enable_custom_domain ? "TLSv1.2_2021" : null
   }
@@ -181,7 +181,8 @@ resource "aws_s3_bucket_policy" "site" {
   depends_on = [aws_s3_bucket_public_access_block.site]
 }
 
-# Optional custom domain — extra cost (Route53 + domain registration)
+# Custom domain — ACM in us-east-1 (required by CloudFront).
+# Cheapest DNS: dns_management = "external" (Cloudflare Free). Skip Route53 (~$0.50/mo).
 resource "aws_acm_certificate" "site" {
   count = var.enable_custom_domain ? 1 : 0
 
@@ -195,7 +196,7 @@ resource "aws_acm_certificate" "site" {
 }
 
 resource "aws_route53_record" "cert_validation" {
-  for_each = var.enable_custom_domain ? {
+  for_each = var.enable_custom_domain && var.dns_management == "route53" && var.route53_zone_id != "" ? {
     for dvo in aws_acm_certificate.site[0].domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
@@ -210,16 +211,40 @@ resource "aws_route53_record" "cert_validation" {
   ttl     = 60
 }
 
-resource "aws_acm_certificate_validation" "site" {
-  count = var.enable_custom_domain ? 1 : 0
+resource "aws_acm_certificate_validation" "site_route53" {
+  count = var.enable_custom_domain && var.dns_management == "route53" ? 1 : 0
 
   provider                = aws.us_east_1
   certificate_arn         = aws_acm_certificate.site[0].arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+
+  timeouts {
+    create = "45m"
+  }
+}
+
+# External DNS (Cloudflare): add terraform output acm_dns_validation_records, then this waits until ACM is Issued.
+resource "aws_acm_certificate_validation" "site_external" {
+  count = var.enable_custom_domain && var.dns_management == "external" ? 1 : 0
+
+  provider        = aws.us_east_1
+  certificate_arn = aws_acm_certificate.site[0].arn
+
+  timeouts {
+    create = "45m"
+  }
+}
+
+locals {
+  custom_domain_cert_arn = try(
+    aws_acm_certificate_validation.site_route53[0].certificate_arn,
+    aws_acm_certificate_validation.site_external[0].certificate_arn,
+    null
+  )
 }
 
 resource "aws_route53_record" "site" {
-  count = var.enable_custom_domain ? 1 : 0
+  count = var.enable_custom_domain && var.dns_management == "route53" && var.route53_zone_id != "" ? 1 : 0
 
   zone_id = var.route53_zone_id
   name    = var.domain_name

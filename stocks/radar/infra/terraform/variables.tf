@@ -45,19 +45,34 @@ variable "required_bucket_prefix" {
 }
 
 variable "enable_custom_domain" {
-  description = "Enable Route53 + ACM custom domain (extra cost). Leave false to use CloudFront URL only."
+  description = "Attach a custom domain to CloudFront via ACM (us-east-1). Leave false for free *.cloudfront.net URL."
   type        = bool
   default     = false
 }
 
 variable "domain_name" {
-  description = "Custom domain (e.g. learn.example.com). Required if enable_custom_domain is true."
+  description = "Custom domain (e.g. stockradar.com). Required if enable_custom_domain is true."
   type        = string
   default     = ""
 }
 
+variable "dns_management" {
+  description = <<-EOT
+    Where DNS lives for the custom domain:
+      external — cheapest path: buy at Cloudflare Registrar or Porkbun, DNS on Cloudflare Free (no Route53 fee)
+      route53  — AWS managed DNS (~$0.50/mo hosted zone)
+  EOT
+  type        = string
+  default     = "external"
+
+  validation {
+    condition     = contains(["external", "route53"], var.dns_management)
+    error_message = "dns_management must be \"external\" (Cloudflare/Porkbun DNS) or \"route53\"."
+  }
+}
+
 variable "route53_zone_id" {
-  description = "Route53 hosted zone ID for DNS validation and alias record"
+  description = "Route53 hosted zone ID. Required only when dns_management = \"route53\"."
   type        = string
   default     = ""
 }

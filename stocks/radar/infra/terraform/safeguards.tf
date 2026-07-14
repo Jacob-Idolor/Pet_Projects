@@ -7,11 +7,11 @@ data "aws_region" "current" {}
 locals {
   safeguard_summary = {
     stack_scope       = "static-site-only"
-    allowed_services  = "S3, CloudFront, optional Route53/ACM/Budgets, optional SNS digest"
+    allowed_services  = "S3, CloudFront, optional ACM + external/Cloudflare or Route53 DNS, Budgets, optional SNS digest"
     blocked_by_design = "EKS, EC2, RDS, Lambda, ECS — not defined in this Terraform"
     account_id        = data.aws_caller_identity.current.account_id
     region            = data.aws_region.current.name
-    cost_notes        = "PriceClass_100, no WAF, no custom domain by default, destroy when feedback done"
+    cost_notes        = "PriceClass_100, Cloudflare DNS preferred (no Route53), destroy when feedback done"
   }
 }
 
@@ -40,9 +40,19 @@ check "custom_domain_requires_dns" {
   assert {
     condition = (
       !var.enable_custom_domain ||
-      (var.domain_name != "" && var.route53_zone_id != "")
+      (
+        var.domain_name != "" &&
+        (
+          var.dns_management == "external" ||
+          (var.dns_management == "route53" && var.route53_zone_id != "")
+        )
+      )
     )
-    error_message = "enable_custom_domain=true requires both domain_name and route53_zone_id."
+    error_message = <<-EOT
+      enable_custom_domain=true requires domain_name.
+      For cheapest path set dns_management = "external" (Cloudflare Free DNS — no Route53).
+      For AWS DNS set dns_management = "route53" and route53_zone_id.
+    EOT
   }
 }
 

@@ -26,10 +26,18 @@ flowchart LR
 ## One-time: AdSense account + site
 
 1. Create / open [Google AdSense](https://www.google.com/adsense/) with your Google account.
-2. Add your **CloudFront URL** (or custom domain) as a site. Complete site verification (meta tag or `ads.txt` — we publish `ads.txt` at build time).
-3. Wait for approval (can take days). Until then, slots stay empty in production even with IDs set.
-4. **Ads → By ad unit → Display ads** — create 3 units (responsive), e.g. Radar hero / board / footer.
-5. Copy **Publisher ID** (`ca-pub-…`) and each **Ad unit ID** (numbers).
+2. Prefer a **custom domain** for site approval (see [DOMAIN.md](DOMAIN.md) — Cloudflare/Porkbun, not Google hosting). You can start with the CloudFront URL while shopping for a name.
+3. Add the site in AdSense. Complete verification (meta tag and/or `ads.txt` — we publish both at build time).
+4. Wait for approval (can take days). Until then, slots stay empty in production even with IDs set.
+5. **Ads → By ad unit → Display ads** — create 3 units (responsive), e.g. Radar hero / board / footer.
+6. Copy **Publisher ID** (`ca-pub-…`) and each **Ad unit ID** (numbers).
+
+### After custom domain is live
+
+1. AdSense → **Sites** → Add `https://yourdomain.com` (and remove or keep the temporary CloudFront host).
+2. Rebuild/deploy with `STOCKS_RADAR_SITE=https://yourdomain.com` so `ads.txt`, `sitemap.xml`, and `robots.txt` match the public hostname.
+3. Confirm `https://yourdomain.com/ads.txt` lists `google.com, pub-XXXXXXXX, DIRECT, f08c47fec0942fa0`.
+4. Optional: set `PUBLIC_ADSENSE_VERIFY_META` (or your verify meta env — see `.env.example`) if AdSense asks for the `google-adsense-account` meta tag.
 
 ## Local setup (see placeholders)
 
@@ -72,7 +80,7 @@ The deploy workflow passes these into the Astro build. After deploy, check:
 - Keep the watchlist useful first; ads sit **outside** the dense table (hero, after board, footer).
 - Do not encourage clicks on ads. Prefer honest group tooling + SEO (`robots.txt`, `sitemap.xml`, Open Graph).
 - CloudFront + S3 is already the cheap host (~$0.50–3/mo). See [DEPLOY.md](DEPLOY.md).
-- Custom domain (optional) looks better for AdSense approval than a raw `*.cloudfront.net` URL.
+- Custom domain: buy at **Cloudflare Registrar or Porkbun**, DNS on **Cloudflare Free** — [DOMAIN.md](DOMAIN.md). Do not move hosting to Google.
 
 ## Files
 

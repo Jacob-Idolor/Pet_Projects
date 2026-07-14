@@ -70,7 +70,9 @@ cd stocks/radar/infra
 
 ## Cost
 
-Typically **~$0.50–3/mo** at friend-scale traffic (`PriceClass_100`, no custom domain). Budget alert default **$3**.
+Typically **~$0.50–3/mo** at friend-scale traffic (`PriceClass_100`). Budget alert default **$3**.
+
+**Cheap custom domain:** [DOMAIN.md](DOMAIN.md) (Cloudflare/Porkbun + Cloudflare Free DNS — no Route53).
 
 **Friend trial loop (apply → share → daily email → destroy):** [`FRIENDS_FEEDBACK.md`](FRIENDS_FEEDBACK.md)
 

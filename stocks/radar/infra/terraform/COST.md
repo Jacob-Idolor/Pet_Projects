@@ -13,7 +13,8 @@ After `terraform destroy`, ongoing AWS cost for this project is **~$0**. No S3 s
 | S3 storage + requests | **<$0.10** | Small static site + `quotes.json` |
 | CloudFront `PriceClass_100` | **~$0.50–2** | US/EU/Canada; free-tier friendly for light traffic |
 | AWS Budgets | **~$0** | Free for the first few budgets |
-| Custom domain (optional) | **+$0.50 Route53 + domain** | Keep `enable_custom_domain = false` for trials |
+| Custom domain + **Cloudflare Free DNS** | **domain ~$10–12/yr** | `dns_management = "external"` — no Route53 |
+| Route53 hosted zone | **+$0.50/mo** | Only if `dns_management = "route53"` |
 | SNS daily digest (optional) | **~$0** | Needs IAM `sns:*` on the deploy user; leave off until allowed |
 | Lambda / API / WAF | **Not in stack** | Avoid for feedback trials |
 

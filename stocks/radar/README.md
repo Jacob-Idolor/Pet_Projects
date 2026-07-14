@@ -57,11 +57,11 @@ npm run build
 ./infra/deploy.sh    # laptop → S3 + invalidate (needs AWS profile)
 ```
 
-Infra stays **Terraform S3 + CloudFront** (~$0.50–3/mo). No second host. See [DEPLOY.md](DEPLOY.md) and [ADSENSE.md](ADSENSE.md).
+Infra stays **Terraform S3 + CloudFront** (~$0.50–3/mo). No second host. See [DEPLOY.md](DEPLOY.md), cheap custom domain [DOMAIN.md](DOMAIN.md), and [ADSENSE.md](ADSENSE.md).
 
 ## AdSense (passive income)
 
-Local `npm run dev` shows labeled **AdSense preview** slots. Production uses your publisher ID after CloudFront domain approval.
+Local `npm run dev` shows labeled **AdSense preview** slots. Production uses your publisher ID after site approval (custom domain preferred — [DOMAIN.md](DOMAIN.md)).
 
 **Guide:** [`ADSENSE.md`](ADSENSE.md) · env template: [`.env.example`](.env.example)
 
@@ -101,6 +101,9 @@ stocks/radar/
   scripts/write-seo-files.mjs
   infra/                    # Terraform + deploy.sh
   DEPLOY.md                 # AWS + GitHub secrets guide
+  DOMAIN.md                 # Cheapest domain (Cloudflare/Porkbun) + DNS
+  ADSENSE.md                # Publisher ads after domain approval
+  FRIENDS_FEEDBACK.md       # Apply → share → digest → destroy
   ADSENSE.md                # Publisher setup + local preview
 ```
 
