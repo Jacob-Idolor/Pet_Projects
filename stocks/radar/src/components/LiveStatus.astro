@@ -28,8 +28,9 @@ const deployLabel =
       const res = await fetch(`/quotes.json?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("quotes fetch failed");
       const data = await res.json();
-      const fetchedAt = new Date(data.fetchedAt);
-      const ageMin = Math.round((Date.now() - fetchedAt.getTime()) / 60000);
+      const updatedAt = new Date(data.updatedAt);
+      const ageMs = Date.now() - updatedAt.getTime();
+      const ageMin = Math.round(ageMs / 60000);
       const ageLabel =
         ageMin < 1 ? "just now" : ageMin === 1 ? "1 min ago" : `${ageMin} min ago`;
       const shortSha = buildMeta.gitSha.slice(0, 7);
@@ -39,6 +40,9 @@ const deployLabel =
           : buildMeta.deployProvider;
       if (statusEl) {
         statusEl.innerHTML = `Quotes ${ageLabel} · Deploy ${new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · ${deployLabel} · <code>${shortSha}</code>`;
+      }
+      if (ageMs > 10 * 60 * 1000) {
+        document.dispatchEvent(new CustomEvent("radar:stale-quotes"));
       }
     } catch {
       /* keep build-time label */

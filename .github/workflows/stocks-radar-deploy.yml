@@ -80,7 +80,7 @@ jobs:
           aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
             --cache-control "public,max-age=60" \
             --exclude "quotes.json" --exclude "build-meta.json"
-          aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
+          aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" \
             --cache-control "public,max-age=0,no-cache" \
             --exclude "*" --include "quotes.json" --include "build-meta.json"
 

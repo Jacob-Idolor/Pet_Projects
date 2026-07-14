@@ -19,22 +19,28 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const HEADERS = { Accept: "application/json", "User-Agent": "stocks-radar/1.0" };
 
+async function fetchChart(symbol, range) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
+  const res = await fetch(url, { headers: HEADERS });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 async function fetchSymbol(symbol) {
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=max`;
-    const res = await fetch(url, { headers: HEADERS });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const result = data?.chart?.result?.[0];
+    const [chart1y, chartMax] = await Promise.all([fetchChart(symbol, "1y"), fetchChart(symbol, "max")]);
+    const result = chart1y?.chart?.result?.[0];
     const meta = result?.meta;
     if (!meta?.regularMarketPrice) return null;
 
     const quote = result?.indicators?.quote?.[0] ?? {};
     const closes = (quote.close ?? []).filter((c) => c != null);
     const volumes = quote.volume ?? [];
-    const highs = quote.high ?? [];
-    const timestamps = result?.timestamp ?? [];
+
+    const maxResult = chartMax?.chart?.result?.[0];
+    const maxQuote = maxResult?.indicators?.quote?.[0] ?? {};
+    const highs = maxQuote.high ?? [];
+    const timestamps = maxResult?.timestamp ?? [];
 
     const price = meta.regularMarketPrice;
     const prevClose =
