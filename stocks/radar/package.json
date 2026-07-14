@@ -10,7 +10,7 @@
     "preview": "astro preview",
     "import-csv": "node scripts/csv-to-watchlist.mjs",
     "update-quotes": "node scripts/fetch-quotes.mjs",
-    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs"
+    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/write-build-meta.mjs"
   },
   "dependencies": {
     "astro": "^5.7.0"

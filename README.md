@@ -13,6 +13,7 @@ This repo is also a **build-in-the-open journal**. Alongside the code, I documen
 | 📊 Dynatrace | [`dynatrace/`](dynatrace/) | Dashboards, scripts, workflows, and everything I learn about Dynatrace |
 | ☸️ Kubernetes | [`kubernetes/`](kubernetes/) | My Kubernetes learning journey — manifests, clusters, experiments, notes |
 | 🏗️ Terraform | [`terraform/`](terraform/) | Infrastructure as Code — curriculum, simulator, labs, production examples |
+| 🔭 OpenTelemetry | [`opentelemetry/`](opentelemetry/) | Industry-standard observability — traces, metrics, logs, Collector, hands-on labs |
 | 📈 Stocks | [`stocks/`](stocks/) | Trading tools — TradingView Pine Scripts, research, screeners, and bots |
 
 ## Deployability standards
@@ -30,9 +31,10 @@ Every project in this repo aims to meet this bar:
 
 | Project | Track | Status | Deployed |
 |---------|-------|--------|----------|
-| [Stocks Radar](stocks/radar/) | 📈 Stocks | Active | [GitHub Pages](https://jacob-idolor.github.io/Pet_Projects/stocks-radar/) (after setup) |
+| [Stocks Radar](stocks/radar/) | 📈 Stocks | Active | AWS S3 + CloudFront — see [DEPLOY.md](stocks/radar/DEPLOY.md) |
 | [K8s Practice Lab](kubernetes/site/) | ☸️ Kubernetes | Active | S3 + CloudFront |
 | [Terraform Practice Lab](terraform/site/) | 🏗️ Terraform | Active | Local / optional AWS |
+| [OpenTelemetry Lab](opentelemetry/) | 🔭 OpenTelemetry | Active | Local Docker stack |
 
 > Previous projects (BallStats, stock-buy-bot, PokerGTO, and more) are preserved in git history — see the [`pre-reset-archive`](../../tree/pre-reset-archive) tag.
 

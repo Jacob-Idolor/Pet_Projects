@@ -1,90 +1,50 @@
 ---
-const base = import.meta.env.BASE_URL;
+import buildMeta from "../../public/build-meta.json";
+
+const buildTime = new Date(buildMeta.builtAt);
+const buildLabel = buildTime.toLocaleString(undefined, {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+const shortSha = buildMeta.gitSha.slice(0, 7);
+const deployLabel =
+  buildMeta.deployProvider === "github-actions"
+    ? "GitHub Actions → AWS"
+    : buildMeta.deployProvider;
 ---
 
-<div class="live-status" id="live-status" role="status" aria-live="polite" data-radar-base={base}>
-  <span class="live-dot" id="live-dot" aria-hidden="true"></span>
-  <span id="live-status-text">Loading prices…</span>
+<div class="live-status" id="live-status">
+  <span class="live-status__dot" aria-hidden="true"></span>
+  <span id="live-status-text">
+    Deployed {buildLabel} · {deployLabel} · <code>{shortSha}</code>
+  </span>
 </div>
 
-<script is:inline>
-  const REFRESH_MS = 60_000;
-  let lastUpdated = null;
-  let timer = null;
-  let countdown = null;
+<script define:vars={{ buildMeta }}>
+  const statusEl = document.getElementById("live-status-text");
 
-  function isUsMarketOpen() {
-    const now = new Date();
-    const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
-    const day = et.getDay();
-    if (day === 0 || day === 6) return false;
-    const mins = et.getHours() * 60 + et.getMinutes();
-    return mins >= 9 * 60 + 30 && mins < 16 * 60;
-  }
-
-  function formatAgo(iso) {
-    if (!iso) return "unknown";
-    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (sec < 60) return "just now";
-    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-    return `${Math.floor(sec / 3600)}h ago`;
-  }
-
-  function setStatus(text, live = true) {
-    const el = document.getElementById("live-status-text");
-    const dot = document.getElementById("live-dot");
-    if (el) el.textContent = text;
-    if (dot) {
-      dot.classList.toggle("paused", !live);
-      dot.classList.toggle("live", live);
-    }
-  }
-
-  async function loadQuotes() {
-    const base = document.getElementById("live-status")?.dataset.radarBase ?? "/";
+  async function refreshStatus() {
     try {
-      const res = await fetch(base + "quotes.json?t=" + Date.now(), { cache: "no-store" });
-      if (!res.ok) throw new Error("not found");
+      const res = await fetch(`/quotes.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("quotes fetch failed");
       const data = await res.json();
-      lastUpdated = data.updatedAt;
-
-      if (data.quotes && Object.keys(data.quotes).length) {
-        document.dispatchEvent(new CustomEvent("radar:quotes", { detail: data.quotes }));
+      const fetchedAt = new Date(data.fetchedAt);
+      const ageMin = Math.round((Date.now() - fetchedAt.getTime()) / 60000);
+      const ageLabel =
+        ageMin < 1 ? "just now" : ageMin === 1 ? "1 min ago" : `${ageMin} min ago`;
+      const shortSha = buildMeta.gitSha.slice(0, 7);
+      const deployLabel =
+        buildMeta.deployProvider === "github-actions"
+          ? "GitHub Actions → AWS"
+          : buildMeta.deployProvider;
+      if (statusEl) {
+        statusEl.innerHTML = `Quotes ${ageLabel} · Deploy ${new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · ${deployLabel} · <code>${shortSha}</code>`;
       }
-
-      const market = isUsMarketOpen() ? "Market open" : "Market closed";
-      const coverage = data.count != null && data.total != null
-        ? `${data.count}/${data.total} quotes`
-        : "quotes loaded";
-      setStatus(`${market} · ${coverage} · updated ${formatAgo(lastUpdated)} · refreshes every 60s`);
-      const ageMs = Date.now() - new Date(lastUpdated).getTime();
-      if (ageMs > 10 * 60 * 1000) {
-        document.dispatchEvent(new CustomEvent("radar:stale-quotes"));
-      }
-      return true;
     } catch {
-      return false;
+      /* keep build-time label */
     }
   }
 
-  async function refresh() {
-    const ok = await loadQuotes();
-    if (!ok) {
-      setStatus("Live feed unavailable — using cached / manual prices", false);
-    }
-  }
-
-  function startLoop() {
-    clearInterval(timer);
-    timer = setInterval(() => {
-      if (document.hidden) return;
-      refresh();
-    }, REFRESH_MS);
-  }
-
-  refresh().then(() => startLoop());
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) refresh();
-  });
+  refreshStatus();
+  setInterval(refreshStatus, 120_000);
 </script>

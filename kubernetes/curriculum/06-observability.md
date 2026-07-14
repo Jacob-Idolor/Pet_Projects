@@ -30,6 +30,8 @@
 - Structured JSON logs (not printf debugging in prod)
 - OpenTelemetry SDK → traces to backend
 
+For a full OpenTelemetry learning path, see the [OpenTelemetry lab](../../opentelemetry/) in this repo.
+
 ## Alerting
 
 Good alert: actionable, tied to user impact, runbook linked.

@@ -1,6 +1,7 @@
 # Kubernetes Learning Lab — common commands
 # Run from kubernetes/ : make help
 
+.PHONY: help site-dev site-build site-preview local-up local-down local-status local-lab docker-lab check-docker aws-init aws-plan aws-apply aws-deploy aws-destroy check-tools test test-unit test-e2e ci
 .PHONY: help site-dev site-build site-preview local-up local-down local-status local-lab docker-lab check-docker aws-init aws-plan aws-apply aws-deploy aws-destroy check-tools
 
 AWS_PROFILE ?= pet-projects
@@ -31,6 +32,14 @@ help:
 	@echo "    make aws-init       terraform init"
 	@echo "    make aws-plan       terraform plan (review before apply)"
 	@echo "    make aws-apply      terraform apply"
+	@echo "    make aws-deploy     Test + build + sync to S3 + invalidate CloudFront"
+	@echo "    make aws-destroy    Tear down AWS resources"
+	@echo ""
+	@echo "  Quality (run before deploy):"
+	@echo "    make test           Unit + link/security checks (requires build)"
+	@echo "    make test-unit      Vitest only"
+	@echo "    make test-e2e       Playwright smoke tests"
+	@echo "    make ci             Full CI suite (build + unit + links + audit + e2e)"
 	@echo "    make aws-deploy     Build site + sync to S3 + invalidate CloudFront"
 	@echo "    make aws-destroy    Tear down AWS resources"
 
@@ -83,3 +92,16 @@ aws-deploy:
 
 aws-destroy:
 	cd $(INFRA_DIR) && terraform destroy
+
+test: site-build
+	cd $(SITE_DIR) && npm run test
+
+test-unit:
+	cd $(SITE_DIR) && npm install && npm run test:unit
+
+test-e2e: site-build
+	cd $(SITE_DIR) && npx playwright install chromium && npm run test:e2e
+
+ci:
+	cd $(SITE_DIR) && npm install && npm run test:all
+	cd $(INFRA_DIR) && terraform init -backend=false && terraform validate && terraform fmt -check

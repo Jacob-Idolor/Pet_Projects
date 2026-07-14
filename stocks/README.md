@@ -6,7 +6,7 @@ Trading tools, indicators, and research — built in the open.
 
 ```
 stocks/
-  radar/             # single-page group watchlist (own / targets / watching)
+  radar/             # single-page group watchlist (unified tracking list)
   pine-scripts/      # TradingView Pine Script indicators & strategies
   research/          # backtests, analysis notebooks, write-ups
   tools/             # screeners, alert bots, data pipelines
@@ -16,11 +16,11 @@ stocks/
 
 [`radar/`](radar/) — a one-page dashboard for tracking tickers with friends:
 
-- **Currently holding** — positions you're in
-- **Price targets** — waiting for a specific entry or trim level
-- **Long-term watchlist** — keeping an eye on, no rush
+- **Unified tracking list** — every ticker in one place
+- **Live quotes** — refreshed on deploy and in the browser
+- **Mobile-friendly** — card layout on phone, full table on desktop
 
-Drop broker screenshots locally (IndexedDB — nothing hits a server). Supports **100+ tickers** via CSV import, searchable table, and holistic overview (at-target counts, closest-to-entry chips).
+Deploy via **AWS S3 + CloudFront** (see [`radar/DEPLOY.md`](radar/DEPLOY.md)). Supports **100+ tickers** via CSV import, searchable table, and theme filters.
 
 ```bash
 cd stocks/radar && npm install && npm run dev

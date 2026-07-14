@@ -11,6 +11,9 @@ export interface QuoteData {
   high52?: number | null;
   low52?: number | null;
   range52Pct?: number | null;
+  athHigh?: number | null;
+  athDate?: string | null;
+  pctFromAth?: number | null;
   sma?: { 20?: number | null; 50?: number | null; 200?: number | null };
   vsSma?: { 20?: number | null; 50?: number | null; 200?: number | null };
   trend?: Trend;
@@ -81,6 +84,25 @@ export function rangeBar(range52Pct: number | null | undefined, low?: number | n
   return `<div class="range-bar" title="${escapeHtml(hint)}"><div class="range-bar-track"><div class="range-bar-marker zone-${zone}" style="left:${pos}%"></div></div><span class="range-bar-label">${pos.toFixed(0)}%</span></div>`;
 }
 
+export function athIndicator(q: QuoteData | undefined) {
+  if (q?.athHigh == null || q?.pctFromAth == null) {
+    return `<span class="dim">—</span>`;
+  }
+
+  const pct = q.pctFromAth;
+  const athTitle = q.athDate
+    ? `All-time high ${fmtPrice(q.athHigh)} (${q.athDate})`
+    : `All-time high ${fmtPrice(q.athHigh)}`;
+
+  if (pct >= -0.5) {
+    return `<span class="ath-badge ath-at" title="${escapeHtml(athTitle)}">ATH</span>`;
+  }
+  if (pct >= -5) {
+    return `<span class="ath-badge ath-near" title="${escapeHtml(athTitle)}">Near ATH</span>`;
+  }
+  return `<span class="ath-badge ath-below" title="${escapeHtml(athTitle)}">${fmtPct(pct)} from ATH</span>`;
+}
+
 export function renderMaStrip(q: QuoteData | undefined, price: number | null) {
   if (!q?.sma) return "";
   const items = ([20, 50, 200] as const)
@@ -132,6 +154,11 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
         ${rangeBar(q?.range52Pct, q?.low52, q?.high52)}
         <span class="tech-range-bounds">${fmtPrice(q?.low52)} – ${fmtPrice(q?.high52)}</span>
       </div>
+      <div class="tech-ath">
+        <span class="tech-label">All-time high</span>
+        ${athIndicator(q)}
+        ${q?.athHigh != null ? `<span class="tech-ath-level">${fmtPrice(q.athHigh)}${q.athDate ? ` · ${q.athDate}` : ""}</span>` : ""}
+      </div>
       <p class="tech-vol"><strong>Volume:</strong> ${volNote}</p>
     </div>`;
 }
@@ -161,6 +188,10 @@ export function matchesTechnicalFilter(filter: string, q: QuoteData | undefined,
       return q.range52Pct != null && q.range52Pct <= 20;
     case "tech-near-high":
       return q.range52Pct != null && q.range52Pct >= 80;
+    case "tech-near-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -5;
+    case "tech-at-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -0.5;
     case "tech-oversold":
       return q.rsi14 != null && q.rsi14 <= 35;
     case "tech-overbought":
