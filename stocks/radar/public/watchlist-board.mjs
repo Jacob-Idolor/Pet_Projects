@@ -388,11 +388,11 @@ function renderRow(stock, compact = false, mode = "default") {
     const rsi = rsiLabel(q?.rsi14);
     return `
     <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${expanded ? "expanded" : ""}">
-      <td class="mono sym">
+      <td class="mono sym sticky-col">
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="num mono">${fmtPrice(price)}</td>
+      <td class="num mono price-cell">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
@@ -406,15 +406,15 @@ function renderRow(stock, compact = false, mode = "default") {
     ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
   }
   return `
-    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${expanded ? "expanded" : ""}">
-      <td class="mono sym">
+    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${stock.priority === "high" ? "row-high" : ""} ${expanded ? "expanded" : ""}">
+      <td class="mono sym sticky-col">
         <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
         ${stock.priority === "high" ? '<span class="conviction-dot" title="High conviction">\u25CF</span>' : ""}
         ${stock.custom ? '<span class="custom-tag" title="Browser import">\u2605</span>' : ""}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="tags-cell">${renderTagsHtml(stock)}</td>
-      <td class="num mono">${fmtPrice(price)}</td>
+      <td class="num mono price-cell">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
@@ -490,15 +490,15 @@ function renderOverview() {
       if (q?.pctFromAth != null && q.pctFromAth >= -5) nearAth++;
     }
     techHtml = `
-    <div class="overview-card tech"><span class="ov-value">${above50}</span><span class="ov-label">Above 50 MA</span></div>
-    <div class="overview-card tech"><span class="ov-value">${above200}</span><span class="ov-label">Above 200 MA</span></div>
-    <div class="overview-card tech highlight"><span class="ov-value">${bullish}</span><span class="ov-label">Bullish trend</span></div>
-    <div class="overview-card tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>
-    <div class="overview-card tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
+    <div class="overview-metric tech"><span class="ov-value">${above50}</span><span class="ov-label">Above 50 MA</span></div>
+    <div class="overview-metric tech"><span class="ov-value">${above200}</span><span class="ov-label">Above 200 MA</span></div>
+    <div class="overview-metric tech highlight"><span class="ov-value">${bullish}</span><span class="ov-label">Bullish trend</span></div>
+    <div class="overview-metric tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>
+    <div class="overview-metric tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
   el.innerHTML = `
-    <div class="overview-card"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Tracking</span></div>
-    <div class="overview-card highlight"><span class="ov-value">${allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
+    <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">Tracking</span></div>
+    <div class="overview-metric highlight"><span class="ov-value">${allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
     ${techHtml}
   `;
 }
@@ -589,17 +589,23 @@ function renderMobileCard(stock) {
   const q = getQuote(stock);
   const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
-  return `<article class="stock-card-m" data-symbol="${stock.symbol}">
+  const high = stock.priority === "high";
+  return `<article class="stock-card-m ${high ? "scm-high" : ""}" data-symbol="${stock.symbol}">
     <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="scm-main">
       <div class="scm-top">
-        <span class="scm-sym">${stock.symbol}${stock.priority === "high" ? '<span class="scm-conviction">high</span>' : ""}</span>
-        <span class="scm-price mono">${fmtPrice(price)}</span>
+        <div class="scm-identity">
+          <span class="scm-sym">${stock.symbol}</span>
+          ${high ? '<span class="scm-conviction">High</span>' : ""}
+        </div>
+        <div class="scm-quote">
+          <span class="scm-price mono">${fmtPrice(price)}</span>
+          <span class="scm-chg chg ${chgCls}">${chgTxt}</span>
+        </div>
       </div>
       <div class="scm-mid">
         <span class="scm-name">${escapeHtml(stock.name)}</span>
-        <span class="chg ${chgCls}">${chgTxt}</span>
+        <span class="scm-ath">${athIndicator(q)}</span>
       </div>
-      <div class="scm-ath">${athIndicator(q)}</div>
       ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
     </a>
   </article>`;

@@ -7,14 +7,17 @@ const base = import.meta.env.BASE_URL;
 
 <section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
   <div class="board-header">
-    <div>
+    <div class="board-heading">
+      <p class="board-eyebrow">Watchlist</p>
       <h2>Tracking list</h2>
-      <p class="board-subtitle desktop-only">Live prices for every ticker on the radar. Press <kbd>/</kbd> to search.</p>
+      <p class="board-subtitle desktop-only">
+        Live prices for every ticker on the radar. Press <kbd>/</kbd> to search.
+      </p>
     </div>
     <div class="board-actions desktop-only">
-      <div class="view-toggle">
-        <button type="button" class="chip active" id="view-table">List</button>
-        <button type="button" class="chip" id="view-technical">Technical</button>
+      <div class="view-toggle" role="group" aria-label="Table view">
+        <button type="button" class="seg active" id="view-table">List</button>
+        <button type="button" class="seg" id="view-technical">Technical</button>
       </div>
       <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button>
       <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button>
@@ -38,23 +41,27 @@ const base = import.meta.env.BASE_URL;
     </div>
   </div>
 
-  <div class="overview-grid desktop-only" id="overview-grid" aria-live="polite"></div>
+  <div class="overview-strip desktop-only" id="overview-grid" aria-live="polite"></div>
 
   <div class="toolbar">
-    <input
-      type="search"
-      id="search-input"
-      class="search-input"
-      placeholder="Search symbol, name, thesis…"
-      autocomplete="off"
-    />
+    <div class="search-wrap">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="Search symbol, name, thesis…"
+        autocomplete="off"
+      />
+      <kbd class="search-hint desktop-only">/</kbd>
+    </div>
     <div class="filter-chips" id="filter-chips">
       <button type="button" class="chip active" data-filter="all">All</button>
       <button type="button" class="chip" data-filter="high-priority">High conviction</button>
       <button type="button" class="chip desktop-only" data-filter="has-target">Has target</button>
     </div>
     <div class="filter-chips tech-filters desktop-only" id="tech-filter-chips">
-      <span class="tag-filter-label">Technicals:</span>
+      <span class="tag-filter-label">Technicals</span>
       <button type="button" class="chip" data-filter="tech-above-50">Above 50 MA</button>
       <button type="button" class="chip" data-filter="tech-bullish">Bullish</button>
       <button type="button" class="chip" data-filter="tech-near-low">Near 52w low</button>

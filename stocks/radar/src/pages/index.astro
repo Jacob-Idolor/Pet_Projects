@@ -11,11 +11,10 @@ import { meta, stocks } from "../data/watchlist";
   <LiveStatus />
   <DayMoodBanner />
   <section class="hero container">
+    <p class="hero-brand">Stocks Radar</p>
     <h1>{meta.groupName}</h1>
     <p class="tagline desktop-only">{meta.tagline}</p>
-    <div class="hero-stats desktop-only">
-      <span class="stat-pill"><strong>{stocks.length}</strong> tickers</span>
-    </div>
+    <p class="hero-meta desktop-only"><span class="mono">{stocks.length}</span> tickers on the board</p>
   </section>
   <div class="container">
     <WatchlistBoard />
