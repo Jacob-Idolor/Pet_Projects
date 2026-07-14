@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-14T10:46:37.316Z",
+  "updatedAt": "2026-07-14T12:12:58.921Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -41,8 +41,8 @@
       "currency": "USD",
       "name": "Nebius Group N.V.",
       "high52": 299.86,
-      "low52": 48.8,
-      "range52Pct": 64.41089779335616,
+      "low52": 49,
+      "range52Pct": 64.38252411703739,
       "sma": {
         "20": 244.6875,
         "50": 222.8711999511719,
