@@ -12,9 +12,12 @@ const boardScript = `${base}watchlist-board.mjs`.replace(/\/{2,}/g, "/").replace
       <div class="board-heading">
         <p class="board-eyebrow">Master list</p>
         <h2>What we’re watching</h2>
-        <p class="board-subtitle">
+        <p class="board-subtitle desktop-only">
           The group’s committed tickers — theses from the chat, priced and scored.
           Press <kbd>/</kbd> to search. Signals are a guide for discussion, not advice.
+        </p>
+        <p class="board-subtitle mobile-only">
+          Tap a name for Yahoo · signals guide the chat, not advice.
         </p>
       </div>
       <div class="board-actions desktop-only">
@@ -40,12 +43,12 @@ const boardScript = `${base}watchlist-board.mjs`.replace(/\/{2,}/g, "/").replace
           />
           <kbd class="search-hint desktop-only">/</kbd>
         </div>
-        <div class="filter-chips" id="filter-chips" aria-label="Conviction filters">
+        <div class="filter-chips filter-chips--scroll" id="filter-chips" aria-label="Conviction filters">
           <button type="button" class="chip active" data-filter="all">All</button>
           <button type="button" class="chip" data-filter="high-priority">High conviction</button>
+          <button type="button" class="chip" data-filter="lean-buy">Lean buy</button>
+          <button type="button" class="chip" data-filter="lean-sell">Lean sell</button>
           <button type="button" class="chip desktop-only" data-filter="has-target">Has target</button>
-          <button type="button" class="chip desktop-only" data-filter="lean-buy">Lean buy</button>
-          <button type="button" class="chip desktop-only" data-filter="lean-sell">Lean sell</button>
         </div>
       </div>
       <div class="filter-chips tech-filters desktop-only" id="tech-filter-chips" aria-label="Technical filters">
