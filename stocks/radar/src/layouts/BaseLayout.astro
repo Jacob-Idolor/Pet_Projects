@@ -1,4 +1,6 @@
 ---
+import { getAdSenseConfig } from "../lib/adsense";
+
 interface Props {
   title: string;
   description?: string;
@@ -10,6 +12,10 @@ const {
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
+const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
+const canonical = site ? `${site}/` : undefined;
+const pageTitle = `${title} | Stocks Radar`;
+const ads = getAdSenseConfig();
 ---
 
 <!doctype html>
@@ -22,8 +28,27 @@ const base = import.meta.env.BASE_URL;
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content={description} />
-    <title>{title} | Stocks Radar</title>
+    <meta name="robots" content="index,follow" />
+    <title>{pageTitle}</title>
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:site_name" content="Stocks Radar" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    {
+      ads.enabled && ads.client && (
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ads.client}`}
+          crossorigin="anonymous"
+        />
+      )
+    }
   </head>
   <body>
     <header class="site-header">

@@ -1,0 +1,55 @@
+---
+import { getAdSenseConfig, slotIdFor } from "../lib/adsense";
+
+interface Props {
+  placement: "hero" | "board" | "footer";
+  /** Accessible label for the region */
+  label?: string;
+  class?: string;
+}
+
+const { placement, label = "Advertisement", class: className = "" } = Astro.props;
+const ads = getAdSenseConfig();
+const slot = slotIdFor(ads, placement);
+
+/** Hide entirely when ads are off and we're not previewing (e.g. disabled in prod). */
+const show = ads.enabled || ads.preview;
+const showLive = ads.enabled && Boolean(slot) && Boolean(ads.client);
+---
+
+{
+  show && (
+    <aside
+      class={`ad-slot ad-slot--${placement} ${className}`.trim()}
+      aria-label={label}
+      data-ad-placement={placement}
+      data-ad-mode={showLive ? "live" : "preview"}
+    >
+      {showLive ? (
+        <>
+          <ins
+            class="adsbygoogle"
+            style="display:block"
+            data-ad-client={ads.client}
+            data-ad-slot={slot}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+          <script is:inline>
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+          </script>
+        </>
+      ) : (
+        <div class="ad-slot-preview">
+          <span class="ad-slot-preview__badge">AdSense preview</span>
+          <span class="ad-slot-preview__place">{placement}</span>
+          <p class="ad-slot-preview__hint">
+            Local/dev placeholder — real ads fill after your CloudFront domain is
+            approved in AdSense. Set <code>PUBLIC_ADSENSE_CLIENT</code> + slot IDs
+            in <code>.env</code> (see <code>ADSENSE.md</code>).
+          </p>
+        </div>
+      )}
+    </aside>
+  )
+}
