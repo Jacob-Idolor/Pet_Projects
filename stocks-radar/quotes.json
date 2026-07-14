@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-14T01:04:25.508Z",
+  "updatedAt": "2026-07-14T04:16:59.906Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 2,
   "count": 10,
@@ -26,9 +26,9 @@
       },
       "trend": "mixed",
       "rsi14": 35.68655446160598,
-      "volume": 8551396,
-      "avgVolume20": 11542619.8,
-      "volRatio": 0.7408539957280755,
+      "volume": 8709100,
+      "avgVolume20": 11550505,
+      "volRatio": 0.7540016648622723,
       "signals": [
         "above-sma200",
         "below-sma50"
@@ -55,38 +55,38 @@
       },
       "trend": "mixed",
       "rsi14": 31.19082085488327,
-      "volume": 10418641,
-      "avgVolume20": 17723117.05,
-      "volRatio": 0.5878560171219994,
+      "volume": 10748400,
+      "avgVolume20": 17739605,
+      "volRatio": 0.6058984966125233,
       "signals": [
         "above-sma200",
         "below-sma50"
       ]
     },
     "SIVEF": {
-      "price": 4.25,
-      "changePct": -14.572862684026799,
+      "price": 4.265,
+      "changePct": -14.271355140558665,
       "prevClose": 4.974999904632568,
       "currency": "USD",
       "name": "Sivers Semiconductors AB (publ)",
       "high52": 11.25,
       "low52": 0.96,
-      "range52Pct": 31.97278911564626,
+      "range52Pct": 32.118561710398446,
       "sma": {
-        "20": 7.194804978370667,
-        "50": 6.98638801574707,
+        "20": 7.195554971694946,
+        "50": 6.986688013076782,
         "200": null
       },
       "vsSma": {
-        "20": -40.92960111112763,
-        "50": -39.16742112776085,
+        "20": -40.7272959934686,
+        "50": -38.955339181922504,
         "200": null
       },
       "trend": "unknown",
-      "rsi14": 14.123413355911921,
-      "volume": 1035787,
-      "avgVolume20": 3882816.05,
-      "volRatio": 0.26676180036909036,
+      "rsi14": 14.148793651067493,
+      "volume": 3012033,
+      "avgVolume20": 3981975.85,
+      "volRatio": 0.7564166919796864,
       "signals": [
         "below-sma50",
         "deep-below-50",
@@ -114,9 +114,9 @@
       },
       "trend": "mixed",
       "rsi14": 68.97524078387559,
-      "volume": 18010409,
-      "avgVolume20": 20317040.45,
-      "volRatio": 0.886468137144453,
+      "volume": 19809100,
+      "avgVolume20": 20406975,
+      "volRatio": 0.9707024191483549,
       "signals": [
         "above-sma20",
         "above-sma50",
@@ -144,9 +144,9 @@
       },
       "trend": "mixed",
       "rsi14": 22.672439310343236,
-      "volume": 6565701,
-      "avgVolume20": 11291970.05,
-      "volRatio": 0.5814486729000844,
+      "volume": 6571000,
+      "avgVolume20": 11292235,
+      "volRatio": 0.5819042908689024,
       "signals": [
         "above-sma200",
         "below-sma50",
@@ -175,9 +175,9 @@
       },
       "trend": "bullish",
       "rsi14": 43.57250777073869,
-      "volume": 3331769,
-      "avgVolume20": 5521658.45,
-      "volRatio": 0.6034000527504558,
+      "volume": 3342700,
+      "avgVolume20": 5522205,
+      "volRatio": 0.605319795262943,
       "signals": [
         "above-sma50",
         "above-sma200"
@@ -204,9 +204,9 @@
       },
       "trend": "mixed",
       "rsi14": 31.36695739929266,
-      "volume": 451515,
-      "avgVolume20": 606700.75,
-      "volRatio": 0.7442136835993692,
+      "volume": 502200,
+      "avgVolume20": 609235,
+      "volRatio": 0.8243124574261164,
       "signals": [
         "above-sma200",
         "below-sma50"
@@ -233,9 +233,9 @@
       },
       "trend": "mixed",
       "rsi14": 50.93167784002689,
-      "volume": 1300567,
-      "avgVolume20": 1783628.35,
-      "volRatio": 0.7291692801361898,
+      "volume": 1318400,
+      "avgVolume20": 1784520,
+      "volRatio": 0.7387981081747472,
       "signals": [
         "above-sma20",
         "above-sma200",
@@ -263,9 +263,9 @@
       },
       "trend": "mixed",
       "rsi14": 33.095504467037884,
-      "volume": 655309,
-      "avgVolume20": 1417575.45,
-      "volRatio": 0.46227451244305906,
+      "volume": 664700,
+      "avgVolume20": 1418045,
+      "volRatio": 0.46874393971982553,
       "signals": [
         "above-sma200",
         "below-sma50"
@@ -292,9 +292,9 @@
       },
       "trend": "mixed",
       "rsi14": 21.01748487255466,
-      "volume": 899512,
-      "avgVolume20": 1347975.6,
-      "volRatio": 0.6673058473758723,
+      "volume": 899800,
+      "avgVolume20": 1347990,
+      "volRatio": 0.6675123702698091,
       "signals": [
         "above-sma200",
         "below-sma50",
