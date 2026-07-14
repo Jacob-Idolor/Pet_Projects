@@ -2,6 +2,7 @@
   "meta": {
     "groupName": "The Radar",
     "tagline": "One list — every ticker we're tracking together.",
+    "lastUpdated": "2026-07-10"
     "lastUpdated": "2026-07-01"
   },
   "stocks": [
@@ -30,14 +31,48 @@
       "holder": "J"
     },
     {
+      "id": "cohr",
+      "symbol": "COHR",
+      "name": "Coherent Corp.",
+      "category": "tracking",
+      "sector": "Photonics",
+      "tags": ["photonics", "lasers", "diversified", "semi"],
+      "priority": "high",
+      "thesis": "Most diversified name in the photonics/laser landscape — broad exposure across the optical stack.",
+      "addedBy": "J"
+    },
+    {
+      "id": "tsem",
+      "symbol": "TSEM",
+      "name": "Tower Semiconductor",
+      "category": "tracking",
+      "sector": "Semiconductors",
+      "tags": ["semi", "foundry", "compounder"],
+      "priority": "high",
+      "thesis": "The foundry compounder — manufacturing leverage without single-product risk.",
+      "addedBy": "J"
+    },
+    {
+      "id": "aaoi",
+      "symbol": "AAOI",
+      "name": "Applied Optoelectronics",
+      "category": "tracking",
+      "sector": "Photonics",
+      "tags": ["photonics", "transceiver", "datacenter"],
+      "priority": "high",
+      "thesis": "Pluggable transceiver play — highly disrespected by the market relative to the setup.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
       "id": "sivef",
       "symbol": "SIVEF",
       "name": "Sivers Semiconductors",
       "category": "tracking",
       "sector": "Photonics",
-      "tags": ["photonics", "speculative"],
-      "priority": "medium",
-      "thesis": "High upside photonics exposure — speculative swing potential.",
+      "tags": ["photonics", "laser", "speculative", "high-torque"],
+      "priority": "high",
+      "thesis": "Laser supplier for a bottleneck NVDA put in the spotlight — highest risk/reward torque in the group.",
       "addedBy": "J",
       "holder": "J"
     },
@@ -54,16 +89,15 @@
       "holder": "J"
     },
     {
-      "id": "aaoi",
-      "symbol": "AAOI",
-      "name": "Applied Optoelectronics",
+      "id": "dram",
+      "symbol": "DRAM",
+      "name": "Roundhill Memory ETF",
       "category": "tracking",
-      "sector": "Photonics",
-      "tags": ["photonics", "speculative"],
+      "sector": "Semiconductors",
+      "tags": ["semi", "memory", "etf", "dram"],
       "priority": "medium",
-      "thesis": "Photonics exposure — optical / datacenter connectivity bet.",
-      "addedBy": "J",
-      "holder": "J"
+      "thesis": "Memory / DRAM cycle exposure via ETF — tracks the memory chip theme.",
+      "addedBy": "J"
     },
     {
       "id": "oust",
