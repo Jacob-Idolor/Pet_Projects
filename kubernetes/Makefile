@@ -2,6 +2,7 @@
 # Run from kubernetes/ : make help
 
 .PHONY: help site-dev site-build site-preview local-up local-down local-status local-lab docker-lab check-docker aws-init aws-plan aws-apply aws-deploy aws-destroy check-tools test test-unit test-e2e ci
+.PHONY: help site-dev site-build site-preview local-up local-down local-status local-lab docker-lab check-docker aws-init aws-plan aws-apply aws-deploy aws-destroy check-tools
 
 AWS_PROFILE ?= pet-projects
 SITE_DIR    := site
@@ -39,6 +40,8 @@ help:
 	@echo "    make test-unit      Vitest only"
 	@echo "    make test-e2e       Playwright smoke tests"
 	@echo "    make ci             Full CI suite (build + unit + links + audit + e2e)"
+	@echo "    make aws-deploy     Build site + sync to S3 + invalidate CloudFront"
+	@echo "    make aws-destroy    Tear down AWS resources"
 
 site-dev:
 	cd $(SITE_DIR) && npm install && npm run dev

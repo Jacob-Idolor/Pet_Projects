@@ -1,0 +1,26 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LiveStatus from "../components/LiveStatus.astro";
+import DayMoodBanner from "../components/DayMoodBanner.astro";
+import WatchlistBoard from "../components/WatchlistBoard.astro";
+import GroupSubmissions from "../components/GroupSubmissions.astro";
+import { meta, stocks } from "../data/watchlist";
+---
+
+<BaseLayout title={meta.groupName}>
+  <LiveStatus />
+  <DayMoodBanner />
+  <section class="hero container">
+    <h1>{meta.groupName}</h1>
+    <p class="tagline desktop-only">{meta.tagline}</p>
+    <div class="hero-stats desktop-only">
+      <span class="stat-pill"><strong>{stocks.length}</strong> tickers</span>
+    </div>
+  </section>
+  <div class="container">
+    <WatchlistBoard />
+    <div class="secondary-panels desktop-only">
+      <GroupSubmissions />
+    </div>
+  </div>
+</BaseLayout>

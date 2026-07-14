@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "groupName": "The Radar",
+    "tagline": "One list — every ticker we're tracking together.",
+    "lastUpdated": "2026-06-30"
+  },
+  "stocks": [
+    {
+      "id": "smh",
+      "symbol": "SMH",
+      "name": "VanEck Semiconductor ETF",
+      "category": "tracking",
+      "sector": "Semiconductors",
+      "tags": ["semi", "etf", "core"],
+      "priority": "high",
+      "thesis": "Top exposure — broad semiconductor basket, core chip cycle play.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "nbis",
+      "symbol": "NBIS",
+      "name": "Nebius Group",
+      "category": "tracking",
+      "sector": "AI Infrastructure",
+      "tags": ["ai", "high-conviction"],
+      "priority": "high",
+      "thesis": "Favorite investment for the next few years — highest conviction name on the list.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "sivef",
+      "symbol": "SIVEF",
+      "name": "Sivers Semiconductors",
+      "category": "tracking",
+      "sector": "Photonics",
+      "tags": ["photonics", "speculative"],
+      "priority": "medium",
+      "thesis": "High upside photonics exposure — speculative swing potential.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "meta",
+      "symbol": "META",
+      "name": "Meta Platforms",
+      "category": "tracking",
+      "sector": "Technology",
+      "tags": ["mag7", "ai"],
+      "priority": "high",
+      "thesis": "Highest upside in Mag 7 outside NVDA — AI + ads + efficiency story.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "aaoi",
+      "symbol": "AAOI",
+      "name": "Applied Optoelectronics",
+      "category": "tracking",
+      "sector": "Photonics",
+      "tags": ["photonics", "speculative"],
+      "priority": "medium",
+      "thesis": "Photonics exposure — optical / datacenter connectivity bet.",
+      "addedBy": "J",
+      "holder": "J"
+    },
+    {
+      "id": "oust",
+      "symbol": "OUST",
+      "name": "Ouster",
+      "category": "tracking",
+      "sector": "Autonomous / Lidar",
+      "tags": ["lidar", "sensors"],
+      "priority": "medium",
+      "thesis": "Digital lidar for robotics, AV, and industrial sensing.",
+      "addedBy": "J"
+    },
+    {
+      "id": "vpg",
+      "symbol": "VPG",
+      "name": "Vishay Precision Group",
+      "category": "tracking",
+      "sector": "Industrial / Sensors",
+      "tags": ["sensors", "industrial"],
+      "priority": "medium",
+      "thesis": "Precision sensors and resistors in the industrial sensing chain.",
+      "addedBy": "J"
+    },
+    {
+      "id": "amba",
+      "symbol": "AMBA",
+      "name": "Ambarella",
+      "category": "tracking",
+      "sector": "Semiconductors",
+      "tags": ["semi", "edge-ai", "video"],
+      "priority": "medium",
+      "thesis": "Low-power vision and edge AI silicon for cameras and automotive.",
+      "addedBy": "J"
+    },
+    {
+      "id": "syna",
+      "symbol": "SYNA",
+      "name": "Synaptics",
+      "category": "tracking",
+      "sector": "Semiconductors",
+      "tags": ["semi", "iot"],
+      "priority": "medium",
+      "thesis": "Human-interface and connectivity ICs for touch, display, and IoT.",
+      "addedBy": "J"
+    },
+    {
+      "id": "inod",
+      "symbol": "INOD",
+      "name": "Innodata",
+      "category": "tracking",
+      "sector": "AI / Data Services",
+      "tags": ["ai", "data"],
+      "priority": "medium",
+      "thesis": "AI data engineering and digital transformation services.",
+      "addedBy": "J"
+    }
+  ]
+}

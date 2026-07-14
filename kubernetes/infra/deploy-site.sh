@@ -30,6 +30,7 @@ if [[ -z "$BUCKET" || -z "$DISTRIBUTION_ID" ]]; then
   exit 1
 fi
 
+echo "Building site..."
 pushd "$SITE_DIR" >/dev/null
 if [[ ! -d node_modules ]]; then
   npm install
@@ -42,6 +43,7 @@ else
   echo "SKIP_TESTS=1 — building without test suite"
   npm run build
 fi
+npm run build
 popd >/dev/null
 
 DIST_PATH="$SITE_DIR/dist"
@@ -70,5 +72,12 @@ elif [[ "$CHANGED" == "false" ]]; then
 else
   echo "SKIP_INVALIDATION=1 — cache not invalidated."
 fi
+aws s3 sync "$DIST_PATH" "s3://$BUCKET" --delete --profile "$PROFILE"
+
+echo "Invalidating CloudFront cache..."
+aws cloudfront create-invalidation \
+  --distribution-id "$DISTRIBUTION_ID" \
+  --paths "/*" \
+  --profile "$PROFILE" >/dev/null
 
 echo "Done. Site: $URL"

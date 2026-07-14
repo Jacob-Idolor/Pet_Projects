@@ -1,0 +1,28 @@
+name: Stocks Radar — validate
+
+on:
+  pull_request:
+    paths:
+      - "stocks/radar/**"
+  push:
+    branches: [main]
+    paths:
+      - "stocks/radar/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stocks/radar
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: stocks/radar/package-lock.json
+      - run: npm ci
+      - run: npm run build
+        env:
+          STOCKS_RADAR_BASE: /Pet_Projects/stocks-radar

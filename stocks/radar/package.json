@@ -1,0 +1,18 @@
+{
+  "name": "stocks-radar",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "bundle:watchlist": "node scripts/bundle-watchlist.mjs",
+    "dev": "npm run bundle:watchlist && astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "import-csv": "node scripts/csv-to-watchlist.mjs",
+    "update-quotes": "node scripts/fetch-quotes.mjs",
+    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.7.0"
+  }
+}

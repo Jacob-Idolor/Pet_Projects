@@ -15,6 +15,10 @@ Start here: run `make site-dev` → **Lab Hub** at http://localhost:4321
 - **Testing / CI:** [TESTING.md](TESTING.md)
 - **Public deploy (cheap):** [DEPLOYMENT.md](DEPLOYMENT.md)
 
+Start here: run `make site-dev` → **Lab Hub** at http://localhost:4321
+
+Full learning guide: **[LEARNING-PATH.md](LEARNING-PATH.md)**
+
 ---
 
 ## Fast commands
@@ -28,6 +32,7 @@ make docker-lab    # build & run sample container
 make local-lab     # kind cluster + Lab instructions
 make aws-deploy    # test + build site → S3 (after terraform apply)
 make ci            # full regression suite (matches GitHub Actions)
+make aws-deploy    # build site → S3 (after terraform apply)
 ```
 
 ---

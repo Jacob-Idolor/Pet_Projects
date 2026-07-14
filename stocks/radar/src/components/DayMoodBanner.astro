@@ -1,0 +1,120 @@
+---
+import { stocks } from "../data/watchlist";
+
+const stocksForMood = JSON.stringify(
+  stocks.map((s) => ({ symbol: s.symbol, category: s.category }))
+);
+---
+
+<section
+  class="day-mood-banner mood-unknown"
+  id="day-mood-banner"
+  role="status"
+  aria-live="polite"
+  aria-label="Today's watchlist mood"
+>
+  <div class="container day-mood-inner">
+    <div class="day-mood-main">
+      <span class="day-mood-icon" id="day-mood-icon" aria-hidden="true">◐</span>
+      <div>
+        <h2 class="day-mood-title" id="day-mood-title">Reading the tape…</h2>
+        <p class="day-mood-desc" id="day-mood-desc">Loading today’s move across your tickers</p>
+      </div>
+    </div>
+    <p class="day-mood-hint" id="day-mood-hint"></p>
+  </div>
+</section>
+
+<script is:inline define:vars={{ stocksForMood }}>
+  (function () {
+    var stocks = JSON.parse(stocksForMood);
+    var banner = document.getElementById("day-mood-banner");
+    var titleEl = document.getElementById("day-mood-title");
+    var descEl = document.getElementById("day-mood-desc");
+    var hintEl = document.getElementById("day-mood-hint");
+    var iconEl = document.getElementById("day-mood-icon");
+
+    var FLAT = 0.05;
+
+    function marketOpen() {
+      var now = new Date();
+      var et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+      var day = et.getDay();
+      if (day === 0 || day === 6) return false;
+      var mins = et.getHours() * 60 + et.getMinutes();
+      return mins >= 570 && mins < 960;
+    }
+
+    function weightFor(cat) {
+      return cat === "owned" ? 2 : 1;
+    }
+
+    function compute(quotes) {
+      var up = 0, down = 0, flat = 0, counted = 0;
+      var weightedUp = 0, weightedDown = 0, weightedSum = 0, weightTotal = 0;
+
+      for (var i = 0; i < stocks.length; i++) {
+        var s = stocks[i];
+        var q = quotes[s.symbol];
+        if (!q || q.changePct == null || isNaN(q.changePct)) continue;
+        var chg = q.changePct;
+        var w = weightFor(s.category);
+        counted++;
+        weightedSum += chg * w;
+        weightTotal += w;
+        if (chg > FLAT) { up++; weightedUp += w; }
+        else if (chg < -FLAT) { down++; weightedDown += w; }
+        else flat++;
+      }
+
+      if (!counted) {
+        return { mood: "unknown", title: "Reading the tape…", description: "Waiting for live quotes", hint: "" };
+      }
+
+      var avg = weightTotal ? weightedSum / weightTotal : null;
+      var upShare = up / counted;
+      var downShare = down / counted;
+      var mood = "mixed";
+
+      if (weightedUp > weightedDown * 1.35 && (avg == null || avg >= 0.1)) mood = "bullish";
+      else if (weightedDown > weightedUp * 1.35 && (avg == null || avg <= -0.1)) mood = "bearish";
+      else if (upShare >= 0.65 && (avg == null || avg >= 0)) mood = "bullish";
+      else if (downShare >= 0.65 && (avg == null || avg <= 0)) mood = "bearish";
+      else if (avg != null && avg > 0.35 && up > down) mood = "bullish";
+      else if (avg != null && avg < -0.35 && down > up) mood = "bearish";
+
+      var avgTxt = avg != null ? "avg " + (avg >= 0 ? "+" : "") + avg.toFixed(2) + "%" : "";
+      var titles = { bullish: "Bullish day", bearish: "Bearish day", mixed: "Mixed day", unknown: "Reading the tape…" };
+      var hints = {
+        bullish: "Watchlist leaning green — more names up than down today.",
+        bearish: "Watchlist leaning red — more names down than up today.",
+        mixed: "No clear edge — winners and losers balanced across the list.",
+        unknown: ""
+      };
+      var desc;
+      if (mood === "bullish") desc = up + " of " + counted + " up · " + down + " down" + (avgTxt ? " · " + avgTxt : "");
+      else if (mood === "bearish") desc = down + " of " + counted + " down · " + up + " up" + (avgTxt ? " · " + avgTxt : "");
+      else desc = up + " up · " + down + " down · " + flat + " flat" + (avgTxt ? " · " + avgTxt : "");
+
+      if (!marketOpen()) desc += " · last session";
+
+      return { mood: mood, title: titles[mood], description: desc, hint: hints[mood] };
+    }
+
+    var icons = { bullish: "▲", bearish: "▼", mixed: "◐", unknown: "◐" };
+
+    function apply(result) {
+      if (!banner || !titleEl || !descEl) return;
+      banner.className = "day-mood-banner mood-" + result.mood;
+      document.body.dataset.dayMood = result.mood;
+      titleEl.textContent = result.title;
+      descEl.textContent = result.description;
+      if (hintEl) hintEl.textContent = result.hint;
+      if (iconEl) iconEl.textContent = icons[result.mood] || "◐";
+    }
+
+    document.addEventListener("radar:quotes", function (e) {
+      apply(compute(e.detail || {}));
+    });
+  })();
+</script>

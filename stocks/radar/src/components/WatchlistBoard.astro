@@ -1,0 +1,118 @@
+---
+import { stocks } from "../data/watchlist";
+
+const stocksJson = JSON.stringify(stocks);
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
+  <div class="board-header">
+    <div>
+      <h2>Tracking list</h2>
+      <p class="board-subtitle desktop-only">Live prices for every ticker on the radar. Press <kbd>/</kbd> to search.</p>
+    </div>
+    <div class="board-actions desktop-only">
+      <div class="view-toggle">
+        <button type="button" class="chip active" id="view-table">List</button>
+        <button type="button" class="chip" id="view-technical">Technical</button>
+      </div>
+      <button type="button" class="btn btn-ghost" id="toggle-import">Import CSV</button>
+      <button type="button" class="btn btn-ghost" id="export-csv">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="import-panel desktop-only" id="import-panel" hidden>
+    <p class="import-help">
+      Paste CSV — columns:
+      <code>symbol, name, sector, tags, targetPrice, thesis, priority</code>.
+      Tags use semicolons. Saved in your browser only.
+    </p>
+    <textarea
+      id="import-text"
+      rows="6"
+      placeholder="NVDA,NVIDIA,Semiconductors,ai;semi,,Mag7 benchmark,high&#10;PLTR,Palantir,Software,ai;gov,18,Want better entry,medium"
+    ></textarea>
+    <div class="import-actions">
+      <button type="button" class="btn btn-primary" id="import-apply">Add to list</button>
+      <button type="button" class="btn btn-ghost" id="import-clear">Clear my imports</button>
+    </div>
+  </div>
+
+  <div class="overview-grid desktop-only" id="overview-grid" aria-live="polite"></div>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      id="search-input"
+      class="search-input"
+      placeholder="Search symbol, name, thesis…"
+      autocomplete="off"
+    />
+    <div class="filter-chips" id="filter-chips">
+      <button type="button" class="chip active" data-filter="all">All</button>
+      <button type="button" class="chip" data-filter="high-priority">High conviction</button>
+      <button type="button" class="chip desktop-only" data-filter="has-target">Has target</button>
+    </div>
+    <div class="filter-chips tech-filters desktop-only" id="tech-filter-chips">
+      <span class="tag-filter-label">Technicals:</span>
+      <button type="button" class="chip" data-filter="tech-above-50">Above 50 MA</button>
+      <button type="button" class="chip" data-filter="tech-bullish">Bullish</button>
+      <button type="button" class="chip" data-filter="tech-near-low">Near 52w low</button>
+    </div>
+  </div>
+
+  <div class="tag-filters desktop-only" id="tag-filters"></div>
+
+  <p class="result-count" id="result-count"></p>
+
+  <div id="mobile-stock-list" class="mobile-stock-list" hidden aria-label="Stocks"></div>
+
+  <div id="table-view">
+    <div class="table-wrap desktop-only">
+      <table class="watchlist-table" id="watchlist-table">
+        <thead>
+          <tr>
+            <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
+            <th data-sort="name" class="sortable">Name</th>
+            <th>Tags</th>
+            <th data-sort="price" class="sortable num">Price</th>
+            <th class="num">Chg</th>
+            <th data-sort="target" class="sortable num">Target</th>
+            <th>Thesis</th>
+            <th data-sort="priority" class="sortable">Priority</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="watchlist-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination desktop-only" id="pagination"></div>
+  </div>
+
+  <div id="technical-view" class="desktop-only" hidden>
+    <div class="table-wrap">
+      <table class="watchlist-table technical-table" id="technical-table">
+        <thead>
+          <tr>
+            <th data-sort="symbol" class="sortable sticky-col">Symbol</th>
+            <th data-sort="name" class="sortable">Name</th>
+            <th data-sort="price" class="sortable num">Price</th>
+            <th class="num">Chg</th>
+            <th data-sort="trend" class="sortable">Trend</th>
+            <th data-sort="vs50" class="sortable num">SMA 50</th>
+            <th data-sort="range52" class="sortable">52W range</th>
+            <th data-sort="rsi" class="sortable num">RSI</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="technical-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="technical-pagination"></div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ stocksJson }}>
+  window.__STOCKS_RADAR_DATA__ = stocksJson;
+</script>
+<script is:inline defer src="/watchlist-board.mjs"></script>

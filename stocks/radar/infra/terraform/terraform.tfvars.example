@@ -1,0 +1,23 @@
+# Copy to terraform.tfvars — never commit terraform.tfvars
+
+aws_profile  = "pet-projects"
+aws_region   = "us-west-2"
+
+project_name = "stocks-radar"
+
+# Must match IAM policy prefix (pet-projects-*)
+required_bucket_prefix = "pet-projects-"
+site_bucket_name       = "pet-projects-jacob-stocks-radar"
+
+# Lock to YOUR account: aws sts get-caller-identity --profile pet-projects
+allowed_account_ids = ["123456789012"]
+
+# Cheapest: CloudFront URL only (no Route53 / domain fees)
+enable_custom_domain = false
+
+enable_budget        = true
+budget_alert_email   = "you@example.com"
+monthly_budget_usd   = 5
+max_monthly_budget_usd = 5
+
+cloudfront_price_class = "PriceClass_100"

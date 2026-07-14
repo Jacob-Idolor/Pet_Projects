@@ -1,0 +1,52 @@
+name: Stocks Radar — live deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "stocks/radar/**"
+      - ".github/workflows/stocks-radar-deploy.yml"
+  schedule:
+    # Weekdays — refresh live quotes during market hours
+    - cron: "*/15 * * * 1-5"
+  workflow_dispatch:
+
+# peaceiris pushes to gh-pages branch — no configure-pages / Pages API needed
+permissions:
+  contents: write
+
+concurrency:
+  group: stocks-radar-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: stocks/radar/package-lock.json
+
+      - name: Install & build
+        working-directory: stocks/radar
+        env:
+          STOCKS_RADAR_BASE: /Pet_Projects/stocks-radar
+          STOCKS_RADAR_SITE: https://jacob-idolor.github.io/Pet_Projects/stocks-radar
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: stocks/radar/dist
+          destination_dir: stocks-radar
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "deploy: stocks-radar @ ${{ github.sha }}"
