@@ -1,0 +1,22 @@
+# Reference — head sampling (10%)
+
+Replace `processors:` section in stack config for Lab 07.
+
+```yaml
+processors:
+  batch:
+    timeout: 5s
+  probabilistic_sampler:
+    sampling_percentage: 10
+```
+
+Apply to traces pipeline only:
+
+```yaml
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [probabilistic_sampler, batch]
+      exporters: [otlp/jaeger, debug]
+```

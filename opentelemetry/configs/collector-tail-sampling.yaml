@@ -1,0 +1,35 @@
+# Reference — tail sampling
+
+Keeps errors and slow traces; samples the rest. Requires adequate Collector memory.
+
+```yaml
+processors:
+  batch:
+    timeout: 5s
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 10000
+    expected_new_traces_per_sec: 10
+    policies:
+      - name: errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow
+        type: latency
+        latency:
+          threshold_ms: 500
+      - name: probabilistic
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [tail_sampling, batch]
+      exporters: [otlp/jaeger, debug]
+```
+
+**Note:** tail sampling must see complete traces — typically runs on a gateway Collector.
