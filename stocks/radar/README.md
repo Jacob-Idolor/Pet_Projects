@@ -67,18 +67,20 @@ Local `npm run dev` shows labeled **AdSense preview** slots. Production uses you
 
 ## Deploy (AWS S3 + CloudFront)
 
-GitHub Pages is **not** used. Deploys run through **GitHub Actions → AWS** so every push shows up clearly under **Actions** with a live URL in the job summary.
+**Friend feedback trial (cheap → destroy when done):** [`FRIENDS_FEEDBACK.md`](FRIENDS_FEEDBACK.md)
+
+GitHub Pages is **not** used. Deploys run through **GitHub Actions → AWS**.
 
 **Full setup:** [`DEPLOY.md`](DEPLOY.md)
 
-1. `terraform apply` in `infra/terraform/` (creates S3 + CloudFront)
-2. Add 6 GitHub secrets (AWS creds + bucket/CloudFront outputs)
-3. Optional: AdSense GitHub **variables** (`PUBLIC_ADSENSE_*`) — see ADSENSE.md
-4. Push to `main` — workflow **Stocks Radar — deploy** runs automatically
+1. `terraform apply` in `infra/terraform/` (S3 + CloudFront + optional SNS digest)
+2. Add GitHub secrets (AWS + bucket/CloudFront; optional digest topic ARN)
+3. Push to `main` — **Stocks Radar — deploy**
+4. When friends are done: `infra/destroy.ps1` or `terraform destroy`
 
-**Live URL:** `https://<your-cloudfront-domain>/` (root path, no repo subpath)
+**Live URL:** `https://<your-cloudfront-domain>/`
 
-Quotes refresh on deploy and every 15 minutes on weekdays (scheduled CI). The status bar shows quote age, deploy time, and commit SHA. SEO build writes `robots.txt`, `sitemap.xml`, and `ads.txt`.
+Daily email (viewers + mood): confirm SNS subscription, then **Stocks Radar — daily digest** workflow.
 
 ## Manual deploy
 

@@ -28,6 +28,22 @@ output "safeguards" {
 }
 
 output "teardown_hint" {
-  description = "How to destroy without prevent_destroy errors"
-  value       = "Edit main.tf: set prevent_destroy = false on aws_s3_bucket.site and aws_cloudfront_distribution.site, then terraform apply && terraform destroy"
+  description = "How to tear down after friend feedback"
+  value       = "Empty the bucket if needed (aws s3 rm s3://$(terraform output -raw s3_bucket_name) --recursive), then: terraform destroy"
+}
+
+output "daily_digest_topic_arn" {
+  description = "SNS topic ARN for daily viewer/mood emails (set as GitHub secret STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN)"
+  value       = try(aws_sns_topic.daily_digest[0].arn, null)
+}
+
+output "daily_digest_email" {
+  description = "Inbox that must Confirm subscription from AWS SNS before digests arrive"
+  value       = try(local.digest_email_effective, null)
+  sensitive   = true
+}
+
+output "estimated_monthly_cost_usd" {
+  description = "Rough low-traffic cost band (no custom domain, PriceClass_100)"
+  value       = "About 0.50–3.00 USD/mo for friend-scale traffic; destroy when done to go to ~0"
 }

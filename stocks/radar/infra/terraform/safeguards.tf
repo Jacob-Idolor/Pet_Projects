@@ -7,10 +7,11 @@ data "aws_region" "current" {}
 locals {
   safeguard_summary = {
     stack_scope       = "static-site-only"
-    allowed_services  = "S3, CloudFront, optional Route53/ACM/Budgets"
+    allowed_services  = "S3, CloudFront, optional Route53/ACM/Budgets, optional SNS digest"
     blocked_by_design = "EKS, EC2, RDS, Lambda, ECS — not defined in this Terraform"
     account_id        = data.aws_caller_identity.current.account_id
     region            = data.aws_region.current.name
+    cost_notes        = "PriceClass_100, no WAF, no custom domain by default, destroy when feedback done"
   }
 }
 

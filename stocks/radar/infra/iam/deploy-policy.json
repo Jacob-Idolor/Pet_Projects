@@ -67,6 +67,35 @@
       "Resource": "*"
     },
     {
+      "Sid": "AllowCloudWatchMetricsForDailyDigest",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:GetMetricData",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowSnsDailyDigest",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:DeleteTopic",
+        "sns:GetTopicAttributes",
+        "sns:SetTopicAttributes",
+        "sns:Subscribe",
+        "sns:Unsubscribe",
+        "sns:ListSubscriptionsByTopic",
+        "sns:ListTopics",
+        "sns:Publish",
+        "sns:TagResource",
+        "sns:UntagResource",
+        "sns:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "DenyExpensiveOrOutOfScopeServices",
       "Effect": "Deny",
       "Action": [

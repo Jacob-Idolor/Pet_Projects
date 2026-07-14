@@ -70,7 +70,18 @@ cd stocks/radar/infra
 
 ## Cost
 
-Typically **~$0.50–3/mo** at low traffic. Budget alert in Terraform tfvars.
+Typically **~$0.50–3/mo** at friend-scale traffic (`PriceClass_100`, no custom domain). Budget alert default **$3**.
+
+**Friend trial loop (apply → share → daily email → destroy):** [`FRIENDS_FEEDBACK.md`](FRIENDS_FEEDBACK.md)
+
+## Daily digest email (viewers + mood)
+
+Terraform creates an SNS topic (`enable_daily_digest = true`). GitHub Actions emails you once/day with CloudFront request counts and watchlist mood — **no Lambda**.
+
+1. `terraform apply` with `digest_email` / `budget_alert_email`
+2. Confirm the AWS SNS subscription email
+3. Add secret `STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN` = `terraform output -raw daily_digest_topic_arn`
+4. Run **Actions → Stocks Radar — daily digest** (or wait for the schedule)
 
 ## AdSense variables (optional)
 

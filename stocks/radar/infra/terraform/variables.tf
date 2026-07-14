@@ -63,15 +63,15 @@ variable "route53_zone_id" {
 }
 
 variable "monthly_budget_usd" {
-  description = "AWS budget alert threshold in USD"
+  description = "AWS budget alert threshold in USD (keep low for friend-feedback trials)"
   type        = number
-  default     = 5
+  default     = 3
 }
 
 variable "max_monthly_budget_usd" {
   description = "Upper cap for budget alert variable (safeguard against typos like 5000)"
   type        = number
-  default     = 25
+  default     = 5
 }
 
 variable "budget_alert_email" {
@@ -99,7 +99,7 @@ variable "cloudfront_price_class" {
 }
 
 variable "enable_prevent_destroy" {
-  description = "Documentation flag only — actual prevent_destroy is hardcoded true in main.tf (Terraform requires a literal). Set false here to remind yourself you edited main.tf before destroy."
+  description = "Documentation flag — prevent_destroy is false in main.tf so friend-feedback stacks can terraform destroy cleanly."
   type        = bool
-  default     = true
+  default     = false
 }

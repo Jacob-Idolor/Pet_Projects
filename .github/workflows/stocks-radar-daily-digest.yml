@@ -1,0 +1,71 @@
+name: Stocks Radar — daily digest email
+
+# Publishes CloudFront viewer metrics + watchlist mood to SNS (confirm email once).
+# Cost: ~free (GitHub Actions minutes + SNS email). No Lambda.
+
+on:
+  schedule:
+    # 13:00 UTC ≈ morning US West
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: stocks-radar-daily-digest
+  cancel-in-progress: true
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Require digest secrets
+        id: gate
+        run: |
+          ok=1
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::warning::AWS credentials missing — skip digest"
+            ok=0
+          fi
+          if [ -z "$STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID" ]; then
+            echo "::warning::STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID missing — skip digest"
+            ok=0
+          fi
+          if [ -z "$STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN" ]; then
+            echo "::warning::STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN missing — will print only"
+          fi
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
+          STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
+
+      - name: Configure AWS credentials
+        if: steps.gate.outputs.ok == '1'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Send digest
+        if: steps.gate.outputs.ok == '1'
+        working-directory: stocks/radar
+        env:
+          STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
+          STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+          STOCKS_RADAR_SITE: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+          STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          DIGEST_OUTPUT_PATH: ${{ runner.temp }}/digest.txt
+        run: |
+          node scripts/daily-digest.mjs
+          echo "## Stocks Radar digest" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat "${{ runner.temp }}/digest.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
