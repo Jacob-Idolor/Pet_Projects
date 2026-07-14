@@ -1,0 +1,10 @@
+aws_region       = "us-east-1"
+project_name     = "tf-lab-dev"
+environment      = "dev"
+site_bucket_name = "your-globally-unique-bucket-name"
+
+# Optional safeguards
+# allowed_account_ids = ["123456789012"]
+# enable_budget       = true
+# budget_alert_email  = "you@example.com"
+# monthly_budget_usd  = 5

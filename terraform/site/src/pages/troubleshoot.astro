@@ -1,0 +1,24 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ScenarioCard from "../components/ScenarioCard.astro";
+import { scenarios, scenariosByType } from "../data/scenarios";
+---
+
+<BaseLayout title="Troubleshooting" description="Practice fixing Terraform validation errors, drift, and state locks.">
+  <section class="hero container">
+    <span class="badge">Debug like on-call</span>
+    <h1>Troubleshooting scenarios</h1>
+    <p class="lead">Three guided scenarios: validation errors, configuration drift, and state locks. Practice in the browser, then replay with real Terraform.</p>
+  </section>
+
+  <section class="container prose">
+    <h2>Fundamentals</h2>
+    <div class="card-grid">{scenariosByType.fundamentals.map((s) => <ScenarioCard scenario={s} />)}</div>
+    <h2>Production</h2>
+    <div class="card-grid">{scenariosByType.production.map((s) => <ScenarioCard scenario={s} />)}</div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/terraform.html">Terraform simulator</a>
+      <a class="btn btn-secondary" href="/practice.html">Sandbox</a>
+    </div>
+  </section>
+</BaseLayout>

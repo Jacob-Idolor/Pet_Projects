@@ -1,0 +1,55 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Practice Terraform — simulated CLI, lessons, and production patterns." } = Astro.props;
+const isHub = Astro.url.pathname === "/" || Astro.url.pathname === "/index.html";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title} | Terraform Practice Lab</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="logo" href="/">🏗️ Terraform Lab</a>
+        <nav>
+          <a href="/">Labs</a>
+          <a href="/learn.html">Learn</a>
+          <a href="/progress.html">Tracker</a>
+          <a href="/certificate.html">Certificate</a>
+          <a href="/about.html">About</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      {!isHub && (
+        <div class="container back-link-wrap">
+          <a href="/" class="back-link">← Lab Hub</a>
+        </div>
+      )}
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          Browser + local Terraform learning — simulated practice and real examples.
+          <a href="https://github.com/Jacob-Idolor/Pet_Projects/tree/main/terraform" target="_blank" rel="noopener">GitHub</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  @import "../styles/global.css";
+  @import "../styles/lesson.css";
+</style>

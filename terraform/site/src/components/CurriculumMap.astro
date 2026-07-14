@@ -1,0 +1,99 @@
+---
+import { getModulesByPhase } from "../data/modules";
+
+const fundLessons = getModulesByPhase("fundamentals");
+const prodLessons = getModulesByPhase("production");
+---
+
+<section class="curriculum-map lesson-animate" data-curriculum-map>
+  <h2>Your learning journey</h2>
+  <p class="map-caption">Fundamentals first — then production patterns for real-world IaC.</p>
+
+  <div class="journey-track">
+    <div class="journey-phase phase-fundamentals">
+      <div class="phase-node">
+        <span class="node-icon">🏗️</span>
+        <strong>Part 1</strong>
+        <span>{fundLessons.length} lessons</span>
+      </div>
+      <div class="journey-bridge">
+        {fundLessons.map((m, i) => (
+          <a href={`/modules/${m.id}.html`} class="journey-dot" title={m.title} data-lesson-dot={m.id}>
+            <span class="dot-num">{i + 1}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div class="journey-connector" aria-hidden="true">
+      <span class="connector-line"></span>
+      <span class="connector-arrow">↓</span>
+    </div>
+
+    <div class="journey-phase phase-production">
+      <div class="phase-node">
+        <span class="node-icon">🏭</span>
+        <strong>Part 2</strong>
+        <span>{prodLessons.length} lessons</span>
+      </div>
+      <div class="journey-bridge">
+        {prodLessons.map((m, i) => (
+          <a href={`/modules/${m.id}.html`} class="journey-dot" title={m.title} data-lesson-dot={m.id}>
+            <span class="dot-num">{i + 7}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="map-legend">
+    <span><span class="legend-dot done-sample"></span> Quiz passed</span>
+    <span><span class="legend-dot todo-sample"></span> Not started</span>
+  </div>
+</section>
+
+<style>
+  .curriculum-map {
+    background: linear-gradient(160deg, #121820 0%, #0d1520 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+  .curriculum-map h2 { margin: 0 0 0.35rem; font-size: 1.15rem; }
+  .map-caption { margin: 0 0 1.5rem; color: var(--muted); font-size: 0.9rem; }
+  .journey-track { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
+  .journey-phase { width: 100%; max-width: 520px; }
+  .phase-node { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; margin-bottom: 0.75rem; }
+  .node-icon { font-size: 1.75rem; }
+  .phase-node strong { font-size: 0.95rem; }
+  .phase-node span:last-child { font-size: 0.75rem; color: var(--muted); }
+  .journey-bridge { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
+  .journey-dot {
+    width: 2.25rem; height: 2.25rem; border-radius: 50%;
+    background: var(--surface); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; color: var(--muted); font-size: 0.75rem; font-weight: 700;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .journey-dot:hover { transform: scale(1.12); border-color: var(--accent); color: var(--text); text-decoration: none; }
+  .journey-dot.passed { background: #152a1f; border-color: var(--success); color: var(--success); }
+  .journey-connector { display: flex; flex-direction: column; align-items: center; padding: 0.25rem 0; }
+  .connector-line { width: 2px; height: 24px; background: linear-gradient(var(--accent), var(--success)); animation: connector-pulse 2s ease-in-out infinite; }
+  @keyframes connector-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+  .connector-arrow { color: var(--accent); font-size: 1.25rem; animation: flow-right 1.4s ease-in-out infinite; }
+  .map-legend { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.25rem; font-size: 0.75rem; color: var(--muted); }
+  .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.35rem; vertical-align: middle; }
+  .done-sample { background: var(--success); }
+  .todo-sample { background: var(--border); border: 1px solid var(--muted); }
+</style>
+
+<script>
+  document.querySelectorAll("[data-lesson-dot]").forEach((dot) => {
+    const id = (dot as HTMLElement).dataset.lessonDot!;
+    if (localStorage.getItem(`tf-quiz-${id}`) === "passed") {
+      dot.classList.add("passed");
+    }
+  });
+</script>

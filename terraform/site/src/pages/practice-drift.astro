@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerraformTerminal from "../components/TerraformTerminal.astro";
+---
+
+<BaseLayout title="Configuration drift" description="Detect and fix Terraform drift.">
+  <section class="hero container">
+    <span class="badge">Troubleshoot</span>
+    <h1>Configuration drift</h1>
+    <p class="lead">Infrastructure was changed outside Terraform. <code>terraform plan</code> shows a <code>~</code> update. Decide: revert with apply, or update HCL to match intent.</p>
+    <p><strong>Goal:</strong> Run <code>terraform plan</code> and read the drift diff. Fix with <code>terraform apply -auto-approve</code>.</p>
+  </section>
+  <section class="container"><TerraformTerminal scenario="drift" height="400px" /></section>
+</BaseLayout>

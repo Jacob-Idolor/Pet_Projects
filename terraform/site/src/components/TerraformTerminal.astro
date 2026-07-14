@@ -1,0 +1,171 @@
+---
+interface Props {
+  scenario?: "default" | "initialized" | "applied" | "drift" | "validation" | "state-lock";
+  missionId?: string;
+  height?: string;
+}
+
+const { scenario = "default", missionId, height = "320px" } = Astro.props;
+---
+
+<div class="terminal-wrap" data-tf-terminal data-scenario={scenario} data-mission={missionId ?? ""} style={`min-height: ${height}`}>
+  <div class="terminal-header">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+    <span class="terminal-title">terraform simulator — browser only (no cloud)</span>
+  </div>
+  <div class="terminal-output" data-output></div>
+  <form class="terminal-input-row" data-form>
+    <span class="prompt">$</span>
+    <input type="text" data-input autocomplete="off" spellcheck="false" placeholder="terraform init" />
+  </form>
+</div>
+
+<script>
+  import {
+    runTerraform,
+    loadScenario,
+    terraformMissions,
+  } from "../lib/terraform-sim";
+
+  function initTerminal(root: HTMLElement) {
+    const scenarioKind = root.dataset.scenario || "default";
+    const missionId = root.dataset.mission || "";
+    const output = root.querySelector("[data-output]") as HTMLElement;
+    const form = root.querySelector("[data-form]") as HTMLFormElement;
+    const input = root.querySelector("[data-input]") as HTMLInputElement;
+
+    let state = loadScenario(scenarioKind);
+    const history: string[] = [];
+    let histIdx = -1;
+    const completedMissions = new Set(JSON.parse(localStorage.getItem("tf-missions") || "[]"));
+
+    function writeln(text: string, className = "") {
+      const line = document.createElement("div");
+      line.className = `line ${className}`;
+      line.textContent = text;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function print(text: string) {
+      if (!text) return;
+      text.split("\n").forEach((l) => writeln(l));
+    }
+
+    writeln("Simulated Terraform ready. Practice IaC commands in your browser.", "muted");
+    writeln(`Scenario: ${scenarioKind} | Try: terraform init`, "muted");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const cmd = input.value.trim();
+      if (!cmd) return;
+      writeln(`$ ${cmd}`, "cmd");
+      history.push(cmd);
+      histIdx = history.length;
+
+      const result = runTerraform(state, cmd);
+      state = result.state;
+      print(result.output);
+
+      terraformMissions.forEach((m) => {
+        const scenarioMatch = !m.scenario || m.scenario === scenarioKind;
+        if (scenarioMatch && m.validate(cmd, state) && !completedMissions.has(m.id)) {
+          completedMissions.add(m.id);
+          localStorage.setItem("tf-missions", JSON.stringify([...completedMissions]));
+          writeln(`✓ Mission complete: ${m.title}`, "success");
+        }
+      });
+
+      if (missionId) {
+        const mission = terraformMissions.find((m) => m.id === missionId);
+        if (mission?.validate(cmd, state)) {
+          localStorage.setItem(`tf-module-${missionId}`, "done");
+          writeln("✓ Practice goal met!", "success");
+        }
+      }
+
+      input.value = "";
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (histIdx > 0) {
+          histIdx--;
+          input.value = history[histIdx];
+        }
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (histIdx < history.length - 1) {
+          histIdx++;
+          input.value = history[histIdx];
+        }
+      }
+    });
+  }
+
+  document.querySelectorAll("[data-tf-terminal]").forEach((el) => initTerminal(el as HTMLElement));
+</script>
+
+<style>
+  .terminal-wrap {
+    background: #0a0e12;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85rem;
+  }
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+    background: #121820;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot.red { background: #ef4444; }
+  .dot.yellow { background: #f59e0b; }
+  .dot.green { background: #22c55e; }
+  .terminal-title {
+    margin-left: 0.5rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .terminal-output {
+    padding: 1rem;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+  .terminal-output .line { white-space: pre-wrap; word-break: break-word; }
+  .terminal-output .muted { color: var(--muted); }
+  .terminal-output .cmd { color: #38bdf8; }
+  .terminal-output .success { color: var(--success); font-weight: 600; }
+  .terminal-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .prompt { color: var(--success); }
+  .terminal-input-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+  }
+</style>

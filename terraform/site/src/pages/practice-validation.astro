@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerraformTerminal from "../components/TerraformTerminal.astro";
+---
+
+<BaseLayout title="Validation error" description="Fix Terraform validation errors.">
+  <section class="hero container">
+    <span class="badge">Troubleshoot</span>
+    <h1>Validation error</h1>
+    <p class="lead"><code>terraform validate</code> fails. Run init first, then diagnose the syntax error. In real life: read the line number, fix HCL, fmt, validate again.</p>
+    <p><strong>Goal:</strong> Run <code>terraform init</code> then <code>terraform validate</code> — understand why validation fails on broken config.</p>
+  </section>
+  <section class="container"><TerraformTerminal scenario="validation" height="400px" /></section>
+</BaseLayout>

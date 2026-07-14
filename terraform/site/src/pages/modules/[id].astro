@@ -1,0 +1,67 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import TerraformTerminal from "../../components/TerraformTerminal.astro";
+import Quiz from "../../components/Quiz.astro";
+import TerraformWorkflowDiagram from "../../components/TerraformWorkflowDiagram.astro";
+import LessonStep from "../../components/LessonStep.astro";
+import LessonProgress from "../../components/LessonProgress.astro";
+import { modules, getModule, phaseLabels } from "../../data/modules";
+
+export function getStaticPaths() {
+  return modules.map((m) => ({ params: { id: m.id } }));
+}
+
+const { id } = Astro.params;
+const mod = getModule(id!);
+if (!mod) throw new Error(`Module not found: ${id}`);
+const prev = modules.find((m) => m.order === mod.order - 1);
+const next = modules.find((m) => m.order === mod.order + 1);
+const phaseInfo = phaseLabels[mod.phase];
+const phaseLessons = modules.filter((m) => m.phase === mod.phase);
+const lessonInPhase = phaseLessons.findIndex((m) => m.id === mod.id) + 1;
+const showWorkflow = mod.id === "t3-workflow";
+---
+
+<BaseLayout title={mod.title} description={mod.subtitle}>
+  <section class="hero container prose lesson-hero">
+    <span class="badge">{phaseInfo.title} · Lesson {lessonInPhase} of {phaseLessons.length}</span>
+    <h1>{mod.title}</h1>
+    <p class="lead">{mod.subtitle}</p>
+  </section>
+
+  <section class="container">
+    <LessonProgress currentOrder={mod.order} totalLessons={modules.length} phaseTitle={phaseInfo.title} lessonInPhase={lessonInPhase} phaseTotal={phaseLessons.length} sectionCount={mod.sections.length} />
+  </section>
+
+  <section class="container lesson-steps-wrap">
+    {mod.sections.map((s, i) => (
+      <LessonStep heading={s.heading} body={s.body} type={s.type} tryCommand={s.tryCommand} index={i + 1} />
+    ))}
+    {showWorkflow && <TerraformWorkflowDiagram animated />}
+    <div class="practice-goal-box lesson-animate">
+      <span class="goal-icon">🎯</span>
+      <div><strong>Practice goal</strong><p>{mod.practiceGoal}</p></div>
+    </div>
+  </section>
+
+  <section class="container terminal-wrap lesson-animate">
+    <p class="terminal-label">Interactive simulator</p>
+    <TerraformTerminal scenario={mod.scenario ?? "default"} height="340px" />
+  </section>
+
+  <section class="container prose">
+    <h2>Quick check</h2>
+    <Quiz questions={mod.quiz} moduleId={mod.id} compact />
+    <nav class="module-nav">
+      {prev ? <a href={`/modules/${prev.id}.html`} class="nav-prev">← {prev.title}</a> : <a href="/learn.html">All lessons</a>}
+      {next ? <a href={`/modules/${next.id}.html`} class="nav-next">{next.title} →</a> : <a href="/practice.html">Practice →</a>}
+    </nav>
+  </section>
+</BaseLayout>
+
+<style>
+  .practice-goal-box { display: flex; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+  .goal-icon { font-size: 1.5rem; }
+  .module-nav { display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .terminal-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+</style>
