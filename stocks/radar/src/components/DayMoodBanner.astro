@@ -84,7 +84,7 @@ const stocksForMood = JSON.stringify(
       else if (avg != null && avg < -0.35 && down > up) mood = "bearish";
 
       var avgTxt = avg != null ? "avg " + (avg >= 0 ? "+" : "") + avg.toFixed(2) + "%" : "";
-      var titles = { bullish: "Bullish day", bearish: "Bearish day", mixed: "Mixed day", unknown: "Reading the tape…" };
+      var titles = { bullish: "Bullish session", bearish: "Bearish session", mixed: "Mixed session", unknown: "Reading the tape…" };
       var hints = {
         bullish: "Watchlist leaning green — more names up than down today.",
         bearish: "Watchlist leaning red — more names down than up today.",
