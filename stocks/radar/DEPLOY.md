@@ -72,10 +72,18 @@ cd stocks/radar/infra
 
 Typically **~$0.50–3/mo** at low traffic. Budget alert in Terraform tfvars.
 
+## AdSense variables (optional)
+
+For publisher ads after domain approval, add **Actions variables** (not secrets) — see [ADSENSE.md](ADSENSE.md):
+
+`PUBLIC_ADSENSE_CLIENT`, `PUBLIC_ADSENSE_ENABLED`, `PUBLIC_ADSENSE_SLOT_HERO`, `PUBLIC_ADSENSE_SLOT_BOARD`, `PUBLIC_ADSENSE_SLOT_FOOTER`
+
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
 | Workflow fails "Missing secret" | Add all 6 secrets above |
 | Old content on phone | CloudFront cache — workflow invalidates `/*` each deploy |
+| AdSense empty / policy | Confirm `/ads.txt` on CloudFront matches publisher ID; site must be approved |
+| Local ads look empty | Expected — use preview boxes in `npm run dev` |
 | Site 404 | Run `terraform apply`, verify S3 bucket has `index.html` at root |

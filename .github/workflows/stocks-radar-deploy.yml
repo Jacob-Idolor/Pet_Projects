@@ -71,6 +71,11 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_RUN_ID: ${{ github.run_id }}
+          PUBLIC_ADSENSE_CLIENT: ${{ vars.PUBLIC_ADSENSE_CLIENT }}
+          PUBLIC_ADSENSE_ENABLED: ${{ vars.PUBLIC_ADSENSE_ENABLED }}
+          PUBLIC_ADSENSE_SLOT_HERO: ${{ vars.PUBLIC_ADSENSE_SLOT_HERO }}
+          PUBLIC_ADSENSE_SLOT_BOARD: ${{ vars.PUBLIC_ADSENSE_SLOT_BOARD }}
+          PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.PUBLIC_ADSENSE_SLOT_FOOTER }}
         run: |
           npm ci
           npm run build

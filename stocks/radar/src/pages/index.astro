@@ -4,10 +4,15 @@ import LiveStatus from "../components/LiveStatus.astro";
 import DayMoodBanner from "../components/DayMoodBanner.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
+import AdSlot from "../components/AdSlot.astro";
 import { meta, stocks } from "../data/watchlist";
+
+const description =
+  meta.tagline ||
+  "Group watchlist with live quotes, technicals, and a clean mobile layout — Stocks Radar.";
 ---
 
-<BaseLayout title={meta.groupName}>
+<BaseLayout title={meta.groupName} description={description}>
   <div class="app-shell">
     <LiveStatus />
     <DayMoodBanner />
@@ -32,11 +37,16 @@ import { meta, stocks } from "../data/watchlist";
         </div>
       </dl>
     </section>
+    <div class="container">
+      <AdSlot placement="hero" label="Sponsored — top" />
+    </div>
     <div class="container board-stage">
       <WatchlistBoard />
+      <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
       <div class="secondary-panels desktop-only">
         <GroupSubmissions />
       </div>
+      <AdSlot placement="footer" label="Sponsored — footer" />
     </div>
   </div>
 </BaseLayout>

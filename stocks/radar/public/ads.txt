@@ -1,0 +1,1 @@
+# Add PUBLIC_ADSENSE_CLIENT=ca-pub-… at build time to publish ads.txt

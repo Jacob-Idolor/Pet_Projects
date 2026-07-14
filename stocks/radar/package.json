@@ -8,9 +8,11 @@
     "dev": "npm run bundle:watchlist && astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "rebuild": "npm run prebuild && npm run build && npm run preview",
     "import-csv": "node scripts/csv-to-watchlist.mjs",
     "update-quotes": "node scripts/fetch-quotes.mjs",
-    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/write-build-meta.mjs"
+    "seo": "node scripts/write-seo-files.mjs",
+    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/write-build-meta.mjs && node scripts/write-seo-files.mjs"
   },
   "dependencies": {
     "astro": "^5.7.0"
