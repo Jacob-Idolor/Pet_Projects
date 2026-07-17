@@ -1,14 +1,8 @@
 name: Stocks Radar — deploy
 
+# PAUSED — AWS secrets / CloudFront stack not configured.
+# Re-enable push + schedule after terraform apply + GitHub secrets (DEPLOY.md).
 on:
-  push:
-    branches: [main]
-    paths:
-      - "stocks/radar/**"
-      - ".github/workflows/stocks-radar-deploy.yml"
-  schedule:
-    # Weekdays — refresh quotes + redeploy during market hours
-    - cron: "*/15 * * * 1-5"
   workflow_dispatch:
 
 concurrency:
@@ -17,11 +11,13 @@ concurrency:
 
 jobs:
   deploy:
+    # Flip to true when secrets + live CloudFront exist again.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
     environment:
-      name: production
+      name: stockwatch
       url: ${{ steps.site.outputs.url }}
     env:
       SITE_URL: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}

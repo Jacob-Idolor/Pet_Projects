@@ -2,11 +2,9 @@ name: Stocks Radar — daily digest email
 
 # Publishes CloudFront viewer metrics + watchlist mood to SNS (confirm email once).
 # Cost: ~free (GitHub Actions minutes + SNS email). No Lambda.
+# PAUSED with deploy — re-enable schedule after AWS secrets + SNS topic exist.
 
 on:
-  schedule:
-    # 13:00 UTC ≈ morning US West
-    - cron: "0 13 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -15,6 +13,7 @@ concurrency:
 
 jobs:
   digest:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

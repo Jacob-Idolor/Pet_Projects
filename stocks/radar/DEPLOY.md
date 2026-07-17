@@ -2,6 +2,12 @@
 
 GitHub Pages is **not** used. Deploys go to **AWS S3 + CloudFront** on every push to `main` and on a weekday schedule (quote refresh).
 
+## Status: deploy paused
+
+GitHub Actions **deploy** and **daily digest** are paused (`if: false`, no push/schedule) until AWS secrets exist again. Local `npm run dev` / validate workflow still work.
+
+To resume: `terraform apply` + fill secrets from this doc → set `if: true` and restore `push` / `schedule` in `.github/workflows/stocks-radar-deploy.yml`.
+
 ## One-time setup (~15 min)
 
 ### 1. Terraform (creates bucket + CloudFront)
@@ -39,7 +45,7 @@ IAM policy: [`infra/iam/deploy-policy.json`](infra/iam/deploy-policy.json)
 
 ### 3. GitHub environment (optional but recommended)
 
-**Settings → Environments → New environment → `production`**
+**Settings → Environments → New environment → `stockwatch`**
 
 Add the CloudFront URL as environment URL. Each deploy shows under **Actions → Stocks Radar — deploy** with a **View deployment** link.
 
