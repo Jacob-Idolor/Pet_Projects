@@ -1,50 +1,64 @@
-# Stocks Radar — infrastructure cost notes
+# Stocks Radar — cost & scale (AWS principles)
 
-Static hosting only: **S3 + CloudFront** (+ optional budget / custom domain / digests / alerts).
+Static hosting only: **S3 + CloudFront** (+ optional budget / custom domain / SNS). Designed for **low cost** and **automatic scale** — no servers to resize.
 
-## Destroyed trial stack (confirmed)
+## Principles we follow
 
-After `terraform destroy`, ongoing AWS cost for this project is **~$0**. No S3 site bucket, no CloudFront distribution, no budget alarms remain unless something outside this Terraform was created manually.
+| AWS / Well-Architected idea | Implementation |
+|----------------------------|----------------|
+| Use managed edge for scale | CloudFront in front of private S3 (OAC) |
+| Right-size price class | `PriceClass_100` only (US/EU/Canada) — enforced in Terraform |
+| Maximize cache hit ratio | Tiered `Cache-Control` on sync; `/_astro/*` behavior; narrow invalidations |
+| Avoid idle compute | No Lambda/EC2/ECS/RDS; quotes via GitHub Actions |
+| Cost visibility | AWS Budget ($3 default) + tags (`Project`, `CostCenter`) |
+| Account/region guardrails | `allowed_account_ids`, `allowed_regions` checks |
+| Tear down when idle | `prevent_destroy = false`; destroy → ~$0 |
 
-## What the Terraform code costs when re-applied
+Passive-income math (AdSense vs hosting): **[../../PASSIVE_INCOME.md](../../PASSIVE_INCOME.md)**.
 
-| Item | Typical monthly | Notes |
-|------|-----------------|-------|
-| S3 storage + requests | **<$0.10** | Small static site + `quotes.json` |
-| CloudFront `PriceClass_100` | **~$0.50–2** | US/EU/Canada; free-tier friendly for light traffic |
-| AWS managed security headers | **$0** | `enable_security_headers` (default on) |
-| AWS Budgets | **~$0** | Free for the first few budgets |
-| Custom domain + **Cloudflare Free DNS** | **domain ~$10–12/yr** | `dns_management = "external"` — no Route53; buy later |
-| Route53 hosted zone | **+$0.50/mo** | Only if `dns_management = "route53"` |
-| SNS daily digest + signal alerts | **~$0** | Optional; leave off until IAM allows CreateTopic |
-| Lambda / API / WAF | **Not in stack** | Avoid for feedback trials |
+## Destroyed trial stack
 
-**Expected trial total: about $0.50–3/month** while live; destroy anytime to stop.
+After `terraform destroy`, ongoing AWS cost for this project is **~$0**.
 
-## Fixes in this Terraform revision (no meaningful cost bump)
+## What it costs when live
 
-1. **Real `/404.html`** — CloudFront `custom_error_response` serves Astro `src/pages/404.astro`.
-2. **403 → 404 mapping** — S3 OAC private buckets often return 403 for missing keys.
-3. **`/quotes.json` + `/build-meta.json` CachingDisabled** — board polls see fresh CI quotes/meta.
-4. **Security headers policy** — AWS managed SecurityHeadersPolicy on cache behaviors.
-5. **Domain-ready ACM** — `include_www_alias` / `domain_aliases` so apex+www cert is one apply after purchase.
-6. **Signal alerts SNS** — optional; can reuse digest topic (`alerts_use_digest_topic`).
+| Item | Typical monthly | Scale note |
+|------|-----------------|------------|
+| S3 storage + requests | **<$0.10** → low $ at high traffic | Origin mostly on cache miss |
+| CloudFront `PriceClass_100` | **~$0.50–2** friends; **~$2–10** growing | Scales with requests + egress |
+| Security headers (managed) | **$0** | |
+| AWS Budgets | **~$0** | |
+| Custom domain + Cloudflare DNS | **~$10–12/yr** domain | No Route53 fee |
+| SNS digests / personal alerts | **~$0** | |
+| Lambda / API / WAF | **Not in stack** | Would break the cost model |
 
-## What would cost more (do not enable unless needed)
+**Expected:** about **$0.50–3/mo** at friend scale; still single-digit–low tens at meaningful hobby traffic if cache stays healthy.
 
-| Change | Extra cost | When you’d want it |
-|--------|------------|--------------------|
-| Lambda@Edge / CloudFront Function quote proxy | **$1–5+/mo** | True browser live Yahoo quotes (CORS) |
-| API Gateway + Lambda quote API / shared suggestions backend | **$1–5+/mo** | Cross-device friend queue sync |
-| WAF | **$5+/mo** | Not needed for a private friends site |
-| Multi-region / `PriceClass_All` | Higher CF egress | Skip for trials |
+## Caching strategy (cost × scale lever)
 
-**Recommendation:** keep static quotes refreshed by GitHub Actions (**refresh quotes** workflow). Friend suggestions stay device-local (IndexedDB) until you deliberately add a backend.
+| Path | Cache | Why |
+|------|-------|-----|
+| `/_astro/*` | Long (immutable object headers + CF behavior) | Hashed bundles — safe to cache hard |
+| HTML / SEO files | ~60s + must-revalidate | Fresh chrome after deploy |
+| `/quotes.json`, `/build-meta.json` | CachingDisabled | Live board + status bar |
+| Invalidation paths | `/`, HTML, JSON, SEO — **not** `/*` | Keeps hashed assets warm |
+
+Deploy uses [`../sync-s3-tiered.sh`](../sync-s3-tiered.sh).
+
+## What would cost more (avoid until revenue justifies)
+
+| Change | Extra cost | When |
+|--------|------------|------|
+| WAF | **$5+/mo** | Public abuse at real scale |
+| Lambda@Edge quote proxy | **$1–5+/mo** | Only if GHA refresh is not enough |
+| API Gateway + Lambda + DB | **$1–5+/mo idle** | Shared suggestions backend |
+| `PriceClass_All` | Higher egress | Global audience proven |
+| Route53 hosted zone | **+$0.50/mo** | Prefer Cloudflare Free DNS |
 
 ## Redeploy checklist
 
-1. `cd stocks/radar/infra/terraform && terraform apply`
-2. Build + sync dist to the bucket (repo deploy workflow / `deploy.sh`)
-3. Confirm `https://<distribution>.cloudfront.net/` loads the board
-4. Confirm `/quotes.json`, `/build-meta.json`, and `/404.html` return 200
-5. When done: empty bucket if needed, then `terraform destroy`
+1. `terraform apply`
+2. `npm run build` + `./infra/deploy.sh` (tiered sync)
+3. Confirm `/`, `/quotes.json`, `/_astro/*` headers
+4. Watch CloudFront **cache hit rate** after a few days of traffic
+5. Idle? Empty bucket → `terraform destroy`

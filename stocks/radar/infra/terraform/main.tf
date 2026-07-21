@@ -123,6 +123,18 @@ resource "aws_cloudfront_distribution" "site" {
     origin_access_control_id = aws_cloudfront_origin_access_control.site.id
   }
 
+  # Hashed Astro assets — high cache hit ratio (cost ↓, scale ↑). Object headers set on sync.
+  ordered_cache_behavior {
+    path_pattern               = "/_astro/*"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = local.caching_optimized_policy_id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
   # Quotes must bypass long cache so price/signal polls see fresh deploys.
   # Cost: negligible — more origin GETs only when visitors poll quotes.json.
   ordered_cache_behavior {

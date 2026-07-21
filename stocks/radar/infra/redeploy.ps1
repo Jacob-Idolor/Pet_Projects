@@ -31,7 +31,9 @@ try {
   npm ci
   npm run build
   aws s3 sync dist "s3://$Bucket" --delete --profile $ProfileName --exclude "alert-state.json"
-  aws cloudfront create-invalidation --distribution-id $DistId --paths "/*" --profile $ProfileName | Out-Null
+  # Prefer bash tiered sync when available (Git Bash / WSL):
+  #   bash ./infra/sync-s3-tiered.sh $Bucket $ProfileName
+  aws cloudfront create-invalidation --distribution-id $DistId --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs" --profile $ProfileName | Out-Null
 } finally {
   Pop-Location
 }

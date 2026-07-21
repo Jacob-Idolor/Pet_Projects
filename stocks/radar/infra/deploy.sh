@@ -33,14 +33,14 @@ export DEPLOY_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 npm ci
 npm run build
 
-echo "Syncing to s3://$BUCKET ..."
-aws s3 sync dist "s3://$BUCKET" --delete --profile "$AWS_PROFILE" \
-  --exclude "alert-state.json"
+echo "Syncing to s3://$BUCKET (tiered cache headers)..."
+DIST_DIR=dist "$SCRIPT_DIR/sync-s3-tiered.sh" "$BUCKET" "$AWS_PROFILE"
 
-echo "Invalidating CloudFront..."
+echo "Invalidating CloudFront (HTML + live JSON only — keep hashed assets cached)..."
 aws cloudfront create-invalidation \
   --distribution-id "$DIST_ID" \
-  --paths "/*" \
+  --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
+         "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs" \
   --profile "$AWS_PROFILE" \
   --output text >/dev/null
 

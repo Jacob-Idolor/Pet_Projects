@@ -85,21 +85,16 @@ jobs:
           npm ci
           npm run build
 
-      - name: Sync to S3
-        run: |
-          aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
-            --cache-control "public,max-age=60" \
-            --exclude "quotes.json" --exclude "build-meta.json" --exclude "alert-state.json"
-          aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
-            --cache-control "public,max-age=0,no-cache" \
-            --exclude "*" --include "quotes.json" --include "build-meta.json" \
-            --exclude "alert-state.json"
+      - name: Sync to S3 (tiered cache)
+        working-directory: stocks/radar
+        run: DIST_DIR=dist ./infra/sync-s3-tiered.sh "${{ secrets.STOCKS_RADAR_S3_BUCKET }}"
 
-      - name: Invalidate CloudFront
+      - name: Invalidate CloudFront (HTML + live JSON)
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/*"
+            --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
+                   "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
 
       - id: site
         name: Live site URL
