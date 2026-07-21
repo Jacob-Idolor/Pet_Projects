@@ -65,6 +65,9 @@ jobs:
 
       - name: Fetch quotes
         working-directory: stocks/radar
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
         run: |
           npm ci
           npm run update-quotes

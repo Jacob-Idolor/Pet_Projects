@@ -8,12 +8,17 @@
  *  - Retries per symbol with backoff
  *  - Keeps last-known quotes for symbols that fail this run (partial merge)
  *  - Writes health metadata (failedSymbols, partial, fetchedAt) for the UI
+ *
+ * Optional OpenTelemetry (no-op unless OTEL_EXPORTER_OTLP_ENDPOINT is set):
+ *   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 npm run update-quotes
+ *   See OBSERVABILITY.md
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildMetrics } from "./market-metrics.mjs";
+import { withOtel } from "./otel.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -51,11 +56,13 @@ async function fetchSymbolOnce(symbol) {
   if (res.status === 429) {
     const err = new Error(`rate-limited ${symbol}`);
     err.retryable = true;
+    err.status = 429;
     throw err;
   }
   if (!res.ok) {
     const err = new Error(`HTTP ${res.status} for ${symbol}`);
     err.retryable = res.status >= 500;
+    err.status = res.status;
     throw err;
   }
 
@@ -92,23 +99,48 @@ async function fetchSymbolOnce(symbol) {
   };
 }
 
-async function fetchSymbol(symbol) {
-  let lastErr = null;
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      return await fetchSymbolOnce(symbol);
-    } catch (e) {
-      lastErr = e;
-      const retryable = e.retryable !== false;
-      if (!retryable || attempt === MAX_RETRIES - 1) break;
-      await delay(RETRY_BASE_MS * 2 ** attempt + Math.floor(Math.random() * 200));
-    }
-  }
-  console.warn(`  ⚠ ${symbol}: ${lastErr?.message || lastErr}`);
-  return null;
+async function fetchSymbol(symbol, otel) {
+  return otel.withSpan(
+    "yahoo.fetch_symbol",
+    async (span) => {
+      span.setAttributes({
+        "stock.symbol": symbol,
+        "http.url.host": "query1.finance.yahoo.com",
+      });
+      let lastErr = null;
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        span.setAttribute("yahoo.attempt", attempt + 1);
+        try {
+          const q = await fetchSymbolOnce(symbol);
+          span.setAttributes({
+            "yahoo.ok": true,
+            "stock.price": q.price,
+          });
+          return q;
+        } catch (e) {
+          lastErr = e;
+          span.addEvent("yahoo.fetch_retry", {
+            "yahoo.attempt": attempt + 1,
+            "error.message": String(e.message || e),
+            "http.status_code": e.status ?? 0,
+          });
+          const retryable = e.retryable !== false;
+          if (!retryable || attempt === MAX_RETRIES - 1) break;
+          await delay(RETRY_BASE_MS * 2 ** attempt + Math.floor(Math.random() * 200));
+        }
+      }
+      span.setAttributes({
+        "yahoo.ok": false,
+        "error.message": String(lastErr?.message || lastErr),
+      });
+      console.warn(`  ⚠ ${symbol}: ${lastErr?.message || lastErr}`);
+      return null;
+    },
+    { "stock.symbol": symbol }
+  );
 }
 
-async function fetchAll(symbols) {
+async function fetchAll(symbols, otel) {
   const quotes = {};
   const failed = [];
   const chunkSize = 8;
@@ -117,7 +149,7 @@ async function fetchAll(symbols) {
     const chunk = symbols.slice(i, i + chunkSize);
     const results = await Promise.all(
       chunk.map(async (symbol) => {
-        const q = await fetchSymbol(symbol);
+        const q = await fetchSymbol(symbol, otel);
         return [symbol, q];
       })
     );
@@ -131,81 +163,104 @@ async function fetchAll(symbols) {
   return { quotes, failed };
 }
 
-const watchlist = JSON.parse(readFileSync(WATCHLIST, "utf8"));
-const symbols = [...new Set(watchlist.stocks.map((s) => s.symbol))];
-const previous = loadPreviousQuotes();
+await withOtel("stocks-radar-quotes", async (otel) => {
+  await otel.withSpan("fetch-quotes.run", async (root) => {
+    const watchlist = JSON.parse(readFileSync(WATCHLIST, "utf8"));
+    const symbols = [...new Set(watchlist.stocks.map((s) => s.symbol))];
+    const previous = loadPreviousQuotes();
 
-console.log(`Fetching quotes + technicals for ${symbols.length} symbols…`);
-const { quotes: fresh, failed } = await fetchAll(symbols);
+    root.setAttributes({
+      "radar.symbol_count": symbols.length,
+      "radar.had_previous_quotes": Object.keys(previous.quotes).length > 0,
+    });
 
-const merged = { ...fresh };
-const carried = [];
-for (const sym of failed) {
-  if (previous.quotes[sym]) {
-    merged[sym] = {
-      ...previous.quotes[sym],
-      _carriedForward: true,
-      _carriedFrom: previous.fetchedAt,
-    };
-    carried.push(sym);
-  }
-}
+    console.log(`Fetching quotes + technicals for ${symbols.length} symbols…`);
+    const { quotes: fresh, failed } = await fetchAll(symbols, otel);
 
-const now = new Date().toISOString();
-const missing = failed.filter((s) => !merged[s]);
-const partial = failed.length > 0;
-const coverage = Object.keys(merged).length;
+    const merged = { ...fresh };
+    const carried = [];
+    for (const sym of failed) {
+      if (previous.quotes[sym]) {
+        merged[sym] = {
+          ...previous.quotes[sym],
+          _carriedForward: true,
+          _carriedFrom: previous.fetchedAt,
+        };
+        carried.push(sym);
+      }
+    }
 
-const payload = {
-  updatedAt: now,
-  fetchedAt: now,
-  marketTime: "US/Eastern",
-  schemaVersion: 4,
-  count: coverage,
-  total: symbols.length,
-  freshCount: Object.keys(fresh).length,
-  failedSymbols: failed,
-  carriedForward: carried,
-  missingSymbols: missing,
-  partial,
-  complete: coverage === symbols.length && failed.length === 0,
-  staleAfterHours: STALE_AFTER_HOURS,
-  quotes: merged,
-};
+    const now = new Date().toISOString();
+    const missing = failed.filter((s) => !merged[s]);
+    const partial = failed.length > 0;
+    const coverage = Object.keys(merged).length;
 
-writeFileSync(OUT, JSON.stringify(payload, null, 2) + "\n");
-
-const status = payload.complete
-  ? "✓ complete"
-  : partial
-    ? `⚠ partial (${payload.freshCount} fresh, ${carried.length} carried, ${missing.length} missing)`
-    : "✓";
-
-console.log(
-  `${status} quotes.json — ${payload.count}/${payload.total} symbols (${payload.fetchedAt})`
-);
-
-if (coverage === 0) {
-  console.error("✗ No quotes fetched — refusing empty file overwrite of previous data would lose all prices.");
-  if (Object.keys(previous.quotes).length) {
-    const fallback = {
-      ...payload,
-      fetchedAt: previous.fetchedAt || now,
+    const payload = {
       updatedAt: now,
-      quotes: previous.quotes,
-      count: Object.keys(previous.quotes).length,
-      partial: true,
-      complete: false,
-      fetchFailed: true,
-      failedSymbols: symbols,
-      carriedForward: Object.keys(previous.quotes),
-      missingSymbols: [],
-      note: "Yahoo fetch returned zero symbols; kept previous quotes.json body",
+      fetchedAt: now,
+      marketTime: "US/Eastern",
+      schemaVersion: 4,
+      count: coverage,
+      total: symbols.length,
+      freshCount: Object.keys(fresh).length,
+      failedSymbols: failed,
+      carriedForward: carried,
+      missingSymbols: missing,
+      partial,
+      complete: coverage === symbols.length && failed.length === 0,
+      staleAfterHours: STALE_AFTER_HOURS,
+      quotes: merged,
     };
-    writeFileSync(OUT, JSON.stringify(fallback, null, 2) + "\n");
-    console.warn("⚠ Wrote previous quotes with fetchFailed=true");
-    process.exitCode = 1;
-  } else {
-    process.exitCode = 1;
-  }
-}
+
+    writeFileSync(OUT, JSON.stringify(payload, null, 2) + "\n");
+
+    root.setAttributes({
+      "radar.fresh_count": payload.freshCount,
+      "radar.failed_count": failed.length,
+      "radar.carried_count": carried.length,
+      "radar.missing_count": missing.length,
+      "radar.coverage_count": coverage,
+      "radar.coverage_total": symbols.length,
+      "radar.partial": partial,
+      "radar.complete": payload.complete,
+    });
+
+    const status = payload.complete
+      ? "✓ complete"
+      : partial
+        ? `⚠ partial (${payload.freshCount} fresh, ${carried.length} carried, ${missing.length} missing)`
+        : "✓";
+
+    console.log(
+      `${status} quotes.json — ${payload.count}/${payload.total} symbols (${payload.fetchedAt})`
+    );
+
+    if (coverage === 0) {
+      console.error(
+        "✗ No quotes fetched — refusing empty file overwrite of previous data would lose all prices."
+      );
+      root.setAttributes({ "radar.fetch_failed": true });
+      if (Object.keys(previous.quotes).length) {
+        const fallback = {
+          ...payload,
+          fetchedAt: previous.fetchedAt || now,
+          updatedAt: now,
+          quotes: previous.quotes,
+          count: Object.keys(previous.quotes).length,
+          partial: true,
+          complete: false,
+          fetchFailed: true,
+          failedSymbols: symbols,
+          carriedForward: Object.keys(previous.quotes),
+          missingSymbols: [],
+          note: "Yahoo fetch returned zero symbols; kept previous quotes.json body",
+        };
+        writeFileSync(OUT, JSON.stringify(fallback, null, 2) + "\n");
+        console.warn("⚠ Wrote previous quotes with fetchFailed=true");
+        process.exitCode = 1;
+      } else {
+        process.exitCode = 1;
+      }
+    }
+  });
+});

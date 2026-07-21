@@ -70,6 +70,8 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           ALERTS_ONLY_ON_SIGNAL: "true"
           ALERTS_OUTPUT_PATH: ${{ runner.temp }}/alerts.txt
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
         run: |
           node scripts/signal-alerts.mjs
           echo "## Stocks Radar personal alerts" >> "$GITHUB_STEP_SUMMARY"

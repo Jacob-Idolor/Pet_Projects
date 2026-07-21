@@ -18,6 +18,10 @@
  *   ALERTS_ONLY_ON_SIGNAL=true — skip publish when nothing fresh
  *   ALERTS_BROADCAST=true — also/always send legacy board-wide lean-buy/sell digest
  *   AWS_REGION / AWS_PROFILE
+ *
+ * Optional OpenTelemetry (off unless OTEL_EXPORTER_OTLP_ENDPOINT is set):
+ *   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 npm run alerts
+ *   See OBSERVABILITY.md
  */
 
 import { execFileSync } from "node:child_process";
@@ -30,6 +34,7 @@ import {
   filterHitsByCooldown,
   updateFiredState,
 } from "./match-alert-rules.mjs";
+import { withOtel } from "./otel.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -207,120 +212,163 @@ function buildPersonalEmail(subscriberId, rows, meta) {
   return lines.join("\n") + "\n";
 }
 
-const watchlist = JSON.parse(readFileSync(WATCHLIST, "utf8"));
-const rulesConfig = existsSync(RULES)
-  ? JSON.parse(readFileSync(RULES, "utf8"))
-  : { rules: [], defaults: {} };
-const data = await loadQuotes();
-const quotes = data.quotes || {};
-const fetchedAt = data.fetchedAt || data.updatedAt || "unknown";
-const when = new Date().toISOString();
-const cooldownHours = rulesConfig.defaults?.cooldownHours ?? 24;
+await withOtel("stocks-radar-alerts", async (otel) => {
+  await otel.withSpan("signal-alerts.run", async (root) => {
+    const watchlist = JSON.parse(readFileSync(WATCHLIST, "utf8"));
+    const rulesConfig = existsSync(RULES)
+      ? JSON.parse(readFileSync(RULES, "utf8"))
+      : { rules: [], defaults: {} };
+    const data = await otel.withSpan("alerts.load_quotes", () => loadQuotes());
+    const quotes = data.quotes || {};
+    const fetchedAt = data.fetchedAt || data.updatedAt || "unknown";
+    const when = new Date().toISOString();
+    const cooldownHours = rulesConfig.defaults?.cooldownHours ?? 24;
 
-const enabledRules = (rulesConfig.rules || []).filter((r) => r && r.enabled !== false);
-const hits = matchAlertRules(rulesConfig, watchlist.stocks || [], quotes);
-const state = loadState();
-const { fresh, skipped } = filterHitsByCooldown(hits, state, Date.now(), cooldownHours);
+    const enabledRules = (rulesConfig.rules || []).filter((r) => r && r.enabled !== false);
+    const hits = matchAlertRules(rulesConfig, watchlist.stocks || [], quotes);
+    const state = loadState();
+    const { fresh, skipped } = filterHitsByCooldown(hits, state, Date.now(), cooldownHours);
 
-console.log(`Rules enabled: ${enabledRules.length}`);
-console.log(`Hits this run: ${hits.length} (${fresh.length} fresh, ${skipped.length} in cooldown)`);
+    root.setAttributes({
+      "radar.rules_enabled": enabledRules.length,
+      "radar.hits_total": hits.length,
+      "radar.hits_fresh": fresh.length,
+      "radar.hits_cooldown": skipped.length,
+      "radar.quote_coverage": data.count ?? Object.keys(quotes).length,
+      "radar.dry_run": dryRun,
+    });
 
-const bySubscriber = new Map();
-for (const row of fresh) {
-  const id = row.rule.subscriberId;
-  if (!bySubscriber.has(id)) bySubscriber.set(id, []);
-  bySubscriber.get(id).push(row);
-}
-
-const outChunks = [];
-let published = 0;
-
-for (const [subscriberId, rows] of bySubscriber) {
-  const body = buildPersonalEmail(subscriberId, rows, { when, fetchedAt, site });
-  outChunks.push(body);
-  console.log(body);
-
-  const topic = topicMap[subscriberId] || broadcastTopic;
-  if (!topicMap[subscriberId] && broadcastTopic) {
-    console.warn(
-      `No STOCKS_RADAR_ALERT_TOPICS["${subscriberId}"] — using broadcast topic (all subscribers may see this)`
+    console.log(`Rules enabled: ${enabledRules.length}`);
+    console.log(
+      `Hits this run: ${hits.length} (${fresh.length} fresh, ${skipped.length} in cooldown)`
     );
-  }
-  const symbols = [...new Set(rows.map((r) => r.stock.symbol))].join(", ");
-  const subject = `Radar alert (${subscriberId}): ${symbols}`.slice(0, 100);
 
-  if (onlyOnSignal && rows.length === 0) continue;
-  if (publish(topic, subject, body)) published++;
-}
+    const bySubscriber = new Map();
+    for (const row of fresh) {
+      const id = row.rule.subscriberId;
+      if (!bySubscriber.has(id)) bySubscriber.set(id, []);
+      bySubscriber.get(id).push(row);
+    }
 
-// Legacy board-wide broadcast (optional)
-if (forceBroadcast || (enabledRules.length === 0 && broadcastTopic)) {
-  const scored = scoreWatchlist(watchlist.stocks || [], quotes);
-  const minBuy = Number(process.env.ALERT_MIN_BUY_SCORE || 2);
-  const nearPct = Number(process.env.ALERT_NEAR_TARGET_PCT || rulesConfig.defaults?.nearTargetPct || 5);
-  const buy = scored.buy.filter((r) => r.score >= minBuy);
-  const sell = scored.sell;
-  const nearTarget = scored.nearTarget.filter(
-    (r) => r.distPct != null && Math.abs(r.distPct) <= nearPct
-  );
-  const hasSignal = buy.length > 0 || sell.length > 0 || nearTarget.length > 0;
+    root.setAttribute("radar.subscribers_notified", bySubscriber.size);
 
-  const lines = [
-    "Stocks Radar — board-wide signal alert",
-    `Generated: ${when}`,
-    `Quotes as of: ${fetchedAt}`,
-    "",
-  ];
-  if (buy.length) {
-    lines.push(`--- Lean buy (${buy.length}) ---`);
-    for (const r of buy) lines.push(lineBroadcast(r));
-    lines.push("");
-  }
-  if (sell.length) {
-    lines.push(`--- Lean sell (${sell.length}) ---`);
-    for (const r of sell) lines.push(lineBroadcast(r));
-    lines.push("");
-  }
-  if (nearTarget.length) {
-    lines.push(`--- Near target ±${nearPct}% ---`);
-    for (const r of nearTarget) lines.push(lineBroadcast(r));
-    lines.push("");
-  }
-  if (!hasSignal) lines.push("(no board-wide signals)", "");
-  lines.push("Not financial advice.");
-  const body = lines.join("\n") + "\n";
-  outChunks.push(body);
-  console.log(body);
+    const outChunks = [];
+    let published = 0;
 
-  if (!(onlyOnSignal && !hasSignal)) {
-    const subjectParts = [];
-    if (buy.length) subjectParts.push(`${buy.length} lean-buy`);
-    if (sell.length) subjectParts.push(`${sell.length} lean-sell`);
-    const subject = hasSignal
-      ? `Radar signals: ${subjectParts.join(", ")}`
-      : "Radar signals: quiet tape";
-    if (publish(broadcastTopic, subject, body)) published++;
-  }
-}
+    for (const [subscriberId, rows] of bySubscriber) {
+      await otel.withSpan(
+        "alerts.publish_personal",
+        async (span) => {
+          const body = buildPersonalEmail(subscriberId, rows, { when, fetchedAt, site });
+          outChunks.push(body);
+          console.log(body);
 
-if (fresh.length) {
-  const nextState = updateFiredState(state, fresh, when);
-  saveState(nextState);
-} else {
-  console.log("(no fresh hits — cooldown state unchanged)");
-}
+          const topic = topicMap[subscriberId] || broadcastTopic;
+          if (!topicMap[subscriberId] && broadcastTopic) {
+            console.warn(
+              `No STOCKS_RADAR_ALERT_TOPICS["${subscriberId}"] — using broadcast topic (all subscribers may see this)`
+            );
+          }
+          const symbols = [...new Set(rows.map((r) => r.stock.symbol))].join(", ");
+          const subject = `Radar alert (${subscriberId}): ${symbols}`.slice(0, 100);
 
-const outPath = process.env.ALERTS_OUTPUT_PATH || process.env.DIGEST_OUTPUT_PATH;
-if (outPath) {
-  writeFileSync(
-    outPath,
-    outChunks.join("\n---\n\n") ||
-      `No personal alert hits.\nFresh: 0 · Cooldown: ${skipped.length}\n`
-  );
-}
+          span.setAttributes({
+            "radar.subscriber_id": subscriberId,
+            "radar.hit_count": rows.length,
+            "radar.symbols": symbols,
+            "radar.has_topic": Boolean(topic),
+          });
 
-if (!published && dryRun) {
-  console.log("(dry run complete)");
-} else if (!published && onlyOnSignal) {
-  console.log("(nothing published — quiet or cooldown)");
-}
+          if (onlyOnSignal && rows.length === 0) return;
+          if (publish(topic, subject, body)) published++;
+        },
+        { "radar.subscriber_id": subscriberId }
+      );
+    }
+
+    // Legacy board-wide broadcast (optional)
+    if (forceBroadcast || (enabledRules.length === 0 && broadcastTopic)) {
+      await otel.withSpan("alerts.publish_broadcast", async (span) => {
+        const scored = scoreWatchlist(watchlist.stocks || [], quotes);
+        const minBuy = Number(process.env.ALERT_MIN_BUY_SCORE || 2);
+        const nearPct = Number(
+          process.env.ALERT_NEAR_TARGET_PCT || rulesConfig.defaults?.nearTargetPct || 5
+        );
+        const buy = scored.buy.filter((r) => r.score >= minBuy);
+        const sell = scored.sell;
+        const nearTarget = scored.nearTarget.filter(
+          (r) => r.distPct != null && Math.abs(r.distPct) <= nearPct
+        );
+        const hasSignal = buy.length > 0 || sell.length > 0 || nearTarget.length > 0;
+
+        span.setAttributes({
+          "radar.broadcast_buy": buy.length,
+          "radar.broadcast_sell": sell.length,
+          "radar.broadcast_near_target": nearTarget.length,
+        });
+
+        const lines = [
+          "Stocks Radar — board-wide signal alert",
+          `Generated: ${when}`,
+          `Quotes as of: ${fetchedAt}`,
+          "",
+        ];
+        if (buy.length) {
+          lines.push(`--- Lean buy (${buy.length}) ---`);
+          for (const r of buy) lines.push(lineBroadcast(r));
+          lines.push("");
+        }
+        if (sell.length) {
+          lines.push(`--- Lean sell (${sell.length}) ---`);
+          for (const r of sell) lines.push(lineBroadcast(r));
+          lines.push("");
+        }
+        if (nearTarget.length) {
+          lines.push(`--- Near target ±${nearPct}% ---`);
+          for (const r of nearTarget) lines.push(lineBroadcast(r));
+          lines.push("");
+        }
+        if (!hasSignal) lines.push("(no board-wide signals)", "");
+        lines.push("Not financial advice.");
+        const body = lines.join("\n") + "\n";
+        outChunks.push(body);
+        console.log(body);
+
+        if (!(onlyOnSignal && !hasSignal)) {
+          const subjectParts = [];
+          if (buy.length) subjectParts.push(`${buy.length} lean-buy`);
+          if (sell.length) subjectParts.push(`${sell.length} lean-sell`);
+          const subject = hasSignal
+            ? `Radar signals: ${subjectParts.join(", ")}`
+            : "Radar signals: quiet tape";
+          if (publish(broadcastTopic, subject, body)) published++;
+        }
+      });
+    }
+
+    if (fresh.length) {
+      const nextState = updateFiredState(state, fresh, when);
+      saveState(nextState);
+    } else {
+      console.log("(no fresh hits — cooldown state unchanged)");
+    }
+
+    root.setAttribute("radar.published_count", published);
+
+    const outPath = process.env.ALERTS_OUTPUT_PATH || process.env.DIGEST_OUTPUT_PATH;
+    if (outPath) {
+      writeFileSync(
+        outPath,
+        outChunks.join("\n---\n\n") ||
+          `No personal alert hits.\nFresh: 0 · Cooldown: ${skipped.length}\n`
+      );
+    }
+
+    if (!published && dryRun) {
+      console.log("(dry run complete)");
+    } else if (!published && onlyOnSignal) {
+      console.log("(nothing published — quiet or cooldown)");
+    }
+  });
+});
+

@@ -14,6 +14,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Theme tags** — filter by semi, photonics, ai, etc.
 - **Technical view** (desktop) — SMA 20/50/200, RSI, 52-week range, trend badges
 - **Radar signals** — Lean buy / Watch / Lean sell; **personal email alerts** when *your* rule fires ([ALERTS.md](ALERTS.md))
+- **Optional OpenTelemetry** — CI/script traces for Yahoo fetch + alerts ([OBSERVABILITY.md](OBSERVABILITY.md); off by default)
 - **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
 
 ## Quick start
