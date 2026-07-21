@@ -79,7 +79,7 @@ The deploy workflow passes these into the Astro build. After deploy, check:
 
 - Keep the watchlist useful first; ads sit **outside** the dense table (hero, after board, footer).
 - Do not encourage clicks on ads. Prefer honest group tooling + SEO (`robots.txt`, `sitemap.xml`, Open Graph).
-- CloudFront + S3 is already the cheap host (~$0.50–3/mo). See [DEPLOY.md](DEPLOY.md).
+- CloudFront + S3 is already the cheap host (~$0.50–3/mo). Unit economics: [PASSIVE_INCOME.md](PASSIVE_INCOME.md).
 - Custom domain: buy at **Cloudflare Registrar or Porkbun**, DNS on **Cloudflare Free** — [DOMAIN.md](DOMAIN.md). Do not move hosting to Google.
 
 ## Files

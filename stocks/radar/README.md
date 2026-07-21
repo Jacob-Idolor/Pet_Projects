@@ -59,7 +59,7 @@ npm run build
 ./infra/deploy.sh    # laptop → S3 + invalidate (needs AWS profile)
 ```
 
-Infra stays **Terraform S3 + CloudFront** (~$0.50–3/mo). No second host. See [DEPLOY.md](DEPLOY.md), cheap custom domain [DOMAIN.md](DOMAIN.md), and [ADSENSE.md](ADSENSE.md).
+Infra stays **Terraform S3 + CloudFront** (~$0.50–3/mo). No second host. See [DEPLOY.md](DEPLOY.md), cost/scale + AdSense math [PASSIVE_INCOME.md](PASSIVE_INCOME.md), cheap custom domain [DOMAIN.md](DOMAIN.md), and [ADSENSE.md](ADSENSE.md).
 
 ## AdSense (passive income)
 
