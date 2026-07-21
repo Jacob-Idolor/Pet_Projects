@@ -41,12 +41,13 @@ Edit product knobs in `site-settings.json`, then rebuild. Toggle features with b
 - [x] Optional OTel on scripts
 - [ ] Merge PR #38 to `main`
 
-### B. AWS go-live
+### B. AWS go-live — see [GO_LIVE.md](GO_LIVE.md)
 
 - [ ] `terraform apply` (budget email on)
 - [ ] IAM policy from `infra/iam/deploy-policy.json`
-- [ ] GitHub secrets (bucket, distribution, domain, AWS keys)
-- [ ] Re-enable workflows (`if: true` + schedules) — [DEPLOY.md](DEPLOY.md)
+- [ ] `bash infra/go-live.sh` (secrets + `STOCKS_RADAR_SITE`)
+- [ ] `npm run go-live:preflight -- --strict`
+- [ ] Set `STOCKS_RADAR_DEPLOY_ENABLED=true`
 - [ ] Confirm `/health.json` and `/settings.json` on CloudFront
 - [ ] Optional: digest + `alert_subscribers` + `STOCKS_RADAR_ALERT_TOPICS` — [ALERTS.md](ALERTS.md)
 
@@ -54,9 +55,9 @@ Edit product knobs in `site-settings.json`, then rebuild. Toggle features with b
 
 - [ ] Buy domain — [DOMAIN.md](DOMAIN.md)
 - [ ] `enable_custom_domain = true` + ACM CNAMEs
-- [ ] `STOCKS_RADAR_SITE=https://yourdomain.com` on deploy
+- [ ] Update variable `STOCKS_RADAR_SITE=https://yourdomain.com`
 - [ ] AdSense site approval + slots — [ADSENSE.md](ADSENSE.md)
-- [ ] `STOCKS_RADAR_ENV=production npm run config:validate:prod` in CI deploy job
+- [x] Deploy workflow runs `config:validate:prod` when `STOCKS_RADAR_ENV=production`
 
 ### D. Observability
 

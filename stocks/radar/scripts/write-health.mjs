@@ -14,6 +14,7 @@ const settingsOut = resolve(ROOT, "public/settings.json");
 writeFileSync(settingsOut, JSON.stringify(settings, null, 2) + "\n");
 
 const health = {
+  ok: true,
   status: "ok",
   service: config.app.name,
   version: config.app.version,

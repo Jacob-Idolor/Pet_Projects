@@ -2,22 +2,20 @@
 
 GitHub Pages is **not** used. Deploys go to **AWS S3 + CloudFront** on every push to `main` and on a weekday quote-refresh schedule.
 
-## Status: deploy paused
+## Status: gated by `STOCKS_RADAR_DEPLOY_ENABLED`
 
-GitHub Actions **deploy**, **quote refresh**, **daily digest**, and **signal alerts** are paused (`if: false`) until AWS secrets exist again. Local `npm run dev` / validate workflow still work.
+Workflows are in the repo with schedules, but jobs only run when the repository variable **`STOCKS_RADAR_DEPLOY_ENABLED=true`**. Local `npm run dev` / validate still work without it.
 
-To resume:
+**Fast path:** follow **[GO_LIVE.md](GO_LIVE.md)** (`infra/go-live.sh` + preflight).
 
-1. `terraform apply` + fill secrets from this doc
-2. Re-attach IAM from [`infra/iam/deploy-policy.json`](infra/iam/deploy-policy.json) (now includes ACM + response headers)
-3. Set `if: true` (or remove the gate) on:
-   - `.github/workflows/stocks-radar-deploy.yml`
-   - `.github/workflows/stocks-radar-refresh-quotes.yml`
-   - `.github/workflows/stocks-radar-daily-digest.yml`
-   - `.github/workflows/stocks-radar-signal-alerts.yml`
-4. Uncomment `push` / `schedule` blocks where noted in those files
+To resume manually:
 
-`terraform output reenable_ci_hint` prints the same reminder.
+1. `terraform apply` + fill secrets from this doc (or `bash infra/go-live.sh`)
+2. IAM from [`infra/iam/deploy-policy.json`](infra/iam/deploy-policy.json)
+3. Set Actions variable `STOCKS_RADAR_SITE` and `STOCKS_RADAR_DEPLOY_ENABLED=true`
+4. Run **Stocks Radar — deploy**
+
+`terraform output reenable_ci_hint` points at the same steps.
 
 ## One-time setup (~15 min)
 
@@ -136,7 +134,7 @@ Full guide: **[ALERTS.md](ALERTS.md)**
 2. `terraform apply` → confirm SNS emails
 3. GitHub secret `STOCKS_RADAR_ALERT_TOPICS` = `terraform output -json personal_alert_topic_arns`
 4. Edit `src/data/alert-rules.json` (`subscriberId` must match)
-5. Re-enable **Stocks Radar — signal alerts**
+5. Ensure `STOCKS_RADAR_DEPLOY_ENABLED=true` so **Stocks Radar — signal alerts** runs
 
 ## AdSense variables (optional)
 

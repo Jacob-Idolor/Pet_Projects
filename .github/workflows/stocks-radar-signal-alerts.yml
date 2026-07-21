@@ -1,14 +1,12 @@
 name: Stocks Radar — signal alerts
 
-# Emails each subscriber when *their* alert-rules.json conditions fire (SNS, no Lambda).
-# Prefer running after quote refresh. PAUSED until AWS + SNS secrets exist.
-# Setup: stocks/radar/ALERTS.md
+# Enable with STOCKS_RADAR_DEPLOY_ENABLED=true + alert topic secrets (ALERTS.md).
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   # Weekdays ~16:30 ET — after near-close quote refresh
-  #   - cron: "30 20 * * 1-5"
+  schedule:
+    # Weekdays ~16:30 ET — after near-close quote refresh
+    - cron: "30 20 * * 1-5"
   workflow_run:
     workflows: ["Stocks Radar — refresh quotes"]
     types: [completed]
@@ -19,9 +17,7 @@ concurrency:
 
 jobs:
   alerts:
-    # Flip to true when secrets + SNS exist. Prefer:
-    # if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    if: ${{ false }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -57,12 +53,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Resolve public site URL
+        id: url
+        if: steps.gate.outputs.ok == '1'
+        env:
+          STOCKS_RADAR_SITE: ${{ vars.STOCKS_RADAR_SITE }}
+          CF_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+        run: |
+          if [ -n "${STOCKS_RADAR_SITE:-}" ]; then
+            echo "site=${STOCKS_RADAR_SITE%/}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${CF_DOMAIN:-}" ]; then
+            echo "site=https://${CF_DOMAIN}" >> "$GITHUB_OUTPUT"
+          else
+            echo "site=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Evaluate personal rules + publish
         if: steps.gate.outputs.ok == '1'
         working-directory: stocks/radar
         env:
           STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
-          STOCKS_RADAR_SITE: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+          STOCKS_RADAR_SITE: ${{ steps.url.outputs.site }}
           STOCKS_RADAR_S3_BUCKET: ${{ secrets.STOCKS_RADAR_S3_BUCKET }}
           STOCKS_RADAR_ALERT_TOPICS: ${{ secrets.STOCKS_RADAR_ALERT_TOPICS }}
           STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN }}

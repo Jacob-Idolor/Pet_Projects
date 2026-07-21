@@ -1,18 +1,18 @@
 name: Stocks Radar — deploy
 
-# PAUSED — AWS secrets / CloudFront stack not configured.
-# Re-enable after terraform apply + GitHub secrets (DEPLOY.md):
-#   - set job if to true
-#   - restore:
-# on:
-#   push:
-#     branches: [main]
-#     paths: [stocks/radar/**]
-#   schedule:
-#     - cron: "0 15 * * 1-5"   # weekday mid-day ET rebuild (optional; prefer refresh-quotes for prices)
-#   workflow_dispatch:
+# Enable by setting repo variable STOCKS_RADAR_DEPLOY_ENABLED=true
+# after terraform apply + secrets (see stocks/radar/GO_LIVE.md).
+
 on:
+  push:
+    branches: [main]
+    paths:
+      - "stocks/radar/**"
+      - ".github/workflows/stocks-radar-deploy.yml"
   workflow_dispatch:
+  # Full rebuild weekday midday UTC (quotes also refresh via dedicated workflow)
+  schedule:
+    - cron: "0 15 * * 1-5"
 
 concurrency:
   group: stocks-radar-deploy
@@ -20,16 +20,13 @@ concurrency:
 
 jobs:
   deploy:
-    # Flip to true when secrets + live CloudFront exist again.
-    if: ${{ false }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
     environment:
       name: stockwatch
       url: ${{ steps.site.outputs.url }}
-    env:
-      SITE_URL: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
     steps:
       - name: Require AWS deploy secrets
         run: |
@@ -38,7 +35,7 @@ jobs:
             STOCKS_RADAR_S3_BUCKET STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID \
             STOCKS_RADAR_CLOUDFRONT_DOMAIN; do
             if [ -z "${!key}" ]; then
-              echo "::error title=Missing secret::$key — see stocks/radar/DEPLOY.md"
+              echo "::error title=Missing secret::$key — run stocks/radar/infra/go-live.sh"
               missing=1
             fi
           done
@@ -59,6 +56,21 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
 
+      - name: Resolve public site URL
+        id: url
+        env:
+          STOCKS_RADAR_SITE: ${{ vars.STOCKS_RADAR_SITE }}
+          CF_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+        run: |
+          if [ -n "${STOCKS_RADAR_SITE:-}" ]; then
+            echo "site=${STOCKS_RADAR_SITE%/}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${CF_DOMAIN:-}" ]; then
+            echo "site=https://${CF_DOMAIN}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Set variable STOCKS_RADAR_SITE or secret STOCKS_RADAR_CLOUDFRONT_DOMAIN"
+            exit 1
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -70,7 +82,8 @@ jobs:
         working-directory: stocks/radar
         env:
           STOCKS_RADAR_BASE: /
-          STOCKS_RADAR_SITE: ${{ env.SITE_URL }}
+          STOCKS_RADAR_SITE: ${{ steps.url.outputs.site }}
+          STOCKS_RADAR_ENV: ${{ vars.STOCKS_RADAR_ENV || 'production' }}
           DEPLOY_PROVIDER: github-actions
           DEPLOY_TIME: ${{ github.event.head_commit.timestamp || github.run_started_at }}
           GITHUB_SHA: ${{ github.sha }}
@@ -81,8 +94,16 @@ jobs:
           PUBLIC_ADSENSE_SLOT_HERO: ${{ vars.PUBLIC_ADSENSE_SLOT_HERO }}
           PUBLIC_ADSENSE_SLOT_BOARD: ${{ vars.PUBLIC_ADSENSE_SLOT_BOARD }}
           PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.PUBLIC_ADSENSE_SLOT_FOOTER }}
+          PUBLIC_ADSENSE_VERIFY_META: ${{ vars.PUBLIC_ADSENSE_VERIFY_META }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
         run: |
           npm ci
+          if [ "${STOCKS_RADAR_ENV}" = "production" ]; then
+            npm run config:validate:prod
+          else
+            npm run config:validate
+          fi
           npm run build
 
       - name: Sync to S3 (tiered cache)
@@ -93,18 +114,43 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-          --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
-                 "/health.json" "/settings.json" \
-                 "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
+            --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
+                   "/health.json" "/settings.json" \
+                   "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
 
       - id: site
         name: Live site URL
-        run: echo "url=${SITE_URL}" >> "$GITHUB_OUTPUT"
+        run: echo "url=${{ steps.url.outputs.site }}" >> "$GITHUB_OUTPUT"
+
+      - name: Post-deploy health check
+        run: |
+          set -euo pipefail
+          url="${{ steps.url.outputs.site }}"
+          url="${url%/}"
+          # CloudFront may lag briefly after invalidation
+          sleep 12
+          for path in /health.json /settings.json /quotes.json /; do
+            code=$(curl -sS -o /tmp/body -w "%{http_code}" --retry 5 --retry-delay 4 --retry-all-errors "$url$path" || echo "000")
+            echo "$path → HTTP $code"
+            if [ "$code" != "200" ]; then
+              echo "::error::$path returned $code"
+              exit 1
+            fi
+          done
+          curl -fsS "$url/health.json" -o /tmp/health.json
+          node -e '
+            const h = JSON.parse(require("fs").readFileSync("/tmp/health.json","utf8"));
+            const good = h.ok === true || h.status === "ok";
+            if (!good) { console.error("health not ok", h); process.exit(1); }
+            console.log("health ok:", h.status, h.generatedAt || h.builtAt || "");
+          '
+          echo "## Health OK" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$url/health.json\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deployment summary
         run: |
           echo "## Stocks Radar deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**URL:** ${SITE_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**URL:** ${{ steps.url.outputs.site }}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Commit:** \`${GITHUB_SHA::7}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> "$GITHUB_STEP_SUMMARY"

@@ -128,5 +128,5 @@ output "domain_setup_hint" {
 
 output "reenable_ci_hint" {
   description = "After terraform apply + GitHub secrets"
-  value       = "Flip if:false → true and restore push/schedule on stocks-radar-deploy.yml, stocks-radar-refresh-quotes.yml, stocks-radar-daily-digest.yml, stocks-radar-signal-alerts.yml"
+  value       = "Run stocks/radar/infra/go-live.sh, then set repo variable STOCKS_RADAR_DEPLOY_ENABLED=true (see stocks/radar/GO_LIVE.md)"
 }

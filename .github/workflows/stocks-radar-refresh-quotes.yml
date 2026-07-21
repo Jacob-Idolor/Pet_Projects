@@ -1,19 +1,14 @@
 name: Stocks Radar — refresh quotes
 
-# Lightweight weekday quote refresh: fetch Yahoo → sync quotes.json only → invalidate.
-# Cheaper/faster than a full site rebuild. PAUSED until AWS secrets exist (DEPLOY.md).
-#
-# To re-enable after terraform apply + secrets:
-#   1. Uncomment push/schedule below (or keep workflow_dispatch only)
-#   2. Set job if: to true (or remove the if)
+# Enable with STOCKS_RADAR_DEPLOY_ENABLED=true (same flag as deploy).
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   # Weekdays 14:30 UTC ≈ 10:30 ET — mid-session refresh
-  #   - cron: "30 14 * * 1-5"
-  #   # Weekdays 20:15 UTC ≈ 16:15 ET — near close
-  #   - cron: "15 20 * * 1-5"
+  schedule:
+    # Weekdays 14:30 UTC ≈ 10:30 ET — mid-session
+    - cron: "30 14 * * 1-5"
+    # Weekdays 20:15 UTC ≈ 16:15 ET — near close
+    - cron: "15 20 * * 1-5"
 
 concurrency:
   group: stocks-radar-quotes
@@ -21,12 +16,10 @@ concurrency:
 
 jobs:
   refresh:
-    if: ${{ false }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      SITE_URL: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
     steps:
       - name: Require AWS deploy secrets
         run: |
@@ -35,7 +28,7 @@ jobs:
             STOCKS_RADAR_S3_BUCKET STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID \
             STOCKS_RADAR_CLOUDFRONT_DOMAIN; do
             if [ -z "${!key}" ]; then
-              echo "::error title=Missing secret::$key — see stocks/radar/DEPLOY.md"
+              echo "::error title=Missing secret::$key — see stocks/radar/GO_LIVE.md"
               missing=1
             fi
           done
@@ -76,7 +69,7 @@ jobs:
         run: |
           aws s3 cp stocks/radar/public/quotes.json \
             "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/quotes.json" \
-            --cache-control "public,max-age=0,no-cache" \
+            --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
             --content-type "application/json"
 
       - name: Invalidate CloudFront quotes
@@ -85,10 +78,26 @@ jobs:
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
             --paths "/quotes.json"
 
+      - name: Resolve public site URL
+        id: url
+        env:
+          STOCKS_RADAR_SITE: ${{ vars.STOCKS_RADAR_SITE }}
+          CF_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+        run: |
+          if [ -n "${STOCKS_RADAR_SITE:-}" ]; then
+            echo "site=${STOCKS_RADAR_SITE%/}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${CF_DOMAIN:-}" ]; then
+            echo "site=https://${CF_DOMAIN}" >> "$GITHUB_OUTPUT"
+          else
+            echo "site=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Summary
+        env:
+          SITE_URL: ${{ steps.url.outputs.site }}
         run: |
           echo "## Quotes refreshed" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Site:** ${SITE_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Site:** ${SITE_URL:-"(set STOCKS_RADAR_SITE)"}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Paths invalidated:** \`/quotes.json\`" >> "$GITHUB_STEP_SUMMARY"
           node -e "const q=require('./stocks/radar/public/quotes.json'); console.log('Coverage:', q.count+'/'+q.total, q.partial?'(partial)':''); console.log('Fetched:', q.fetchedAt||q.updatedAt);" >> "$GITHUB_STEP_SUMMARY"

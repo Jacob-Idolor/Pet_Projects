@@ -16,6 +16,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Radar signals** — Lean buy / Watch / Lean sell; **personal email alerts** when *your* rule fires ([ALERTS.md](ALERTS.md))
 - **Optional OpenTelemetry** — CI/script traces for Yahoo fetch + alerts ([OBSERVABILITY.md](OBSERVABILITY.md); off by default)
 - **Production config** — `site-settings.json` + `/settings.json` + `/health.json` ([PRODUCTION.md](PRODUCTION.md))
+- **Go-live bootstrap** — gated CI + `infra/go-live.sh` + preflight ([GO_LIVE.md](GO_LIVE.md))
 - **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
 
 ## Quick start
@@ -75,12 +76,12 @@ Local `npm run dev` shows labeled **AdSense preview** slots. Production uses you
 
 GitHub Pages is **not** used. Deploys run through **GitHub Actions → AWS**.
 
-**Full setup:** [`DEPLOY.md`](DEPLOY.md)
+**Go live (one checklist):** [`GO_LIVE.md`](GO_LIVE.md) · details: [`DEPLOY.md`](DEPLOY.md)
 
 1. `terraform apply` in `infra/terraform/` (S3 + CloudFront + optional SNS digest/alerts)
-2. Add GitHub secrets (AWS + bucket/CloudFront; optional digest/alerts topic ARNs)
-3. Re-enable paused workflows (see [DEPLOY.md](DEPLOY.md)) and push to `main`
-4. When friends are done: `infra/destroy.ps1` or `terraform destroy`
+2. `bash infra/go-live.sh` (or add GitHub secrets manually — [GO_LIVE.md](GO_LIVE.md))
+3. Set `STOCKS_RADAR_DEPLOY_ENABLED=true` and run **Stocks Radar — deploy**
+4. When friends are done: `infra/destroy.sh` or `terraform destroy`
 
 **Live URL:** `https://<your-cloudfront-domain>/`
 
@@ -109,11 +110,12 @@ stocks/radar/
   scripts/fetch-quotes.mjs
   scripts/write-seo-files.mjs
   infra/                    # Terraform + deploy.sh
+  GO_LIVE.md                # One checklist: TF → secrets → enable CI
   DEPLOY.md                 # AWS + GitHub secrets guide
   DOMAIN.md                 # Cheapest domain (Cloudflare/Porkbun) + DNS
   ADSENSE.md                # Publisher ads after domain approval
+  PRODUCTION.md             # Production readiness
   FRIENDS_FEEDBACK.md       # Apply → share → digest → destroy
-  ADSENSE.md                # Publisher setup + local preview
 ```
 
 ## License
