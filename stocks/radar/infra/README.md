@@ -42,7 +42,8 @@ Add repository **Secrets** (Settings → Secrets → Actions):
 | `STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID` | terraform output |
 | `STOCKS_RADAR_CLOUDFRONT_DOMAIN` | hostname only |
 | `STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN` | `daily_digest_topic_arn` (optional) |
-| `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` | `signal_alerts_topic_arn` (optional; can equal digest) |
+| `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` | shared board-wide alerts (optional) |
+| `STOCKS_RADAR_ALERT_TOPICS` | `personal_alert_topic_arns` JSON (personal rules — [ALERTS.md](../ALERTS.md)) |
 
 Workflows (paused until secrets exist — see [../DEPLOY.md](../DEPLOY.md)):
 
