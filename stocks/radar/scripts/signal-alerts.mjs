@@ -12,11 +12,13 @@
  *   STOCKS_RADAR_SITE / STOCKS_RADAR_CLOUDFRONT_DOMAIN — live quotes
  *   STOCKS_RADAR_ALERT_TOPICS — JSON map { "jacob": "arn:aws:sns:..." }
  *   STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN / DIGEST — broadcast fallback topic
- *   STOCKS_RADAR_S3_BUCKET — optional; load/save alert-state.json cooldown file
- *   ALERT_STATE_PATH — local state path (default public/alert-state.json)
+ *   STOCKS_RADAR_S3_BUCKET — optional; load/save cooldown under _private/ (not public via CF)
+ *   ALERT_STATE_PATH — local state path (default .cache/alert-state.json)
+ *   ALERT_STATE_S3_KEY — must be under _private/ (default _private/alert-state.json)
  *   ALERTS_DRY_RUN=true — print only
  *   ALERTS_ONLY_ON_SIGNAL=true — skip publish when nothing fresh
- *   ALERTS_BROADCAST=true — also/always send legacy board-wide lean-buy/sell digest
+ *   ALERTS_BROADCAST=true — send legacy board-wide lean-buy/sell digest (explicit only)
+ *   ALERTS_ALLOW_BROADCAST_FALLBACK=true — allow personal hits to use shared topic (INSECURE; off by default)
  *   AWS_REGION / AWS_PROFILE
  *
  * Optional OpenTelemetry (off unless OTEL_EXPORTER_OTLP_ENDPOINT is set):
@@ -25,7 +27,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { scoreWatchlist } from "./radar-score.mjs";
@@ -42,20 +44,28 @@ const ROOT = resolve(__dirname, "..");
 const WATCHLIST = resolve(ROOT, "src/data/watchlist.json");
 const RULES = resolve(ROOT, "src/data/alert-rules.json");
 const LOCAL_QUOTES = resolve(ROOT, "public/quotes.json");
-const DEFAULT_STATE = resolve(ROOT, "public/alert-state.json");
+const DEFAULT_STATE = resolve(ROOT, ".cache/alert-state.json");
 
 const dryRun = process.env.ALERTS_DRY_RUN === "true" || process.env.DIGEST_DRY_RUN === "true";
 const runtime = loadRuntimeConfig();
 const region = process.env.AWS_REGION || runtime.ops.awsRegion || "us-west-2";
 const profile = process.env.AWS_PROFILE || runtime.ops.awsProfile || "";
 const bucket = process.env.STOCKS_RADAR_S3_BUCKET?.trim() || runtime.site.s3Bucket || "";
-const stateKey = process.env.ALERT_STATE_S3_KEY?.trim() || "alert-state.json";
+const rawStateKey = process.env.ALERT_STATE_S3_KEY?.trim() || "_private/alert-state.json";
+if (!rawStateKey.startsWith("_private/")) {
+  console.error(
+    `ALERT_STATE_S3_KEY must start with "_private/" (got "${rawStateKey}") — refusing public path`,
+  );
+  process.exit(1);
+}
+const stateKey = rawStateKey;
 const statePath = process.env.ALERT_STATE_PATH?.trim() || DEFAULT_STATE;
 const onlyOnSignal =
   process.env.ALERTS_ONLY_ON_SIGNAL != null
     ? process.env.ALERTS_ONLY_ON_SIGNAL === "true"
     : runtime.alerts.onlyOnSignal;
 const forceBroadcast = process.env.ALERTS_BROADCAST === "true";
+const allowBroadcastFallback = process.env.ALERTS_ALLOW_BROADCAST_FALLBACK === "true";
 
 const broadcastTopic =
   process.env.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN?.trim() ||
@@ -133,6 +143,7 @@ function saveState(state) {
     );
     return;
   }
+  mkdirSync(dirname(statePath), { recursive: true });
   writeFileSync(statePath, body);
   if (bucket) {
     aws(
@@ -144,11 +155,11 @@ function saveState(state) {
         "--content-type",
         "application/json",
         "--cache-control",
-        "no-cache",
+        "no-store",
       ],
       { json: false }
     );
-    console.log(`✓ cooldown state → s3://${bucket}/${stateKey}`);
+    console.log(`✓ cooldown state → s3://${bucket}/${stateKey} (CloudFront-blocked _private/)`);
   } else {
     console.log(`✓ cooldown state → ${statePath}`);
   }
@@ -268,12 +279,18 @@ await withOtel("stocks-radar-alerts", async (otel) => {
           outChunks.push(body);
           console.log(body);
 
-          const topic = topicMap[subscriberId] || broadcastTopic;
-          if (!topicMap[subscriberId] && broadcastTopic) {
-            console.warn(
-              `No STOCKS_RADAR_ALERT_TOPICS["${subscriberId}"] — using broadcast topic (all subscribers may see this)`
-            );
+          const mapped = topicMap[subscriberId];
+          if (!mapped) {
+            const msg = `No STOCKS_RADAR_ALERT_TOPICS["${subscriberId}"] — skipping personal publish (fail-closed)`;
+            if (allowBroadcastFallback && broadcastTopic) {
+              console.warn(`${msg}; ALERTS_ALLOW_BROADCAST_FALLBACK=true → using shared topic`);
+            } else {
+              console.warn(msg);
+              span.setAttributes({ "radar.skipped_no_topic": true });
+              return;
+            }
           }
+          const topic = mapped || broadcastTopic;
           const symbols = [...new Set(rows.map((r) => r.stock.symbol))].join(", ");
           const subject = `Radar alert (${subscriberId}): ${symbols}`.slice(0, 100);
 

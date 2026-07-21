@@ -15,6 +15,9 @@ jobs:
   digest:
     if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: stockwatch
     steps:
       - uses: actions/checkout@v5
 

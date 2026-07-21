@@ -44,11 +44,12 @@ Edit product knobs in `site-settings.json`, then rebuild. Toggle features with b
 ### B. AWS go-live — see [GO_LIVE.md](GO_LIVE.md)
 
 - [ ] `terraform apply` (budget email on)
-- [ ] IAM policy from `infra/iam/deploy-policy.json`
+- [ ] IAM policy from `infra/iam/deploy-policy.json` (narrowed — [SECURITY.md](SECURITY.md))
 - [ ] `bash infra/go-live.sh` (secrets + `STOCKS_RADAR_SITE`)
 - [ ] `npm run go-live:preflight -- --strict`
 - [ ] Set `STOCKS_RADAR_DEPLOY_ENABLED=true`
 - [ ] Confirm `/health.json` and `/settings.json` on CloudFront
+- [ ] Confirm `/_private/alert-state.json` is **not** publicly readable (403/404)
 - [ ] Optional: digest + `alert_subscribers` + `STOCKS_RADAR_ALERT_TOPICS` — [ALERTS.md](ALERTS.md)
 
 ### C. Domain + AdSense (passive income)

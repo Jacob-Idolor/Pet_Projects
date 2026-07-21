@@ -6,3 +6,4 @@ node_modules/
 .env.*.local
 public/alert-state.json
 .alert-state.json
+.cache/

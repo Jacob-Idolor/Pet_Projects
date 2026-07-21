@@ -36,7 +36,7 @@ function scopeLabel(rule) {
               <span class="alert-rule-signal mono">{rule.signal}</span>
               <span class="alert-rule-scope">{scopeLabel(rule)}</span>
               <span class="alert-rule-who mono">→ {rule.subscriberId}</span>
-              {rule.note ? <span class="alert-rule-note">{rule.note}</span> : null}
+              {/* Personal notes stay in alert-rules.json for operators — not rendered publicly */}
             </li>
           ))
         }

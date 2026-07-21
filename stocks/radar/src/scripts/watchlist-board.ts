@@ -1,4 +1,4 @@
-import { escapeHtml, yahooUrl } from "../lib/format";
+import { escapeHtml, sanitizeId, sanitizePriority, sanitizeSymbol, yahooUrl } from "../lib/format";
 import {
   type QuoteData,
   type QuoteMap,
@@ -341,10 +341,13 @@ function renderTagsHtml(stock: StockRow) {
 
 function renderPriority(stock: StockRow) {
   if (!stock.priority) return "—";
-  return `<span class="priority priority-${stock.priority}">${stock.priority}</span>`;
+  const p = sanitizePriority(stock.priority);
+  return `<span class="priority priority-${p}">${escapeHtml(p)}</span>`;
 }
 
 function renderRow(stock: StockRow, compact = false, mode: "default" | "technical" = "default") {
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
   const price = getPrice(stock);
   const q = getQuote(stock);
   const chg = getChange(stock);
@@ -360,12 +363,12 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
   if (mode === "technical") {
     const rsi = rsiLabel(q?.rsi14);
     return `
-    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${expanded ? "expanded" : ""}">
+    <tr data-id="${sid}" data-symbol="${sym}" class="data-row ${expanded ? "expanded" : ""}">
       <td class="mono sym sticky-col">
-        <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
+        <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="num mono price-cell" data-price-for="${stock.symbol}">${fmtPrice(price)}</td>
+      <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td>${actionBadge(q)}</td>
       <td>${trendBadge(q?.trend)}</td>
@@ -373,21 +376,22 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
   }
 
+  const pri = sanitizePriority(stock.priority);
   return `
-    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${stock.priority === "high" ? "row-high" : ""} ${expanded ? "expanded" : ""}">
+    <tr data-id="${sid}" data-symbol="${sym}" class="data-row ${atTarget ? "row-at-target" : ""} ${pri === "high" ? "row-high" : ""} ${expanded ? "expanded" : ""}">
       <td class="mono sym sticky-col">
-        <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
-        ${stock.priority === "high" ? '<span class="conviction-dot" title="High conviction">●</span>' : ""}
+        <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
+        ${pri === "high" ? '<span class="conviction-dot" title="High conviction">●</span>' : ""}
         ${stock.custom ? '<span class="custom-tag" title="From group notes">★</span>' : ""}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="num mono price-cell" data-price-for="${stock.symbol}">${fmtPrice(price)}</td>
+      <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td>${actionBadge(q)}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
@@ -395,7 +399,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
       <td>${renderPriority(stock)}</td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
@@ -403,22 +407,24 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
 }
 
 function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
   const ptVal = stock.targetPrice != null ? String(stock.targetPrice) : "";
-  return `<tr class="detail-row" data-detail-for="${stock.id}">
+  return `<tr class="detail-row" data-detail-for="${sid}">
         <td colspan="${colspan}">
           <div class="detail-panel">
             ${renderTechnicalDetail(q, price)}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
-            <div class="pt-inline" data-pt-inline="${stock.symbol}">
+            <div class="pt-inline" data-pt-inline="${sym}">
               <strong>Price target:</strong>
-              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${escapeHtml(stock.symbol)}" />
-              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${stock.symbol}">Save to PT list</button>
+              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${sym}" />
+              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${sym}">Save to PT list</button>
               ${stock.targetPrice != null ? `<span class="pt-current">Target ${fmtPrice(stock.targetPrice)}</span>` : ""}
             </div>
             <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "—")}</p>
-            <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
+            <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
           </div>
         </td>
       </tr>`;
@@ -612,8 +618,8 @@ function renderOpportunities() {
     .map(({ stock, dist }) => {
       const { text, cls } = distanceLabel(dist);
       const price = getPrice(stock);
-      return `<button type="button" class="opp-chip ${cls}" data-jump="${stock.symbol}" title="${escapeHtml(stock.thesis ?? "")}">
-        <strong>${stock.symbol}</strong>
+      return `<button type="button" class="opp-chip ${cls}" data-jump="${sanitizeSymbol(stock.symbol)}" title="${escapeHtml(stock.thesis ?? "")}">
+        <strong>${sanitizeSymbol(stock.symbol) || escapeHtml(stock.symbol)}</strong>
         <span>${fmtPrice(price)} → ${fmtPrice(stock.targetPrice!)}</span>
         <em>${text}</em>
       </button>`;
@@ -639,11 +645,12 @@ function renderHeldStrip() {
       const q = getQuote(stock);
       const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
       const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
-      return `<article class="held-card" data-symbol="${stock.symbol}">
+      const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+      return `<article class="held-card" data-symbol="${sym}">
         <div class="held-top">
-          <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="held-sym">${stock.symbol}</a>
+          <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="held-sym">${sym}</a>
           ${q?.trend ? trendBadge(q.trend) : ""}
-          ${stock.priority === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
+          ${sanitizePriority(stock.priority) === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
         </div>
         <div class="held-name">${escapeHtml(stock.name)}</div>
         <div class="held-price mono">${fmtPrice(price)} <span class="chg ${chgCls}">${chgTxt}</span></div>
@@ -793,18 +800,19 @@ function renderMobileCard(stock: StockRow) {
   const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
 
-  const high = stock.priority === "high";
+  const high = sanitizePriority(stock.priority) === "high";
   const action = actionBias(q);
-  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${action.cls}" data-symbol="${stock.symbol}">
-    <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="scm-main">
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
+    <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
       <div class="scm-top">
         <div class="scm-identity">
-          <span class="scm-sym">${stock.symbol}</span>
+          <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
           ${actionBadge(q)}
         </div>
         <div class="scm-quote">
-          <span class="scm-price mono" data-price-for="${stock.symbol}">${fmtPrice(price)}</span>
+          <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
           <span class="scm-chg chg ${chgCls}">${chgTxt}</span>
         </div>
       </div>

@@ -17,6 +17,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Optional OpenTelemetry** — CI/script traces for Yahoo fetch + alerts ([OBSERVABILITY.md](OBSERVABILITY.md); off by default)
 - **Production config** — `site-settings.json` + `/settings.json` + `/health.json` ([PRODUCTION.md](PRODUCTION.md))
 - **Go-live bootstrap** — gated CI + `infra/go-live.sh` + preflight ([GO_LIVE.md](GO_LIVE.md))
+- **Security posture** — private S3/OAC, `_private/` blocked, hardened IAM/alerts ([SECURITY.md](SECURITY.md))
 - **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
 
 ## Quick start
@@ -111,6 +112,7 @@ stocks/radar/
   scripts/write-seo-files.mjs
   infra/                    # Terraform + deploy.sh
   GO_LIVE.md                # One checklist: TF → secrets → enable CI
+  SECURITY.md               # Audit posture + residual risks
   DEPLOY.md                 # AWS + GitHub secrets guide
   DOMAIN.md                 # Cheapest domain (Cloudflare/Porkbun) + DNS
   ADSENSE.md                # Publisher ads after domain approval

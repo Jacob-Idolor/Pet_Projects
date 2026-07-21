@@ -30,7 +30,8 @@ variable "alert_subscribers" {
     id    = string
     email = string
   }))
-  default = []
+  default   = []
+  sensitive = true
 
   validation {
     condition = alltrue([
@@ -57,7 +58,8 @@ locals {
   )
 
   alert_subscribers_map = {
-    for s in var.alert_subscribers : s.id => s
+    # IDs are not secret; unwrap so for_each is allowed. Emails remain sensitive.
+    for s in var.alert_subscribers : nonsensitive(s.id) => s
   }
 }
 

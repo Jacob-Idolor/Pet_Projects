@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Tiered S3 sync for Stocks Radar — AWS cost + cache-hit best practice.
 # Hashed assets: long cache. HTML/SEO: short. Live JSON: no-cache.
-# Preserves alert-state.json (personal alert cooldowns) across --delete.
+# Preserves _private/* (personal alert cooldowns) across --delete — not public via CloudFront.
 set -euo pipefail
 
 BUCKET="${1:?Usage: sync-s3-tiered.sh <bucket> [aws-profile]}"
@@ -18,7 +18,7 @@ if [[ ! -d "$DIST" ]]; then
   exit 1
 fi
 
-EXCLUDE_STATE=(--exclude "alert-state.json")
+EXCLUDE_STATE=(--exclude "alert-state.json" --exclude "_private/*")
 
 echo "→ Immutable / long-cache assets (_astro, fonts, images)…"
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \

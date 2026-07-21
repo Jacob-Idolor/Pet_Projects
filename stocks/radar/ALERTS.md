@@ -51,7 +51,7 @@ Confirm each **Subscription Confirmation** email from AWS SNS.
 | Secret | Value |
 |--------|--------|
 | `STOCKS_RADAR_ALERT_TOPICS` | JSON from `personal_alert_topic_arns`, e.g. `{"jacob":"arn:aws:sns:...","friend1":"arn:..."}` |
-| `STOCKS_RADAR_S3_BUCKET` | Same as deploy (stores `alert-state.json` cooldown) |
+| `STOCKS_RADAR_S3_BUCKET` | Same as deploy (stores `_private/alert-state.json` cooldown — not public via CloudFront) |
 | AWS keys / region | Same as deploy |
 
 Optional shared broadcast topic: `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` (board-wide digests).
@@ -82,7 +82,9 @@ Edit [`src/data/alert-rules.json`](src/data/alert-rules.json). `subscriberId` mu
 
 More examples: [`src/data/alert-rules.example.json`](src/data/alert-rules.example.json).
 
-**Cooldown:** the same rule+symbol will not re-email until `cooldownHours` passes (default 24). State lives at `s3://$bucket/alert-state.json`.
+**Cooldown:** the same rule+symbol will not re-email until `cooldownHours` passes (default 24). State lives at `s3://$bucket/_private/alert-state.json` (CloudFront cannot read `_private/*`).
+
+**Privacy:** personal hits only publish to `STOCKS_RADAR_ALERT_TOPICS[subscriberId]`. Missing map entries are **skipped** (no shared-topic fallback unless `ALERTS_ALLOW_BROADCAST_FALLBACK=true`).
 
 ## 4. Test locally
 

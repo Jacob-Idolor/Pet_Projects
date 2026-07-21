@@ -242,6 +242,29 @@ resource "aws_s3_bucket_policy" "site" {
             "AWS:SourceArn" = aws_cloudfront_distribution.site.arn
           }
         }
+      },
+      {
+        # Cooldown / ops state must never be world-readable via CloudFront
+        Sid       = "DenyCloudFrontPrivatePrefix"
+        Effect    = "Deny"
+        Principal = { Service = "cloudfront.amazonaws.com" }
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.site.arn}/_private/*"
+      },
+      {
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.site.arn,
+          "${aws_s3_bucket.site.arn}/*",
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
       }
     ]
   })

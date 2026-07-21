@@ -30,7 +30,7 @@ After `terraform destroy`: **about $0** (beyond any leftover pennies on the bill
 cd stocks/radar/infra/terraform
 cp terraform.tfvars.example terraform.tfvars
 # Set: allowed_account_ids, site_bucket_name
-# Digests + budget alerts default to jacob.idolor@outlook.com in terraform.tfvars.example
+# Digests + budget alerts: set emails in terraform.tfvars (gitignored) — never commit real addresses
 terraform init
 terraform plan
 terraform apply

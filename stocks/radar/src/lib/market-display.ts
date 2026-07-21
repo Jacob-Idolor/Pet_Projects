@@ -53,7 +53,8 @@ export function rsiLabel(rsi: number | null | undefined) {
 }
 
 export function trendBadge(trend: Trend | undefined) {
-  const t = trend ?? "unknown";
+  const allowed: Trend[] = ["bullish", "bearish", "mixed", "unknown"];
+  const t: Trend = allowed.includes(trend as Trend) ? (trend as Trend) : "unknown";
   const labels: Record<Trend, string> = {
     bullish: "Bullish",
     bearish: "Bearish",

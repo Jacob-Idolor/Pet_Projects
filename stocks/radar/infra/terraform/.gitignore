@@ -8,3 +8,7 @@ terraform.tfvars
 crash.log
 override.tf
 override.tf.json
+
+# Never commit plans (can contain PII / account IDs)
+tfplan
+*.tfplan
