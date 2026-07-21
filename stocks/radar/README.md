@@ -13,7 +13,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Day mood banner** — quick read on how the list is doing today
 - **Theme tags** — filter by semi, photonics, ai, etc.
 - **Technical view** (desktop) — SMA 20/50/200, RSI, 52-week range, trend badges
-- **Radar signals** — Lean buy / Watch / Lean sell; optional SNS email alerts (no Lambda)
+- **Radar signals** — Lean buy / Watch / Lean sell; **personal email alerts** when *your* rule fires ([ALERTS.md](ALERTS.md))
 - **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
 
 ## Quick start
@@ -82,7 +82,8 @@ GitHub Pages is **not** used. Deploys run through **GitHub Actions → AWS**.
 
 **Live URL:** `https://<your-cloudfront-domain>/`
 
-Daily email (viewers + mood + signals): confirm SNS subscription, then **Stocks Radar — daily digest**. Optional lean-buy alerts: **Stocks Radar — signal alerts** (`npm run alerts` locally).
+Daily email (viewers + mood + signals): confirm SNS subscription, then **Stocks Radar — daily digest**.  
+**Personal alerts** (email when *your* ticker/signal hits): [ALERTS.md](ALERTS.md) · `npm run alerts` locally.
 
 Weekday **quote-only refresh** (no full rebuild): **Stocks Radar — refresh quotes** — see [DEPLOY.md](DEPLOY.md).
 

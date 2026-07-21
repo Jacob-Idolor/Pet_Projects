@@ -56,7 +56,8 @@ terraform output signal_alerts_topic_arn
 | `STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID` | from terraform output |
 | `STOCKS_RADAR_CLOUDFRONT_DOMAIN` | hostname only, e.g. `d111111abcdef8.cloudfront.net` |
 | `STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN` | optional — daily digest |
-| `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` | optional — lean-buy/sell alerts (defaults to digest ARN if unset) |
+| `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` | optional — board-wide lean-buy/sell alerts |
+| `STOCKS_RADAR_ALERT_TOPICS` | optional — JSON map of personal alert topics (`terraform output -json personal_alert_topic_arns`) |
 
 IAM policy: [`infra/iam/deploy-policy.json`](infra/iam/deploy-policy.json)
 
@@ -124,6 +125,18 @@ ALERTS_DRY_RUN=true npm run alerts
 ```
 
 Workflow **Stocks Radar — signal alerts** can run after quote refresh (`ALERTS_ONLY_ON_SIGNAL=true` skips quiet days).
+
+### Personal alerts (per friend)
+
+Email **only that person** when a rule they configured fires (ticker, tag, price, RSI, lean-buy, …).
+
+Full guide: **[ALERTS.md](ALERTS.md)**
+
+1. `alert_subscribers = [{ id = "jacob", email = "..." }]` in `terraform.tfvars`
+2. `terraform apply` → confirm SNS emails
+3. GitHub secret `STOCKS_RADAR_ALERT_TOPICS` = `terraform output -json personal_alert_topic_arns`
+4. Edit `src/data/alert-rules.json` (`subscriberId` must match)
+5. Re-enable **Stocks Radar — signal alerts**
 
 ## AdSense variables (optional)
 

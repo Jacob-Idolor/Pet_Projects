@@ -5,6 +5,7 @@ import DayMoodBanner from "../components/DayMoodBanner.astro";
 import CheckInPulse from "../components/CheckInPulse.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
+import AlertRulesPanel from "../components/AlertRulesPanel.astro";
 import AdSlot from "../components/AdSlot.astro";
 import { meta, stocks } from "../data/watchlist";
 
@@ -46,6 +47,7 @@ const description =
       <CheckInPulse />
       <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
       <WatchlistBoard />
+      <AlertRulesPanel />
       <GroupSubmissions />
       <AdSlot placement="footer" label="Sponsored — footer" />
     </div>

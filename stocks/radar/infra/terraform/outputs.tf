@@ -54,8 +54,25 @@ output "daily_digest_email" {
 }
 
 output "signal_alerts_topic_arn" {
-  description = "SNS topic for lean-buy/sell alerts (STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN). May equal daily digest ARN when alerts_use_digest_topic=true."
+  description = "Shared SNS topic for board-wide alerts (STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN). May equal daily digest ARN when alerts_use_digest_topic=true."
   value       = local.signal_alerts_topic_arn
+}
+
+output "personal_alert_topic_arns" {
+  description = "Map of subscriberId → SNS topic ARN. Set GitHub secret STOCKS_RADAR_ALERT_TOPICS to this JSON."
+  value = {
+    for id, topic in aws_sns_topic.personal_alerts : id => topic.arn
+  }
+}
+
+output "personal_alert_subscribers" {
+  description = "Subscriber IDs with personal alert topics (emails are in tfvars only)"
+  value       = keys(aws_sns_topic.personal_alerts)
+}
+
+output "alert_setup_hint" {
+  description = "How to wire personal signal emails"
+  value       = "1) Add alert_subscribers in tfvars 2) terraform apply 3) confirm each SNS email 4) set GitHub secret STOCKS_RADAR_ALERT_TOPICS to jsonencode(personal_alert_topic_arns) 5) edit src/data/alert-rules.json 6) see ALERTS.md"
 }
 
 output "estimated_monthly_cost_usd" {

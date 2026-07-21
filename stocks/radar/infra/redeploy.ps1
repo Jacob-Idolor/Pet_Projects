@@ -30,7 +30,7 @@ try {
   $env:DEPLOY_TIME = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
   npm ci
   npm run build
-  aws s3 sync dist "s3://$Bucket" --delete --profile $ProfileName
+  aws s3 sync dist "s3://$Bucket" --delete --profile $ProfileName --exclude "alert-state.json"
   aws cloudfront create-invalidation --distribution-id $DistId --paths "/*" --profile $ProfileName | Out-Null
 } finally {
   Pop-Location

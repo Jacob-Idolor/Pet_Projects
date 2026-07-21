@@ -36,14 +36,21 @@ max_monthly_budget_usd = 5
 enable_daily_digest = false
 digest_email        = "you@example.com"
 
-# Lean-buy / lean-sell / near-target emails (GHA script, no Lambda).
-# Turn on with digest (reuse one SNS topic) OR set alerts_use_digest_topic=false.
+# Lean-buy / lean-sell board-wide emails (optional) + personal rules (ALERTS.md).
 enable_signal_alerts    = false
 alerts_use_digest_topic = true
 # enable_daily_digest     = true
 # enable_signal_alerts    = true
 # alerts_use_digest_topic = true
-# alerts_email            = "you@example.com"  # only for a dedicated alerts topic
+# alerts_email            = "you@example.com"
 
+# Personal signal emails — IDs must match alert-rules.json subscriberId.
+# Emails stay here (terraform.tfvars is gitignored). After apply:
+#   terraform output -json personal_alert_topic_arns
+# → GitHub secret STOCKS_RADAR_ALERT_TOPICS
+alert_subscribers = [
+  # { id = "jacob", email = "you@example.com" },
+  # { id = "friend1", email = "friend@example.com" },
+]
 # Cheapest CloudFront edges only (enforced in variables.tf)
 cloudfront_price_class = "PriceClass_100"

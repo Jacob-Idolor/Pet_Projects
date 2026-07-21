@@ -1,7 +1,8 @@
 name: Stocks Radar — signal alerts
 
-# Emails lean-buy / lean-sell / near-target names via SNS (no Lambda).
+# Emails each subscriber when *their* alert-rules.json conditions fire (SNS, no Lambda).
 # Prefer running after quote refresh. PAUSED until AWS + SNS secrets exist.
+# Setup: stocks/radar/ALERTS.md
 
 on:
   workflow_dispatch:
@@ -37,15 +38,14 @@ jobs:
             echo "::warning::AWS credentials missing — skip alerts"
             ok=0
           fi
-          topic="${STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN:-$STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN}"
-          if [ -z "$topic" ]; then
-            echo "::warning::No alerts/digest SNS topic — will print only"
+          if [ -z "$STOCKS_RADAR_ALERT_TOPICS" ] && [ -z "$STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN" ] && [ -z "$STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN" ]; then
+            echo "::warning::No alert topics configured — will print only (see ALERTS.md)"
           fi
           echo "ok=$ok" >> "$GITHUB_OUTPUT"
-          echo "topic=$topic" >> "$GITHUB_OUTPUT"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          STOCKS_RADAR_ALERT_TOPICS: ${{ secrets.STOCKS_RADAR_ALERT_TOPICS }}
           STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN }}
           STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
 
@@ -57,19 +57,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Score + publish signals
+      - name: Evaluate personal rules + publish
         if: steps.gate.outputs.ok == '1'
         working-directory: stocks/radar
         env:
           STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
           STOCKS_RADAR_SITE: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
-          STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ steps.gate.outputs.topic }}
+          STOCKS_RADAR_S3_BUCKET: ${{ secrets.STOCKS_RADAR_S3_BUCKET }}
+          STOCKS_RADAR_ALERT_TOPICS: ${{ secrets.STOCKS_RADAR_ALERT_TOPICS }}
+          STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN }}
+          STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           ALERTS_ONLY_ON_SIGNAL: "true"
           ALERTS_OUTPUT_PATH: ${{ runner.temp }}/alerts.txt
         run: |
           node scripts/signal-alerts.mjs
-          echo "## Stocks Radar signals" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Stocks Radar personal alerts" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           cat "${{ runner.temp }}/alerts.txt" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

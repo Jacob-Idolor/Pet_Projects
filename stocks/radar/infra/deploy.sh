@@ -34,7 +34,8 @@ npm ci
 npm run build
 
 echo "Syncing to s3://$BUCKET ..."
-aws s3 sync dist "s3://$BUCKET" --delete --profile "$AWS_PROFILE"
+aws s3 sync dist "s3://$BUCKET" --delete --profile "$AWS_PROFILE" \
+  --exclude "alert-state.json"
 
 echo "Invalidating CloudFront..."
 aws cloudfront create-invalidation \

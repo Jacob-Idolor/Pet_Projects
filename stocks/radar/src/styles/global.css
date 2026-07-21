@@ -1510,6 +1510,83 @@ body[data-day-mood="mixed"] .site-header {
   }
 }
 
+/* Personal alert rules (public summary — no emails) */
+.alert-rules-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.alert-rules-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.alert-rules-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+}
+
+.alert-rules-header .subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 42rem;
+}
+
+.alert-rules-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.alert-rule-row {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr) auto;
+  gap: 0.35rem 0.85rem;
+  align-items: baseline;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--bg-elevated);
+}
+
+.alert-rule-signal {
+  font-size: 0.75rem;
+  color: var(--amber);
+}
+
+.alert-rule-scope {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.alert-rule-who {
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+
+.alert-rule-note {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .alert-rule-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Group submissions feed */
 .submissions-panel {
   background: var(--surface);

@@ -89,10 +89,11 @@ jobs:
         run: |
           aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
             --cache-control "public,max-age=60" \
-            --exclude "quotes.json" --exclude "build-meta.json"
+            --exclude "quotes.json" --exclude "build-meta.json" --exclude "alert-state.json"
           aws s3 sync stocks/radar/dist "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}" --delete \
             --cache-control "public,max-age=0,no-cache" \
-            --exclude "*" --include "quotes.json" --include "build-meta.json"
+            --exclude "*" --include "quotes.json" --include "build-meta.json" \
+            --exclude "alert-state.json"
 
       - name: Invalidate CloudFront
         run: |
