@@ -7,11 +7,12 @@ data "aws_region" "current" {}
 locals {
   safeguard_summary = {
     stack_scope       = "static-site-only"
-    allowed_services  = "S3, CloudFront, optional ACM + external/Cloudflare or Route53 DNS, Budgets, optional SNS digest"
+    allowed_services  = "S3, CloudFront, optional ACM + external/Cloudflare or Route53 DNS, Budgets, optional SNS digest/alerts"
     blocked_by_design = "EKS, EC2, RDS, Lambda, ECS — not defined in this Terraform"
     account_id        = data.aws_caller_identity.current.account_id
     region            = data.aws_region.current.name
-    cost_notes        = "PriceClass_100, Cloudflare DNS preferred (no Route53), destroy when feedback done"
+    cost_notes        = "PriceClass_100, Cloudflare DNS preferred (no Route53), security headers on, destroy when feedback done"
+    domain_ready      = "Set enable_custom_domain after purchase — see DOMAIN.md; include_www_alias defaults true"
   }
 }
 
@@ -53,6 +54,16 @@ check "custom_domain_requires_dns" {
       For cheapest path set dns_management = "external" (Cloudflare Free DNS — no Route53).
       For AWS DNS set dns_management = "route53" and route53_zone_id.
     EOT
+  }
+}
+
+check "domain_aliases_need_custom_domain" {
+  assert {
+    condition = (
+      length(var.domain_aliases) == 0 ||
+      var.enable_custom_domain
+    )
+    error_message = "domain_aliases requires enable_custom_domain=true (buy domain first, then flip the flag)."
   }
 }
 

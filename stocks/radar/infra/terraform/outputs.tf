@@ -3,6 +3,11 @@ output "cloudfront_url" {
   value       = "https://${aws_cloudfront_distribution.site.domain_name}"
 }
 
+output "preferred_site_url" {
+  description = "URL to share: custom domain when enabled, otherwise CloudFront"
+  value       = var.enable_custom_domain ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.site.domain_name}"
+}
+
 output "cloudfront_domain_name" {
   description = "CloudFront hostname for Cloudflare CNAME target (DNS only / grey cloud)"
   value       = aws_cloudfront_distribution.site.domain_name
@@ -48,14 +53,24 @@ output "daily_digest_email" {
   sensitive   = true
 }
 
+output "signal_alerts_topic_arn" {
+  description = "SNS topic for lean-buy/sell alerts (STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN). May equal daily digest ARN when alerts_use_digest_topic=true."
+  value       = local.signal_alerts_topic_arn
+}
+
 output "estimated_monthly_cost_usd" {
   description = "Rough low-traffic cost band (PriceClass_100; Cloudflare DNS avoids Route53)"
   value       = "About 0.50–3.00 USD/mo + ~10–12 USD/yr domain; destroy AWS when done to go to ~0"
 }
 
 output "custom_domain" {
-  description = "Configured custom domain (empty when using CloudFront URL only)"
+  description = "Primary custom domain (empty when using CloudFront URL only)"
   value       = var.enable_custom_domain ? var.domain_name : ""
+}
+
+output "custom_domain_aliases" {
+  description = "All hostnames on the CloudFront distribution / ACM cert"
+  value       = local.cloudfront_aliases
 }
 
 output "acm_dns_validation_records" {
@@ -69,8 +84,19 @@ output "acm_dns_validation_records" {
   ] : []
 }
 
+output "cloudflare_site_cnames" {
+  description = "After ACM is issued: one Cloudflare CNAME per hostname → CloudFront (proxy OFF / grey cloud)"
+  value = var.enable_custom_domain ? [
+    for host in local.cloudfront_aliases : {
+      name   = host
+      target = aws_cloudfront_distribution.site.domain_name
+      proxy  = "DNS only (grey cloud)"
+    }
+  ] : []
+}
+
 output "cloudflare_site_cname" {
-  description = "After ACM is issued: Cloudflare CNAME @ or www → this hostname (proxy OFF / grey cloud)"
+  description = "Deprecated alias of the primary hostname mapping — prefer cloudflare_site_cnames"
   value = var.enable_custom_domain ? {
     name   = var.domain_name
     target = aws_cloudfront_distribution.site.domain_name
@@ -80,5 +106,10 @@ output "cloudflare_site_cname" {
 
 output "domain_setup_hint" {
   description = "Next steps for cheapest custom domain"
-  value       = "See stocks/radar/DOMAIN.md — buy at Cloudflare Registrar or Porkbun, DNS on Cloudflare Free, then set enable_custom_domain=true"
+  value       = "Buy domain (DOMAIN.md) → set enable_custom_domain=true + domain_name → terraform apply → add acm_dns_validation_records + cloudflare_site_cnames in Cloudflare (grey cloud)"
+}
+
+output "reenable_ci_hint" {
+  description = "After terraform apply + GitHub secrets"
+  value       = "Flip if:false → true and restore push/schedule on stocks-radar-deploy.yml, stocks-radar-refresh-quotes.yml, stocks-radar-daily-digest.yml, stocks-radar-signal-alerts.yml"
 }

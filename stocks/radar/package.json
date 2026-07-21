@@ -13,6 +13,7 @@
     "update-quotes": "node scripts/fetch-quotes.mjs",
     "seo": "node scripts/write-seo-files.mjs",
     "digest": "node scripts/daily-digest.mjs",
+    "alerts": "node scripts/signal-alerts.mjs",
     "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/write-build-meta.mjs && node scripts/write-seo-files.mjs"
   },
   "dependencies": {

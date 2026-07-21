@@ -163,6 +163,33 @@ a:hover {
   animation: none;
 }
 
+.live-status__dot.partial {
+  background: var(--amber);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--amber) 50%, transparent);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.live-status__dot.stale {
+  background: var(--amber);
+  box-shadow: none;
+  animation: none;
+}
+
+.live-status__dot.error {
+  background: var(--red);
+  box-shadow: none;
+  animation: none;
+}
+
+.live-status[data-health="stale"],
+.live-status[data-health="error"] {
+  color: color-mix(in srgb, var(--muted) 70%, var(--amber));
+}
+
+.live-status[data-health="error"] {
+  color: color-mix(in srgb, var(--muted) 55%, var(--red));
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }

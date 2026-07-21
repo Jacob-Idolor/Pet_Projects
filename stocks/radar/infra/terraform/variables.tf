@@ -51,9 +51,24 @@ variable "enable_custom_domain" {
 }
 
 variable "domain_name" {
-  description = "Custom domain (e.g. stockradar.com). Required if enable_custom_domain is true."
+  description = "Primary hostname (e.g. stockradar.com or www.stockradar.com). Required if enable_custom_domain is true."
   type        = string
   default     = ""
+}
+
+variable "domain_aliases" {
+  description = <<-EOT
+    Extra hostnames on the same ACM cert + CloudFront aliases (e.g. ["www.example.com"] when domain_name is apex).
+    Keep empty until you buy the domain. Cloudflare can redirect the unused hostname later.
+  EOT
+  type        = list(string)
+  default     = []
+}
+
+variable "include_www_alias" {
+  description = "When domain_name is an apex (example.com), also request www.example.com on the cert and CloudFront."
+  type        = bool
+  default     = true
 }
 
 variable "dns_management" {
@@ -75,6 +90,12 @@ variable "route53_zone_id" {
   description = "Route53 hosted zone ID. Required only when dns_management = \"route53\"."
   type        = string
   default     = ""
+}
+
+variable "enable_security_headers" {
+  description = "Attach AWS managed SecurityHeadersPolicy to CloudFront (HSTS, XSS, frame deny, etc.)."
+  type        = bool
+  default     = true
 }
 
 variable "monthly_budget_usd" {

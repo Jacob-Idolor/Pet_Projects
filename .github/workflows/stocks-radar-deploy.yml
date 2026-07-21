@@ -1,7 +1,16 @@
 name: Stocks Radar — deploy
 
 # PAUSED — AWS secrets / CloudFront stack not configured.
-# Re-enable push + schedule after terraform apply + GitHub secrets (DEPLOY.md).
+# Re-enable after terraform apply + GitHub secrets (DEPLOY.md):
+#   - set job if to true
+#   - restore:
+# on:
+#   push:
+#     branches: [main]
+#     paths: [stocks/radar/**]
+#   schedule:
+#     - cron: "0 15 * * 1-5"   # weekday mid-day ET rebuild (optional; prefer refresh-quotes for prices)
+#   workflow_dispatch:
 on:
   workflow_dispatch:
 

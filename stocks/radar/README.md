@@ -7,12 +7,14 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 ## What you get
 
 - **Unified tracking list** — every ticker in one place (no owned vs watching split)
-- **Live prices** — free Yahoo quotes on deploy + browser refresh
+- **Live prices** — free Yahoo quotes on deploy + weekday refresh workflow; browser falls back when stale
+- **Quote health bar** — age, coverage (e.g. 13/14), partial/stale/error states; last-good prices kept on Yahoo misses
 - **Mobile-first cards** — simple price view on phone; full table + technicals on desktop
 - **Day mood banner** — quick read on how the list is doing today
 - **Theme tags** — filter by semi, photonics, ai, etc.
 - **Technical view** (desktop) — SMA 20/50/200, RSI, 52-week range, trend badges
-- **Group feed** (desktop) — post ticker notes; auto-detects symbols
+- **Radar signals** — Lean buy / Watch / Lean sell; optional SNS email alerts (no Lambda)
+- **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
 
 ## Quick start
 
@@ -73,14 +75,18 @@ GitHub Pages is **not** used. Deploys run through **GitHub Actions → AWS**.
 
 **Full setup:** [`DEPLOY.md`](DEPLOY.md)
 
-1. `terraform apply` in `infra/terraform/` (S3 + CloudFront + optional SNS digest)
-2. Add GitHub secrets (AWS + bucket/CloudFront; optional digest topic ARN)
-3. Push to `main` — **Stocks Radar — deploy**
+1. `terraform apply` in `infra/terraform/` (S3 + CloudFront + optional SNS digest/alerts)
+2. Add GitHub secrets (AWS + bucket/CloudFront; optional digest/alerts topic ARNs)
+3. Re-enable paused workflows (see [DEPLOY.md](DEPLOY.md)) and push to `main`
 4. When friends are done: `infra/destroy.ps1` or `terraform destroy`
 
 **Live URL:** `https://<your-cloudfront-domain>/`
 
-Daily email (viewers + mood): confirm SNS subscription, then **Stocks Radar — daily digest** workflow.
+Daily email (viewers + mood + signals): confirm SNS subscription, then **Stocks Radar — daily digest**. Optional lean-buy alerts: **Stocks Radar — signal alerts** (`npm run alerts` locally).
+
+Weekday **quote-only refresh** (no full rebuild): **Stocks Radar — refresh quotes** — see [DEPLOY.md](DEPLOY.md).
+
+Custom domain when you are ready to buy: [DOMAIN.md](DOMAIN.md) (`include_www_alias` covers apex + www in one ACM cert).
 
 ## Manual deploy
 

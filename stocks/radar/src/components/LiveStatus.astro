@@ -15,7 +15,14 @@ const base = import.meta.env.BASE_URL;
 const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
 ---
 
-<div class="live-status" id="live-status" data-quotes-url={quotesUrl}>
+<div
+  class="live-status"
+  id="live-status"
+  data-quotes-url={quotesUrl}
+  data-health="unknown"
+  role="status"
+  aria-live="polite"
+>
   <span class="live-status__dot" aria-hidden="true"></span>
   <span id="live-status-text">
     Deployed {buildLabel} · {deployLabel} · <code>{shortSha}</code>
@@ -23,29 +30,106 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
 </div>
 
 <script define:vars={{ buildMeta, quotesUrl }}>
+  const root = document.getElementById("live-status");
   const statusEl = document.getElementById("live-status-text");
-  const dot = document.querySelector(".live-status__dot");
+  const dot = root?.querySelector(".live-status__dot");
+
+  function ageMinutes(iso) {
+    const t = new Date(iso).getTime();
+    if (Number.isNaN(t)) return null;
+    return Math.round((Date.now() - t) / 60000);
+  }
+
+  function ageLabel(mins) {
+    if (mins == null) return "unknown age";
+    if (mins < 1) return "just now";
+    if (mins === 1) return "1 min ago";
+    if (mins < 60) return `${mins} min ago`;
+    const hours = Math.round(mins / 60);
+    if (hours === 1) return "1 hr ago";
+    if (hours < 48) return `${hours} hr ago`;
+    return `${Math.round(hours / 24)}d ago`;
+  }
+
+  function setHealth(health) {
+    if (!root || !dot) return;
+    root.dataset.health = health;
+    dot.classList.remove("live", "paused", "stale", "error", "partial");
+    if (health === "live") dot.classList.add("live");
+    else if (health === "partial") dot.classList.add("partial");
+    else if (health === "stale") dot.classList.add("stale");
+    else if (health === "error") dot.classList.add("error");
+    else dot.classList.add("paused");
+  }
+
+  function applyMeta(data) {
+    const fetchedAt = data.fetchedAt || data.updatedAt;
+    const mins = ageMinutes(fetchedAt);
+    const staleAfterH = data.staleAfterHours ?? 6;
+    const staleAfterMin = staleAfterH * 60;
+    const count = data.count ?? Object.keys(data.quotes || {}).length;
+    const total = data.total ?? count;
+    const partial = Boolean(data.partial) || (total > 0 && count < total);
+    const fetchFailed = Boolean(data.fetchFailed);
+    const isStale = mins != null && mins >= staleAfterMin;
+
+    let health = "live";
+    if (fetchFailed || count === 0) health = "error";
+    else if (isStale) health = "stale";
+    else if (partial) health = "partial";
+    setHealth(health);
+
+    const shortSha = buildMeta.gitSha.slice(0, 7);
+    const deployLabel =
+      buildMeta.deployProvider === "github-actions"
+        ? "GitHub Actions → AWS"
+        : buildMeta.deployProvider;
+    const coverage =
+      total > 0 ? `${count}/${total}` : String(count);
+    const flags = [];
+    if (partial) flags.push("partial");
+    if (isStale) flags.push("stale");
+    if (fetchFailed) flags.push("fetch failed — showing last good");
+    if (data.carriedForward?.length) flags.push(`${data.carriedForward.length} carried`);
+    const flagTxt = flags.length ? ` · ${flags.join(" · ")}` : "";
+
+    if (statusEl) {
+      statusEl.innerHTML = `Quotes ${ageLabel(mins)} (${coverage})${flagTxt} · Deploy ${new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · ${deployLabel} · <code>${shortSha}</code>`;
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("radar:quotes-meta", {
+        detail: {
+          fetchedAt,
+          ageMin: mins,
+          stale: isStale,
+          partial,
+          fetchFailed,
+          count,
+          total,
+          failedSymbols: data.failedSymbols || [],
+          carriedForward: data.carriedForward || [],
+        },
+      })
+    );
+
+    if (isStale || fetchFailed) {
+      document.dispatchEvent(new CustomEvent("radar:stale-quotes", { detail: { fetchedAt, health } }));
+    }
+  }
 
   async function refreshStatus() {
     try {
       const res = await fetch(`${quotesUrl}?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("quotes fetch failed");
       const data = await res.json();
-      const fetchedAt = new Date(data.fetchedAt);
-      const ageMin = Math.round((Date.now() - fetchedAt.getTime()) / 60000);
-      const ageLabel =
-        ageMin < 1 ? "just now" : ageMin === 1 ? "1 min ago" : `${ageMin} min ago`;
-      const shortSha = buildMeta.gitSha.slice(0, 7);
-      const deployLabel =
-        buildMeta.deployProvider === "github-actions"
-          ? "GitHub Actions → AWS"
-          : buildMeta.deployProvider;
-      if (statusEl) {
-        statusEl.innerHTML = `Quotes ${ageLabel} · Deploy ${new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · ${deployLabel} · <code>${shortSha}</code>`;
-      }
-      dot?.classList.add("live");
+      applyMeta(data);
     } catch {
-      /* keep build-time label */
+      setHealth("error");
+      if (statusEl) {
+        statusEl.textContent = "Quotes unavailable — check deploy or run npm run update-quotes";
+      }
+      document.dispatchEvent(new CustomEvent("radar:stale-quotes", { detail: { health: "error" } }));
     }
   }
 

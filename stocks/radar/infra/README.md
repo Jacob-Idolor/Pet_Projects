@@ -1,10 +1,12 @@
 # Stocks Radar — AWS hosting
 
-Static site: **S3** + **CloudFront** (~$0.50–3/mo at friend scale). Optional **SNS** for daily email digests (no Lambda).
+Static site: **S3** + **CloudFront** (~$0.50–3/mo at friend scale). Optional **SNS** for daily digests + signal alerts (no Lambda).
 
 ## Friend trial (recommended path)
 
 See **[../FRIENDS_FEEDBACK.md](../FRIENDS_FEEDBACK.md)** — apply → deploy → share → daily digests → **destroy**.
+
+Buy a domain later — stack works on `*.cloudfront.net` first. Domain wiring: **[../DOMAIN.md](../DOMAIN.md)**.
 
 ## One-time setup
 
@@ -15,14 +17,17 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init && terraform apply
 ```
 
-Confirm the SNS subscription email if digests are enabled.
+Confirm the SNS subscription email if digests/alerts are enabled.
 
 Note outputs:
 
+- `preferred_site_url`
 - `s3_bucket_name`
 - `cloudfront_distribution_id`
 - `cloudfront_domain_name` / `cloudfront_url`
 - `daily_digest_topic_arn`
+- `signal_alerts_topic_arn`
+- `reenable_ci_hint`
 
 ## GitHub Actions (recommended)
 
@@ -36,11 +41,19 @@ Add repository **Secrets** (Settings → Secrets → Actions):
 | `STOCKS_RADAR_S3_BUCKET` | terraform output |
 | `STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID` | terraform output |
 | `STOCKS_RADAR_CLOUDFRONT_DOMAIN` | hostname only |
-| `STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN` | `daily_digest_topic_arn` (optional, for email) |
+| `STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN` | `daily_digest_topic_arn` (optional) |
+| `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` | `signal_alerts_topic_arn` (optional; can equal digest) |
 
-Push to `main` (under `stocks/radar/**`) runs **Stocks Radar — deploy**.
+Workflows (paused until secrets exist — see [../DEPLOY.md](../DEPLOY.md)):
 
-See [../DEPLOY.md](../DEPLOY.md) for IAM policy and troubleshooting. Attach/update IAM from [`iam/deploy-policy.json`](iam/deploy-policy.json) so CloudWatch metrics + SNS publish work for digests.
+| Workflow | Role |
+|----------|------|
+| **Stocks Radar — deploy** | Full site build + sync |
+| **Stocks Radar — refresh quotes** | Quotes-only weekday refresh |
+| **Stocks Radar — daily digest** | Viewers + mood + signals email |
+| **Stocks Radar — signal alerts** | Lean-buy/sell email when tape is active |
+
+Attach/update IAM from [`iam/deploy-policy.json`](iam/deploy-policy.json) so CloudWatch metrics, SNS, ACM, and response-headers reads work.
 
 ## Manual deploy
 
@@ -55,8 +68,6 @@ npm ci && npm run build
 ```bash
 cd stocks/radar/infra
 ./destroy.sh
-# Windows PowerShell:
-# .\destroy.ps1
 ```
 
 Or: empty the bucket, then `terraform destroy` in `terraform/`.

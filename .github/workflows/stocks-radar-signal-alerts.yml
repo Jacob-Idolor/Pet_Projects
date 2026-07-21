@@ -1,0 +1,75 @@
+name: Stocks Radar — signal alerts
+
+# Emails lean-buy / lean-sell / near-target names via SNS (no Lambda).
+# Prefer running after quote refresh. PAUSED until AWS + SNS secrets exist.
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   # Weekdays ~16:30 ET — after near-close quote refresh
+  #   - cron: "30 20 * * 1-5"
+  workflow_run:
+    workflows: ["Stocks Radar — refresh quotes"]
+    types: [completed]
+
+concurrency:
+  group: stocks-radar-signal-alerts
+  cancel-in-progress: true
+
+jobs:
+  alerts:
+    # Flip to true when secrets + SNS exist. Prefer:
+    # if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Require alert secrets
+        id: gate
+        run: |
+          ok=1
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::warning::AWS credentials missing — skip alerts"
+            ok=0
+          fi
+          topic="${STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN:-$STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN}"
+          if [ -z "$topic" ]; then
+            echo "::warning::No alerts/digest SNS topic — will print only"
+          fi
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          echo "topic=$topic" >> "$GITHUB_OUTPUT"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN }}
+          STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
+
+      - name: Configure AWS credentials
+        if: steps.gate.outputs.ok == '1'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Score + publish signals
+        if: steps.gate.outputs.ok == '1'
+        working-directory: stocks/radar
+        env:
+          STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+          STOCKS_RADAR_SITE: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+          STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ steps.gate.outputs.topic }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ALERTS_ONLY_ON_SIGNAL: "true"
+          ALERTS_OUTPUT_PATH: ${{ runner.temp }}/alerts.txt
+        run: |
+          node scripts/signal-alerts.mjs
+          echo "## Stocks Radar signals" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat "${{ runner.temp }}/alerts.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

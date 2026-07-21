@@ -996,18 +996,30 @@ function isUsMarketOpen() {
   const mins = et.getHours() * 60 + et.getMinutes();
   return mins >= 570 && mins < 960;
 }
-async function fetchOneQuote(symbol) {
+async function fetchOneQuote(symbol, attempt = 0) {
   try {
     const res = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
       { headers: { Accept: "application/json" } }
     );
+    if (res.status === 429 && attempt < 2) {
+      await new Promise((r) => setTimeout(r, 400 * 2 ** attempt));
+      return fetchOneQuote(symbol, attempt + 1);
+    }
     if (!res.ok) return null;
     const data = await res.json();
     const m = data?.chart?.result?.[0]?.meta;
     if (!m?.regularMarketPrice) return null;
-    return { price: m.regularMarketPrice, changePct: m.regularMarketChangePercent ?? null, prevClose: m.chartPreviousClose ?? null };
+    return {
+      price: m.regularMarketPrice,
+      changePct: m.regularMarketChangePercent ?? null,
+      prevClose: m.chartPreviousClose ?? null
+    };
   } catch {
+    if (attempt < 1) {
+      await new Promise((r) => setTimeout(r, 300));
+      return fetchOneQuote(symbol, attempt + 1);
+    }
     return null;
   }
 }
@@ -1015,14 +1027,16 @@ async function fetchQuotesBatched(symbols) {
   const unique = [...new Set(symbols)];
   if (!unique.length) return;
   const out = {};
-  for (let i = 0; i < unique.length; i += 12) {
-    const chunk = unique.slice(i, i + 12);
-    const results = await Promise.all(chunk.map(async (s) => {
-      const q = await fetchOneQuote(s);
-      return q ? [s, q] : null;
-    }));
+  for (let i = 0; i < unique.length; i += 8) {
+    const chunk = unique.slice(i, i + 8);
+    const results = await Promise.all(
+      chunk.map(async (s) => {
+        const q = await fetchOneQuote(s);
+        return q ? [s, q] : null;
+      })
+    );
     for (const row of results) if (row) out[row[0]] = row[1];
-    if (i + 12 < unique.length) await new Promise((r) => setTimeout(r, 250));
+    if (i + 8 < unique.length) await new Promise((r) => setTimeout(r, 300));
   }
   if (Object.keys(out).length) {
     document.dispatchEvent(new CustomEvent("radar:quotes", { detail: out }));
@@ -1030,6 +1044,8 @@ async function fetchQuotesBatched(symbols) {
 }
 function startQuoteLoader() {
   const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
+  let lastJsonOk = false;
+  let browserFallbackInFlight = false;
   async function loadFromJson() {
     try {
       const res = await fetch(`${base}quotes.json?t=${Date.now()}`, { cache: "no-store" });
@@ -1037,23 +1053,38 @@ function startQuoteLoader() {
       const data = await res.json();
       if (data.quotes && Object.keys(data.quotes).length) {
         document.dispatchEvent(new CustomEvent("radar:quotes", { detail: data.quotes }));
+        lastJsonOk = true;
         return true;
       }
     } catch {
+      lastJsonOk = false;
     }
     return false;
   }
+  async function maybeBrowserFallback(force = false) {
+    if (browserFallbackInFlight) return;
+    if (!force && !isUsMarketOpen()) return;
+    browserFallbackInFlight = true;
+    try {
+      await fetchQuotesBatched([...new Set(allStocks.map((s) => s.symbol))]);
+    } finally {
+      browserFallbackInFlight = false;
+    }
+  }
   const symbols = [...new Set(allStocks.map((s) => s.symbol))];
   loadFromJson().then((ok) => {
-    if (!ok) fetchQuotesBatched(symbols);
+    if (!ok) maybeBrowserFallback(true);
   });
   setInterval(() => {
     if (document.hidden) return;
-    loadFromJson();
+    loadFromJson().then((ok) => {
+      if (!ok && lastJsonOk === false) maybeBrowserFallback();
+    });
   }, 6e4);
   document.addEventListener("radar:stale-quotes", () => {
-    if (isUsMarketOpen()) fetchQuotesBatched(symbols);
+    maybeBrowserFallback(true);
   });
+  void symbols;
 }
 function initBucketSections() {
 }

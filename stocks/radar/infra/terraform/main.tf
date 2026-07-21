@@ -84,6 +84,27 @@ resource "aws_cloudfront_origin_access_control" "site" {
   signing_protocol                  = "sigv4"
 }
 
+locals {
+  # Apex → optional www SAN; explicit domain_aliases always included.
+  inferred_www = (
+    var.enable_custom_domain &&
+    var.include_www_alias &&
+    var.domain_name != "" &&
+    !startswith(var.domain_name, "www.")
+  ) ? ["www.${var.domain_name}"] : []
+
+  cloudfront_aliases = var.enable_custom_domain ? distinct(concat(
+    [var.domain_name],
+    local.inferred_www,
+    var.domain_aliases,
+  )) : []
+
+  # AWS managed response headers policy — SecurityHeadersPolicy
+  security_headers_policy_id  = "67f7725c-6f97-4210-82d8-225cc5080799"
+  caching_disabled_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+  caching_optimized_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+}
+
 resource "aws_cloudfront_distribution" "site" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -105,22 +126,35 @@ resource "aws_cloudfront_distribution" "site" {
   # Quotes must bypass long cache so price/signal polls see fresh deploys.
   # Cost: negligible — more origin GETs only when visitors poll quotes.json.
   ordered_cache_behavior {
-    path_pattern           = "/quotes.json"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-${aws_s3_bucket.site.id}"
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
-    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS managed-CachingDisabled
+    path_pattern               = "/quotes.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = local.caching_disabled_policy_id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/build-meta.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = local.caching_disabled_policy_id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
   }
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-${aws_s3_bucket.site.id}"
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
-    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6" # AWS managed-CachingOptimized
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = local.caching_optimized_policy_id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
   }
 
   custom_error_response {
@@ -150,7 +184,7 @@ resource "aws_cloudfront_distribution" "site" {
     minimum_protocol_version       = var.enable_custom_domain ? "TLSv1.2_2021" : null
   }
 
-  aliases = var.enable_custom_domain ? [var.domain_name] : []
+  aliases = local.cloudfront_aliases
 
   lifecycle {
     prevent_destroy = false
@@ -189,6 +223,10 @@ resource "aws_acm_certificate" "site" {
   provider          = aws.us_east_1
   domain_name       = var.domain_name
   validation_method = "DNS"
+
+  subject_alternative_names = [
+    for h in local.cloudfront_aliases : h if h != var.domain_name
+  ]
 
   lifecycle {
     create_before_destroy = true
