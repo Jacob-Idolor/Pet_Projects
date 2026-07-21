@@ -43,7 +43,7 @@ aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   --delete \
   "${EXCLUDE_STATE[@]}" \
   --exclude "_astro/*" \
-  --exclude "quotes.json" --exclude "build-meta.json" \
+  --exclude "quotes.json" --exclude "build-meta.json" --exclude "health.json" --exclude "settings.json" \
   --exclude "*.mjs" --exclude "*.js" --exclude "*.css" \
   --exclude "*.woff" --exclude "*.woff2" --exclude "*.ttf" \
   --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.webp" --exclude "*.svg" --exclude "*.ico" \
@@ -53,7 +53,7 @@ echo "→ Live data (never cache at edge via object headers)…"
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   "${EXCLUDE_STATE[@]}" \
   --exclude "*" \
-  --include "quotes.json" --include "build-meta.json" \
+  --include "quotes.json" --include "build-meta.json" --include "health.json" --include "settings.json" \
   --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
   --content-type "application/json"
 

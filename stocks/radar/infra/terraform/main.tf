@@ -159,6 +159,28 @@ resource "aws_cloudfront_distribution" "site" {
     response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
   }
 
+  ordered_cache_behavior {
+    path_pattern               = "/health.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = local.caching_disabled_policy_id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/settings.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = local.caching_disabled_policy_id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
   default_cache_behavior {
     allowed_methods            = ["GET", "HEAD", "OPTIONS"]
     cached_methods             = ["GET", "HEAD"]

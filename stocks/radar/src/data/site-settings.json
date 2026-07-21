@@ -1,0 +1,44 @@
+{
+  "$schema": "./site-settings.schema.json",
+  "app": {
+    "name": "Stocks Radar",
+    "version": "0.2.0",
+    "environment": "development"
+  },
+  "features": {
+    "adsense": true,
+    "personalAlerts": true,
+    "groupSubmissions": true,
+    "checkInPulse": true,
+    "technicalView": true,
+    "dayMood": true,
+    "otelScripts": true
+  },
+  "quotes": {
+    "staleAfterHours": 6,
+    "pollIntervalMs": 60000,
+    "browserFallback": true,
+    "yahooChunkSize": 8,
+    "yahooMaxRetries": 3
+  },
+  "board": {
+    "defaultPageSize": 50,
+    "defaultSort": "symbol",
+    "defaultView": "table",
+    "pageSizeOptions": [25, 50, 100]
+  },
+  "alerts": {
+    "defaultCooldownHours": 24,
+    "nearTargetPct": 5,
+    "minBuyScore": 2,
+    "onlyOnSignal": true
+  },
+  "seo": {
+    "requireCustomDomainForAds": true
+  },
+  "ops": {
+    "healthPath": "/health.json",
+    "settingsPath": "/settings.json",
+    "budgetUsd": 3
+  }
+}

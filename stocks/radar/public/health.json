@@ -1,0 +1,18 @@
+{
+  "status": "ok",
+  "service": "Stocks Radar",
+  "version": "0.2.0",
+  "environment": "development",
+  "builtAt": "2026-07-21T18:56:19.490Z",
+  "gitSha": "local",
+  "siteUrl": "https://d2stjcqx4wkpwu.cloudfront.net",
+  "checks": {
+    "settings": true,
+    "quotesExpected": true
+  },
+  "paths": {
+    "quotes": "/quotes.json",
+    "settings": "/settings.json",
+    "health": "/health.json"
+  }
+}

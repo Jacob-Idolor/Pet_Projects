@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Stocks Radar",
+    "version": "0.2.0",
+    "environment": "development",
+    "production": false
+  },
+  "features": {
+    "adsense": true,
+    "personalAlerts": true,
+    "groupSubmissions": true,
+    "checkInPulse": true,
+    "technicalView": true,
+    "dayMood": true,
+    "otelScripts": true
+  },
+  "quotes": {
+    "staleAfterHours": 6,
+    "pollIntervalMs": 60000,
+    "browserFallback": true
+  },
+  "board": {
+    "defaultPageSize": 50,
+    "defaultSort": "symbol",
+    "defaultView": "table",
+    "pageSizeOptions": [
+      25,
+      50,
+      100
+    ]
+  },
+  "alerts": {
+    "defaultCooldownHours": 24,
+    "nearTargetPct": 5,
+    "minBuyScore": 2
+  },
+  "ops": {
+    "healthPath": "/health.json",
+    "settingsPath": "/settings.json"
+  },
+  "siteUrl": "https://d2stjcqx4wkpwu.cloudfront.net",
+  "generatedAt": "2026-07-21T18:56:19.490Z"
+}

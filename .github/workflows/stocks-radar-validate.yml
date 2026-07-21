@@ -23,6 +23,9 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
       - run: npm ci
+      - run: npm run config:validate
       - run: npm run build
         env:
           STOCKS_RADAR_BASE: /
+          STOCKS_RADAR_SITE: https://example.cloudfront.net
+          STOCKS_RADAR_ENV: development

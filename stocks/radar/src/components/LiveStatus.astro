@@ -1,5 +1,10 @@
 ---
 import buildMeta from "../../public/build-meta.json";
+import { getSiteSettings } from "../lib/site-config";
+
+const settings = getSiteSettings();
+const staleAfterHours = settings.quotes.staleAfterHours;
+const pollIntervalMs = settings.quotes.pollIntervalMs;
 
 const buildTime = new Date(buildMeta.builtAt);
 const buildLabel = buildTime.toLocaleString(undefined, {
@@ -19,6 +24,8 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   class="live-status"
   id="live-status"
   data-quotes-url={quotesUrl}
+  data-stale-after-hours={staleAfterHours}
+  data-poll-ms={pollIntervalMs}
   data-health="unknown"
   role="status"
   aria-live="polite"
@@ -29,7 +36,7 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   </span>
 </div>
 
-<script define:vars={{ buildMeta, quotesUrl }}>
+<script define:vars={{ buildMeta, quotesUrl, staleAfterHours, pollIntervalMs }}>
   const root = document.getElementById("live-status");
   const statusEl = document.getElementById("live-status-text");
   const dot = root?.querySelector(".live-status__dot");
@@ -65,7 +72,7 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   function applyMeta(data) {
     const fetchedAt = data.fetchedAt || data.updatedAt;
     const mins = ageMinutes(fetchedAt);
-    const staleAfterH = data.staleAfterHours ?? 6;
+    const staleAfterH = data.staleAfterHours ?? staleAfterHours ?? 6;
     const staleAfterMin = staleAfterH * 60;
     const count = data.count ?? Object.keys(data.quotes || {}).length;
     const total = data.total ?? count;
@@ -134,5 +141,5 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   }
 
   refreshStatus();
-  setInterval(refreshStatus, 60_000);
+  setInterval(refreshStatus, pollIntervalMs || 60_000);
 </script>

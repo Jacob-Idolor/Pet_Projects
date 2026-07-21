@@ -35,6 +35,7 @@ import {
   updateFiredState,
 } from "./match-alert-rules.mjs";
 import { withOtel } from "./otel.mjs";
+import { loadRuntimeConfig } from "./config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -44,12 +45,16 @@ const LOCAL_QUOTES = resolve(ROOT, "public/quotes.json");
 const DEFAULT_STATE = resolve(ROOT, "public/alert-state.json");
 
 const dryRun = process.env.ALERTS_DRY_RUN === "true" || process.env.DIGEST_DRY_RUN === "true";
-const region = process.env.AWS_REGION || "us-west-2";
-const profile = process.env.AWS_PROFILE || "";
-const bucket = process.env.STOCKS_RADAR_S3_BUCKET?.trim() || "";
+const runtime = loadRuntimeConfig();
+const region = process.env.AWS_REGION || runtime.ops.awsRegion || "us-west-2";
+const profile = process.env.AWS_PROFILE || runtime.ops.awsProfile || "";
+const bucket = process.env.STOCKS_RADAR_S3_BUCKET?.trim() || runtime.site.s3Bucket || "";
 const stateKey = process.env.ALERT_STATE_S3_KEY?.trim() || "alert-state.json";
 const statePath = process.env.ALERT_STATE_PATH?.trim() || DEFAULT_STATE;
-const onlyOnSignal = process.env.ALERTS_ONLY_ON_SIGNAL === "true";
+const onlyOnSignal =
+  process.env.ALERTS_ONLY_ON_SIGNAL != null
+    ? process.env.ALERTS_ONLY_ON_SIGNAL === "true"
+    : runtime.alerts.onlyOnSignal;
 const forceBroadcast = process.env.ALERTS_BROADCAST === "true";
 
 const broadcastTopic =
@@ -222,7 +227,7 @@ await withOtel("stocks-radar-alerts", async (otel) => {
     const quotes = data.quotes || {};
     const fetchedAt = data.fetchedAt || data.updatedAt || "unknown";
     const when = new Date().toISOString();
-    const cooldownHours = rulesConfig.defaults?.cooldownHours ?? 24;
+    const cooldownHours = rulesConfig.defaults?.cooldownHours ?? runtime.alerts.defaultCooldownHours;
 
     const enabledRules = (rulesConfig.rules || []).filter((r) => r && r.enabled !== false);
     const hits = matchAlertRules(rulesConfig, watchlist.stocks || [], quotes);
@@ -290,9 +295,11 @@ await withOtel("stocks-radar-alerts", async (otel) => {
     if (forceBroadcast || (enabledRules.length === 0 && broadcastTopic)) {
       await otel.withSpan("alerts.publish_broadcast", async (span) => {
         const scored = scoreWatchlist(watchlist.stocks || [], quotes);
-        const minBuy = Number(process.env.ALERT_MIN_BUY_SCORE || 2);
+        const minBuy = Number(process.env.ALERT_MIN_BUY_SCORE || runtime.alerts.minBuyScore);
         const nearPct = Number(
-          process.env.ALERT_NEAR_TARGET_PCT || rulesConfig.defaults?.nearTargetPct || 5
+          process.env.ALERT_NEAR_TARGET_PCT ||
+            rulesConfig.defaults?.nearTargetPct ||
+            runtime.alerts.nearTargetPct
         );
         const buy = scored.buy.filter((r) => r.score >= minBuy);
         const sell = scored.sell;

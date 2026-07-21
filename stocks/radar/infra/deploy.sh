@@ -40,6 +40,7 @@ echo "Invalidating CloudFront (HTML + live JSON only — keep hashed assets cach
 aws cloudfront create-invalidation \
   --distribution-id "$DIST_ID" \
   --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
+         "/health.json" "/settings.json" \
          "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs" \
   --profile "$AWS_PROFILE" \
   --output text >/dev/null

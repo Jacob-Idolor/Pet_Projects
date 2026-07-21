@@ -57,6 +57,17 @@ let page = 1;
 let pageSize = 50;
 let expandedId: string | null = null;
 
+function radarSettings() {
+  return (
+    (typeof window !== "undefined" &&
+      (window as unknown as { __RADAR_SETTINGS__?: {
+        board?: { defaultPageSize?: number; defaultSort?: string; defaultView?: string };
+        quotes?: { pollIntervalMs?: number; browserFallback?: boolean };
+      } }).__RADAR_SETTINGS__) ||
+    {}
+  );
+}
+
 interface Prefs {
   viewMode?: "table" | "technical";
   pageSize?: number;
@@ -1074,6 +1085,10 @@ function bindEvents() {
 }
 
 export async function initWatchlistBoard(stocksJson: string) {
+  const site = radarSettings();
+  if (site.board?.defaultPageSize) pageSize = site.board.defaultPageSize;
+  if (site.board?.defaultSort) sortKey = site.board.defaultSort;
+
   const prefs = loadPrefs();
   if (prefs.pageSize) pageSize = prefs.pageSize;
   if (prefs.sortKey) sortKey = prefs.sortKey;
@@ -1083,7 +1098,8 @@ export async function initWatchlistBoard(stocksJson: string) {
   const custom = await getCustomStocks();
   allStocks = mergeStocks(baseStocks, custom);
 
-  if (prefs.viewMode === "technical") {
+  const defaultView = site.board?.defaultView === "technical" ? "technical" : "table";
+  if (prefs.viewMode === "technical" || (!prefs.viewMode && defaultView === "technical")) {
     viewMode = "technical";
     setViewToggle("view-technical");
   } else {
@@ -1192,6 +1208,7 @@ function startQuoteLoader() {
 
   async function maybeBrowserFallback(force = false) {
     if (browserFallbackInFlight) return;
+    if (radarSettings().quotes?.browserFallback === false) return;
     if (!force && !isUsMarketOpen()) return;
     browserFallbackInFlight = true;
     try {
@@ -1212,7 +1229,7 @@ function startQuoteLoader() {
     loadFromJson().then((ok) => {
       if (!ok && lastJsonOk === false) maybeBrowserFallback();
     });
-  }, 60_000);
+  }, radarSettings().quotes?.pollIntervalMs ?? 60_000);
 
   document.addEventListener("radar:stale-quotes", () => {
     maybeBrowserFallback(true);

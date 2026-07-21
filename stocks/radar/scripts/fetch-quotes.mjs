@@ -19,11 +19,13 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildMetrics } from "./market-metrics.mjs";
 import { withOtel } from "./otel.mjs";
+import { loadRuntimeConfig } from "./config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const WATCHLIST = resolve(ROOT, "src/data/watchlist.json");
 const OUT = resolve(ROOT, "public/quotes.json");
+const runtime = loadRuntimeConfig();
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -32,10 +34,11 @@ const HEADERS = {
   "User-Agent": "stocks-radar/1.1 (+https://github.com/Jacob-Idolor/Pet_Projects)",
 };
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = runtime.quotes.yahooMaxRetries;
 const RETRY_BASE_MS = 500;
 /** Quotes older than this (hours) are treated as stale in the UI. */
-const STALE_AFTER_HOURS = Number(process.env.QUOTES_STALE_AFTER_HOURS || 6);
+const STALE_AFTER_HOURS = runtime.quotes.staleAfterHours;
+const CHUNK_SIZE = runtime.quotes.yahooChunkSize;
 
 function loadPreviousQuotes() {
   if (!existsSync(OUT)) return { quotes: {}, fetchedAt: null };
@@ -143,7 +146,7 @@ async function fetchSymbol(symbol, otel) {
 async function fetchAll(symbols, otel) {
   const quotes = {};
   const failed = [];
-  const chunkSize = 8;
+  const chunkSize = CHUNK_SIZE;
 
   for (let i = 0; i < symbols.length; i += chunkSize) {
     const chunk = symbols.slice(i, i + chunkSize);

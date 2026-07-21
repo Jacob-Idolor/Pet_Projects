@@ -93,8 +93,9 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
-                   "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
+          --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
+                 "/health.json" "/settings.json" \
+                 "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
 
       - id: site
         name: Live site URL
