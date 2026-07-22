@@ -26,11 +26,14 @@ domain_aliases       = []         # or e.g. ["www.example.com"] if not using inc
 
 enable_security_headers = true
 
-# Budget alarms — keep low while friends test
-enable_budget          = true
-budget_alert_email     = "you@example.com"
-monthly_budget_usd     = 3
-max_monthly_budget_usd = 5
+# Budget alarms — scoped to Project=stocks-radar (see COST.md)
+# Expected AWS spend: ~$0.50–3/mo friends; raise to 5–10 only if traffic grows
+enable_budget                = true
+budget_alert_email           = "you@example.com"
+monthly_budget_usd           = 3
+max_monthly_budget_usd       = 15
+budget_scope_to_project_tag  = true
+# After apply: Billing → Cost allocation tags → activate "Project"
 
 # Daily viewer email (SNS). Needs IAM sns permissions — leave false if CreateTopic is denied.
 enable_daily_digest = false

@@ -25,11 +25,14 @@ Merge the Stocks Radar reliability PR to `main` so workflows and scripts are on 
 ```bash
 cd stocks/radar/infra/terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit: allowed_account_ids, site_bucket_name, budget_alert_email, digest_email
+# Edit: allowed_account_ids, site_bucket_name, budget_alert_email
 # Optional: alert_subscribers = [{ id = "jacob", email = "you@example.com" }]
+# Budget defaults to $3/mo scoped to Project=stocks-radar — see infra/terraform/COST.md
 
 terraform init && terraform plan && terraform apply
 ```
+
+After apply: **Billing → Cost allocation tags → activate `Project`** (needed for the budget filter; up to 24h).
 
 Leave `enable_custom_domain = false` until you buy a name ([DOMAIN.md](DOMAIN.md)).
 

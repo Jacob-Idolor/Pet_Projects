@@ -11,7 +11,7 @@ locals {
     blocked_by_design = "EKS, EC2, RDS, Lambda, ECS — not defined in this Terraform"
     account_id        = data.aws_caller_identity.current.account_id
     region            = data.aws_region.current.name
-    cost_notes        = "PriceClass_100, Cloudflare DNS preferred (no Route53), security headers on, destroy when feedback done"
+    cost_notes        = "PriceClass_100 ≈ $0.50–3/mo friends; Project-scoped $3 budget; Cloudflare DNS preferred; destroy when idle"
     domain_ready      = "Set enable_custom_domain after purchase — see DOMAIN.md; include_www_alias defaults true"
   }
 }
@@ -78,5 +78,20 @@ check "budget_cap_sane" {
   assert {
     condition     = !var.enable_budget || (var.monthly_budget_usd >= 1 && var.monthly_budget_usd <= var.max_monthly_budget_usd)
     error_message = "monthly_budget_usd must be between 1 and ${var.max_monthly_budget_usd} when enable_budget is true."
+  }
+}
+
+check "budget_email_required" {
+  assert {
+    condition     = !var.enable_budget || var.budget_alert_email != ""
+    error_message = "enable_budget=true requires budget_alert_email (you will not get emails otherwise)."
+  }
+}
+
+check "budget_floor_viable" {
+  assert {
+    # Sub-$2 limits false-alarm on normal CloudFront friend traffic (~$0.50–2 typical).
+    condition     = !var.enable_budget || var.monthly_budget_usd >= 2
+    error_message = "monthly_budget_usd below $2 will false-alarm on normal friend-scale CloudFront use; keep default 3 (or 5–10 if growing)."
   }
 }

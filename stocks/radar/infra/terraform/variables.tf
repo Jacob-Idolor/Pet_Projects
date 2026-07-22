@@ -99,28 +99,40 @@ variable "enable_security_headers" {
 }
 
 variable "monthly_budget_usd" {
-  description = "AWS budget alert threshold in USD (keep low for friend-feedback trials)"
-  type        = number
-  default     = 3
+  description = <<-EOT
+    Monthly cost alert for THIS stack only (filtered by Project tag).
+    Friend-scale hosting is typically $0.50–3; default $3 gives headroom without masking a runaway.
+  EOT
+  type    = number
+  default = 3
 }
 
 variable "max_monthly_budget_usd" {
-  description = "Upper cap for budget alert variable (safeguard against typos like 5000)"
+  description = "Upper cap for monthly_budget_usd (typo safeguard). Raise only if you expect real traffic growth."
   type        = number
-  default     = 5
+  default     = 15
 }
 
 variable "budget_alert_email" {
-  description = "Email for budget alerts. Required for budget resource."
+  description = "Email for budget alerts. Required when enable_budget=true."
   type        = string
   default     = ""
   sensitive   = true
 }
 
 variable "enable_budget" {
-  description = "Create AWS Budget alert (needs billing permissions on IAM user)"
+  description = "Create AWS Budget alert scoped to Project=project_name (needs Billing → Cost allocation tags activated for Project)."
   type        = bool
   default     = true
+}
+
+variable "budget_scope_to_project_tag" {
+  description = <<-EOT
+    If true (recommended), budget tracks only spend tagged Project=<project_name>.
+    If false, budget is account-wide — only use on a dedicated empty account.
+  EOT
+  type    = bool
+  default = true
 }
 
 variable "cloudfront_price_class" {
