@@ -13,6 +13,7 @@ import {
   rsiLabel,
   athIndicator,
   actionBadge,
+  actionBias,
   pulseExplain,
 } from "../lib/market-display";
 

@@ -102,7 +102,7 @@ function renderTechnicalDetail(q, price) {
     const above = price != null && price >= ma;
     return `<tr><td>SMA ${p}</td><td class="mono">${fmtPrice(ma)}</td><td class="${above ? "ma-above" : "ma-below"}">${vs != null ? fmtPct(vs) : "\u2014"}</td></tr>`;
   }).filter(Boolean).join("");
-  const action = actionBias2(q);
+  const action = actionBias(q);
   return `
     <div class="tech-detail">
       <h4>Technical snapshot</h4>
@@ -127,7 +127,7 @@ function renderTechnicalDetail(q, price) {
       <p class="tech-vol"><strong>Volume:</strong> ${volNote}</p>
     </div>`;
 }
-function actionBias2(q) {
+function actionBias(q) {
   if (!q || q.price == null) {
     return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0 };
   }
@@ -178,7 +178,7 @@ function actionBias2(q) {
   return { label: "Watch", cls: "watch", reason, score };
 }
 function actionBadge(q) {
-  const a = actionBias2(q);
+  const a = actionBias(q);
   return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
 function sma50Plain(q) {
@@ -190,7 +190,7 @@ function sma50Plain(q) {
   return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
 }
 function pulseExplain(q) {
-  const bias = actionBias2(q);
+  const bias = actionBias(q);
   const sma = sma50Plain(q);
   const lean = bias.cls === "buy" ? "Lean buy \u2014 checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on our checklist" : bias.cls === "watch" ? "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
   const bits = [lean];
