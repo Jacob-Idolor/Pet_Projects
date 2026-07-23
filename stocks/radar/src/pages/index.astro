@@ -5,18 +5,28 @@ import DayMoodBanner from "../components/DayMoodBanner.astro";
 import CheckInPulse from "../components/CheckInPulse.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
+import AlertRulesPanel from "../components/AlertRulesPanel.astro";
+import SiteSettingsPanel from "../components/SiteSettingsPanel.astro";
 import AdSlot from "../components/AdSlot.astro";
 import { meta, stocks } from "../data/watchlist";
+import { featureEnabled, getSiteSettings } from "../lib/site-config";
 
 const description =
   meta.tagline ||
   "Group check-in: master watchlist, movers, and buy setups from our radar score.";
+
+const settings = getSiteSettings();
+const showPulse = featureEnabled("checkInPulse");
+const showAlerts = featureEnabled("personalAlerts");
+const showSubmissions = featureEnabled("groupSubmissions");
+const showAds = featureEnabled("adsense");
+const showMood = featureEnabled("dayMood");
 ---
 
 <BaseLayout title={meta.groupName} description={description}>
   <div class="app-shell">
     <LiveStatus />
-    <DayMoodBanner />
+    {showMood && <DayMoodBanner />}
     <section class="hero container">
       <div class="hero-copy">
         <p class="hero-brand">Stocks Radar</p>
@@ -34,20 +44,30 @@ const description =
           <dd>Check-in</dd>
         </div>
         <div class="hero-kpi desktop-only">
-          <dt>Signals</dt>
-          <dd>Buy / watch</dd>
+          <dt>Version</dt>
+          <dd class="mono">{settings.app.version}</dd>
         </div>
       </dl>
     </section>
-    <div class="container">
-      <AdSlot placement="hero" label="Sponsored — top" />
-    </div>
+    {
+      showAds && (
+        <div class="container">
+          <AdSlot placement="hero" label="Sponsored — top" />
+        </div>
+      )
+    }
     <div class="container board-stage">
-      <CheckInPulse />
-      <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
+      {showPulse && <CheckInPulse />}
+      {
+        showAds && (
+          <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
+        )
+      }
       <WatchlistBoard />
-      <GroupSubmissions />
-      <AdSlot placement="footer" label="Sponsored — footer" />
+      {showAlerts && <AlertRulesPanel />}
+      <SiteSettingsPanel />
+      {showSubmissions && <GroupSubmissions />}
+      {showAds && <AdSlot placement="footer" label="Sponsored — footer" />}
     </div>
   </div>
 </BaseLayout>

@@ -1,0 +1,48 @@
+{
+  "defaults": {
+    "cooldownHours": 24,
+    "nearTargetPct": 5
+  },
+  "rules": [
+    {
+      "id": "nbis-lean-buy",
+      "subscriberId": "jacob",
+      "enabled": true,
+      "signal": "lean-buy",
+      "symbols": ["NBIS"],
+      "minScore": 2,
+      "note": "Highest conviction — ping on lean buy",
+      "cooldownHours": 24
+    },
+    {
+      "id": "photonics-lean-buy",
+      "subscriberId": "jacob",
+      "enabled": true,
+      "signal": "lean-buy",
+      "tags": ["photonics"],
+      "minScore": 2,
+      "note": "Photonics basket lean buy",
+      "cooldownHours": 24
+    },
+    {
+      "id": "smh-lean-sell",
+      "subscriberId": "jacob",
+      "enabled": true,
+      "signal": "lean-sell",
+      "symbols": ["SMH"],
+      "maxScore": -2,
+      "note": "Core semi ETF extended / lean sell",
+      "cooldownHours": 48
+    },
+    {
+      "id": "high-conviction-near-52w-low",
+      "subscriberId": "jacob",
+      "enabled": true,
+      "signal": "near-52w-low",
+      "tags": ["high-conviction"],
+      "range52Pct": 25,
+      "note": "High-conviction name near 52w low",
+      "cooldownHours": 24
+    }
+  ]
+}

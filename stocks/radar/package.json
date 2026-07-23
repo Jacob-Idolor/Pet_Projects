@@ -1,10 +1,12 @@
 {
   "name": "stocks-radar",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "bundle:watchlist": "node scripts/bundle-watchlist.mjs",
+    "config:validate": "node scripts/validate-config.mjs",
+    "config:validate:prod": "node scripts/validate-config.mjs --production",
     "dev": "npm run bundle:watchlist && astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -12,10 +14,21 @@
     "import-csv": "node scripts/csv-to-watchlist.mjs",
     "update-quotes": "node scripts/fetch-quotes.mjs",
     "seo": "node scripts/write-seo-files.mjs",
+    "health": "node scripts/write-health.mjs",
     "digest": "node scripts/daily-digest.mjs",
-    "prebuild": "npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/write-build-meta.mjs && node scripts/write-seo-files.mjs"
+    "alerts": "node scripts/signal-alerts.mjs",
+    "go-live:preflight": "node scripts/go-live-preflight.mjs",
+    "prebuild": "npm run config:validate && npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/write-build-meta.mjs && node scripts/write-seo-files.mjs && node scripts/write-health.mjs",
+    "update-quotes:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/fetch-quotes.mjs",
+    "alerts:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/signal-alerts.mjs"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
+    "@opentelemetry/resources": "^2.9.0",
+    "@opentelemetry/sdk-trace-base": "^2.9.0",
+    "@opentelemetry/sdk-trace-node": "^2.9.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
     "astro": "^5.7.0"
   }
 }

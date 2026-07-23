@@ -12,25 +12,48 @@ site_bucket_name       = "pet-projects-jacob-stocks-radar"
 # Lock to YOUR account: aws sts get-caller-identity --profile pet-projects
 allowed_account_ids = ["123456789012"]
 
-# Cheapest: CloudFront URL only first (no domain fee while testing)
+# --- Domain (buy later) -------------------------------------------------------
+# Keep false until the name is purchased. Stack works on *.cloudfront.net.
 enable_custom_domain = false
 dns_management       = "external" # Cloudflare Free DNS — no Route53 (~$0.50/mo saved)
-
-# After you buy a domain (Porkbun/Cloudflare Registrar), see DOMAIN.md:
+include_www_alias    = true       # when you flip domain on, cert covers apex + www
+domain_aliases       = []         # or e.g. ["www.example.com"] if not using include_www_alias
+# After purchase (see DOMAIN.md):
 # enable_custom_domain = true
 # domain_name          = "yourdomain.com"
 # dns_management       = "external"
-# # route53_zone_id  = ""   # only if dns_management = "route53"
+# include_www_alias    = true
 
-# Budget alarms — keep low while friends test
-enable_budget          = true
-budget_alert_email     = "you@example.com"
-monthly_budget_usd     = 3
-max_monthly_budget_usd = 5
+enable_security_headers = true
+
+# Budget alarms — scoped to Project=stocks-radar (see COST.md)
+# Expected AWS spend: ~$0.50–3/mo friends; raise to 5–10 only if traffic grows
+enable_budget                = true
+budget_alert_email           = "you@example.com"
+monthly_budget_usd           = 3
+max_monthly_budget_usd       = 15
+budget_scope_to_project_tag  = true
+# After apply: Billing → Cost allocation tags → activate "Project"
 
 # Daily viewer email (SNS). Needs IAM sns permissions — leave false if CreateTopic is denied.
 enable_daily_digest = false
 digest_email        = "you@example.com"
 
+# Lean-buy / lean-sell board-wide emails (optional) + personal rules (ALERTS.md).
+enable_signal_alerts    = false
+alerts_use_digest_topic = true
+# enable_daily_digest     = true
+# enable_signal_alerts    = true
+# alerts_use_digest_topic = true
+# alerts_email            = "you@example.com"
+
+# Personal signal emails — IDs must match alert-rules.json subscriberId.
+# Emails stay here (terraform.tfvars is gitignored). After apply:
+#   terraform output -json personal_alert_topic_arns
+# → GitHub secret STOCKS_RADAR_ALERT_TOPICS
+alert_subscribers = [
+  # { id = "jacob", email = "you@example.com" },
+  # { id = "friend1", email = "friend@example.com" },
+]
 # Cheapest CloudFront edges only (enforced in variables.tf)
 cloudfront_price_class = "PriceClass_100"

@@ -152,17 +152,6 @@
       "priority": "medium",
       "thesis": "AI data engineering and digital transformation services.",
       "addedBy": "J"
-    },
-    {
-      "id": "dram",
-      "symbol": "DRAM",
-      "name": "Roundhill Memory ETF",
-      "category": "tracking",
-      "sector": "Semiconductors",
-      "tags": ["semi", "memory", "etf", "dram"],
-      "priority": "medium",
-      "thesis": "Memory / DRAM cycle exposure via ETF — tracks the memory chip theme.",
-      "addedBy": "J"
     }
   ]
 }

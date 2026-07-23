@@ -1,0 +1,46 @@
+---
+import rulesRaw from "../data/alert-rules.json";
+
+const rules = (rulesRaw.rules || []).filter((r) => r && r.enabled !== false);
+const cooldown = rulesRaw.defaults?.cooldownHours ?? 24;
+
+function scopeLabel(rule) {
+  const parts = [];
+  if (rule.symbols?.length) parts.push(rule.symbols.join(", "));
+  if (rule.tags?.length) parts.push(`tags: ${rule.tags.join(", ")}`);
+  return parts.length ? parts.join(" · ") : "entire list";
+}
+---
+
+{
+  rules.length > 0 && (
+    <section class="alert-rules-panel" id="alert-rules" aria-labelledby="alert-rules-title">
+      <div class="alert-rules-header">
+        <div>
+          <p class="board-eyebrow">Personal alerts</p>
+          <h2 id="alert-rules-title">Email when your signal hits</h2>
+          <p class="subtitle">
+            Friends can watch specific tickers or themes. When the condition fires, only that
+            person gets an email (SNS). Default cooldown: {cooldown}h.
+          </p>
+        </div>
+        <a class="btn btn-ghost" href="https://github.com/Jacob-Idolor/Pet_Projects/blob/main/stocks/radar/ALERTS.md">
+          How to add yours
+        </a>
+      </div>
+
+      <ul class="alert-rules-list">
+        {
+          rules.map((rule) => (
+            <li class="alert-rule-row">
+              <span class="alert-rule-signal mono">{rule.signal}</span>
+              <span class="alert-rule-scope">{scopeLabel(rule)}</span>
+              <span class="alert-rule-who mono">→ {rule.subscriberId}</span>
+              {/* Personal notes stay in alert-rules.json for operators — not rendered publicly */}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  )
+}

@@ -1,4 +1,4 @@
-import { escapeHtml, yahooUrl } from "../lib/format";
+import { escapeHtml, sanitizeId, sanitizePriority, sanitizeSymbol, yahooUrl } from "../lib/format";
 import {
   type QuoteData,
   type QuoteMap,
@@ -56,6 +56,17 @@ let viewMode: "table" | "technical" = "table";
 let page = 1;
 let pageSize = 50;
 let expandedId: string | null = null;
+
+function radarSettings() {
+  return (
+    (typeof window !== "undefined" &&
+      (window as unknown as { __RADAR_SETTINGS__?: {
+        board?: { defaultPageSize?: number; defaultSort?: string; defaultView?: string };
+        quotes?: { pollIntervalMs?: number; browserFallback?: boolean };
+      } }).__RADAR_SETTINGS__) ||
+    {}
+  );
+}
 
 interface Prefs {
   viewMode?: "table" | "technical";
@@ -330,10 +341,13 @@ function renderTagsHtml(stock: StockRow) {
 
 function renderPriority(stock: StockRow) {
   if (!stock.priority) return "—";
-  return `<span class="priority priority-${stock.priority}">${stock.priority}</span>`;
+  const p = sanitizePriority(stock.priority);
+  return `<span class="priority priority-${p}">${escapeHtml(p)}</span>`;
 }
 
 function renderRow(stock: StockRow, compact = false, mode: "default" | "technical" = "default") {
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
   const price = getPrice(stock);
   const q = getQuote(stock);
   const chg = getChange(stock);
@@ -349,12 +363,12 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
   if (mode === "technical") {
     const rsi = rsiLabel(q?.rsi14);
     return `
-    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${expanded ? "expanded" : ""}">
+    <tr data-id="${sid}" data-symbol="${sym}" class="data-row ${expanded ? "expanded" : ""}">
       <td class="mono sym sticky-col">
-        <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
+        <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="num mono price-cell" data-price-for="${stock.symbol}">${fmtPrice(price)}</td>
+      <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td>${actionBadge(q)}</td>
       <td>${trendBadge(q?.trend)}</td>
@@ -362,21 +376,22 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
   }
 
+  const pri = sanitizePriority(stock.priority);
   return `
-    <tr data-id="${stock.id}" data-symbol="${stock.symbol}" class="data-row ${atTarget ? "row-at-target" : ""} ${stock.priority === "high" ? "row-high" : ""} ${expanded ? "expanded" : ""}">
+    <tr data-id="${sid}" data-symbol="${sym}" class="data-row ${atTarget ? "row-at-target" : ""} ${pri === "high" ? "row-high" : ""} ${expanded ? "expanded" : ""}">
       <td class="mono sym sticky-col">
-        <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="sym-link">${stock.symbol}</a>
-        ${stock.priority === "high" ? '<span class="conviction-dot" title="High conviction">●</span>' : ""}
+        <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
+        ${pri === "high" ? '<span class="conviction-dot" title="High conviction">●</span>' : ""}
         ${stock.custom ? '<span class="custom-tag" title="From group notes">★</span>' : ""}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
-      <td class="num mono price-cell" data-price-for="${stock.symbol}">${fmtPrice(price)}</td>
+      <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
       <td>${actionBadge(q)}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
@@ -384,7 +399,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
       <td>${renderPriority(stock)}</td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${stock.id}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
@@ -392,22 +407,24 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
 }
 
 function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
   const ptVal = stock.targetPrice != null ? String(stock.targetPrice) : "";
-  return `<tr class="detail-row" data-detail-for="${stock.id}">
+  return `<tr class="detail-row" data-detail-for="${sid}">
         <td colspan="${colspan}">
           <div class="detail-panel">
             ${renderTechnicalDetail(q, price)}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
-            <div class="pt-inline" data-pt-inline="${stock.symbol}">
+            <div class="pt-inline" data-pt-inline="${sym}">
               <strong>Price target:</strong>
-              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${escapeHtml(stock.symbol)}" />
-              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${stock.symbol}">Save to PT list</button>
+              <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${sym}" />
+              <button type="button" class="btn btn-ghost btn-sm" data-pt-save="${sym}">Save to PT list</button>
               ${stock.targetPrice != null ? `<span class="pt-current">Target ${fmtPrice(stock.targetPrice)}</span>` : ""}
             </div>
             <p><strong>Holder:</strong> ${escapeHtml(stock.holder ?? stock.addedBy ?? "—")}</p>
-            <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
+            <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer">View on Yahoo Finance →</a>
           </div>
         </td>
       </tr>`;
@@ -601,8 +618,8 @@ function renderOpportunities() {
     .map(({ stock, dist }) => {
       const { text, cls } = distanceLabel(dist);
       const price = getPrice(stock);
-      return `<button type="button" class="opp-chip ${cls}" data-jump="${stock.symbol}" title="${escapeHtml(stock.thesis ?? "")}">
-        <strong>${stock.symbol}</strong>
+      return `<button type="button" class="opp-chip ${cls}" data-jump="${sanitizeSymbol(stock.symbol)}" title="${escapeHtml(stock.thesis ?? "")}">
+        <strong>${sanitizeSymbol(stock.symbol) || escapeHtml(stock.symbol)}</strong>
         <span>${fmtPrice(price)} → ${fmtPrice(stock.targetPrice!)}</span>
         <em>${text}</em>
       </button>`;
@@ -628,11 +645,12 @@ function renderHeldStrip() {
       const q = getQuote(stock);
       const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
       const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
-      return `<article class="held-card" data-symbol="${stock.symbol}">
+      const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+      return `<article class="held-card" data-symbol="${sym}">
         <div class="held-top">
-          <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="held-sym">${stock.symbol}</a>
+          <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="held-sym">${sym}</a>
           ${q?.trend ? trendBadge(q.trend) : ""}
-          ${stock.priority === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
+          ${sanitizePriority(stock.priority) === "high" ? '<span class="held-conviction">High conviction</span>' : ""}
         </div>
         <div class="held-name">${escapeHtml(stock.name)}</div>
         <div class="held-price mono">${fmtPrice(price)} <span class="chg ${chgCls}">${chgTxt}</span></div>
@@ -782,18 +800,19 @@ function renderMobileCard(stock: StockRow) {
   const chgCls = chg != null ? (chg >= 0 ? "up" : "down") : "dim";
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
 
-  const high = stock.priority === "high";
+  const high = sanitizePriority(stock.priority) === "high";
   const action = actionBias(q);
-  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${action.cls}" data-symbol="${stock.symbol}">
-    <a href="${yahooUrl(stock.symbol)}" target="_blank" rel="noopener noreferrer" class="scm-main">
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
+    <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
       <div class="scm-top">
         <div class="scm-identity">
-          <span class="scm-sym">${stock.symbol}</span>
+          <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
           ${actionBadge(q)}
         </div>
         <div class="scm-quote">
-          <span class="scm-price mono" data-price-for="${stock.symbol}">${fmtPrice(price)}</span>
+          <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
           <span class="scm-chg chg ${chgCls}">${chgTxt}</span>
         </div>
       </div>
@@ -1074,6 +1093,10 @@ function bindEvents() {
 }
 
 export async function initWatchlistBoard(stocksJson: string) {
+  const site = radarSettings();
+  if (site.board?.defaultPageSize) pageSize = site.board.defaultPageSize;
+  if (site.board?.defaultSort) sortKey = site.board.defaultSort;
+
   const prefs = loadPrefs();
   if (prefs.pageSize) pageSize = prefs.pageSize;
   if (prefs.sortKey) sortKey = prefs.sortKey;
@@ -1083,7 +1106,8 @@ export async function initWatchlistBoard(stocksJson: string) {
   const custom = await getCustomStocks();
   allStocks = mergeStocks(baseStocks, custom);
 
-  if (prefs.viewMode === "technical") {
+  const defaultView = site.board?.defaultView === "technical" ? "technical" : "table";
+  if (prefs.viewMode === "technical" || (!prefs.viewMode && defaultView === "technical")) {
     viewMode = "technical";
     setViewToggle("view-technical");
   } else {
@@ -1121,18 +1145,30 @@ function isUsMarketOpen() {
   return mins >= 570 && mins < 960;
 }
 
-async function fetchOneQuote(symbol: string) {
+async function fetchOneQuote(symbol: string, attempt = 0): Promise<QuoteData | null> {
   try {
     const res = await fetch(
       `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
       { headers: { Accept: "application/json" } }
     );
+    if (res.status === 429 && attempt < 2) {
+      await new Promise((r) => setTimeout(r, 400 * 2 ** attempt));
+      return fetchOneQuote(symbol, attempt + 1);
+    }
     if (!res.ok) return null;
     const data = await res.json();
     const m = data?.chart?.result?.[0]?.meta;
     if (!m?.regularMarketPrice) return null;
-    return { price: m.regularMarketPrice, changePct: m.regularMarketChangePercent ?? null, prevClose: m.chartPreviousClose ?? null };
+    return {
+      price: m.regularMarketPrice,
+      changePct: m.regularMarketChangePercent ?? null,
+      prevClose: m.chartPreviousClose ?? null,
+    };
   } catch {
+    if (attempt < 1) {
+      await new Promise((r) => setTimeout(r, 300));
+      return fetchOneQuote(symbol, attempt + 1);
+    }
     return null;
   }
 }
@@ -1141,14 +1177,16 @@ async function fetchQuotesBatched(symbols: string[]) {
   const unique = [...new Set(symbols)];
   if (!unique.length) return;
   const out: QuoteMap = {};
-  for (let i = 0; i < unique.length; i += 12) {
-    const chunk = unique.slice(i, i + 12);
-    const results = await Promise.all(chunk.map(async (s) => {
-      const q = await fetchOneQuote(s);
-      return q ? [s, q] as const : null;
-    }));
+  for (let i = 0; i < unique.length; i += 8) {
+    const chunk = unique.slice(i, i + 8);
+    const results = await Promise.all(
+      chunk.map(async (s) => {
+        const q = await fetchOneQuote(s);
+        return q ? ([s, q] as const) : null;
+      })
+    );
     for (const row of results) if (row) out[row[0]] = row[1];
-    if (i + 12 < unique.length) await new Promise((r) => setTimeout(r, 250));
+    if (i + 8 < unique.length) await new Promise((r) => setTimeout(r, 300));
   }
   if (Object.keys(out).length) {
     document.dispatchEvent(new CustomEvent("radar:quotes", { detail: out }));
@@ -1157,6 +1195,8 @@ async function fetchQuotesBatched(symbols: string[]) {
 
 function startQuoteLoader() {
   const base = document.querySelector<HTMLElement>("[data-radar-base]")?.dataset.radarBase ?? "/";
+  let lastJsonOk = false;
+  let browserFallbackInFlight = false;
 
   async function loadFromJson() {
     try {
@@ -1165,28 +1205,45 @@ function startQuoteLoader() {
       const data = await res.json();
       if (data.quotes && Object.keys(data.quotes).length) {
         document.dispatchEvent(new CustomEvent("radar:quotes", { detail: data.quotes }));
+        lastJsonOk = true;
         return true;
       }
     } catch {
-      /* fall through */
+      lastJsonOk = false;
     }
     return false;
+  }
+
+  async function maybeBrowserFallback(force = false) {
+    if (browserFallbackInFlight) return;
+    if (radarSettings().quotes?.browserFallback === false) return;
+    if (!force && !isUsMarketOpen()) return;
+    browserFallbackInFlight = true;
+    try {
+      await fetchQuotesBatched([...new Set(allStocks.map((s) => s.symbol))]);
+    } finally {
+      browserFallbackInFlight = false;
+    }
   }
 
   const symbols = [...new Set(allStocks.map((s) => s.symbol))];
 
   loadFromJson().then((ok) => {
-    if (!ok) fetchQuotesBatched(symbols);
+    if (!ok) maybeBrowserFallback(true);
   });
 
   setInterval(() => {
     if (document.hidden) return;
-    loadFromJson();
-  }, 60_000);
+    loadFromJson().then((ok) => {
+      if (!ok && lastJsonOk === false) maybeBrowserFallback();
+    });
+  }, radarSettings().quotes?.pollIntervalMs ?? 60_000);
 
   document.addEventListener("radar:stale-quotes", () => {
-    if (isUsMarketOpen()) fetchQuotesBatched(symbols);
+    maybeBrowserFallback(true);
   });
+
+  void symbols;
 }
 
 export function initBucketSections() {

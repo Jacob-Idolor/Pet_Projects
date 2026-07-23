@@ -1,0 +1,45 @@
+{
+  "defaults": {
+    "cooldownHours": 24,
+    "nearTargetPct": 5
+  },
+  "rules": [
+    {
+      "id": "example-nbis-lean-buy",
+      "subscriberId": "jacob",
+      "enabled": false,
+      "signal": "lean-buy",
+      "symbols": ["NBIS"],
+      "minScore": 2,
+      "note": "Email me when NBIS leans buy",
+      "cooldownHours": 24
+    },
+    {
+      "id": "example-photonics-lean-buy",
+      "subscriberId": "jacob",
+      "enabled": false,
+      "signal": "lean-buy",
+      "tags": ["photonics"],
+      "minScore": 2,
+      "note": "Any photonics name leaning buy"
+    },
+    {
+      "id": "example-smh-price",
+      "subscriberId": "friend1",
+      "enabled": false,
+      "signal": "price-below",
+      "symbols": ["SMH"],
+      "price": 250,
+      "note": "SMH dipped under my level"
+    },
+    {
+      "id": "example-rsi-oversold",
+      "subscriberId": "jacob",
+      "enabled": false,
+      "signal": "rsi-below",
+      "symbols": ["COHR", "TSEM"],
+      "rsi": 35,
+      "note": "RSI washout on core names"
+    }
+  ]
+}

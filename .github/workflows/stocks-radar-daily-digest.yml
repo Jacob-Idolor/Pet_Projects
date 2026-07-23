@@ -1,11 +1,11 @@
 name: Stocks Radar — daily digest email
 
-# Publishes CloudFront viewer metrics + watchlist mood to SNS (confirm email once).
-# Cost: ~free (GitHub Actions minutes + SNS email). No Lambda.
-# PAUSED with deploy — re-enable schedule after AWS secrets + SNS topic exist.
+# Enable with STOCKS_RADAR_DEPLOY_ENABLED=true + SNS digest topic secret.
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * *" # 13:00 UTC daily
 
 concurrency:
   group: stocks-radar-daily-digest
@@ -13,8 +13,11 @@ concurrency:
 
 jobs:
   digest:
-    if: ${{ false }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: stockwatch
     steps:
       - uses: actions/checkout@v5
 
@@ -52,13 +55,28 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Resolve public site URL
+        id: url
+        if: steps.gate.outputs.ok == '1'
+        env:
+          STOCKS_RADAR_SITE: ${{ vars.STOCKS_RADAR_SITE }}
+          CF_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+        run: |
+          if [ -n "${STOCKS_RADAR_SITE:-}" ]; then
+            echo "site=${STOCKS_RADAR_SITE%/}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${CF_DOMAIN:-}" ]; then
+            echo "site=https://${CF_DOMAIN}" >> "$GITHUB_OUTPUT"
+          else
+            echo "site=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Send digest
         if: steps.gate.outputs.ok == '1'
         working-directory: stocks/radar
         env:
           STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
           STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
-          STOCKS_RADAR_SITE: https://${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+          STOCKS_RADAR_SITE: ${{ steps.url.outputs.site }}
           STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           DIGEST_OUTPUT_PATH: ${{ runner.temp }}/digest.txt

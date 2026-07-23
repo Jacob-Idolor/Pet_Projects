@@ -17,13 +17,49 @@
       "Resource": "*"
     },
     {
-      "Sid": "AllowS3PetProjectsPrefixOnly",
+      "Sid": "AllowS3SiteBucketObjects",
       "Effect": "Allow",
-      "Action": "s3:*",
-      "Resource": [
-        "arn:aws:s3:::pet-projects-*",
-        "arn:aws:s3:::pet-projects-*/*"
-      ]
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:GetBucketPolicy",
+        "s3:PutBucketPolicy",
+        "s3:DeleteBucketPolicy",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetBucketOwnershipControls",
+        "s3:PutBucketOwnershipControls",
+        "s3:GetLifecycleConfiguration",
+        "s3:PutLifecycleConfiguration",
+        "s3:GetBucketCORS",
+        "s3:PutBucketCORS",
+        "s3:GetBucketWebsite",
+        "s3:PutBucketWebsite",
+        "s3:DeleteBucketWebsite",
+        "s3:CreateBucket",
+        "s3:DeleteBucket"
+      ],
+      "Resource": "arn:aws:s3:::pet-projects-*"
+    },
+    {
+      "Sid": "AllowS3SiteObjectReadWrite",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts",
+        "s3:GetObjectTagging",
+        "s3:PutObjectTagging"
+      ],
+      "Resource": "arn:aws:s3:::pet-projects-*/*"
     },
     {
       "Sid": "AllowCloudFrontStaticSiteManagement",
@@ -46,9 +82,39 @@
         "cloudfront:ListOriginAccessControls",
         "cloudfront:ListCachePolicies",
         "cloudfront:GetCachePolicy",
+        "cloudfront:ListResponseHeadersPolicies",
+        "cloudfront:GetResponseHeadersPolicy",
         "cloudfront:TagResource",
         "cloudfront:UntagResource",
         "cloudfront:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowAcmUsEast1ForCloudFrontCerts",
+      "Effect": "Allow",
+      "Action": [
+        "acm:RequestCertificate",
+        "acm:DescribeCertificate",
+        "acm:DeleteCertificate",
+        "acm:ListCertificates",
+        "acm:AddTagsToCertificate",
+        "acm:RemoveTagsFromCertificate",
+        "acm:ListTagsForCertificate",
+        "acm:GetCertificate"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowRoute53OptionalCustomDomain",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets",
+        "route53:GetChange",
+        "route53:GetHostedZone",
+        "route53:ListHostedZones",
+        "route53:ListResourceRecordSets",
+        "route53:ListTagsForResource"
       ],
       "Resource": "*"
     },
@@ -77,7 +143,15 @@
       "Resource": "*"
     },
     {
-      "Sid": "AllowSnsDailyDigest",
+      "Sid": "AllowSnsListTopics",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListTopics"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowSnsStocksRadarTopicsOnly",
       "Effect": "Allow",
       "Action": [
         "sns:CreateTopic",
@@ -87,13 +161,12 @@
         "sns:Subscribe",
         "sns:Unsubscribe",
         "sns:ListSubscriptionsByTopic",
-        "sns:ListTopics",
         "sns:Publish",
         "sns:TagResource",
         "sns:UntagResource",
         "sns:ListTagsForResource"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:sns:*:*:stocks-radar-*"
     },
     {
       "Sid": "DenyExpensiveOrOutOfScopeServices",
@@ -112,7 +185,15 @@
         "elasticache:*",
         "redshift:*",
         "sagemaker:*",
-        "apigateway:*"
+        "apigateway:*",
+        "iam:CreateUser",
+        "iam:CreateAccessKey",
+        "iam:AttachUserPolicy",
+        "iam:PutUserPolicy",
+        "iam:CreateRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:PassRole"
       ],
       "Resource": "*"
     }

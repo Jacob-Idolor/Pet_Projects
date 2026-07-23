@@ -1,12 +1,17 @@
 ---
 import { stocks } from "../data/watchlist";
+import { clientSettingsPayload } from "../lib/site-config";
 
 const stocksJson = JSON.stringify(stocks);
+const settingsJson = JSON.stringify(clientSettingsPayload());
 const base = import.meta.env.BASE_URL;
 const boardScript = `${base}watchlist-board.mjs`.replace(/\/{2,}/g, "/").replace(":/", "://");
 ---
 
 <section class="watchlist-board" id="watchlist-board" data-radar-base={base}>
+  <script is:inline define:vars={{ settingsJson }}>
+    window.__RADAR_SETTINGS__ = JSON.parse(settingsJson);
+  </script>
   <div class="board-chrome">
     <div class="board-header">
       <div class="board-heading">
