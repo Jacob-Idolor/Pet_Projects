@@ -27,7 +27,7 @@ npm run config:validate           # PR / local (lenient)
 npm run config:validate:prod      # strict — requires real STOCKS_RADAR_SITE
 ```
 
-Edit product knobs in `site-settings.json`, then rebuild. Toggle features with booleans under `features.*` (adsense, personalAlerts, groupSubmissions, …).
+Edit product knobs in `site-settings.json`, then rebuild. Toggle features with booleans under `features.*`. The public board does **not** show a settings or personal-alerts panel — those are ops-only (`/settings.json`, [ALERTS.md](ALERTS.md)).
 
 ## Production checklist
 

@@ -115,8 +115,8 @@ try {
     readFileSync(join(root, "src/data/alert-rules.json"), "utf8"),
   );
   const n = (rules.rules || []).filter((r) => r.enabled !== false).length;
-  ok(`${n} enabled rule(s) in alert-rules.json`);
-  if (n === 0) warn("no enabled alert rules — signal emails will be empty");
+  if (n === 0) ok("0 enabled alert rules (personal alerts UI off — expected)");
+  else ok(`${n} enabled rule(s) in alert-rules.json`);
 } catch (e) {
   fail(`alert-rules.json: ${e.message}`);
 }
