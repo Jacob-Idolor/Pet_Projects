@@ -14,6 +14,8 @@ import {
   athIndicator,
   actionBadge,
   actionBias,
+  pulseExplain,
+  sma50Plain,
 } from "../lib/market-display";
 
 export interface StockRow {
@@ -495,84 +497,145 @@ function renderOverview() {
 }
 
 function renderCheckIn() {
-  const moversEl = document.getElementById("checkin-movers");
+  const gainersEl = document.getElementById("checkin-gainers");
+  const losersEl = document.getElementById("checkin-losers");
   const setupsEl = document.getElementById("checkin-setups");
+  const watchEl = document.getElementById("checkin-watch");
   const cautionEl = document.getElementById("checkin-caution");
-  if (!moversEl && !setupsEl && !cautionEl) return;
+  const tallyEl = document.getElementById("checkin-tally");
+  // Legacy id from older builds
+  const moversEl = document.getElementById("checkin-movers");
+  if (!gainersEl && !losersEl && !setupsEl && !watchEl && !cautionEl && !moversEl) return;
 
   const priced = allStocks
     .map((s) => {
       const q = getQuote(s);
       const price = getPrice(s);
       const chg = q?.changePct ?? null;
-      const bias = actionBias(q);
-      return { stock: s, q, price, chg, bias };
+      const explain = pulseExplain(q);
+      return { stock: s, q, price, chg, bias: explain.bias, explain };
     })
     .filter((x) => x.price != null);
 
+  const emptyAll = (msg: string) => {
+    const empty = `<li class="checkin-rank__empty">${msg}</li>`;
+    for (const el of [gainersEl, losersEl, setupsEl, watchEl, cautionEl, moversEl]) {
+      if (el) el.innerHTML = empty;
+    }
+    if (tallyEl) tallyEl.innerHTML = `<span class="checkin-tally__loading">${msg}</span>`;
+  };
+
   if (!priced.length) {
-    const empty = `<li class="checkin-rank__empty">Waiting on quotes for the master list…</li>`;
-    if (moversEl) moversEl.innerHTML = empty;
-    if (setupsEl) setupsEl.innerHTML = empty;
-    if (cautionEl) cautionEl.innerHTML = empty;
+    emptyAll("Waiting on quotes for the master list…");
     return;
   }
 
-  const movers = [...priced]
+  const buyN = priced.filter((x) => x.bias.cls === "buy").length;
+  const sellN = priced.filter((x) => x.bias.cls === "sell").length;
+  const watchN = priced.filter((x) => x.bias.cls === "watch").length;
+  const upN = priced.filter((x) => (x.chg ?? 0) > 0).length;
+  const downN = priced.filter((x) => (x.chg ?? 0) < 0).length;
+
+  if (tallyEl) {
+    tallyEl.innerHTML = `
+      <div class="checkin-tally__item checkin-tally__item--buy"><strong>${buyN}</strong><span>Lean buy</span></div>
+      <div class="checkin-tally__item checkin-tally__item--watch"><strong>${watchN}</strong><span>Watch</span></div>
+      <div class="checkin-tally__item checkin-tally__item--sell"><strong>${sellN}</strong><span>Lean sell</span></div>
+      <div class="checkin-tally__item"><strong class="up">${upN}</strong><span>Up today</span></div>
+      <div class="checkin-tally__item"><strong class="down">${downN}</strong><span>Down today</span></div>
+    `;
+  }
+
+  const moveRow = (x: (typeof priced)[0], i: number) => {
+    const up = (x.chg ?? 0) >= 0;
+    const sym = sanitizeSymbol(x.stock.symbol) || escapeHtml(String(x.stock.symbol ?? ""));
+    return `<li class="checkin-rank__row">
+      <span class="checkin-rank__n">${i + 1}</span>
+      <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
+      <span class="checkin-rank__meta">
+        <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+        <span class="checkin-rank__why">${escapeHtml(x.explain.sma)} · ${escapeHtml(x.bias.label)}</span>
+      </span>
+      <span class="checkin-rank__val mono ${up ? "up" : "down"}">${up ? "+" : ""}${(x.chg ?? 0).toFixed(1)}%</span>
+    </li>`;
+  };
+
+  const signalRow = (x: (typeof priced)[0], i: number) => {
+    const sym = sanitizeSymbol(x.stock.symbol) || escapeHtml(String(x.stock.symbol ?? ""));
+    return `<li class="checkin-rank__row">
+      <span class="checkin-rank__n">${i + 1}</span>
+      <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
+      <span class="checkin-rank__meta">
+        <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+        <span class="checkin-rank__why">${escapeHtml(x.bias.reason)} · ${escapeHtml(sma50Plain(x.q))}</span>
+      </span>
+      <span class="checkin-rank__val">${actionBadge(x.q)} <span class="mono dim">score ${x.bias.score > 0 ? "+" : ""}${x.bias.score}</span></span>
+    </li>`;
+  };
+
+  const gainers = [...priced]
+    .filter((x) => x.chg != null && x.chg > 0)
+    .sort((a, b) => (b.chg ?? 0) - (a.chg ?? 0))
+    .slice(0, 8);
+
+  const losers = [...priced]
+    .filter((x) => x.chg != null && x.chg < 0)
+    .sort((a, b) => (a.chg ?? 0) - (b.chg ?? 0))
+    .slice(0, 8);
+
+  // Absolute movers fallback for legacy #checkin-movers
+  const absMovers = [...priced]
     .filter((x) => x.chg != null)
     .sort((a, b) => Math.abs(b.chg!) - Math.abs(a.chg!))
-    .slice(0, 10);
+    .slice(0, 8);
 
+  if (gainersEl) {
+    gainersEl.innerHTML = gainers.length
+      ? gainers.map(moveRow).join("")
+      : `<li class="checkin-rank__empty">No green names today — flat or red tape on the list.</li>`;
+  }
+  if (losersEl) {
+    losersEl.innerHTML = losers.length
+      ? losers.map(moveRow).join("")
+      : `<li class="checkin-rank__empty">No red names today — list is flat or green.</li>`;
+  }
   if (moversEl) {
-    moversEl.innerHTML = movers.length
-      ? movers
-          .map((x, i) => {
-            const up = (x.chg ?? 0) >= 0;
-            return `<li class="checkin-rank__row">
-              <span class="checkin-rank__n">${i + 1}</span>
-              <button type="button" class="checkin-rank__sym" data-jump="${escapeHtml(x.stock.symbol)}">${escapeHtml(x.stock.symbol)}</button>
-              <span class="checkin-rank__meta">${escapeHtml(x.stock.name)}</span>
-              <span class="checkin-rank__val mono ${up ? "up" : "down"}">${up ? "+" : ""}${(x.chg ?? 0).toFixed(1)}%</span>
-            </li>`;
-          })
-          .join("")
+    moversEl.innerHTML = absMovers.length
+      ? absMovers.map(moveRow).join("")
       : `<li class="checkin-rank__empty">No % moves yet — refresh quotes.</li>`;
   }
 
   const setups = [...priced]
-    .filter((x) => x.bias.cls === "buy" || x.bias.score > 0)
+    .filter((x) => x.bias.cls === "buy")
     .sort((a, b) => b.bias.score - a.bias.score || (b.chg ?? 0) - (a.chg ?? 0))
-    .slice(0, 10);
+    .slice(0, 8);
 
   if (setupsEl) {
     setupsEl.innerHTML = setups.length
-      ? setups
-          .map((x, i) => `<li class="checkin-rank__row">
-            <span class="checkin-rank__n">${i + 1}</span>
-            <button type="button" class="checkin-rank__sym" data-jump="${escapeHtml(x.stock.symbol)}">${escapeHtml(x.stock.symbol)}</button>
-            <span class="checkin-rank__meta">${escapeHtml(x.bias.reason)}</span>
-            <span class="checkin-rank__val">${actionBadge(x.q)} <span class="mono dim">score ${x.bias.score > 0 ? "+" : ""}${x.bias.score}</span></span>
-          </li>`)
-          .join("")
-      : `<li class="checkin-rank__empty">No lean-buy setups on the list right now — check Watch names below.</li>`;
+      ? setups.map(signalRow).join("")
+      : `<li class="checkin-rank__empty">No lean-buy names right now — check Watch for mixed setups.</li>`;
+  }
+
+  const watch = [...priced]
+    .filter((x) => x.bias.cls === "watch")
+    .sort((a, b) => Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0))
+    .slice(0, 8);
+
+  if (watchEl) {
+    watchEl.innerHTML = watch.length
+      ? watch.map(signalRow).join("")
+      : `<li class="checkin-rank__empty">Everyone is leaning buy or sell — no mid-pack Watch names.</li>`;
   }
 
   const caution = [...priced]
-    .filter((x) => x.bias.cls === "sell" || x.bias.score < 0)
+    .filter((x) => x.bias.cls === "sell")
     .sort((a, b) => a.bias.score - b.bias.score)
-    .slice(0, 10);
+    .slice(0, 8);
 
   if (cautionEl) {
     cautionEl.innerHTML = caution.length
-      ? caution
-          .map((x, i) => `<li class="checkin-rank__row">
-            <span class="checkin-rank__n">${i + 1}</span>
-            <button type="button" class="checkin-rank__sym" data-jump="${escapeHtml(x.stock.symbol)}">${escapeHtml(x.stock.symbol)}</button>
-            <span class="checkin-rank__meta">${escapeHtml(x.bias.reason)}</span>
-            <span class="checkin-rank__val">${actionBadge(x.q)} <span class="mono dim">score ${x.bias.score}</span></span>
-          </li>`)
-          .join("")
-      : `<li class="checkin-rank__empty">Nothing flagged lean-sell — list looks calm on stretch risk.</li>`;
+      ? caution.map(signalRow).join("")
+      : `<li class="checkin-rank__empty">Nothing flagged lean-sell — stretch risk looks calm on the list.</li>`;
   }
 }
 
