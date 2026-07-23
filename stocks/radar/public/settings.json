@@ -7,7 +7,7 @@
   },
   "features": {
     "adsense": true,
-    "personalAlerts": true,
+    "personalAlerts": false,
     "groupSubmissions": true,
     "checkInPulse": true,
     "technicalView": true,

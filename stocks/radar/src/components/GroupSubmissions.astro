@@ -12,6 +12,7 @@ const seedJson = JSON.stringify(seed.submissions);
       <p class="subtitle">
         Paste what you’d text us — tickers land in a <strong>pending queue</strong>.
         They do not join the master list until an owner adds them in git.
+        Fresh slate for the group — drop the first suggestions here.
       </p>
     </div>
     <span class="submission-count" id="submission-count"></span>
@@ -150,6 +151,11 @@ const seedJson = JSON.stringify(seed.submissions);
       }
 
       if (!listEl) return;
+      if (!all.length) {
+        listEl.innerHTML =
+          '<li class="submission-empty">No suggestions yet — be the first to drop a ticker for the group.</li>';
+        return;
+      }
       listEl.innerHTML = all
         .map(function (sub) {
           var chips = (sub.symbols || [])

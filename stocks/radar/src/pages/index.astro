@@ -5,8 +5,6 @@ import DayMoodBanner from "../components/DayMoodBanner.astro";
 import CheckInPulse from "../components/CheckInPulse.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
-import AlertRulesPanel from "../components/AlertRulesPanel.astro";
-import SiteSettingsPanel from "../components/SiteSettingsPanel.astro";
 import AdSlot from "../components/AdSlot.astro";
 import { meta, stocks } from "../data/watchlist";
 import { featureEnabled, getSiteSettings } from "../lib/site-config";
@@ -17,7 +15,6 @@ const description =
 
 const settings = getSiteSettings();
 const showPulse = featureEnabled("checkInPulse");
-const showAlerts = featureEnabled("personalAlerts");
 const showSubmissions = featureEnabled("groupSubmissions");
 const showAds = featureEnabled("adsense");
 const showMood = featureEnabled("dayMood");
@@ -64,8 +61,6 @@ const showMood = featureEnabled("dayMood");
         )
       }
       <WatchlistBoard />
-      {showAlerts && <AlertRulesPanel />}
-      <SiteSettingsPanel />
       {showSubmissions && <GroupSubmissions />}
       {showAds && <AdSlot placement="footer" label="Sponsored — footer" />}
     </div>
