@@ -239,6 +239,61 @@ export function actionBadge(q: QuoteData | undefined) {
   return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
 
+/** Plain-English SMA50 for friends who are not chart-fluent. */
+export function sma50Plain(q: QuoteData | undefined): string {
+  const vs = q?.vsSma?.[50];
+  if (vs == null || Number.isNaN(vs)) return "50-day avg n/a";
+  const abs = Math.abs(vs).toFixed(1);
+  if (Math.abs(vs) < 1) return "about even with its 50-day average price";
+  if (vs > 0) return `${abs}% above its 50-day average (running hot vs recent weeks)`;
+  return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
+}
+
+/** Short pulse row blurb: lean signal + SMA50 in normal language. */
+export function pulseExplain(q: QuoteData | undefined): {
+  bias: ReturnType<typeof actionBias>;
+  sma: string;
+  line: string;
+} {
+  const bias = actionBias(q);
+  const sma = sma50Plain(q);
+  const lean =
+    bias.cls === "buy"
+      ? "Lean buy — checklist tips constructive (not advice)"
+      : bias.cls === "sell"
+        ? "Lean sell — stretched or soft on our checklist"
+        : bias.cls === "watch"
+          ? "Watch — mixed / wait for a clearer setup"
+          : "Waiting on quotes";
+  const bits = [lean];
+  if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
+  bits.push(sma);
+  return { bias, sma, line: bits.join(" · ") };
+}
+
+export const PULSE_SIGNAL_GUIDE = [
+  {
+    id: "buy",
+    title: "Lean buy",
+    blurb: "Our checklist is constructive (RSI soft, near lows, or cool vs averages). Discussion only — not a buy order.",
+  },
+  {
+    id: "watch",
+    title: "Watch",
+    blurb: "Mixed tape. Fine to hold the conversation; nothing screaming buy or trim on our simple score.",
+  },
+  {
+    id: "sell",
+    title: "Lean sell",
+    blurb: "Extended or soft (hot RSI, near highs, stretched above averages). A caution flag for the group chat.",
+  },
+  {
+    id: "sma50",
+    title: "SMA50",
+    blurb: "50-day average ≈ typical price over ~2.5 months. Above it = running hot lately; below = cooler vs recent weeks.",
+  },
+] as const;
+
 export function matchesTechnicalFilter(filter: string, q: QuoteData | undefined, price: number | null) {
   if (!filter.startsWith("tech-")) return true;
   if (!q) return false;

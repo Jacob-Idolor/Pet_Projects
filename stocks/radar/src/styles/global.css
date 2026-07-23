@@ -1114,9 +1114,137 @@ body[data-day-mood="mixed"] .site-header {
 
 .checkin-lede {
   margin: 0;
-  max-width: 40rem;
+  max-width: 42rem;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.checkin-guide {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+}
+
+.checkin-guide__card {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.checkin-guide__card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.checkin-guide__card p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.checkin-guide__card--buy {
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--green) 8%, var(--bg-elevated));
+}
+
+.checkin-guide__card--buy h3 {
+  color: var(--green);
+}
+
+.checkin-guide__card--watch {
+  border-color: color-mix(in srgb, #fbbf24 35%, var(--border-subtle));
+  background: color-mix(in srgb, #fbbf24 8%, var(--bg-elevated));
+}
+
+.checkin-guide__card--watch h3 {
+  color: #fbbf24;
+}
+
+.checkin-guide__card--sell {
+  border-color: color-mix(in srgb, var(--red) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--red) 8%, var(--bg-elevated));
+}
+
+.checkin-guide__card--sell h3 {
+  color: var(--red);
+}
+
+.checkin-guide__card--sma {
+  border-color: color-mix(in srgb, #38bdf8 35%, var(--border-subtle));
+  background: color-mix(in srgb, #38bdf8 8%, var(--bg-elevated));
+}
+
+.checkin-guide__card--sma h3 {
+  color: #7dd3fc;
+}
+
+.checkin-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+}
+
+.checkin-tally__loading {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.checkin-tally__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.checkin-tally__item strong {
+  font-size: 0.95rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkin-tally__item--buy {
+  border-color: color-mix(in srgb, var(--green) 40%, var(--border-subtle));
+}
+
+.checkin-tally__item--buy strong {
+  color: var(--green);
+}
+
+.checkin-tally__item--watch {
+  border-color: color-mix(in srgb, #fbbf24 40%, var(--border-subtle));
+}
+
+.checkin-tally__item--watch strong {
+  color: #fbbf24;
+}
+
+.checkin-tally__item--sell {
+  border-color: color-mix(in srgb, var(--red) 40%, var(--border-subtle));
+}
+
+.checkin-tally__item--sell strong {
+  color: var(--red);
+}
+
+.checkin-tally__item .up {
+  color: var(--green);
+}
+
+.checkin-tally__item .down {
+  color: var(--red);
 }
 
 .checkin-jump {
@@ -1204,7 +1332,7 @@ body[data-day-mood="mixed"] .site-header {
 
 .checkin-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
   gap: 0.85rem;
 }
 
@@ -1219,6 +1347,23 @@ body[data-day-mood="mixed"] .site-header {
 .checkin-panel--buy {
   border-color: color-mix(in srgb, var(--green) 28%, var(--border-subtle));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 8%, transparent);
+}
+
+.checkin-panel--up {
+  border-color: color-mix(in srgb, var(--green) 22%, var(--border-subtle));
+}
+
+.checkin-panel--down {
+  border-color: color-mix(in srgb, var(--red) 22%, var(--border-subtle));
+}
+
+.checkin-panel--watch {
+  border-color: color-mix(in srgb, #fbbf24 28%, var(--border-subtle));
+}
+
+.checkin-panel--sell {
+  border-color: color-mix(in srgb, var(--red) 28%, var(--border-subtle));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 8%, transparent);
 }
 
 .checkin-panel__head {
@@ -1248,24 +1393,23 @@ body[data-day-mood="mixed"] .site-header {
 
 .checkin-rank__row {
   display: grid;
-  grid-template-columns: 1.4rem minmax(3.2rem, auto) 1fr auto;
-  gap: 0.45rem;
-  align-items: center;
-  padding: 0.55rem 0.5rem;
-  min-height: 2.75rem;
+  grid-template-columns: 1.25rem 3.6rem minmax(0, 1fr) auto;
+  gap: 0.35rem 0.45rem;
+  align-items: start;
+  padding: 0.45rem 0.35rem;
   border-radius: 8px;
-  animation: row-in 0.35s ease-out both;
   transition: background 0.15s ease;
 }
 
 .checkin-rank__row:hover {
-  background: var(--surface-hover);
+  background: color-mix(in srgb, #38bdf8 8%, transparent);
 }
 
 .checkin-rank__n {
-  font-family: var(--mono);
   font-size: 0.7rem;
   color: var(--dim);
+  padding-top: 0.2rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .checkin-rank__sym {
@@ -1273,47 +1417,63 @@ body[data-day-mood="mixed"] .site-header {
   border: 0;
   background: transparent;
   color: var(--text);
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 0.85rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  min-height: 2rem;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s ease, color 0.15s ease;
 }
 
 .checkin-rank__sym:hover {
   color: #7dd3fc;
+  text-decoration-color: color-mix(in srgb, #38bdf8 50%, transparent);
 }
 
 .checkin-rank__meta {
-  font-size: 0.72rem;
-  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.checkin-rank__name {
+  font-size: 0.78rem;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.checkin-rank__why {
+  font-size: 0.68rem;
+  color: var(--dim);
+  line-height: 1.35;
+}
+
 .checkin-rank__val {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
   font-size: 0.8rem;
-  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
+  padding-top: 0.1rem;
 }
 
 .checkin-rank__val.up {
-  color: #86efac;
+  color: var(--green);
 }
 
 .checkin-rank__val.down {
-  color: #fca5a5;
+  color: var(--red);
 }
 
 .checkin-rank__empty {
-  padding: 1rem 0.5rem;
-  color: var(--dim);
-  font-size: 0.85rem;
+  padding: 0.85rem 0.35rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 .mobile-dock {
@@ -1368,6 +1528,10 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 @media (max-width: 960px) {
+  .checkin-guide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .checkin-grid {
     grid-template-columns: 1fr;
   }
@@ -1392,6 +1556,9 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 @media (max-width: 640px) {
+  .checkin-guide {
+    grid-template-columns: 1fr;
+  }
   .mobile-only {
     display: block;
   }
