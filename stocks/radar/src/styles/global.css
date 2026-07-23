@@ -1090,12 +1090,8 @@ body[data-day-mood="mixed"] .site-header {
 /* Friend check-in pulse */
 .checkin-pulse {
   margin: 0 0 1.75rem;
-  padding: 1.35rem 1.25rem 1.5rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, #38bdf8 8%, transparent), transparent 42%),
-    var(--surface);
+  padding: 0 0 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .checkin-header {
@@ -1103,93 +1099,28 @@ body[data-day-mood="mixed"] .site-header {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem 1.5rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.65rem;
 }
 
 .checkin-header h2 {
-  margin: 0.15rem 0 0.35rem;
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  margin: 0.1rem 0 0.25rem;
+  font-size: clamp(1.25rem, 2.2vw, 1.55rem);
   letter-spacing: -0.02em;
 }
 
 .checkin-lede {
   margin: 0;
-  max-width: 42rem;
+  max-width: 36rem;
   color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.checkin-guide {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin: 0 0 1rem;
-}
-
-.checkin-guide__card {
-  margin: 0;
-  padding: 0.7rem 0.8rem;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-elevated);
-}
-
-.checkin-guide__card h3 {
-  margin: 0 0 0.3rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.checkin-guide__card p {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
-
-.checkin-guide__card--buy {
-  border-color: color-mix(in srgb, var(--green) 35%, var(--border-subtle));
-  background: color-mix(in srgb, var(--green) 8%, var(--bg-elevated));
-}
-
-.checkin-guide__card--buy h3 {
-  color: var(--green);
-}
-
-.checkin-guide__card--watch {
-  border-color: color-mix(in srgb, #fbbf24 35%, var(--border-subtle));
-  background: color-mix(in srgb, #fbbf24 8%, var(--bg-elevated));
-}
-
-.checkin-guide__card--watch h3 {
-  color: #fbbf24;
-}
-
-.checkin-guide__card--sell {
-  border-color: color-mix(in srgb, var(--red) 35%, var(--border-subtle));
-  background: color-mix(in srgb, var(--red) 8%, var(--bg-elevated));
-}
-
-.checkin-guide__card--sell h3 {
-  color: var(--red);
-}
-
-.checkin-guide__card--sma {
-  border-color: color-mix(in srgb, #38bdf8 35%, var(--border-subtle));
-  background: color-mix(in srgb, #38bdf8 8%, var(--bg-elevated));
-}
-
-.checkin-guide__card--sma h3 {
-  color: #7dd3fc;
+  font-size: 0.9rem;
 }
 
 .checkin-tally {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0 0 1.1rem;
+  align-items: baseline;
+  gap: 0.55rem 1rem;
+  margin: 0 0 1rem;
 }
 
 .checkin-tally__loading {
@@ -1197,54 +1128,44 @@ body[data-day-mood="mixed"] .site-header {
   color: var(--muted);
 }
 
-.checkin-tally__item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.4rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-elevated);
-  font-size: 0.78rem;
+.checkin-tally__stat {
+  font-size: 0.8rem;
   color: var(--muted);
-}
-
-.checkin-tally__item strong {
-  font-size: 0.95rem;
-  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
-.checkin-tally__item--buy {
-  border-color: color-mix(in srgb, var(--green) 40%, var(--border-subtle));
+.checkin-tally__stat strong {
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--text);
+  margin-right: 0.2rem;
 }
 
-.checkin-tally__item--buy strong {
+.checkin-tally__stat--buy strong {
   color: var(--green);
 }
 
-.checkin-tally__item--watch {
-  border-color: color-mix(in srgb, #fbbf24 40%, var(--border-subtle));
-}
-
-.checkin-tally__item--watch strong {
+.checkin-tally__stat--watch strong {
   color: #fbbf24;
 }
 
-.checkin-tally__item--sell {
-  border-color: color-mix(in srgb, var(--red) 40%, var(--border-subtle));
-}
-
-.checkin-tally__item--sell strong {
+.checkin-tally__stat--sell strong {
   color: var(--red);
 }
 
-.checkin-tally__item .up {
+.checkin-tally__stat .up {
   color: var(--green);
 }
 
-.checkin-tally__item .down {
+.checkin-tally__stat .down {
   color: var(--red);
+}
+
+.checkin-tally__sep {
+  width: 1px;
+  height: 0.9rem;
+  background: var(--border);
+  align-self: center;
 }
 
 .checkin-jump {
@@ -1255,49 +1176,34 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 .checkin-jump a {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--muted);
   text-decoration: none;
-  padding: 0.55rem 0.85rem;
-  min-height: 2.5rem;
+  padding: 0.4rem 0.65rem;
+  min-height: 2.25rem;
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg-elevated);
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: color 0.15s ease;
 }
 
 .checkin-jump a:hover,
 .checkin-jump a.is-active {
-  border-color: color-mix(in srgb, #38bdf8 50%, var(--border));
-  color: #7dd3fc;
-  text-decoration: none;
-  background: color-mix(in srgb, #38bdf8 12%, var(--bg-elevated));
-}
-
-.checkin-method {
-  margin: 0 0 1.15rem;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.82rem;
-  color: var(--muted);
-  border-left: 2px solid color-mix(in srgb, #38bdf8 55%, transparent);
-  background: color-mix(in srgb, #38bdf8 6%, transparent);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
-
-.checkin-method strong {
   color: var(--text);
-  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  border-color: transparent;
 }
 
 .checkin-tabs {
   display: none;
-  gap: 0.5rem;
-  margin: 0 0 0.85rem;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -1311,75 +1217,81 @@ body[data-day-mood="mixed"] .site-header {
 .checkin-tab {
   appearance: none;
   flex: 0 0 auto;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
   color: var(--muted);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 600;
-  padding: 0.65rem 1rem;
-  min-height: 2.75rem;
-  border-radius: 999px;
+  padding: 0.55rem 0.65rem;
+  min-height: 2.5rem;
+  border-radius: 0;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .checkin-tab.is-active {
-  background: color-mix(in srgb, #38bdf8 22%, var(--bg-elevated));
-  border-color: color-mix(in srgb, #38bdf8 45%, var(--border));
-  color: #e0f7ff;
+  background: transparent;
+  border-bottom-color: #7dd3fc;
+  color: var(--text);
 }
 
 .checkin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0 1.25rem;
 }
 
 .checkin-panel {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 0.85rem 0.75rem 0.65rem;
-  min-height: 12rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  min-height: 0;
 }
 
-.checkin-panel--buy {
-  border-color: color-mix(in srgb, var(--green) 28%, var(--border-subtle));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 8%, transparent);
-}
-
-.checkin-panel--up {
-  border-color: color-mix(in srgb, var(--green) 22%, var(--border-subtle));
-}
-
-.checkin-panel--down {
-  border-color: color-mix(in srgb, var(--red) 22%, var(--border-subtle));
-}
-
-.checkin-panel--watch {
-  border-color: color-mix(in srgb, #fbbf24 28%, var(--border-subtle));
-}
-
+.checkin-panel--buy,
+.checkin-panel--up,
+.checkin-panel--down,
+.checkin-panel--watch,
 .checkin-panel--sell {
-  border-color: color-mix(in srgb, var(--red) 28%, var(--border-subtle));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 8%, transparent);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .checkin-panel__head {
-  margin-bottom: 0.65rem;
-  padding: 0 0.25rem;
+  margin-bottom: 0.35rem;
+  padding: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.35rem;
 }
 
 .checkin-panel__head h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkin-panel--up .checkin-panel__head h3,
+.checkin-panel--buy .checkin-panel__head h3 {
+  color: var(--green);
+}
+
+.checkin-panel--down .checkin-panel__head h3,
+.checkin-panel--sell .checkin-panel__head h3 {
+  color: var(--red);
+}
+
+.checkin-panel--watch .checkin-panel__head h3 {
+  color: #fbbf24;
 }
 
 .checkin-panel__head p {
-  margin: 0.2rem 0 0;
-  font-size: 0.75rem;
-  color: var(--dim);
+  display: none;
 }
 
 .checkin-rank {
@@ -1388,27 +1300,30 @@ body[data-day-mood="mixed"] .site-header {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
 }
 
 .checkin-rank__row {
   display: grid;
-  grid-template-columns: 1.25rem 3.6rem minmax(0, 1fr) auto;
-  gap: 0.35rem 0.45rem;
-  align-items: start;
-  padding: 0.45rem 0.35rem;
-  border-radius: 8px;
+  grid-template-columns: 1.1rem 3.4rem minmax(0, 1fr) auto;
+  gap: 0.35rem 0.4rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
   transition: background 0.15s ease;
 }
 
+.checkin-rank__row:last-child {
+  border-bottom: 0;
+}
+
 .checkin-rank__row:hover {
-  background: color-mix(in srgb, #38bdf8 8%, transparent);
+  background: color-mix(in srgb, var(--surface-hover) 55%, transparent);
 }
 
 .checkin-rank__n {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--dim);
-  padding-top: 0.2rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1419,46 +1334,31 @@ body[data-day-mood="mixed"] .site-header {
   color: var(--text);
   font: inherit;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  transition: text-decoration-color 0.15s ease, color 0.15s ease;
+  text-decoration: none;
 }
 
 .checkin-rank__sym:hover {
   color: #7dd3fc;
-  text-decoration-color: color-mix(in srgb, #38bdf8 50%, transparent);
-}
-
-.checkin-rank__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-  min-width: 0;
 }
 
 .checkin-rank__name {
-  font-size: 0.78rem;
-  color: var(--text);
+  font-size: 0.75rem;
+  color: var(--dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.checkin-rank__why {
-  font-size: 0.68rem;
-  color: var(--dim);
-  line-height: 1.35;
+  min-width: 0;
 }
 
 .checkin-rank__val {
   font-size: 0.8rem;
   text-align: right;
   white-space: nowrap;
-  padding-top: 0.1rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .checkin-rank__val.up {
@@ -1469,9 +1369,13 @@ body[data-day-mood="mixed"] .site-header {
   color: var(--red);
 }
 
+.checkin-rank__val.dim {
+  color: var(--dim);
+}
+
 .checkin-rank__empty {
-  padding: 0.85rem 0.35rem;
-  font-size: 0.82rem;
+  padding: 0.65rem 0;
+  font-size: 0.8rem;
   color: var(--muted);
   line-height: 1.4;
 }
@@ -1527,13 +1431,17 @@ body[data-day-mood="mixed"] .site-header {
   line-height: 1.35;
 }
 
-@media (max-width: 960px) {
-  .checkin-guide {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1100px) {
+  .checkin-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem 1.1rem;
   }
+}
 
+@media (max-width: 960px) {
   .checkin-grid {
     grid-template-columns: 1fr;
+    gap: 0;
   }
 
   .checkin-tabs {
@@ -1542,8 +1450,6 @@ body[data-day-mood="mixed"] .site-header {
 
   .checkin-panel {
     display: none;
-    min-height: 0;
-    animation: row-in 0.3s ease-out;
   }
 
   .checkin-panel.is-active {
@@ -1556,9 +1462,6 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 @media (max-width: 640px) {
-  .checkin-guide {
-    grid-template-columns: 1fr;
-  }
   .mobile-only {
     display: block;
   }
@@ -1571,22 +1474,21 @@ body[data-day-mood="mixed"] .site-header {
   }
 
   .checkin-pulse {
-    padding: 1rem 0.9rem 1.1rem;
-    margin-bottom: 1.15rem;
-    border-radius: 12px;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
   }
 
   .checkin-header h2 {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
   }
 
   .checkin-rank__row {
-    grid-template-columns: 1.2rem minmax(3rem, auto) 1fr auto;
-    padding: 0.7rem 0.45rem;
-    min-height: 3rem;
+    grid-template-columns: 1.1rem 3.2rem minmax(0, 1fr) auto;
+    padding: 0.55rem 0;
+    min-height: 2.75rem;
   }
 
-  .checkin-rank__meta {
+  .checkin-rank__name {
     display: none;
   }
 

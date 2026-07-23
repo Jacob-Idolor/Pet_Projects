@@ -13,9 +13,7 @@ import {
   rsiLabel,
   athIndicator,
   actionBadge,
-  actionBias,
   pulseExplain,
-  sma50Plain,
 } from "../lib/market-display";
 
 export interface StockRow {
@@ -538,11 +536,12 @@ function renderCheckIn() {
 
   if (tallyEl) {
     tallyEl.innerHTML = `
-      <div class="checkin-tally__item checkin-tally__item--buy"><strong>${buyN}</strong><span>Lean buy</span></div>
-      <div class="checkin-tally__item checkin-tally__item--watch"><strong>${watchN}</strong><span>Watch</span></div>
-      <div class="checkin-tally__item checkin-tally__item--sell"><strong>${sellN}</strong><span>Lean sell</span></div>
-      <div class="checkin-tally__item"><strong class="up">${upN}</strong><span>Up today</span></div>
-      <div class="checkin-tally__item"><strong class="down">${downN}</strong><span>Down today</span></div>
+      <span class="checkin-tally__stat checkin-tally__stat--buy"><strong>${buyN}</strong> buy</span>
+      <span class="checkin-tally__stat checkin-tally__stat--watch"><strong>${watchN}</strong> watch</span>
+      <span class="checkin-tally__stat checkin-tally__stat--sell"><strong>${sellN}</strong> sell</span>
+      <span class="checkin-tally__sep" aria-hidden="true"></span>
+      <span class="checkin-tally__stat"><strong class="up">${upN}</strong> up</span>
+      <span class="checkin-tally__stat"><strong class="down">${downN}</strong> down</span>
     `;
   }
 
@@ -552,24 +551,23 @@ function renderCheckIn() {
     return `<li class="checkin-rank__row">
       <span class="checkin-rank__n">${i + 1}</span>
       <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
-      <span class="checkin-rank__meta">
-        <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
-        <span class="checkin-rank__why">${escapeHtml(x.explain.sma)} · ${escapeHtml(x.bias.label)}</span>
-      </span>
+      <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
       <span class="checkin-rank__val mono ${up ? "up" : "down"}">${up ? "+" : ""}${(x.chg ?? 0).toFixed(1)}%</span>
     </li>`;
   };
 
   const signalRow = (x: (typeof priced)[0], i: number) => {
     const sym = sanitizeSymbol(x.stock.symbol) || escapeHtml(String(x.stock.symbol ?? ""));
+    const chg = x.chg;
+    const chgHtml =
+      chg == null
+        ? `<span class="checkin-rank__val dim">—</span>`
+        : `<span class="checkin-rank__val mono ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(1)}%</span>`;
     return `<li class="checkin-rank__row">
       <span class="checkin-rank__n">${i + 1}</span>
       <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
-      <span class="checkin-rank__meta">
-        <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
-        <span class="checkin-rank__why">${escapeHtml(x.bias.reason)} · ${escapeHtml(sma50Plain(x.q))}</span>
-      </span>
-      <span class="checkin-rank__val">${actionBadge(x.q)} <span class="mono dim">score ${x.bias.score > 0 ? "+" : ""}${x.bias.score}</span></span>
+      <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+      ${chgHtml}
     </li>`;
   };
 
@@ -592,17 +590,17 @@ function renderCheckIn() {
   if (gainersEl) {
     gainersEl.innerHTML = gainers.length
       ? gainers.map(moveRow).join("")
-      : `<li class="checkin-rank__empty">No green names today — flat or red tape on the list.</li>`;
+      : `<li class="checkin-rank__empty">No gainers today.</li>`;
   }
   if (losersEl) {
     losersEl.innerHTML = losers.length
       ? losers.map(moveRow).join("")
-      : `<li class="checkin-rank__empty">No red names today — list is flat or green.</li>`;
+      : `<li class="checkin-rank__empty">No losers today.</li>`;
   }
   if (moversEl) {
     moversEl.innerHTML = absMovers.length
       ? absMovers.map(moveRow).join("")
-      : `<li class="checkin-rank__empty">No % moves yet — refresh quotes.</li>`;
+      : `<li class="checkin-rank__empty">No moves yet.</li>`;
   }
 
   const setups = [...priced]
@@ -613,7 +611,7 @@ function renderCheckIn() {
   if (setupsEl) {
     setupsEl.innerHTML = setups.length
       ? setups.map(signalRow).join("")
-      : `<li class="checkin-rank__empty">No lean-buy names right now — check Watch for mixed setups.</li>`;
+      : `<li class="checkin-rank__empty">None right now.</li>`;
   }
 
   const watch = [...priced]
@@ -624,7 +622,7 @@ function renderCheckIn() {
   if (watchEl) {
     watchEl.innerHTML = watch.length
       ? watch.map(signalRow).join("")
-      : `<li class="checkin-rank__empty">Everyone is leaning buy or sell — no mid-pack Watch names.</li>`;
+      : `<li class="checkin-rank__empty">None right now.</li>`;
   }
 
   const caution = [...priced]
@@ -635,7 +633,7 @@ function renderCheckIn() {
   if (cautionEl) {
     cautionEl.innerHTML = caution.length
       ? caution.map(signalRow).join("")
-      : `<li class="checkin-rank__empty">Nothing flagged lean-sell — stretch risk looks calm on the list.</li>`;
+      : `<li class="checkin-rank__empty">None right now.</li>`;
   }
 }
 

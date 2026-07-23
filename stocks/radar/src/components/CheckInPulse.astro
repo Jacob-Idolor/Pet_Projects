@@ -7,8 +7,7 @@
       <p class="board-eyebrow">Friend check-in</p>
       <h2 id="checkin-title">Today’s pulse</h2>
       <p class="checkin-lede">
-        Start here before the group chat: who’s up, who’s down, who’s on watch,
-        and where the radar leans buy or sell — plain English, not advice.
+        Who’s moving and where the list leans — for the group chat, not advice.
       </p>
     </div>
     <nav class="checkin-jump desktop-only" aria-label="Jump to sections">
@@ -16,25 +15,6 @@
       <a href="#watchlist-board">Master list</a>
       <a href="#submissions">Suggest</a>
     </nav>
-  </div>
-
-  <div class="checkin-guide" aria-label="How to read the pulse">
-    <article class="checkin-guide__card checkin-guide__card--buy">
-      <h3>Lean buy</h3>
-      <p>Checklist looks constructive (soft RSI, near lows, or cool vs averages). Chat bait — not a buy button.</p>
-    </article>
-    <article class="checkin-guide__card checkin-guide__card--watch">
-      <h3>Watch</h3>
-      <p>Mixed signals. Worth tracking, but nothing loud on our simple score.</p>
-    </article>
-    <article class="checkin-guide__card checkin-guide__card--sell">
-      <h3>Lean sell</h3>
-      <p>Stretched or soft (hot RSI, near highs, far above averages). A caution flag for the call.</p>
-    </article>
-    <article class="checkin-guide__card checkin-guide__card--sma">
-      <h3>SMA50</h3>
-      <p>50-day average ≈ typical price over ~2.5 months. Above = running hot lately; below = cooler vs recent weeks.</p>
-    </article>
   </div>
 
   <div class="checkin-tally" id="checkin-tally" aria-live="polite">
@@ -52,8 +32,7 @@
   <div class="checkin-grid" data-active-panel="gainers">
     <article class="checkin-panel checkin-panel--up is-active" data-checkin-panel="gainers" aria-labelledby="gainers-title">
       <header class="checkin-panel__head">
-        <h3 id="gainers-title">Top gainers</h3>
-        <p>Biggest green % moves on our list today</p>
+        <h3 id="gainers-title">Gainers</h3>
       </header>
       <ol class="checkin-rank" id="checkin-gainers" aria-live="polite">
         <li class="checkin-rank__empty">Loading quotes…</li>
@@ -62,8 +41,7 @@
 
     <article class="checkin-panel checkin-panel--down" data-checkin-panel="losers" aria-labelledby="losers-title">
       <header class="checkin-panel__head">
-        <h3 id="losers-title">Top losers</h3>
-        <p>Biggest red % moves — useful for the “what got hit?” chat</p>
+        <h3 id="losers-title">Losers</h3>
       </header>
       <ol class="checkin-rank" id="checkin-losers" aria-live="polite">
         <li class="checkin-rank__empty">Loading quotes…</li>
@@ -73,7 +51,6 @@
     <article class="checkin-panel checkin-panel--buy" data-checkin-panel="setups" aria-labelledby="setups-title">
       <header class="checkin-panel__head">
         <h3 id="setups-title">Lean buy</h3>
-        <p>Highest radar score — why it leaned buy + vs 50-day average</p>
       </header>
       <ol class="checkin-rank" id="checkin-setups" aria-live="polite">
         <li class="checkin-rank__empty">Scoring master list…</li>
@@ -82,8 +59,7 @@
 
     <article class="checkin-panel checkin-panel--watch" data-checkin-panel="watch" aria-labelledby="watch-title">
       <header class="checkin-panel__head">
-        <h3 id="watch-title">Ones to watch</h3>
-        <p>Mixed / mid-score names — keep on the radar without a strong lean</p>
+        <h3 id="watch-title">Watch</h3>
       </header>
       <ol class="checkin-rank" id="checkin-watch" aria-live="polite">
         <li class="checkin-rank__empty">Scoring master list…</li>
@@ -93,7 +69,6 @@
     <article class="checkin-panel checkin-panel--sell" data-checkin-panel="caution" aria-labelledby="caution-title">
       <header class="checkin-panel__head">
         <h3 id="caution-title">Lean sell</h3>
-        <p>Extended or soft on the checklist — caution for the group, not a sell order</p>
       </header>
       <ol class="checkin-rank" id="checkin-caution" aria-live="polite">
         <li class="checkin-rank__empty">Scoring master list…</li>
