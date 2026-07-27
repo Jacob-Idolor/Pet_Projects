@@ -12,9 +12,9 @@ const { placement, label = "Advertisement", class: className = "" } = Astro.prop
 const ads = getAdSenseConfig();
 const slot = slotIdFor(ads, placement);
 
-/** Hide entirely when ads are off and we're not previewing (e.g. disabled in prod). */
-const show = ads.enabled || ads.preview;
+/** Live units need client + slot. Preview boxes are local/dev only — never ship those hints to production. */
 const showLive = ads.enabled && Boolean(slot) && Boolean(ads.client);
+const show = showLive || ads.preview;
 ---
 
 {
@@ -44,9 +44,8 @@ const showLive = ads.enabled && Boolean(slot) && Boolean(ads.client);
           <span class="ad-slot-preview__badge">AdSense preview</span>
           <span class="ad-slot-preview__place">{placement}</span>
           <p class="ad-slot-preview__hint">
-            Local/dev placeholder — real ads fill after your CloudFront domain is
-            approved in AdSense. Set <code>PUBLIC_ADSENSE_CLIENT</code> + slot IDs
-            in <code>.env</code> (see <code>ADSENSE.md</code>).
+            Local layout placeholder. On production, units appear after AdSense
+            approval and slot IDs are set (<code>PUBLIC_ADSENSE_SLOT_*</code>).
           </p>
         </div>
       )}
