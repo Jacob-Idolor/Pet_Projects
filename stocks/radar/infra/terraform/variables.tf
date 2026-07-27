@@ -100,17 +100,32 @@ variable "enable_security_headers" {
 
 variable "monthly_budget_usd" {
   description = <<-EOT
-    Monthly cost alert for THIS stack only (filtered by Project tag).
-    Friend-scale hosting is typically $0.50–3; default $3 gives headroom without masking a runaway.
+    Early-warning monthly budget for THIS stack only (filtered by Project tag).
+    Friend-scale hosting is typically $0.50–3; default $3 emails before spend gets weird.
   EOT
   type    = number
   default = 3
 }
 
+variable "high_spend_budget_usd" {
+  description = <<-EOT
+    Second monthly budget — hard tripwire for abnormal / large spend on this stack.
+    Default $15: well above friend hosting, still far below a runaway bill.
+  EOT
+  type    = number
+  default = 15
+}
+
+variable "enable_high_spend_budget" {
+  description = "Create the high-spend ($15 default) AWS Budget in addition to the early-warning budget."
+  type        = bool
+  default     = true
+}
+
 variable "max_monthly_budget_usd" {
-  description = "Upper cap for monthly_budget_usd (typo safeguard). Raise only if you expect real traffic growth."
+  description = "Typo safeguard upper cap for high_spend_budget_usd (blocks absurd values like 5000)."
   type        = number
-  default     = 15
+  default     = 50
 }
 
 variable "budget_alert_email" {
@@ -121,7 +136,7 @@ variable "budget_alert_email" {
 }
 
 variable "enable_budget" {
-  description = "Create AWS Budget alert scoped to Project=project_name (needs Billing → Cost allocation tags activated for Project)."
+  description = "Create AWS Budget alerts scoped to Project=project_name (needs Billing → Cost allocation tags activated for Project)."
   type        = bool
   default     = true
 }

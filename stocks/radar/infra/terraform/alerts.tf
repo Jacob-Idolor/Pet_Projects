@@ -57,9 +57,10 @@ locals {
     null
   )
 
-  alert_subscribers_map = {
-    # IDs are not secret; unwrap so for_each is allowed. Emails remain sensitive.
-    for s in var.alert_subscribers : nonsensitive(s.id) => s
+  # for_each keys must be wholly nonsensitive — never map the sensitive email object.
+  alert_subscriber_ids = toset(nonsensitive([for s in var.alert_subscribers : s.id]))
+  alert_subscriber_email = {
+    for s in var.alert_subscribers : nonsensitive(s.id) => s.email
   }
 }
 
@@ -83,7 +84,7 @@ resource "aws_sns_topic_subscription" "signal_alerts_email" {
 
 # One topic per person — emails for their alert-rules only.
 resource "aws_sns_topic" "personal_alerts" {
-  for_each = local.alert_subscribers_map
+  for_each = local.alert_subscriber_ids
 
   name = "${var.project_name}-alerts-${each.key}"
 
@@ -94,11 +95,11 @@ resource "aws_sns_topic" "personal_alerts" {
 }
 
 resource "aws_sns_topic_subscription" "personal_alerts_email" {
-  for_each = local.alert_subscribers_map
+  for_each = local.alert_subscriber_ids
 
   topic_arn = aws_sns_topic.personal_alerts[each.key].arn
   protocol  = "email"
-  endpoint  = each.value.email
+  endpoint  = local.alert_subscriber_email[each.key]
 }
 
 check "alerts_need_inbox" {

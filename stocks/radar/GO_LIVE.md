@@ -26,8 +26,9 @@ Merge the Stocks Radar reliability PR to `main` so workflows and scripts are on 
 cd stocks/radar/infra/terraform
 cp terraform.tfvars.example terraform.tfvars
 # Edit: allowed_account_ids, site_bucket_name, budget_alert_email
+# Domain: enable_custom_domain + domain_name = "stockswatch.cc" (Cloudflare DNS)
 # Optional: alert_subscribers = [{ id = "jacob", email = "you@example.com" }]
-# Budget defaults to $3/mo scoped to Project=stocks-radar — see infra/terraform/COST.md
+# Budgets: $3 early warning + $15 high-spend tripwire — see infra/terraform/COST.md
 
 terraform init && terraform plan && terraform apply
 ```

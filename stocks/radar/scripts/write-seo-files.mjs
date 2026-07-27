@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC = resolve(ROOT, "public");
 
-const rawSite = (process.env.STOCKS_RADAR_SITE ?? "https://example.cloudfront.net").replace(
+const rawSite = (process.env.STOCKS_RADAR_SITE ?? "https://stockswatch.cc").replace(
   /\/$/,
   "",
 );

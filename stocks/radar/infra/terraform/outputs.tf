@@ -82,14 +82,15 @@ output "estimated_monthly_cost_usd" {
     growing_hobby_aws   = "2–10 USD/mo"
     domain_amortized    = "~1 USD/mo (10–12 USD/yr)"
     after_destroy       = "~0 USD/mo"
-    budget_default_usd  = var.monthly_budget_usd
-    budget_scope        = var.budget_scope_to_project_tag ? "Project tag = ${var.project_name}" : "ENTIRE ACCOUNT"
+    budget_default_usd     = var.monthly_budget_usd
+    high_spend_budget_usd  = var.high_spend_budget_usd
+    budget_scope           = var.budget_scope_to_project_tag ? "Project tag = ${var.project_name}" : "ENTIRE ACCOUNT"
   }
 }
 
 output "budget_setup_hint" {
-  description = "Make the $3 Project-scoped budget actually track this stack"
-  value       = "1) Billing → Cost allocation tags → activate user tag Project 2) Confirm email from AWS Budgets 3) Expected spend $0.50–3/mo friends; raise monthly_budget_usd to 5–10 only if traffic grows 4) See COST.md"
+  description = "Make the Project-scoped $3 + $15 budgets actually track this stack"
+  value       = "1) Billing → Cost allocation tags → activate user tag Project 2) Confirm BOTH AWS Budgets subscription emails ($3 early + $15 high-spend) 3) Expected spend $0.50–3/mo friends; $15 tripwire is for abnormal spend 4) See COST.md"
 }
 
 output "custom_domain" {

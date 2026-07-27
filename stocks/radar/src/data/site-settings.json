@@ -1,7 +1,7 @@
 {
   "$schema": "./site-settings.schema.json",
   "app": {
-    "name": "Stocks Radar",
+    "name": "StocksWatch",
     "version": "0.2.0",
     "environment": "development"
   },

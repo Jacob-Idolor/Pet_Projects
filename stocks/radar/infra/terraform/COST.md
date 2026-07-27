@@ -30,19 +30,31 @@ Passive-income math (AdSense vs hosting): **[../../PASSIVE_INCOME.md](../../PASS
 
 | Setting | Default | Why |
 |---------|---------|-----|
-| `monthly_budget_usd` | **$3** | Above typical friend spend (~$0.50–2), below “something is wrong” |
-| `max_monthly_budget_usd` | **$15** | Typo cap (blocks `5000`); raise limit only when traffic grows |
+| `monthly_budget_usd` | **$3** | Early warning above typical friend spend (~$0.50–2) |
+| `high_spend_budget_usd` | **$15** | Separate email tripwire for abnormal / large spend |
+| `max_monthly_budget_usd` | **$50** | Typo cap only (blocks `5000`); not an alert by itself |
 | Scope | **`Project = stocks-radar`** | Tracks *this* stack, not the whole AWS account |
-| Alerts | 50% actual, 80% forecast + actual, 100% actual | Early warning → act before month-end |
+| Alerts (each budget) | 50% actual, 80% forecast + actual, 100% actual | Early → act before month-end |
 
-At **$3**:
+### Budget A — early warning ($3)
 
 | Threshold | ≈ USD | Meaning |
 |-----------|-------|---------|
 | 50% actual | $1.50 | Normal-to-busy friends traffic, or first deploy month with invalidations |
 | 80% forecast | $2.40 | AWS thinks you’ll finish the month over ~$2.40 |
 | 80% actual | $2.40 | Already burning hot for this stack |
-| 100% actual | $3.00 | Over the intentional ceiling — investigate CloudFront egress / wrong price class / other tagged resources |
+| 100% actual | $3.00 | Over the intentional early ceiling — investigate |
+
+### Budget B — high spend / large amounts ($15)
+
+| Threshold | ≈ USD | Meaning |
+|-----------|-------|---------|
+| 50% actual | $7.50 | Climbing into “something is wrong” |
+| 80% forecast | $12.00 | Forecast says you’ll blow past ~$12 |
+| 80% actual | $12.00 | Act now (price class, traffic spike, wrong resources) |
+| 100% actual | **$15.00** | Passed the hard tripwire — treat as urgent |
+
+> Before this change, `$15` was only a Terraform typo cap (`max_monthly_budget_usd`), **not** an email alert. It is now a real second AWS Budget.
 
 ### One-time Billing setup (required for tag filter)
 

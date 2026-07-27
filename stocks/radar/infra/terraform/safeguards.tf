@@ -11,7 +11,7 @@ locals {
     blocked_by_design = "EKS, EC2, RDS, Lambda, ECS — not defined in this Terraform"
     account_id        = data.aws_caller_identity.current.account_id
     region            = data.aws_region.current.name
-    cost_notes        = "PriceClass_100 ≈ $0.50–3/mo friends; Project-scoped $3 budget; Cloudflare DNS preferred; destroy when idle"
+    cost_notes        = "PriceClass_100 ≈ $0.50–3/mo friends; Project-scoped $3 early + $15 high-spend budgets; Cloudflare DNS preferred; destroy when idle"
     domain_ready      = "Set enable_custom_domain after purchase — see DOMAIN.md; include_www_alias defaults true"
   }
 }
@@ -76,8 +76,16 @@ check "region_is_allowed" {
 
 check "budget_cap_sane" {
   assert {
-    condition     = !var.enable_budget || (var.monthly_budget_usd >= 1 && var.monthly_budget_usd <= var.max_monthly_budget_usd)
-    error_message = "monthly_budget_usd must be between 1 and ${var.max_monthly_budget_usd} when enable_budget is true."
+    condition = (
+      !var.enable_budget ||
+      (
+        var.monthly_budget_usd >= 1 &&
+        var.monthly_budget_usd <= var.max_monthly_budget_usd &&
+        var.high_spend_budget_usd >= 1 &&
+        var.high_spend_budget_usd <= var.max_monthly_budget_usd
+      )
+    )
+    error_message = "monthly_budget_usd and high_spend_budget_usd must be between 1 and ${var.max_monthly_budget_usd} when enable_budget is true."
   }
 }
 
@@ -93,5 +101,16 @@ check "budget_floor_viable" {
     # Sub-$2 limits false-alarm on normal CloudFront friend traffic (~$0.50–2 typical).
     condition     = !var.enable_budget || var.monthly_budget_usd >= 2
     error_message = "monthly_budget_usd below $2 will false-alarm on normal friend-scale CloudFront use; keep default 3 (or 5–10 if growing)."
+  }
+}
+
+check "high_spend_above_early_warning" {
+  assert {
+    condition = (
+      !var.enable_budget ||
+      !var.enable_high_spend_budget ||
+      var.high_spend_budget_usd >= var.monthly_budget_usd
+    )
+    error_message = "high_spend_budget_usd must be >= monthly_budget_usd (early warning first, then $15-class tripwire)."
   }
 }

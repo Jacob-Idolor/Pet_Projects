@@ -352,21 +352,15 @@ resource "aws_route53_record" "site" {
   }
 }
 
-# Cost guardrail for THIS stack.
+# Cost guardrails for THIS stack (Project tag filter).
 # Expected friend-scale spend ≈ $0.50–3/mo (S3 + CloudFront PriceClass_100 + SNS).
-# Default limit $3 with 50% / 80% / 100% alerts — viable only when scoped by Project tag
-# (otherwise other account spend trips a $3 budget immediately).
-resource "aws_budgets_budget" "monthly" {
-  count = var.enable_budget && var.budget_alert_email != "" ? 1 : 0
+# Two budgets:
+#   1) early warning @ monthly_budget_usd (default $3) — 50% / 80% / 100%
+#   2) high-spend tripwire @ high_spend_budget_usd (default $15) — abnormal / large amounts
+# Viable only when scoped by Project tag (otherwise other account spend trips these immediately).
 
-  name         = "${var.project_name}-monthly-budget"
-  budget_type  = "COST"
-  limit_amount = tostring(var.monthly_budget_usd)
-  limit_unit   = "USD"
-  time_unit    = "MONTHLY"
-
-  # Track usage for this product, not credits/refunds noise.
-  cost_types {
+locals {
+  budget_cost_types = {
     include_credit             = false
     include_discount           = true
     include_other_subscription = true
@@ -378,6 +372,30 @@ resource "aws_budgets_budget" "monthly" {
     include_upfront            = true
     use_amortized              = false
     use_blended                = false
+  }
+}
+
+resource "aws_budgets_budget" "monthly" {
+  count = var.enable_budget && var.budget_alert_email != "" ? 1 : 0
+
+  name         = "${var.project_name}-monthly-budget"
+  budget_type  = "COST"
+  limit_amount = tostring(var.monthly_budget_usd)
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  cost_types {
+    include_credit             = local.budget_cost_types.include_credit
+    include_discount           = local.budget_cost_types.include_discount
+    include_other_subscription = local.budget_cost_types.include_other_subscription
+    include_recurring          = local.budget_cost_types.include_recurring
+    include_refund             = local.budget_cost_types.include_refund
+    include_subscription       = local.budget_cost_types.include_subscription
+    include_support            = local.budget_cost_types.include_support
+    include_tax                = local.budget_cost_types.include_tax
+    include_upfront            = local.budget_cost_types.include_upfront
+    use_amortized              = local.budget_cost_types.use_amortized
+    use_blended                = local.budget_cost_types.use_blended
   }
 
   dynamic "cost_filter" {
@@ -417,7 +435,83 @@ resource "aws_budgets_budget" "monthly" {
     subscriber_email_addresses = [var.budget_alert_email]
   }
 
-  # Hard: at/over the configured monthly limit
+  # Hard: at/over the early-warning monthly limit
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# Abnormal / large spend tripwire (default $15). Separate budget so $3 warnings stay useful
+# without waiting until a true runaway to get mail.
+resource "aws_budgets_budget" "high_spend" {
+  count = (
+    var.enable_budget &&
+    var.enable_high_spend_budget &&
+    var.budget_alert_email != ""
+  ) ? 1 : 0
+
+  name         = "${var.project_name}-high-spend-budget"
+  budget_type  = "COST"
+  limit_amount = tostring(var.high_spend_budget_usd)
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
+
+  cost_types {
+    include_credit             = local.budget_cost_types.include_credit
+    include_discount           = local.budget_cost_types.include_discount
+    include_other_subscription = local.budget_cost_types.include_other_subscription
+    include_recurring          = local.budget_cost_types.include_recurring
+    include_refund             = local.budget_cost_types.include_refund
+    include_subscription       = local.budget_cost_types.include_subscription
+    include_support            = local.budget_cost_types.include_support
+    include_tax                = local.budget_cost_types.include_tax
+    include_upfront            = local.budget_cost_types.include_upfront
+    use_amortized              = local.budget_cost_types.use_amortized
+    use_blended                = local.budget_cost_types.use_blended
+  }
+
+  dynamic "cost_filter" {
+    for_each = var.budget_scope_to_project_tag ? [1] : []
+    content {
+      name   = "TagKeyValue"
+      values = [format("user:Project$%s", var.project_name)]
+    }
+  }
+
+  # ~$7.50 at default $15 — climbing into "something is wrong" territory
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 50
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.budget_alert_email]
+  }
+
+  # Passed $15 (or configured high_spend_budget_usd)
   notification {
     comparison_operator        = "GREATER_THAN"
     threshold                  = 100

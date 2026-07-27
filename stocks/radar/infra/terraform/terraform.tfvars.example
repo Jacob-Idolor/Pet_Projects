@@ -12,26 +12,24 @@ site_bucket_name       = "pet-projects-jacob-stocks-radar"
 # Lock to YOUR account: aws sts get-caller-identity --profile pet-projects
 allowed_account_ids = ["123456789012"]
 
-# --- Domain (buy later) -------------------------------------------------------
-# Keep false until the name is purchased. Stack works on *.cloudfront.net.
-enable_custom_domain = false
-dns_management       = "external" # Cloudflare Free DNS — no Route53 (~$0.50/mo saved)
-include_www_alias    = true       # when you flip domain on, cert covers apex + www
-domain_aliases       = []         # or e.g. ["www.example.com"] if not using include_www_alias
-# After purchase (see DOMAIN.md):
-# enable_custom_domain = true
-# domain_name          = "yourdomain.com"
-# dns_management       = "external"
-# include_www_alias    = true
+# --- Domain (stockswatch.cc on Cloudflare) ------------------------------------
+# DNS on Cloudflare Free — no Route53. Keep orange cloud OFF (DNS only).
+enable_custom_domain = true
+domain_name          = "stockswatch.cc"
+dns_management       = "external"
+include_www_alias    = true
+domain_aliases       = []
 
 enable_security_headers = true
 
-# Budget alarms — scoped to Project=stocks-radar (see COST.md)
-# Expected AWS spend: ~$0.50–3/mo friends; raise to 5–10 only if traffic grows
+# Dual budget alarms — scoped to Project=stocks-radar (see COST.md)
+# $3 = early warning for friend-scale; $15 = abnormal / large-spend tripwire
 enable_budget                = true
+enable_high_spend_budget     = true
 budget_alert_email           = "you@example.com"
 monthly_budget_usd           = 3
-max_monthly_budget_usd       = 15
+high_spend_budget_usd        = 15
+max_monthly_budget_usd       = 50
 budget_scope_to_project_tag  = true
 # After apply: Billing → Cost allocation tags → activate "Project"
 
