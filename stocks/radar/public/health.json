@@ -1,11 +1,12 @@
 {
+  "ok": true,
   "status": "ok",
-  "service": "Stocks Radar",
+  "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "development",
-  "builtAt": "2026-07-21T18:56:19.490Z",
+  "builtAt": "2026-07-27T23:09:45.584Z",
   "gitSha": "local",
-  "siteUrl": "https://d2stjcqx4wkpwu.cloudfront.net",
+  "siteUrl": "https://d18obfsjwqu836.cloudfront.net",
   "checks": {
     "settings": true,
     "quotesExpected": true

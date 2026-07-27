@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Stocks Radar",
+    "name": "StocksWatch",
     "version": "0.2.0",
     "environment": "development",
     "production": false
@@ -38,6 +38,6 @@
     "healthPath": "/health.json",
     "settingsPath": "/settings.json"
   },
-  "siteUrl": "https://d2stjcqx4wkpwu.cloudfront.net",
-  "generatedAt": "2026-07-21T18:56:19.490Z"
+  "siteUrl": "https://d18obfsjwqu836.cloudfront.net",
+  "generatedAt": "2026-07-27T23:09:45.583Z"
 }
