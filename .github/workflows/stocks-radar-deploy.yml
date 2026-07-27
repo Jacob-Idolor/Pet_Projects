@@ -95,8 +95,11 @@ jobs:
           PUBLIC_ADSENSE_SLOT_BOARD: ${{ vars.PUBLIC_ADSENSE_SLOT_BOARD }}
           PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.PUBLIC_ADSENSE_SLOT_FOOTER }}
           PUBLIC_ADSENSE_VERIFY_META: ${{ vars.PUBLIC_ADSENSE_VERIFY_META }}
-          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
-          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          # Never bake local AdSense preview boxes into the live site
+          PUBLIC_ADSENSE_PREVIEW: "false"
+          # Telemetry opt-in only — leave unset unless you intentionally enable otelScripts
+          OTEL_SDK_DISABLED: "true"
+          OTEL_EXPORTER_OTLP_ENDPOINT: ""
         run: |
           npm ci
           if [ "${STOCKS_RADAR_ENV}" = "production" ]; then

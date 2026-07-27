@@ -3,7 +3,7 @@
   "app": {
     "name": "StocksWatch",
     "version": "0.2.0",
-    "environment": "development"
+    "environment": "production"
   },
   "features": {
     "adsense": true,
@@ -12,7 +12,7 @@
     "checkInPulse": true,
     "technicalView": true,
     "dayMood": true,
-    "otelScripts": true
+    "otelScripts": false
   },
   "quotes": {
     "staleAfterHours": 6,

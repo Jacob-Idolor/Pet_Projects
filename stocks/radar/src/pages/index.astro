@@ -7,6 +7,7 @@ import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
 import AdSlot from "../components/AdSlot.astro";
 import { meta, stocks } from "../data/watchlist";
+import { canShowAdSlot, getAdSenseConfig } from "../lib/adsense";
 import { featureEnabled, getSiteSettings } from "../lib/site-config";
 
 const description =
@@ -14,10 +15,14 @@ const description =
   "Group check-in: pulse with gainers, losers, watch names, and lean buy/sell in plain English.";
 
 const settings = getSiteSettings();
+const ads = getAdSenseConfig();
 const showPulse = featureEnabled("checkInPulse");
 const showSubmissions = featureEnabled("groupSubmissions");
-const showAds = featureEnabled("adsense");
+const adsFeature = featureEnabled("adsense");
 const showMood = featureEnabled("dayMood");
+const showHeroAd = adsFeature && canShowAdSlot(ads, "hero");
+const showBoardAd = adsFeature && canShowAdSlot(ads, "board");
+const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
 ---
 
 <BaseLayout title={meta.groupName} description={description}>
@@ -47,7 +52,7 @@ const showMood = featureEnabled("dayMood");
       </dl>
     </section>
     {
-      showAds && (
+      showHeroAd && (
         <div class="container">
           <AdSlot placement="hero" label="Sponsored — top" />
         </div>
@@ -56,13 +61,13 @@ const showMood = featureEnabled("dayMood");
     <div class="container board-stage">
       {showPulse && <CheckInPulse />}
       {
-        showAds && (
+        showBoardAd && (
           <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
         )
       }
       <WatchlistBoard />
       {showSubmissions && <GroupSubmissions />}
-      {showAds && <AdSlot placement="footer" label="Sponsored — footer" />}
+      {showFooterAd && <AdSlot placement="footer" label="Sponsored — footer" />}
     </div>
   </div>
 </BaseLayout>

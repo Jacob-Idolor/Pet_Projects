@@ -69,7 +69,7 @@ export function loadRuntimeConfig(opts = {}) {
       checkInPulse: settings.features?.checkInPulse !== false,
       technicalView: settings.features?.technicalView !== false,
       dayMood: settings.features?.dayMood !== false,
-      otelScripts: settings.features?.otelScripts !== false,
+      otelScripts: settings.features?.otelScripts === true,
     },
     quotes: {
       staleAfterHours: num(
@@ -105,7 +105,7 @@ export function loadRuntimeConfig(opts = {}) {
     otel: {
       endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "",
       enabled:
-        settings.features?.otelScripts !== false &&
+        settings.features?.otelScripts === true &&
         Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT) &&
         process.env.OTEL_SDK_DISABLED !== "true",
     },
@@ -126,7 +126,14 @@ export function loadRuntimeConfig(opts = {}) {
 export function publicSettingsPayload(config = loadRuntimeConfig()) {
   return {
     app: config.app,
-    features: config.features,
+    features: {
+      adsense: config.features.adsense,
+      personalAlerts: config.features.personalAlerts,
+      groupSubmissions: config.features.groupSubmissions,
+      checkInPulse: config.features.checkInPulse,
+      technicalView: config.features.technicalView,
+      dayMood: config.features.dayMood,
+    },
     quotes: {
       staleAfterHours: config.quotes.staleAfterHours,
       pollIntervalMs: config.quotes.pollIntervalMs,

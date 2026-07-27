@@ -38,12 +38,18 @@ if (strict) {
     errors.push(`Production site URL looks like a placeholder: ${config.site.url}`);
   }
 
+  if (process.env.PUBLIC_ADSENSE_PREVIEW === "true") {
+    errors.push("PUBLIC_ADSENSE_PREVIEW must not be true in production builds");
+  }
+
   if (config.features.adsense || config.adsense.enabled) {
     if (!config.adsense.client.startsWith("ca-pub-")) {
       errors.push("PUBLIC_ADSENSE_CLIENT must be a ca-pub-… id when ads are enabled");
     }
     if (!config.adsense.slots.hero || !config.adsense.slots.board || !config.adsense.slots.footer) {
-      warnings.push("AdSense slots incomplete — hero/board/footer recommended before go-live");
+      warnings.push(
+        "AdSense slots incomplete — units stay hidden until hero/board/footer IDs are set (OK while pending review)"
+      );
     }
     if (config.rawSettings.seo?.requireCustomDomainForAds) {
       if (/cloudfront\.net/i.test(config.site.url || "")) {
