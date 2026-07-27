@@ -6,7 +6,7 @@
     "environment": "development"
   },
   "features": {
-    "adsense": false,
+    "adsense": true,
     "personalAlerts": false,
     "groupSubmissions": true,
     "checkInPulse": true,
