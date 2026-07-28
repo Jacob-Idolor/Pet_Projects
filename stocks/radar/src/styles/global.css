@@ -1,33 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap");
-
-:root {
-  --bg: #05070a;
-  --bg-elevated: #0b0f14;
-  --surface: #0e141c;
-  --surface-hover: #141c27;
-  --border: #1c2736;
-  --border-subtle: #151d28;
-  --text: #e8eef6;
-  --muted: #7f94ad;
-  --dim: #51657d;
-  --green: #22c55e;
-  --green-dim: #16a34a;
-  --green-glow: rgba(34, 197, 94, 0.14);
-  --red: #ef4444;
-  --amber: #f59e0b;
-  --blue: #3b82f6;
-  --radius: 6px;
-  --radius-sm: 4px;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-  --mono: "IBM Plex Mono", ui-monospace, monospace;
-}
+@import "./tokens.css";
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   line-height: 1.45;
@@ -119,15 +97,25 @@ a:hover {
 }
 
 .header-link {
-  color: var(--accent, #7eb6ff);
+  color: var(--muted);
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .header-link:hover {
-  text-decoration: underline;
+  color: var(--text);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--surface-hover) 80%, transparent);
+}
+
+.header-link.is-active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
 }
 
 /* Live status bar */
@@ -1673,8 +1661,8 @@ body[data-day-mood="mixed"] .site-header {
   }
 
   .mobile-dock__link.is-active {
-    background: color-mix(in srgb, #38bdf8 22%, transparent);
-    color: #e0f7ff;
+    background: color-mix(in srgb, var(--green) 18%, transparent);
+    color: #dcfce7;
   }
 
   .mobile-dock__link:active {
@@ -1726,7 +1714,9 @@ body[data-day-mood="mixed"] .site-header {
 .submissions-header .subtitle {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 42rem;
 }
 
 .submission-count {
@@ -1785,6 +1775,36 @@ body[data-day-mood="mixed"] .site-header {
 .submission-form textarea:focus {
   outline: none;
   border-color: var(--green);
+}
+
+.submission-status {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  animation: submission-status-in 0.28s ease;
+}
+
+.submission-status--ok {
+  color: var(--green);
+}
+
+.submission-status--warn {
+  color: var(--amber);
+}
+
+.submission-status--err {
+  color: var(--red);
+}
+
+@keyframes submission-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .submission-list {
@@ -1857,9 +1877,9 @@ body[data-day-mood="mixed"] .site-header {
 
 .submission-text {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--muted);
-  line-height: 1.5;
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.55;
 }
 
 .btn-text {

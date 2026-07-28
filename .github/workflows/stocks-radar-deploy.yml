@@ -105,6 +105,8 @@ jobs:
           PUBLIC_ADSENSE_VERIFY_META: ${{ vars.PUBLIC_ADSENSE_VERIFY_META }}
           # Never bake local AdSense preview boxes into the live site
           PUBLIC_ADSENSE_PREVIEW: "false"
+          # Free Web3Forms key — emails friend suggestions to the list owner (optional)
+          PUBLIC_WEB3FORMS_ACCESS_KEY: ${{ vars.PUBLIC_WEB3FORMS_ACCESS_KEY || secrets.PUBLIC_WEB3FORMS_ACCESS_KEY }}
           # Telemetry opt-in only — leave unset unless you intentionally enable otelScripts
           OTEL_SDK_DISABLED: "true"
           OTEL_EXPORTER_OTLP_ENDPOINT: ""

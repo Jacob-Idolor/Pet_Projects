@@ -260,7 +260,8 @@ async function load(refresh = false) {
     if (STATE.mode === "rack" && window.RackExplorer) window.RackExplorer.render();
     if (STATE.mode === "analyst") initAnalyst();
   } catch (e) {
-    $("#status").textContent = "Failed to load data — is the server running?";
+    $("#status").textContent =
+      "Couldn’t load the screener snapshot. Try Refresh, or rebuild with npm run update-screener.";
     console.error(e);
   } finally {
     btn.disabled = false;
@@ -737,20 +738,44 @@ $("#filtersBtn").addEventListener("click", () => {
 });
 
 // ---- mode (screener vs data-center map) --------------------------------
+const MODE_PURPOSE = {
+  screener: "Screener — rank holdings by valuation, momentum, quality, and composite score",
+  datacenter: "Data Center Map — explore the six-layer buildout, then drill into a layer’s stocks",
+  rack: "Rack Explorer — zoom from hall to rack to GPU die and see who builds each piece",
+  analyst: "AI Analyst — copy a grounded research prompt for Claude, Gemini, or ChatGPT",
+  lookup: "Stock Lookup — pin a universe ticker locally in this browser",
+};
+
 function applyMode() {
   const m = STATE.mode, screener = m === "screener";
   document.querySelectorAll("#mainnav button").forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
+  const purpose = $("#modePurpose");
+  if (purpose) {
+    purpose.style.opacity = "0";
+    purpose.textContent = MODE_PURPOSE[m] || "";
+    requestAnimationFrame(() => { purpose.style.opacity = "1"; });
+  }
   // screener chrome shows only in screener mode
   $(".filterbar").classList.toggle("hidden", !screener);
   $("#filtersPanel").classList.toggle("hidden", !screener || !STATE.panelOpen);
   $(".statusbar").classList.toggle("hidden", !screener);
-  $("#layers").classList.toggle("hidden", !screener);
+  const layersEl = $("#layers");
+  layersEl.classList.toggle("hidden", !screener);
+  layersEl.classList.toggle("view-pane", screener);
   $("#search").classList.toggle("hidden", !screener);
   renderAlerts();   // hides the alerts strip outside screener mode
-  $("#datacenter").classList.toggle("hidden", m !== "datacenter");
-  $("#rackexplorer").classList.toggle("hidden", m !== "rack");
-  $("#analyst").classList.toggle("hidden", m !== "analyst");
-  $("#lookup").classList.toggle("hidden", m !== "lookup");
+  const panes = [
+    ["#datacenter", "datacenter"],
+    ["#rackexplorer", "rack"],
+    ["#analyst", "analyst"],
+    ["#lookup", "lookup"],
+  ];
+  for (const [sel, mode] of panes) {
+    const el = $(sel);
+    const on = m === mode;
+    el.classList.toggle("hidden", !on);
+    el.classList.toggle("view-pane", on);
+  }
   updateFocusBanner();
   if (m === "datacenter" && window.DataCenter) window.DataCenter.render();
   if (m === "rack" && window.RackExplorer) window.RackExplorer.render();

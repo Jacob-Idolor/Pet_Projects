@@ -2,6 +2,10 @@
 import seed from "../data/submissions.json";
 
 const seedJson = JSON.stringify(seed.submissions);
+const web3formsKey =
+  (typeof import.meta.env.PUBLIC_WEB3FORMS_ACCESS_KEY === "string"
+    ? import.meta.env.PUBLIC_WEB3FORMS_ACCESS_KEY.trim()
+    : "") || "";
 ---
 
 <section class="submissions-panel" id="submissions">
@@ -12,7 +16,11 @@ const seedJson = JSON.stringify(seed.submissions);
       <p class="subtitle">
         Paste what you’d text us — tickers land in a <strong>pending queue</strong>.
         They do not join the master list until an owner adds them in git.
-        Fresh slate for the group — drop the first suggestions here.
+        {
+          web3formsKey
+            ? " Notes are emailed to the list owner when you submit."
+            : " On this build, notes stay on your device until email delivery is configured."
+        }
       </p>
     </div>
     <span class="submission-count" id="submission-count"></span>
@@ -34,16 +42,18 @@ const seedJson = JSON.stringify(seed.submissions);
         required
       ></textarea>
     </label>
-    <button type="submit" class="btn btn-primary">Suggest for master list</button>
+    <button type="submit" class="btn btn-primary" id="submission-submit">Suggest for master list</button>
+    <p class="submission-status" id="submission-status" role="status" aria-live="polite" hidden></p>
   </form>
 
   <ul class="submission-list" id="submission-list" aria-live="polite"></ul>
 </section>
 
-<script is:inline define:vars={{ seedJson }}>
+<script is:inline define:vars={{ seedJson, web3formsKey }}>
   (function () {
     var DB = "stocks-radar-submissions";
     var KEY = "entries";
+    var WEB3FORMS_URL = "https://api.web3forms.com/submit";
 
     function openDb() {
       return new Promise(function (resolve, reject) {
@@ -116,9 +126,32 @@ const seedJson = JSON.stringify(seed.submissions);
     var contentInput = document.getElementById("submission-content");
     var listEl = document.getElementById("submission-list");
     var countEl = document.getElementById("submission-count");
+    var submitBtn = document.getElementById("submission-submit");
+    var statusEl = document.getElementById("submission-status");
 
     var savedAuthor = localStorage.getItem("radar-author");
     if (savedAuthor && authorInput) authorInput.value = savedAuthor;
+
+    function setStatus(message, kind) {
+      if (!statusEl) return;
+      if (!message) {
+        statusEl.hidden = true;
+        statusEl.textContent = "";
+        statusEl.className = "submission-status";
+        return;
+      }
+      statusEl.hidden = false;
+      statusEl.textContent = message;
+      statusEl.className =
+        "submission-status" +
+        (kind === "ok"
+          ? " submission-status--ok"
+          : kind === "warn"
+            ? " submission-status--warn"
+            : kind === "err"
+              ? " submission-status--err"
+              : "");
+    }
 
     function allSubmissions(local) {
       var map = {};
@@ -200,6 +233,38 @@ const seedJson = JSON.stringify(seed.submissions);
       });
     }
 
+    function deliverToOwner(sub) {
+      if (!web3formsKey) {
+        return Promise.resolve({ ok: false, skipped: true });
+      }
+      return fetch(WEB3FORMS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: web3formsKey,
+          subject: "StocksWatch suggestion from " + sub.author,
+          from_name: "StocksWatch",
+          author: sub.author,
+          content: sub.content,
+          symbols: (sub.symbols || []).join(", ") || "(none detected)",
+          submittedAt: sub.submittedAt,
+          page: typeof location !== "undefined" ? location.href : "",
+          submissionId: sub.id,
+        }),
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: Boolean(res.ok && data && data.success), skipped: false, data: data };
+        }).catch(function () {
+          return { ok: false, skipped: false };
+        });
+      }).catch(function () {
+        return { ok: false, skipped: false };
+      });
+    }
+
     async function init() {
       render(await getLocal());
     }
@@ -209,6 +274,7 @@ const seedJson = JSON.stringify(seed.submissions);
       var author = (authorInput?.value || "").trim().toUpperCase();
       var content = (contentInput?.value || "").trim();
       if (!author || !content) return;
+      if (submitBtn && submitBtn.disabled) return;
 
       localStorage.setItem("radar-author", author);
 
@@ -221,12 +287,41 @@ const seedJson = JSON.stringify(seed.submissions);
         status: "pending",
       };
 
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+      }
+      setStatus("", null);
+
       var local = await getLocal();
       local.push(sub);
       await setLocal(local);
 
       if (contentInput) contentInput.value = "";
       render(local);
+
+      var delivery = await deliverToOwner(sub);
+      if (delivery.skipped) {
+        setStatus(
+          "Saved on this device only — email delivery isn’t configured on this build.",
+          "warn"
+        );
+      } else if (delivery.ok) {
+        setStatus(
+          "Sent — you’ll show as pending until it’s on the master list.",
+          "ok"
+        );
+      } else {
+        setStatus(
+          "Saved on this device, but email didn’t go through. Try again later or ping the list owner.",
+          "err"
+        );
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Suggest for master list";
+      }
       // Master list stays git-owned — no auto-merge into the board
     });
 
