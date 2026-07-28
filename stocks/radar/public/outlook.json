@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-07-28T19:08:42.634Z",
-  "fetchedAt": "2026-07-28T19:08:42.634Z",
+  "updatedAt": "2026-07-28T22:10:43.822Z",
+  "fetchedAt": "2026-07-28T22:10:43.822Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -20,8 +20,8 @@
       "label": "US 13W",
       "unit": "yield",
       "blurb": "Short bill yield — front-end rates / Fed path proxy",
-      "price": 3.7599998,
-      "changePct": -0.9744569924823708,
+      "price": 3.76,
+      "changePct": -0.9744517251659819,
       "name": "13 WEEK TREASURY BILL"
     },
     "us5y": {
@@ -40,8 +40,8 @@
       "label": "TLT",
       "unit": "price",
       "blurb": "Long-bond ETF — yields down ≈ TLT up",
-      "price": 84.235,
-      "changePct": 0.5791044776119396,
+      "price": 84.24,
+      "changePct": 0.5850746268656656,
       "name": "iShares 20+ Year Treasury Bond ETF"
     },
     "uup": {
@@ -50,8 +50,8 @@
       "label": "USD",
       "unit": "price",
       "blurb": "Dollar proxy — strong USD often pressures risk assets",
-      "price": 28.56,
-      "changePct": -0.13986147180489045,
+      "price": 28.58,
+      "changePct": -0.06993140280755643,
       "name": "Invesco DB US Dollar Index Bullish Fund"
     }
   },
@@ -59,7 +59,7 @@
     "SMH": {
       "symbol": "SMH",
       "fundamentals": {
-        "trailingPE": 34.39197,
+        "trailingPE": 34.284508,
         "forwardPE": null,
         "pegRatio": null,
         "priceToBook": null,
@@ -74,57 +74,53 @@
       },
       "news": [
         {
-          "title": "Update: US Equity Indexes Mixed as Chipmakers Restrain Nasdaq, Crude Oil Slides",
+          "title": "ETF League Tables: VanEck Sheds $1.9B",
+          "publisher": "etf.com",
+          "link": "https://finance.yahoo.com/m/8599c2eb-6d40-3cd8-80b4-a6f1626b3259/etf-league-tables%3A-vaneck.html",
+          "publishedAt": "2026-07-28T21:00:05.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Update: US Equity Indexes Mixed as Chipmakers Weigh Ahead of Mag-7 Results, Crude Oil Drops Amid Halt in Middle East Strikes",
           "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-mixed-chipmakers-173518246.html",
-          "publishedAt": "2026-07-28T17:35:18.000Z",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-mixed-chipmakers-205435929.html",
+          "publishedAt": "2026-07-28T20:54:35.000Z",
           "sentiment": "negative",
           "sentimentScore": -1,
           "sentimentHits": [
-            "slides"
+            "drops"
           ]
         },
         {
-          "title": "Dow Jones rises 659 points on Coca-Cola, Sherwin-Williams earnings",
-          "publisher": "Quartz",
-          "link": "https://finance.yahoo.com/m/425d975c-54c3-383c-b038-2f790d7b5e9b/dow-jones-rises-659-points-on.html",
-          "publishedAt": "2026-07-28T17:03:48.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "rises"
-          ]
-        },
-        {
-          "title": "Update: US Equity Indexes Mixed as Chipmakers Mount Pressure on Nasdaq",
+          "title": "Update: US Equity Indexes Mixed as Semiconductor Heavyweights Restrain Nasdaq",
           "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-mixed-chipmakers-165322246.html",
-          "publishedAt": "2026-07-28T16:53:22.000Z",
-          "sentiment": "negative",
-          "sentimentScore": -1,
-          "sentimentHits": [
-            "pressure"
-          ]
+          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-mixed-semiconductor-193716548.html",
+          "publishedAt": "2026-07-28T19:37:16.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "mixed",
-        "positive": 1,
-        "negative": 2,
-        "neutral": 0,
+        "tilt": "negative",
+        "positive": 0,
+        "negative": 1,
+        "neutral": 2,
         "net": -1,
-        "scoreDelta": 0,
-        "label": "News check: mixed (1+ / 2−)",
+        "scoreDelta": -1,
+        "label": "News check: negative (-1) · 0+ / 1−",
         "method": "headline-lexicon-v1"
       }
     },
     "NBIS": {
       "symbol": "NBIS",
       "fundamentals": {
-        "trailingPE": 64.34942,
-        "forwardPE": -103.29984,
+        "trailingPE": 65.51738,
+        "forwardPE": -105.17476,
         "pegRatio": 0.63,
-        "priceToBook": 5.8948464,
+        "priceToBook": 6.001839,
         "evToEbitda": -1252.207,
         "profitMargin": 0.93086,
         "revenueGrowth": 6.839,
@@ -177,10 +173,10 @@
     "COHR": {
       "symbol": "COHR",
       "fundamentals": {
-        "trailingPE": 115.80383,
-        "forwardPE": 29.194536,
+        "trailingPE": 116.42584,
+        "forwardPE": 29.351347,
         "pegRatio": 0.92,
-        "priceToBook": 4.4327025,
+        "priceToBook": 4.4565115,
         "evToEbitda": 41.423,
         "profitMargin": 0.07102,
         "revenueGrowth": 0.205,
@@ -192,10 +188,10 @@
       },
       "news": [
         {
-          "title": "Why Corning Stock Is Having Its Worst Day in 6 Years After Earnings",
+          "title": "Why Corning Stock Had Its Worst Day in Four Months After Earnings",
           "publisher": "Barrons.com",
-          "link": "https://finance.yahoo.com/m/d4e10d4e-1e60-3253-b7ce-b020844e1695/why-corning-stock-is-having.html",
-          "publishedAt": "2026-07-28T18:18:00.000Z",
+          "link": "https://finance.yahoo.com/m/d4e10d4e-1e60-3253-b7ce-b020844e1695/why-corning-stock-had-its.html",
+          "publishedAt": "2026-07-28T21:30:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
@@ -240,10 +236,10 @@
     "TSEM": {
       "symbol": "TSEM",
       "fundamentals": {
-        "trailingPE": 94.88372,
-        "forwardPE": 35.041492,
+        "trailingPE": 94.41395,
+        "forwardPE": 34.868004,
         "pegRatio": 6.46,
-        "priceToBook": 7.721131,
+        "priceToBook": 7.6829042,
         "evToEbitda": 44.444,
         "profitMargin": 0.15131,
         "revenueGrowth": 0.155,
@@ -297,9 +293,9 @@
       "symbol": "AAOI",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 18.375944,
+        "forwardPE": 18.470243,
         "pegRatio": 0.78,
-        "priceToBook": 6.2613354,
+        "priceToBook": 6.2934666,
         "evToEbitda": -280.087,
         "profitMargin": -0.085480005,
         "revenueGrowth": 0.514,
@@ -417,10 +413,10 @@
     "META": {
       "symbol": "META",
       "fundamentals": {
-        "trailingPE": 21.623274,
-        "forwardPE": 16.06615,
+        "trailingPE": 21.578545,
+        "forwardPE": 16.032917,
         "pegRatio": 0.87,
-        "priceToBook": 6.193328,
+        "priceToBook": 6.1805167,
         "evToEbitda": 13.842,
         "profitMargin": 0.32837,
         "revenueGrowth": 0.331,
@@ -432,51 +428,52 @@
       },
       "news": [
         {
-          "title": "Earnings Showdown: Is Microsoft or Meta More at Risk When July 29 Earnings Drop?",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/ec4526a4-de12-327d-9e8c-0eb4217f87ae/earnings-showdown%3A-is.html",
-          "publishedAt": "2026-07-28T18:46:15.000Z",
-          "sentiment": "negative",
-          "sentimentScore": -2,
+          "title": "Markets brace for Fed decision and Big Tech earnings",
+          "publisher": "Yahoo Finance Video",
+          "link": "https://finance.yahoo.com/video/markets-brace-fed-decision-big-220000833.html",
+          "publishedAt": "2026-07-28T22:00:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Coca-Cola Stock Is Rocking Like the 1990s, With a Higher P/E Than Most of the Magnificent 7",
+          "publisher": "Barrons.com",
+          "link": "https://finance.yahoo.com/m/2a64dcfb-563e-346f-bfb5-03778e6fe251/coca-cola-stock-is-rocking.html",
+          "publishedAt": "2026-07-28T21:30:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Visa Announced Layoffs Ahead of Earnings Beat, as AI and Restructuring Accelerate",
+          "publisher": "Barrons.com",
+          "link": "https://finance.yahoo.com/m/e050b06c-401c-3510-a760-dd9c4f08ccb7/visa-announced-layoffs-ahead.html",
+          "publishedAt": "2026-07-28T21:12:00.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
           "sentimentHits": [
-            "drop",
-            "risk"
+            "beat",
+            "accelerate",
+            "layoffs"
           ]
-        },
-        {
-          "title": "Why Investors Should Wait For Meta’s Post Earnings Dip",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/9da7ee94-2f43-37cc-997b-c820a9f0983f/why-investors-should-wait-for.html",
-          "publishedAt": "2026-07-28T18:45:26.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Apple stock hits $5 trillion market cap for the first time",
-          "publisher": "Quartz",
-          "link": "https://finance.yahoo.com/m/054261bc-68b8-3c33-86f8-1dc8374fa69b/apple-stock-hits-%245-trillion.html",
-          "publishedAt": "2026-07-28T18:31:20.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "negative",
-        "positive": 0,
-        "negative": 1,
+        "tilt": "positive",
+        "positive": 1,
+        "negative": 0,
         "neutral": 2,
-        "net": -1,
-        "scoreDelta": -1,
-        "label": "News check: negative (-1) · 0+ / 1−",
+        "net": 1,
+        "scoreDelta": 1,
+        "label": "News check: positive (+1) · 1+ / 0−",
         "method": "headline-lexicon-v1"
       }
     },
     "DRAM": {
       "symbol": "DRAM",
       "fundamentals": {
-        "trailingPE": 21.678146,
+        "trailingPE": 21.51153,
         "forwardPE": null,
         "pegRatio": null,
         "priceToBook": null,
@@ -540,9 +537,9 @@
       "symbol": "OUST",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": -743.99994,
+        "forwardPE": -753.55554,
         "pegRatio": null,
-        "priceToBook": 7.7089567,
+        "priceToBook": 7.8079667,
         "evToEbitda": -30.799,
         "profitMargin": -0.30122,
         "revenueGrowth": 0.489,
@@ -599,10 +596,10 @@
     "VPG": {
       "symbol": "VPG",
       "fundamentals": {
-        "trailingPE": 203.04445,
-        "forwardPE": 50.480667,
+        "trailingPE": 204.17778,
+        "forwardPE": 50.762432,
         "pegRatio": 5.68,
-        "priceToBook": 3.6308365,
+        "priceToBook": 3.6511025,
         "evToEbitda": 51.277,
         "profitMargin": 0.0185,
         "revenueGrowth": 0.176,
@@ -659,9 +656,9 @@
       "symbol": "AMBA",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 59.871525,
+        "forwardPE": 60.115578,
         "pegRatio": 2.28,
-        "priceToBook": 4.973212,
+        "priceToBook": 4.993484,
         "evToEbitda": -43.467,
         "profitMargin": -0.17185,
         "revenueGrowth": 0.169,
@@ -718,9 +715,9 @@
       "symbol": "SYNA",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 21.033554,
+        "forwardPE": 21.028812,
         "pegRatio": 0.51,
-        "priceToBook": 3.1615634,
+        "priceToBook": 3.1608508,
         "evToEbitda": 56.449,
         "profitMargin": -0.04104,
         "revenueGrowth": 0.104,
@@ -776,10 +773,10 @@
     "INOD": {
       "symbol": "INOD",
       "fundamentals": {
-        "trailingPE": 51.517857,
-        "forwardPE": 28.85,
+        "trailingPE": 51.392857,
+        "forwardPE": 28.78,
         "pegRatio": 0.87,
-        "priceToBook": 14.689409,
+        "priceToBook": 14.653769,
         "evToEbitda": 35.195,
         "profitMargin": 0.13864,
         "revenueGrowth": 0.544,
@@ -830,6 +827,69 @@
         "net": 2,
         "scoreDelta": 2,
         "label": "News check: positive (+2) · 2+ / 0−",
+        "method": "headline-lexicon-v1"
+      }
+    },
+    "BE": {
+      "symbol": "BE",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": 36.704674,
+        "pegRatio": 0.91,
+        "priceToBook": 51.46206,
+        "evToEbitda": 233.234,
+        "profitMargin": 0.00246,
+        "revenueGrowth": 1.304,
+        "targetMeanPrice": 286.2,
+        "recommendationMean": 2.31034,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Dow Jones Futures: Market Strong Outside AI; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
+          "publisher": "Investor's Business Daily",
+          "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures%3A-market.html",
+          "publishedAt": "2026-07-28T21:59:20.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "strong"
+          ]
+        },
+        {
+          "title": "BE Stock Soars 10% After-Hours On Beating Q2 Expectations, Raised 2026 Revenue Outlook — CEO Says Order Backlog Outpacing Revenue",
+          "publisher": "Stocktwits",
+          "link": "https://finance.yahoo.com/m/a326afed-b6c5-34d6-bade-9bdf3b18f356/be-stock-soars-10%25.html",
+          "publishedAt": "2026-07-28T21:38:09.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "soars"
+          ]
+        },
+        {
+          "title": "Bloom Energy Jumps On Blowout Earnings, Strong Guidance For AI Infrastructure Play",
+          "publisher": "Investor's Business Daily",
+          "link": "https://finance.yahoo.com/m/06f15e12-4bda-3a35-9188-c52868b34a56/bloom-energy-jumps-on-blowout.html",
+          "publishedAt": "2026-07-28T21:16:59.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 2,
+          "sentimentHits": [
+            "jumps",
+            "strong"
+          ]
+        }
+      ],
+      "newsCheck": {
+        "tilt": "positive",
+        "positive": 3,
+        "negative": 0,
+        "neutral": 0,
+        "net": 3,
+        "scoreDelta": 2,
+        "label": "News check: positive (+2) · 3+ / 0−",
         "method": "headline-lexicon-v1"
       }
     }

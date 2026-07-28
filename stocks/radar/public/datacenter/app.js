@@ -268,12 +268,8 @@ async function load(refresh = false) {
     if (STATE.mode === "rack" && window.RackExplorer) window.RackExplorer.render();
     if (STATE.mode === "analyst") initAnalyst();
   } catch (e) {
-<<<<<<< Updated upstream
     $("#status").textContent =
       "Couldn’t load the screener snapshot. Try Refresh, or rebuild with npm run update-screener.";
-=======
-    $("#status").textContent = "Failed to load screener.json — try Refresh, or re-run npm run update-screener.";
->>>>>>> Stashed changes
     console.error(e);
   } finally {
     btn.disabled = false;

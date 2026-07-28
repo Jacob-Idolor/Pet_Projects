@@ -1,0 +1,113 @@
+---
+interface Props {
+  /** Which primary nav item is current */
+  active?: "watchlist" | "datacenter";
+}
+
+const { active = "watchlist" } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const dcHref = `${base}datacenter.html`.replace(/\/{2,}/g, "/").replace(":/", "://");
+---
+
+<header class="site-header">
+  <div class="site-header__inner container">
+    <a class="logo" href={base}>
+      <span class="logo-mark" aria-hidden="true"></span>
+      StocksWatch
+    </a>
+    <nav class="header-nav" aria-label="Primary">
+      <a
+        class:list={["header-link", { "is-active": active === "watchlist" }]}
+        href={base}
+        aria-current={active === "watchlist" ? "page" : undefined}
+      >
+        Watchlist
+      </a>
+      <a
+        class:list={["header-link", { "is-active": active === "datacenter" }]}
+        href={dcHref}
+        aria-current={active === "datacenter" ? "page" : undefined}
+      >
+        AI Data Center
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style is:global>
+  /* Shared chrome — used by Home (via global.css) and Datacenter layout.
+     Keep rules identical; Datacenter imports this component instead of duplicating markup. */
+  .site-header {
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(11, 15, 20, 0.92);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .site-header__inner,
+  .site-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1.15rem;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .site-header .logo {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    letter-spacing: -0.02em;
+  }
+
+  .site-header .logo:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .site-header .logo-mark {
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 3px;
+    background: linear-gradient(145deg, #4ade80 0%, #16a34a 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+  }
+
+  .site-header .header-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .site-header .header-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.35rem 0.55rem;
+    border-radius: var(--radius-sm, 4px);
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .site-header .header-link:hover {
+    color: var(--text);
+    text-decoration: none;
+    background: color-mix(in srgb, var(--surface-hover, #141c27) 80%, transparent);
+  }
+
+  .site-header .header-link.is-active {
+    color: var(--text);
+    background: color-mix(in srgb, var(--green, #22c55e) 14%, transparent);
+  }
+</style>

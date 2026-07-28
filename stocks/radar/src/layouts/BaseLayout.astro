@@ -1,5 +1,6 @@
 ---
 import { getAdSenseConfig } from "../lib/adsense";
+import SiteHeader from "../components/SiteHeader.astro";
 
 interface Props {
   title: string;
@@ -56,18 +57,7 @@ const ads = getAdSenseConfig();
     }
   </head>
   <body>
-    <header class="site-header">
-      <div class="container">
-        <a class="logo" href={base}>
-          <span class="logo-mark" aria-hidden="true"></span>
-          StocksWatch
-        </a>
-        <nav class="header-nav" aria-label="Primary">
-          <a class="header-link is-active" href={base} aria-current="page">Watchlist</a>
-          <a class="header-link" href={`${base}datacenter.html`}>AI Data Center</a>
-        </nav>
-      </div>
-    </header>
+    <SiteHeader active="watchlist" />
     <main>
       <slot />
     </main>

@@ -1,4 +1,6 @@
 ---
+import SiteHeader from "../components/SiteHeader.astro";
+
 interface Props {
   title: string;
   description?: string;
@@ -6,7 +8,7 @@ interface Props {
 
 const {
   title,
-  description = "AI data-center buildout screener — six layers, live quotes, research tools.",
+  description = "AI data-center buildout screener — six layers, market snapshots, research tools.",
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
@@ -33,24 +35,17 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
     <meta name="robots" content="index,follow" />
     <title>{pageTitle}</title>
     {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:site_name" content="StocksWatch" />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <link rel="stylesheet" href={`${base}tokens.css`.replace(/\/{2,}/g, "/").replace(":/", "://")} />
     <link rel="stylesheet" href={`${dcBase}style.css`} />
   </head>
-  <body>
-    <header class="site-header">
-      <div class="site-header__inner">
-        <a class="logo" href={base}>
-          <span class="logo-mark" aria-hidden="true"></span>
-          StocksWatch
-        </a>
-        <nav class="header-nav" aria-label="Primary">
-          <a class="header-link" href={base}>Watchlist</a>
-          <a class="header-link is-active" href={`${base}datacenter.html`} aria-current="page">
-            AI Data Center
-          </a>
-        </nav>
-      </div>
-    </header>
+  <body class="dc-page">
+    <SiteHeader active="datacenter" />
     <slot />
   </body>
 </html>
