@@ -2,7 +2,7 @@
   "defaults": {
     "cooldownHours": 24,
     "nearTargetPct": 5,
-    "minBuyScore": 2
+    "minBuyScore": 3
   },
   "rules": []
 }

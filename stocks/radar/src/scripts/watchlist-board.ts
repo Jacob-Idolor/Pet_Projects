@@ -2,12 +2,14 @@ import { escapeHtml, sanitizeId, sanitizePriority, sanitizeSymbol, yahooUrl } fr
 import {
   type QuoteData,
   type QuoteMap,
+  type OutlookStock,
   fmtPrice,
   trendBadge,
   maCell,
   rangeBar,
   renderMaStrip,
   renderTechnicalDetail,
+  renderOutlookDetail,
   hasTechnical,
   matchesTechnicalFilter,
   rsiLabel,
@@ -32,6 +34,11 @@ export interface StockRow {
   priority?: string;
   sector?: string;
   custom?: boolean;
+  catalyst?: string;
+  valuation?: {
+    bias?: "cheap" | "fair" | "rich" | "unknown" | string;
+    note?: string;
+  };
 }
 
 const CUSTOM_STORE = "stocks-radar-custom";
@@ -48,6 +55,7 @@ const CAT_LABEL: Record<string, string> = {
 let baseStocks: StockRow[] = [];
 let allStocks: StockRow[] = [];
 let quotes: QuoteMap = {};
+let outlookBySymbol: Record<string, OutlookStock> = {};
 let filter = "all";
 let tagFilter: string | null = null;
 let search = "";
@@ -224,9 +232,9 @@ function matchesFilter(stock: StockRow) {
     case "high-priority":
       return stock.priority === "high";
     case "lean-buy":
-      return actionBias(getQuote(stock)).cls === "buy";
+      return stockBias(stock).cls === "buy";
     case "lean-sell":
-      return actionBias(getQuote(stock)).cls === "sell";
+      return stockBias(stock).cls === "sell";
     default:
       if (filter.startsWith("tech-")) {
         return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
@@ -318,8 +326,8 @@ function sortStocks(list: StockRow[]) {
       }
       case "action": {
         const order: Record<string, number> = { buy: 0, watch: 1, sell: 2, idle: 3 };
-        av = order[actionBias(getQuote(a)).cls] ?? 4;
-        bv = order[actionBias(getQuote(b)).cls] ?? 4;
+        av = order[stockBias(a).cls] ?? 4;
+        bv = order[stockBias(b).cls] ?? 4;
         return sortDir * ((av as number) - (bv as number));
       }
       default:
@@ -371,7 +379,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td>${actionBadge(q)}</td>
+      <td>${actionBadge(q, biasOpts(stock))}</td>
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
@@ -394,7 +402,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td>${actionBadge(q)}</td>
+      <td>${actionBadge(q, biasOpts(stock))}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
@@ -407,6 +415,32 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
   `;
 }
 
+function outlookFor(stock: StockRow): OutlookStock | undefined {
+  const sym = stock.symbol?.toUpperCase();
+  const fetched = sym ? outlookBySymbol[sym] : undefined;
+  const human = stock.valuation || {};
+  const fundamentals = {
+    ...(fetched?.fundamentals || {}),
+    bias: human.bias || fetched?.fundamentals?.bias || null,
+    note: human.note || fetched?.fundamentals?.note || null,
+    catalyst: stock.catalyst || fetched?.fundamentals?.catalyst || null,
+  };
+  return {
+    symbol: sym,
+    fundamentals,
+    news: fetched?.news || [],
+    newsCheck: fetched?.newsCheck || null,
+  };
+}
+
+function biasOpts(stock: StockRow) {
+  return { newsCheck: outlookFor(stock)?.newsCheck };
+}
+
+function stockBias(stock: StockRow) {
+  return actionBias(getQuote(stock), biasOpts(stock));
+}
+
 function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
@@ -414,10 +448,11 @@ function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | u
   return `<tr class="detail-row" data-detail-for="${sid}">
         <td colspan="${colspan}">
           <div class="detail-panel">
-            ${renderTechnicalDetail(q, price)}
+            ${renderOutlookDetail(outlookFor(stock))}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            ${renderTechnicalDetail(q, price)}
             <div class="pt-inline" data-pt-inline="${sym}">
               <strong>Price target:</strong>
               <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${sym}" />
@@ -485,7 +520,7 @@ function renderOverview() {
     <div class="overview-metric tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
 
-  const leanBuy = allStocks.filter((s) => actionBias(getQuote(s)).cls === "buy").length;
+  const leanBuy = allStocks.filter((s) => stockBias(s).cls === "buy").length;
 
   el.innerHTML = `
     <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">On master list</span></div>
@@ -511,7 +546,7 @@ function renderCheckIn() {
       const q = getQuote(s);
       const price = getPrice(s);
       const chg = q?.changePct ?? null;
-      const explain = pulseExplain(q);
+      const explain = pulseExplain(q, biasOpts(s));
       return { stock: s, q, price, chg, bias: explain.bias, explain };
     })
     .filter((x) => x.price != null);
@@ -532,6 +567,7 @@ function renderCheckIn() {
   const buyN = priced.filter((x) => x.bias.cls === "buy").length;
   const sellN = priced.filter((x) => x.bias.cls === "sell").length;
   const watchN = priced.filter((x) => x.bias.cls === "watch").length;
+  const preN = priced.filter((x) => x.bias.setup === "pre-momentum").length;
   const upN = priced.filter((x) => (x.chg ?? 0) > 0).length;
   const downN = priced.filter((x) => (x.chg ?? 0) < 0).length;
 
@@ -539,6 +575,7 @@ function renderCheckIn() {
     tallyEl.innerHTML = `
       <span class="checkin-tally__stat checkin-tally__stat--buy"><strong>${buyN}</strong> buy</span>
       <span class="checkin-tally__stat checkin-tally__stat--watch"><strong>${watchN}</strong> watch</span>
+      <span class="checkin-tally__stat checkin-tally__stat--coil"><strong>${preN}</strong> pre-mom</span>
       <span class="checkin-tally__stat checkin-tally__stat--sell"><strong>${sellN}</strong> sell</span>
       <span class="checkin-tally__sep" aria-hidden="true"></span>
       <span class="checkin-tally__stat"><strong class="up">${upN}</strong> up</span>
@@ -564,10 +601,21 @@ function renderCheckIn() {
       chg == null
         ? `<span class="checkin-rank__val dim">—</span>`
         : `<span class="checkin-rank__val mono ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(1)}%</span>`;
-    return `<li class="checkin-rank__row">
+    const setupTag =
+      x.bias.setup === "pre-momentum"
+        ? `<span class="checkin-setup-tag">pre-mom</span>`
+        : x.bias.setup === "washed-out"
+          ? `<span class="checkin-setup-tag checkin-setup-tag--wash">wash</span>`
+          : x.bias.setup === "extended"
+            ? `<span class="checkin-setup-tag checkin-setup-tag--ext">ext</span>`
+            : "";
+    return `<li class="checkin-rank__row checkin-rank__row--signal">
       <span class="checkin-rank__n">${i + 1}</span>
       <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
-      <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+      <span class="checkin-rank__meta">
+        <span class="checkin-rank__name">${escapeHtml(x.stock.name)} ${setupTag}</span>
+        <span class="checkin-rank__why">${escapeHtml(x.bias.reason)}</span>
+      </span>
       ${chgHtml}
     </li>`;
   };
@@ -617,7 +665,13 @@ function renderCheckIn() {
 
   const watch = [...priced]
     .filter((x) => x.bias.cls === "watch")
-    .sort((a, b) => Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0))
+    .sort((a, b) => {
+      // Pre-momentum quiet coils first — answer “what hasn’t run yet?”
+      const ap = a.bias.setup === "pre-momentum" ? 1 : 0;
+      const bp = b.bias.setup === "pre-momentum" ? 1 : 0;
+      if (bp !== ap) return bp - ap;
+      return Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0);
+    })
     .slice(0, 8);
 
   if (watchEl) {
@@ -863,7 +917,7 @@ function renderMobileCard(stock: StockRow) {
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
 
   const high = sanitizePriority(stock.priority) === "high";
-  const action = actionBias(q);
+  const action = stockBias(stock);
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
     <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
@@ -871,7 +925,7 @@ function renderMobileCard(stock: StockRow) {
         <div class="scm-identity">
           <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
-          ${actionBadge(q)}
+          ${actionBadge(q, biasOpts(stock))}
         </div>
         <div class="scm-quote">
           <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
@@ -1197,6 +1251,24 @@ export async function initWatchlistBoard(stocksJson: string) {
 
   renderAll();
   startQuoteLoader();
+  loadOutlook().then((ok) => {
+    if (ok) renderAll();
+  });
+}
+
+async function loadOutlook() {
+  const base = document.querySelector<HTMLElement>("[data-radar-base]")?.dataset.radarBase ?? "/";
+  try {
+    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const stocks = data?.stocks;
+    if (!stocks || typeof stocks !== "object") return false;
+    outlookBySymbol = stocks as Record<string, OutlookStock>;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function isUsMarketOpen() {

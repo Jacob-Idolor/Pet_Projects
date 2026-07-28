@@ -1,0 +1,37 @@
+[
+  {
+    "id": "us10y",
+    "symbol": "^TNX",
+    "label": "US 10Y",
+    "unit": "yield",
+    "blurb": "10-year Treasury yield — gravity for equity valuations"
+  },
+  {
+    "id": "us13w",
+    "symbol": "^IRX",
+    "label": "US 13W",
+    "unit": "yield",
+    "blurb": "Short bill yield — front-end rates / Fed path proxy"
+  },
+  {
+    "id": "us5y",
+    "symbol": "^FVX",
+    "label": "US 5Y",
+    "unit": "yield",
+    "blurb": "5-year yield — mid-curve growth vs inflation bet"
+  },
+  {
+    "id": "tlt",
+    "symbol": "TLT",
+    "label": "TLT",
+    "unit": "price",
+    "blurb": "Long-bond ETF — yields down ≈ TLT up"
+  },
+  {
+    "id": "uup",
+    "symbol": "UUP",
+    "label": "USD",
+    "unit": "price",
+    "blurb": "Dollar proxy — strong USD often pressures risk assets"
+  }
+]

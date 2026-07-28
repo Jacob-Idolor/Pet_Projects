@@ -121,6 +121,148 @@ export function hasTechnical(q: QuoteData | undefined) {
   return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
 }
 
+export interface OutlookFundamentals {
+  trailingPE?: number | null;
+  forwardPE?: number | null;
+  pegRatio?: number | null;
+  priceToBook?: number | null;
+  evToEbitda?: number | null;
+  profitMargin?: number | null;
+  revenueGrowth?: number | null;
+  targetMeanPrice?: number | null;
+  recommendationMean?: number | null;
+  bias?: string | null;
+  note?: string | null;
+  catalyst?: string | null;
+}
+
+export interface OutlookNewsItem {
+  title?: string;
+  publisher?: string;
+  link?: string;
+  publishedAt?: string | null;
+  sentiment?: "positive" | "negative" | "neutral" | string;
+  sentimentScore?: number;
+  sentimentHits?: string[];
+}
+
+export interface NewsCheck {
+  tilt?: "positive" | "negative" | "mixed" | "neutral" | string;
+  positive?: number;
+  negative?: number;
+  neutral?: number;
+  net?: number;
+  scoreDelta?: number;
+  label?: string;
+  method?: string;
+}
+
+export interface OutlookStock {
+  symbol?: string;
+  fundamentals?: OutlookFundamentals | null;
+  news?: OutlookNewsItem[];
+  newsCheck?: NewsCheck | null;
+}
+
+function fmtMultiple(v: number | null | undefined) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return v.toFixed(1);
+}
+
+function fmtGrowth(v: number | null | undefined) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return `${(v * 100).toFixed(0)}%`;
+}
+
+function biasLabel(bias: string | null | undefined) {
+  const b = (bias || "").toLowerCase();
+  if (b === "cheap") return { text: "Group lean: cheap vs story", cls: "cheap" };
+  if (b === "fair") return { text: "Group lean: fair", cls: "fair" };
+  if (b === "rich") return { text: "Group lean: rich vs story", cls: "rich" };
+  return null;
+}
+
+function sentimentBadge(sentiment: string | undefined) {
+  const s = (sentiment || "neutral").toLowerCase();
+  const cls = s === "positive" || s === "negative" || s === "neutral" ? s : "neutral";
+  const text = cls === "positive" ? "+" : cls === "negative" ? "−" : "~";
+  const label = cls === "positive" ? "Positive" : cls === "negative" ? "Negative" : "Neutral";
+  return `<span class="news-sent news-sent--${cls}" title="${escapeHtml(label)} headline">${text} ${escapeHtml(label)}</span>`;
+}
+
+function newsCheckHtml(check: NewsCheck | null | undefined) {
+  if (!check?.tilt) return "";
+  const tilt = String(check.tilt);
+  const cls =
+    tilt === "positive" ? "positive" : tilt === "negative" ? "negative" : tilt === "mixed" ? "mixed" : "neutral";
+  const label = check.label || `News check: ${tilt}`;
+  return `<p class="outlook-news-check outlook-news-check--${cls}">${escapeHtml(label)}</p>
+    <p class="outlook-disclaimer">Headline lexicon — quick tape check, not a thesis. Read the links.</p>`;
+}
+
+/** Valuation + news first — friend feedback: more important than technical momentum. */
+export function renderOutlookDetail(row: OutlookStock | null | undefined) {
+  const f = row?.fundamentals;
+  const news = Array.isArray(row?.news) ? row!.news! : [];
+  const hasMetrics =
+    f &&
+    (f.trailingPE != null ||
+      f.forwardPE != null ||
+      f.pegRatio != null ||
+      f.priceToBook != null ||
+      f.evToEbitda != null ||
+      f.bias ||
+      f.note ||
+      f.catalyst);
+
+  if (!hasMetrics && !news.length && !row?.newsCheck) {
+    return `<div class="outlook-detail">
+      <h4>Valuation + news</h4>
+      <p class="outlook-empty">Outlook refreshes with quotes — run <code>npm run update-quotes</code> or wait for CI.</p>
+    </div>`;
+  }
+
+  const lean = biasLabel(f?.bias);
+  const metrics = [
+    ["Trailing PE", fmtMultiple(f?.trailingPE)],
+    ["Forward PE", fmtMultiple(f?.forwardPE)],
+    ["PEG", fmtMultiple(f?.pegRatio)],
+    ["P/B", fmtMultiple(f?.priceToBook)],
+    ["EV/EBITDA", fmtMultiple(f?.evToEbitda)],
+    ["Rev growth", fmtGrowth(f?.revenueGrowth)],
+  ]
+    .filter(([, v]) => v !== "—")
+    .map(
+      ([label, v]) =>
+        `<span class="outlook-metric"><span class="outlook-metric__label">${escapeHtml(label)}</span><span class="mono">${escapeHtml(v)}</span></span>`
+    )
+    .join("");
+
+  const newsHtml = news.length
+    ? `<ul class="outlook-news">${news
+        .slice(0, 3)
+        .map((n) => {
+          const title = escapeHtml(n.title || "Headline");
+          const pub = escapeHtml(n.publisher || "");
+          const href = escapeHtml(n.link || "#");
+          return `<li>${sentimentBadge(n.sentiment)} <a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
+        })
+        .join("")}</ul>`
+    : `<p class="outlook-empty">No recent headlines in the feed.</p>`;
+
+  return `<div class="outlook-detail">
+    <h4>Valuation + news <span class="tech-detail__sub">(primary)</span></h4>
+    ${lean ? `<p class="outlook-bias outlook-bias--${lean.cls}">${escapeHtml(lean.text)}</p>` : ""}
+    ${f?.note ? `<p class="outlook-note">${escapeHtml(f.note)}</p>` : ""}
+    ${f?.catalyst ? `<p class="outlook-catalyst"><strong>Catalyst:</strong> ${escapeHtml(f.catalyst)}</p>` : ""}
+    ${metrics ? `<div class="outlook-metrics">${metrics}</div>` : ""}
+    <p class="outlook-disclaimer">Multiples without peer context are not a buy/sell — they’re chat fuel next to the thesis.</p>
+    <h5 class="outlook-news-title">News check</h5>
+    ${newsCheckHtml(row?.newsCheck)}
+    ${newsHtml}
+  </div>`;
+}
+
 export function renderTechnicalDetail(q: QuoteData | undefined, price: number | null) {
   if (!hasTechnical(q)) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy — run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
@@ -148,7 +290,7 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
   const action = actionBias(q);
   return `
     <div class="tech-detail">
-      <h4>Technical snapshot</h4>
+      <h4>Momentum <span class="tech-detail__sub">(secondary)</span></h4>
       <div class="tech-summary-row">
         ${actionBadge(q)}
         ${trendBadge(q?.trend)}
@@ -171,71 +313,136 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
     </div>`;
 }
 
-export function actionBias(q: QuoteData | undefined): {
+export function actionBias(
+  q: QuoteData | undefined,
+  opts?: { newsCheck?: NewsCheck | null }
+): {
   label: string;
   cls: "buy" | "sell" | "watch" | "idle";
   reason: string;
   score: number;
+  setup: "washed-out" | "pre-momentum" | "trending" | "extended" | "mixed" | "idle";
 } {
   if (!q || q.price == null) {
-    return { label: "—", cls: "idle", reason: "Waiting on quotes", score: 0 };
+    return { label: "—", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
   }
 
   let score = 0;
   const bits: string[] = [];
 
+  // Heavy: RSI extremes
   if (q.rsi14 != null && q.rsi14 <= 30) {
-    score += 2;
-    bits.push("RSI oversold");
+    score += 3;
+    bits.push("RSI oversold (+3)");
   } else if (q.rsi14 != null && q.rsi14 <= 40) {
     score += 1;
-    bits.push("RSI soft");
+    bits.push("RSI soft (+1)");
   } else if (q.rsi14 != null && q.rsi14 >= 70) {
-    score -= 2;
-    bits.push("RSI overbought");
+    score -= 3;
+    bits.push("RSI overbought (−3)");
   } else if (q.rsi14 != null && q.rsi14 >= 65) {
     score -= 1;
-    bits.push("RSI elevated");
+    bits.push("RSI elevated (−1)");
   }
 
+  // Heavy: year range
   if (q.range52Pct != null && q.range52Pct <= 20) {
-    score += 1;
-    bits.push("near 52w low");
+    score += 2;
+    bits.push("near 52w low (+2)");
   } else if (q.range52Pct != null && q.range52Pct >= 85) {
-    score -= 1;
-    bits.push("near 52w high");
+    score -= 2;
+    bits.push("near 52w high (−2)");
   }
 
+  // Medium-heavy: ATH stretch
   if (q.pctFromAth != null && q.pctFromAth >= -3) {
-    score -= 1;
-    bits.push("near ATH");
+    score -= 2;
+    bits.push("near ATH (−2)");
   }
 
+  // Heavy: SMA50 stretch
+  if (q.signals?.includes("deep-below-50") || (q.vsSma?.[50] != null && q.vsSma[50] < -10)) {
+    score += 2;
+    bits.push("deep below SMA50 (+2)");
+  }
+  if (q.signals?.includes("extended-above-50") || (q.vsSma?.[50] != null && q.vsSma[50] > 10)) {
+    score -= 2;
+    bits.push("extended above SMA50 (−2)");
+  }
+
+  // Light: trend is context
   if (q.trend === "bullish") {
     score += 1;
-    bits.push("bullish trend");
+    bits.push("bullish trend (+1)");
   } else if (q.trend === "bearish") {
     score -= 1;
-    bits.push("bearish trend");
+    bits.push("bearish trend (−1)");
   }
 
-  if (q.signals?.includes("deep-below-50")) {
-    score += 1;
-    bits.push("deep below SMA50");
-  }
-  if (q.signals?.includes("extended-above-50")) {
+  // Pre-momentum: quiet / coiling names that haven't run
+  if (isPreMomentum(q)) {
+    score += 2;
+    bits.push("quiet coil / pre-momentum (+2)");
+  } else if (
+    q.volRatio != null &&
+    q.volRatio < 0.7 &&
+    q.range52Pct != null &&
+    q.range52Pct >= 80
+  ) {
     score -= 1;
-    bits.push("extended above SMA50");
+    bits.push("quiet near highs (−1)");
   }
 
-  const reason = bits.length ? bits.slice(0, 3).join(" · ") : "Neutral setup";
-  if (score >= 2) return { label: "Lean buy", cls: "buy", reason, score };
-  if (score <= -2) return { label: "Lean sell", cls: "sell", reason, score };
-  return { label: "Watch", cls: "watch", reason, score };
+  // News tape check (primary outlook layer — lexicon tilt from outlook.json)
+  const delta = opts?.newsCheck?.scoreDelta;
+  if (typeof delta === "number" && delta !== 0) {
+    score += delta;
+    const sign = delta > 0 ? `+${delta}` : String(delta);
+    const tilt = opts?.newsCheck?.tilt || (delta > 0 ? "positive" : "negative");
+    bits.push(`news ${tilt} (${sign})`);
+  }
+
+  let setup: "washed-out" | "pre-momentum" | "trending" | "extended" | "mixed" | "idle" = "mixed";
+  if (isPreMomentum(q)) setup = "pre-momentum";
+  else if (
+    (q.rsi14 != null && q.rsi14 <= 35) ||
+    (q.vsSma?.[50] != null && q.vsSma[50] < -10) ||
+    (q.range52Pct != null && q.range52Pct <= 20)
+  ) {
+    setup = "washed-out";
+  } else if (
+    (q.rsi14 != null && q.rsi14 >= 65) ||
+    (q.vsSma?.[50] != null && q.vsSma[50] > 10) ||
+    (q.range52Pct != null && q.range52Pct >= 85) ||
+    (q.pctFromAth != null && q.pctFromAth >= -5)
+  ) {
+    setup = "extended";
+  } else if (q.trend === "bullish" || q.trend === "bearish") {
+    setup = "trending";
+  }
+
+  const reason = bits.length ? bits.slice(0, 4).join(" · ") : "Neutral setup";
+  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
+  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  return { label: "Watch", cls: "watch", reason, score, setup };
 }
 
-export function actionBadge(q: QuoteData | undefined) {
-  const a = actionBias(q);
+/** Quiet volume + mid RSI + near/under SMA50 + not at highs → coil before momentum. */
+export function isPreMomentum(q: QuoteData | undefined): boolean {
+  if (!q || q.price == null) return false;
+  const volQuiet = q.volRatio != null && q.volRatio < 0.75;
+  const rsi = q.rsi14;
+  const rsiMid = rsi != null && rsi >= 35 && rsi <= 55;
+  const vs50 = q.vsSma?.[50];
+  const nearOrUnder50 = vs50 != null && vs50 > -12 && vs50 <= 3;
+  const range = q.range52Pct;
+  const notHigh = range == null || range < 70;
+  const notAth = q.pctFromAth == null || q.pctFromAth < -8;
+  return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
+}
+
+export function actionBadge(q: QuoteData | undefined, opts?: { newsCheck?: NewsCheck | null }) {
+  const a = actionBias(q, opts);
   return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
 
@@ -249,23 +456,37 @@ export function sma50Plain(q: QuoteData | undefined): string {
   return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
 }
 
-/** Short pulse row blurb: lean signal + SMA50 in normal language. */
-export function pulseExplain(q: QuoteData | undefined): {
+/** Short pulse row blurb: lean signal + setup flavor + SMA50. */
+export function pulseExplain(
+  q: QuoteData | undefined,
+  opts?: { newsCheck?: NewsCheck | null }
+): {
   bias: ReturnType<typeof actionBias>;
   sma: string;
   line: string;
 } {
-  const bias = actionBias(q);
+  const bias = actionBias(q, opts);
   const sma = sma50Plain(q);
   const lean =
     bias.cls === "buy"
-      ? "Lean buy — checklist tips constructive (not advice)"
+      ? "Lean buy — weighted checklist tips constructive (not advice)"
       : bias.cls === "sell"
-        ? "Lean sell — stretched or soft on our checklist"
+        ? "Lean sell — stretched or soft on the weighted checklist"
         : bias.cls === "watch"
-          ? "Watch — mixed / wait for a clearer setup"
+          ? bias.setup === "pre-momentum"
+            ? "Watch — quiet coil / pre-momentum (no run yet)"
+            : "Watch — mixed / wait for a clearer setup"
           : "Waiting on quotes";
+  const setupLabel =
+    bias.setup === "pre-momentum"
+      ? "pre-momentum"
+      : bias.setup === "washed-out"
+        ? "washed-out"
+        : bias.setup === "extended"
+          ? "extended"
+          : null;
   const bits = [lean];
+  if (setupLabel && bias.cls !== "idle") bits.push(setupLabel);
   if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
   bits.push(sma);
   return { bias, sma, line: bits.join(" · ") };
@@ -275,22 +496,22 @@ export const PULSE_SIGNAL_GUIDE = [
   {
     id: "buy",
     title: "Lean buy",
-    blurb: "Our checklist is constructive (RSI soft, near lows, or cool vs averages). Discussion only — not a buy order.",
+    blurb: "Weighted score ≥ +3. RSI washouts and year-lows count more than trend.",
   },
   {
     id: "watch",
     title: "Watch",
-    blurb: "Mixed tape. Fine to hold the conversation; nothing screaming buy or trim on our simple score.",
+    blurb: "Score between −2 and +2. Includes quiet coils that haven’t caught momentum yet.",
   },
   {
     id: "sell",
     title: "Lean sell",
-    blurb: "Extended or soft (hot RSI, near highs, stretched above averages). A caution flag for the group chat.",
+    blurb: "Weighted score ≤ −3. Overbought / year-highs / SMA50 stretch weigh heavier.",
   },
   {
     id: "sma50",
-    title: "SMA50",
-    blurb: "50-day average ≈ typical price over ~2.5 months. Above it = running hot lately; below = cooler vs recent weeks.",
+    title: "SMA50 + quiet",
+    blurb: "50-day avg = recent typical price. Low volume near it can flag a coil before a move.",
   },
 ] as const;
 

@@ -44,6 +44,7 @@ const ROOT = resolve(__dirname, "..");
 const WATCHLIST = resolve(ROOT, "src/data/watchlist.json");
 const RULES = resolve(ROOT, "src/data/alert-rules.json");
 const LOCAL_QUOTES = resolve(ROOT, "public/quotes.json");
+const LOCAL_OUTLOOK = resolve(ROOT, "public/outlook.json");
 const DEFAULT_STATE = resolve(ROOT, ".cache/alert-state.json");
 
 const dryRun = process.env.ALERTS_DRY_RUN === "true" || process.env.DIGEST_DRY_RUN === "true";
@@ -92,6 +93,15 @@ function aws(args, { json = true } = {}) {
   const out = execFileSync(cmd[0], cmd.slice(1), { encoding: "utf8" });
   if (!json) return out;
   return out ? JSON.parse(out) : null;
+}
+
+function loadOutlookStocks() {
+  if (!existsSync(LOCAL_OUTLOOK)) return {};
+  try {
+    return JSON.parse(readFileSync(LOCAL_OUTLOOK, "utf8")).stocks || {};
+  } catch {
+    return {};
+  }
 }
 
 async function loadQuotes() {
@@ -236,12 +246,13 @@ await withOtel("stocks-radar-alerts", async (otel) => {
       : { rules: [], defaults: {} };
     const data = await otel.withSpan("alerts.load_quotes", () => loadQuotes());
     const quotes = data.quotes || {};
+    const outlookStocks = loadOutlookStocks();
     const fetchedAt = data.fetchedAt || data.updatedAt || "unknown";
     const when = new Date().toISOString();
     const cooldownHours = rulesConfig.defaults?.cooldownHours ?? runtime.alerts.defaultCooldownHours;
 
     const enabledRules = (rulesConfig.rules || []).filter((r) => r && r.enabled !== false);
-    const hits = matchAlertRules(rulesConfig, watchlist.stocks || [], quotes);
+    const hits = matchAlertRules(rulesConfig, watchlist.stocks || [], quotes, outlookStocks);
     const state = loadState();
     const { fresh, skipped } = filterHitsByCooldown(hits, state, Date.now(), cooldownHours);
 
@@ -311,7 +322,7 @@ await withOtel("stocks-radar-alerts", async (otel) => {
     // Legacy board-wide broadcast (optional)
     if (forceBroadcast || (enabledRules.length === 0 && broadcastTopic)) {
       await otel.withSpan("alerts.publish_broadcast", async (span) => {
-        const scored = scoreWatchlist(watchlist.stocks || [], quotes);
+        const scored = scoreWatchlist(watchlist.stocks || [], quotes, outlookStocks);
         const minBuy = Number(process.env.ALERT_MIN_BUY_SCORE || runtime.alerts.minBuyScore);
         const nearPct = Number(
           process.env.ALERT_NEAR_TARGET_PCT ||

@@ -55,6 +55,7 @@ export function deriveSignals(price, metrics) {
 
   if (vsSma?.[50] != null && vsSma[50] > 10) signals.push("extended-above-50");
   if (vsSma?.[50] != null && vsSma[50] < -10) signals.push("deep-below-50");
+  if (vsSma?.[50] != null && Math.abs(vsSma[50]) <= 3) signals.push("coiling-near-50");
 
   if (range52Pct != null && range52Pct >= 85) signals.push("near-52w-high");
   if (range52Pct != null && range52Pct <= 15) signals.push("near-52w-low");
@@ -65,6 +66,26 @@ export function deriveSignals(price, metrics) {
   if (metrics.pctFromAth != null && metrics.pctFromAth >= -0.5) signals.push("at-ath");
   if (metrics.pctFromAth != null && metrics.pctFromAth >= -5 && metrics.pctFromAth < -0.5) {
     signals.push("near-ath");
+  }
+
+  // Volume vs 20-day average — quiet tape often precedes (or follows) a move
+  if (metrics.volRatio != null && metrics.volRatio < 0.75) signals.push("quiet-volume");
+  if (metrics.volRatio != null && metrics.volRatio >= 1.8) signals.push("volume-surge");
+
+  // Pre-momentum coil: quiet + mid RSI + near/under 50 + not at highs
+  if (
+    metrics.volRatio != null &&
+    metrics.volRatio < 0.75 &&
+    rsi14 != null &&
+    rsi14 >= 35 &&
+    rsi14 <= 55 &&
+    vsSma?.[50] != null &&
+    vsSma[50] > -12 &&
+    vsSma[50] <= 3 &&
+    (range52Pct == null || range52Pct < 70) &&
+    (metrics.pctFromAth == null || metrics.pctFromAth < -8)
+  ) {
+    signals.push("pre-momentum");
   }
 
   return signals;

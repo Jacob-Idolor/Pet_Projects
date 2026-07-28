@@ -89,6 +89,75 @@ function athIndicator(q) {
 function hasTechnical(q) {
   return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
 }
+function fmtMultiple(v) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
+  return v.toFixed(1);
+}
+function fmtGrowth(v) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
+  return `${(v * 100).toFixed(0)}%`;
+}
+function biasLabel(bias) {
+  const b = (bias || "").toLowerCase();
+  if (b === "cheap") return { text: "Group lean: cheap vs story", cls: "cheap" };
+  if (b === "fair") return { text: "Group lean: fair", cls: "fair" };
+  if (b === "rich") return { text: "Group lean: rich vs story", cls: "rich" };
+  return null;
+}
+function sentimentBadge(sentiment) {
+  const s = (sentiment || "neutral").toLowerCase();
+  const cls = s === "positive" || s === "negative" || s === "neutral" ? s : "neutral";
+  const text = cls === "positive" ? "+" : cls === "negative" ? "\u2212" : "~";
+  const label = cls === "positive" ? "Positive" : cls === "negative" ? "Negative" : "Neutral";
+  return `<span class="news-sent news-sent--${cls}" title="${escapeHtml(label)} headline">${text} ${escapeHtml(label)}</span>`;
+}
+function newsCheckHtml(check) {
+  if (!check?.tilt) return "";
+  const tilt = String(check.tilt);
+  const cls = tilt === "positive" ? "positive" : tilt === "negative" ? "negative" : tilt === "mixed" ? "mixed" : "neutral";
+  const label = check.label || `News check: ${tilt}`;
+  return `<p class="outlook-news-check outlook-news-check--${cls}">${escapeHtml(label)}</p>
+    <p class="outlook-disclaimer">Headline lexicon \u2014 quick tape check, not a thesis. Read the links.</p>`;
+}
+function renderOutlookDetail(row) {
+  const f = row?.fundamentals;
+  const news = Array.isArray(row?.news) ? row.news : [];
+  const hasMetrics = f && (f.trailingPE != null || f.forwardPE != null || f.pegRatio != null || f.priceToBook != null || f.evToEbitda != null || f.bias || f.note || f.catalyst);
+  if (!hasMetrics && !news.length && !row?.newsCheck) {
+    return `<div class="outlook-detail">
+      <h4>Valuation + news</h4>
+      <p class="outlook-empty">Outlook refreshes with quotes \u2014 run <code>npm run update-quotes</code> or wait for CI.</p>
+    </div>`;
+  }
+  const lean = biasLabel(f?.bias);
+  const metrics = [
+    ["Trailing PE", fmtMultiple(f?.trailingPE)],
+    ["Forward PE", fmtMultiple(f?.forwardPE)],
+    ["PEG", fmtMultiple(f?.pegRatio)],
+    ["P/B", fmtMultiple(f?.priceToBook)],
+    ["EV/EBITDA", fmtMultiple(f?.evToEbitda)],
+    ["Rev growth", fmtGrowth(f?.revenueGrowth)]
+  ].filter(([, v]) => v !== "\u2014").map(
+    ([label, v]) => `<span class="outlook-metric"><span class="outlook-metric__label">${escapeHtml(label)}</span><span class="mono">${escapeHtml(v)}</span></span>`
+  ).join("");
+  const newsHtml = news.length ? `<ul class="outlook-news">${news.slice(0, 3).map((n) => {
+    const title = escapeHtml(n.title || "Headline");
+    const pub = escapeHtml(n.publisher || "");
+    const href = escapeHtml(n.link || "#");
+    return `<li>${sentimentBadge(n.sentiment)} <a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
+  }).join("")}</ul>` : `<p class="outlook-empty">No recent headlines in the feed.</p>`;
+  return `<div class="outlook-detail">
+    <h4>Valuation + news <span class="tech-detail__sub">(primary)</span></h4>
+    ${lean ? `<p class="outlook-bias outlook-bias--${lean.cls}">${escapeHtml(lean.text)}</p>` : ""}
+    ${f?.note ? `<p class="outlook-note">${escapeHtml(f.note)}</p>` : ""}
+    ${f?.catalyst ? `<p class="outlook-catalyst"><strong>Catalyst:</strong> ${escapeHtml(f.catalyst)}</p>` : ""}
+    ${metrics ? `<div class="outlook-metrics">${metrics}</div>` : ""}
+    <p class="outlook-disclaimer">Multiples without peer context are not a buy/sell \u2014 they\u2019re chat fuel next to the thesis.</p>
+    <h5 class="outlook-news-title">News check</h5>
+    ${newsCheckHtml(row?.newsCheck)}
+    ${newsHtml}
+  </div>`;
+}
 function renderTechnicalDetail(q, price) {
   if (!hasTechnical(q)) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy \u2014 run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
@@ -105,7 +174,7 @@ function renderTechnicalDetail(q, price) {
   const action = actionBias(q);
   return `
     <div class="tech-detail">
-      <h4>Technical snapshot</h4>
+      <h4>Momentum <span class="tech-detail__sub">(secondary)</span></h4>
       <div class="tech-summary-row">
         ${actionBadge(q)}
         ${trendBadge(q?.trend)}
@@ -127,58 +196,93 @@ function renderTechnicalDetail(q, price) {
       <p class="tech-vol"><strong>Volume:</strong> ${volNote}</p>
     </div>`;
 }
-function actionBias(q) {
+function actionBias(q, opts) {
   if (!q || q.price == null) {
-    return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0 };
+    return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
   }
   let score = 0;
   const bits = [];
   if (q.rsi14 != null && q.rsi14 <= 30) {
-    score += 2;
-    bits.push("RSI oversold");
+    score += 3;
+    bits.push("RSI oversold (+3)");
   } else if (q.rsi14 != null && q.rsi14 <= 40) {
     score += 1;
-    bits.push("RSI soft");
+    bits.push("RSI soft (+1)");
   } else if (q.rsi14 != null && q.rsi14 >= 70) {
-    score -= 2;
-    bits.push("RSI overbought");
+    score -= 3;
+    bits.push("RSI overbought (\u22123)");
   } else if (q.rsi14 != null && q.rsi14 >= 65) {
     score -= 1;
-    bits.push("RSI elevated");
+    bits.push("RSI elevated (\u22121)");
   }
   if (q.range52Pct != null && q.range52Pct <= 20) {
-    score += 1;
-    bits.push("near 52w low");
+    score += 2;
+    bits.push("near 52w low (+2)");
   } else if (q.range52Pct != null && q.range52Pct >= 85) {
-    score -= 1;
-    bits.push("near 52w high");
+    score -= 2;
+    bits.push("near 52w high (\u22122)");
   }
   if (q.pctFromAth != null && q.pctFromAth >= -3) {
-    score -= 1;
-    bits.push("near ATH");
+    score -= 2;
+    bits.push("near ATH (\u22122)");
+  }
+  if (q.signals?.includes("deep-below-50") || q.vsSma?.[50] != null && q.vsSma[50] < -10) {
+    score += 2;
+    bits.push("deep below SMA50 (+2)");
+  }
+  if (q.signals?.includes("extended-above-50") || q.vsSma?.[50] != null && q.vsSma[50] > 10) {
+    score -= 2;
+    bits.push("extended above SMA50 (\u22122)");
   }
   if (q.trend === "bullish") {
     score += 1;
-    bits.push("bullish trend");
+    bits.push("bullish trend (+1)");
   } else if (q.trend === "bearish") {
     score -= 1;
-    bits.push("bearish trend");
+    bits.push("bearish trend (\u22121)");
   }
-  if (q.signals?.includes("deep-below-50")) {
-    score += 1;
-    bits.push("deep below SMA50");
-  }
-  if (q.signals?.includes("extended-above-50")) {
+  if (isPreMomentum(q)) {
+    score += 2;
+    bits.push("quiet coil / pre-momentum (+2)");
+  } else if (q.volRatio != null && q.volRatio < 0.7 && q.range52Pct != null && q.range52Pct >= 80) {
     score -= 1;
-    bits.push("extended above SMA50");
+    bits.push("quiet near highs (\u22121)");
   }
-  const reason = bits.length ? bits.slice(0, 3).join(" \xB7 ") : "Neutral setup";
-  if (score >= 2) return { label: "Lean buy", cls: "buy", reason, score };
-  if (score <= -2) return { label: "Lean sell", cls: "sell", reason, score };
-  return { label: "Watch", cls: "watch", reason, score };
+  const delta = opts?.newsCheck?.scoreDelta;
+  if (typeof delta === "number" && delta !== 0) {
+    score += delta;
+    const sign = delta > 0 ? `+${delta}` : String(delta);
+    const tilt = opts?.newsCheck?.tilt || (delta > 0 ? "positive" : "negative");
+    bits.push(`news ${tilt} (${sign})`);
+  }
+  let setup = "mixed";
+  if (isPreMomentum(q)) setup = "pre-momentum";
+  else if (q.rsi14 != null && q.rsi14 <= 35 || q.vsSma?.[50] != null && q.vsSma[50] < -10 || q.range52Pct != null && q.range52Pct <= 20) {
+    setup = "washed-out";
+  } else if (q.rsi14 != null && q.rsi14 >= 65 || q.vsSma?.[50] != null && q.vsSma[50] > 10 || q.range52Pct != null && q.range52Pct >= 85 || q.pctFromAth != null && q.pctFromAth >= -5) {
+    setup = "extended";
+  } else if (q.trend === "bullish" || q.trend === "bearish") {
+    setup = "trending";
+  }
+  const reason = bits.length ? bits.slice(0, 4).join(" \xB7 ") : "Neutral setup";
+  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
+  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  return { label: "Watch", cls: "watch", reason, score, setup };
 }
-function actionBadge(q) {
-  const a = actionBias(q);
+function isPreMomentum(q) {
+  if (!q || q.price == null) return false;
+  const volQuiet = q.volRatio != null && q.volRatio < 0.75;
+  const rsi = q.rsi14;
+  const rsiMid = rsi != null && rsi >= 35 && rsi <= 55;
+  const vs50 = q.vsSma?.[50];
+  const nearOrUnder50 = vs50 != null && vs50 > -12 && vs50 <= 3;
+  const range = q.range52Pct;
+  const notHigh = range == null || range < 70;
+  const notAth = q.pctFromAth == null || q.pctFromAth < -8;
+  return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
+}
+function actionBadge(q, opts) {
+  const a = actionBias(q, opts);
   return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
 function sma50Plain(q) {
@@ -189,11 +293,13 @@ function sma50Plain(q) {
   if (vs > 0) return `${abs}% above its 50-day average (running hot vs recent weeks)`;
   return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
 }
-function pulseExplain(q) {
-  const bias = actionBias(q);
+function pulseExplain(q, opts) {
+  const bias = actionBias(q, opts);
   const sma = sma50Plain(q);
-  const lean = bias.cls === "buy" ? "Lean buy \u2014 checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on our checklist" : bias.cls === "watch" ? "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
+  const lean = bias.cls === "buy" ? "Lean buy \u2014 weighted checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on the weighted checklist" : bias.cls === "watch" ? bias.setup === "pre-momentum" ? "Watch \u2014 quiet coil / pre-momentum (no run yet)" : "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
+  const setupLabel = bias.setup === "pre-momentum" ? "pre-momentum" : bias.setup === "washed-out" ? "washed-out" : bias.setup === "extended" ? "extended" : null;
   const bits = [lean];
+  if (setupLabel && bias.cls !== "idle") bits.push(setupLabel);
   if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
   bits.push(sma);
   return { bias, sma, line: bits.join(" \xB7 ") };
@@ -238,6 +344,7 @@ var PREFS_KEY = "stocks-radar-prefs";
 var baseStocks = [];
 var allStocks = [];
 var quotes = {};
+var outlookBySymbol = {};
 var filter = "all";
 var tagFilter = null;
 var search = "";
@@ -373,9 +480,9 @@ function matchesFilter(stock) {
     case "high-priority":
       return stock.priority === "high";
     case "lean-buy":
-      return actionBias(getQuote(stock)).cls === "buy";
+      return stockBias(stock).cls === "buy";
     case "lean-sell":
-      return actionBias(getQuote(stock)).cls === "sell";
+      return stockBias(stock).cls === "sell";
     default:
       if (filter.startsWith("tech-")) {
         return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
@@ -458,8 +565,8 @@ function sortStocks(list) {
       }
       case "action": {
         const order = { buy: 0, watch: 1, sell: 2, idle: 3 };
-        av = order[actionBias(getQuote(a)).cls] ?? 4;
-        bv = order[actionBias(getQuote(b)).cls] ?? 4;
+        av = order[stockBias(a).cls] ?? 4;
+        bv = order[stockBias(b).cls] ?? 4;
         return sortDir * (av - bv);
       }
       default:
@@ -497,7 +604,7 @@ function renderRow(stock, compact = false, mode = "default") {
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td>${actionBadge(q)}</td>
+      <td>${actionBadge(q, biasOpts(stock))}</td>
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
@@ -519,7 +626,7 @@ function renderRow(stock, compact = false, mode = "default") {
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td>${actionBadge(q)}</td>
+      <td>${actionBadge(q, biasOpts(stock))}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "\u2014"}</td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "\u2014")}</td>
@@ -531,6 +638,29 @@ function renderRow(stock, compact = false, mode = "default") {
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
   `;
 }
+function outlookFor(stock) {
+  const sym = stock.symbol?.toUpperCase();
+  const fetched = sym ? outlookBySymbol[sym] : void 0;
+  const human = stock.valuation || {};
+  const fundamentals = {
+    ...fetched?.fundamentals || {},
+    bias: human.bias || fetched?.fundamentals?.bias || null,
+    note: human.note || fetched?.fundamentals?.note || null,
+    catalyst: stock.catalyst || fetched?.fundamentals?.catalyst || null
+  };
+  return {
+    symbol: sym,
+    fundamentals,
+    news: fetched?.news || [],
+    newsCheck: fetched?.newsCheck || null
+  };
+}
+function biasOpts(stock) {
+  return { newsCheck: outlookFor(stock)?.newsCheck };
+}
+function stockBias(stock) {
+  return actionBias(getQuote(stock), biasOpts(stock));
+}
 function renderDetailRow(stock, price, q, colspan) {
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
@@ -538,10 +668,11 @@ function renderDetailRow(stock, price, q, colspan) {
   return `<tr class="detail-row" data-detail-for="${sid}">
         <td colspan="${colspan}">
           <div class="detail-panel">
-            ${renderTechnicalDetail(q, price)}
+            ${renderOutlookDetail(outlookFor(stock))}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            ${renderTechnicalDetail(q, price)}
             <div class="pt-inline" data-pt-inline="${sym}">
               <strong>Price target:</strong>
               <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${sym}" />
@@ -602,7 +733,7 @@ function renderOverview() {
     <div class="overview-metric tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>
     <div class="overview-metric tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
-  const leanBuy = allStocks.filter((s) => actionBias(getQuote(s)).cls === "buy").length;
+  const leanBuy = allStocks.filter((s) => stockBias(s).cls === "buy").length;
   el.innerHTML = `
     <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">On master list</span></div>
     <div class="overview-metric highlight"><span class="ov-value">${allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
@@ -623,7 +754,7 @@ function renderCheckIn() {
     const q = getQuote(s);
     const price = getPrice(s);
     const chg = q?.changePct ?? null;
-    const explain = pulseExplain(q);
+    const explain = pulseExplain(q, biasOpts(s));
     return { stock: s, q, price, chg, bias: explain.bias, explain };
   }).filter((x) => x.price != null);
   const emptyAll = (msg) => {
@@ -640,12 +771,14 @@ function renderCheckIn() {
   const buyN = priced.filter((x) => x.bias.cls === "buy").length;
   const sellN = priced.filter((x) => x.bias.cls === "sell").length;
   const watchN = priced.filter((x) => x.bias.cls === "watch").length;
+  const preN = priced.filter((x) => x.bias.setup === "pre-momentum").length;
   const upN = priced.filter((x) => (x.chg ?? 0) > 0).length;
   const downN = priced.filter((x) => (x.chg ?? 0) < 0).length;
   if (tallyEl) {
     tallyEl.innerHTML = `
       <span class="checkin-tally__stat checkin-tally__stat--buy"><strong>${buyN}</strong> buy</span>
       <span class="checkin-tally__stat checkin-tally__stat--watch"><strong>${watchN}</strong> watch</span>
+      <span class="checkin-tally__stat checkin-tally__stat--coil"><strong>${preN}</strong> pre-mom</span>
       <span class="checkin-tally__stat checkin-tally__stat--sell"><strong>${sellN}</strong> sell</span>
       <span class="checkin-tally__sep" aria-hidden="true"></span>
       <span class="checkin-tally__stat"><strong class="up">${upN}</strong> up</span>
@@ -666,10 +799,14 @@ function renderCheckIn() {
     const sym = sanitizeSymbol(x.stock.symbol) || escapeHtml(String(x.stock.symbol ?? ""));
     const chg = x.chg;
     const chgHtml = chg == null ? `<span class="checkin-rank__val dim">\u2014</span>` : `<span class="checkin-rank__val mono ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(1)}%</span>`;
-    return `<li class="checkin-rank__row">
+    const setupTag = x.bias.setup === "pre-momentum" ? `<span class="checkin-setup-tag">pre-mom</span>` : x.bias.setup === "washed-out" ? `<span class="checkin-setup-tag checkin-setup-tag--wash">wash</span>` : x.bias.setup === "extended" ? `<span class="checkin-setup-tag checkin-setup-tag--ext">ext</span>` : "";
+    return `<li class="checkin-rank__row checkin-rank__row--signal">
       <span class="checkin-rank__n">${i + 1}</span>
       <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
-      <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+      <span class="checkin-rank__meta">
+        <span class="checkin-rank__name">${escapeHtml(x.stock.name)} ${setupTag}</span>
+        <span class="checkin-rank__why">${escapeHtml(x.bias.reason)}</span>
+      </span>
       ${chgHtml}
     </li>`;
   };
@@ -689,7 +826,12 @@ function renderCheckIn() {
   if (setupsEl) {
     setupsEl.innerHTML = setups.length ? setups.map(signalRow).join("") : `<li class="checkin-rank__empty">None right now.</li>`;
   }
-  const watch = [...priced].filter((x) => x.bias.cls === "watch").sort((a, b) => Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0)).slice(0, 8);
+  const watch = [...priced].filter((x) => x.bias.cls === "watch").sort((a, b) => {
+    const ap = a.bias.setup === "pre-momentum" ? 1 : 0;
+    const bp = b.bias.setup === "pre-momentum" ? 1 : 0;
+    if (bp !== ap) return bp - ap;
+    return Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0);
+  }).slice(0, 8);
   if (watchEl) {
     watchEl.innerHTML = watch.length ? watch.map(signalRow).join("") : `<li class="checkin-rank__empty">None right now.</li>`;
   }
@@ -786,7 +928,7 @@ function renderMobileCard(stock) {
   const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
   const high = sanitizePriority(stock.priority) === "high";
-  const action = actionBias(q);
+  const action = stockBias(stock);
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
     <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
@@ -794,7 +936,7 @@ function renderMobileCard(stock) {
         <div class="scm-identity">
           <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
-          ${actionBadge(q)}
+          ${actionBadge(q, biasOpts(stock))}
         </div>
         <div class="scm-quote">
           <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
@@ -1074,6 +1216,23 @@ async function initWatchlistBoard(stocksJson) {
   });
   renderAll();
   startQuoteLoader();
+  loadOutlook().then((ok) => {
+    if (ok) renderAll();
+  });
+}
+async function loadOutlook() {
+  const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
+  try {
+    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const stocks = data?.stocks;
+    if (!stocks || typeof stocks !== "object") return false;
+    outlookBySymbol = stocks;
+    return true;
+  } catch {
+    return false;
+  }
 }
 function isUsMarketOpen() {
   const et = new Date((/* @__PURE__ */ new Date()).toLocaleString("en-US", { timeZone: "America/New_York" }));

@@ -7,14 +7,36 @@
       <p class="board-eyebrow">Friend check-in</p>
       <h2 id="checkin-title">Today’s pulse</h2>
       <p class="checkin-lede">
-        Who’s moving and where the list leans — for the group chat, not advice.
+        Stock outlook starts with <strong>valuation + news</strong> (expand any ticker).
+        Macro mood is <a href="#macro-rates">rates / bonds / yields</a> above.
+        This pulse is secondary — weighted technical momentum that may or may not hold.
       </p>
     </div>
     <nav class="checkin-jump desktop-only" aria-label="Jump to sections">
+      <a href="#macro-rates">Rates</a>
       <a href="#checkin" class="is-active">Pulse</a>
       <a href="#watchlist-board">Master list</a>
       <a href="#submissions">Suggest</a>
     </nav>
+  </div>
+
+  <div class="checkin-guide" aria-label="How to read the board">
+    <article class="checkin-guide__card checkin-guide__card--buy">
+      <h3>1 · Valuation + news</h3>
+      <p>Expand a name for PE / forward PE, group valuation lean, and headlines tagged positive/negative — that news check feeds the lean score.</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--sma">
+      <h3>2 · Rates tape</h3>
+      <p>10Y / front-end / long bonds / dollar above — gravity for multiples. Macro first, then tickers.</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--watch">
+      <h3>3 · Momentum (pulse)</h3>
+      <p>Weighted RSI / 52w / SMA50 / pre-momentum coils. Useful for timing talk — not the thesis.</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--sell">
+      <h3>Thresholds</h3>
+      <p>Lean buy ≥ +3 · Watch −2…+2 · Lean sell ≤ −3. Same checklist on every ticker — chat bait, not advice.</p>
+    </article>
   </div>
 
   <div class="checkin-tally" id="checkin-tally" aria-live="polite">
@@ -59,7 +81,8 @@
 
     <article class="checkin-panel checkin-panel--watch" data-checkin-panel="watch" aria-labelledby="watch-title">
       <header class="checkin-panel__head">
-        <h3 id="watch-title">Watch</h3>
+        <h3 id="watch-title">Watch / pre-momentum</h3>
+        <p>Mixed scores — quiet coils float to the top</p>
       </header>
       <ol class="checkin-rank" id="checkin-watch" aria-live="polite">
         <li class="checkin-rank__empty">Scoring master list…</li>
@@ -78,6 +101,9 @@
 </section>
 
 <nav class="mobile-dock" aria-label="Primary">
+  <a href="#macro-rates" class="mobile-dock__link" data-dock="rates">
+    <span class="mobile-dock__label">Rates</span>
+  </a>
   <a href="#checkin" class="mobile-dock__link is-active" data-dock="checkin">
     <span class="mobile-dock__label">Pulse</span>
   </a>
@@ -118,11 +144,12 @@
     function syncDock() {
       var y = window.scrollY + 120;
       var sections = [
+        { id: "macro-rates", key: "rates" },
         { id: "checkin", key: "checkin" },
         { id: "watchlist-board", key: "list" },
         { id: "submissions", key: "suggest" },
       ];
-      var active = "checkin";
+      var active = "rates";
       for (var i = 0; i < sections.length; i++) {
         var el = document.getElementById(sections[i].id);
         if (el && el.offsetTop <= y) active = sections[i].key;
