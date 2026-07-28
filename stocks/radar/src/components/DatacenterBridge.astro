@@ -1,0 +1,168 @@
+---
+import { buildDatacenterBridge, datacenterHref } from "../lib/datacenter-bridge";
+
+const base = import.meta.env.BASE_URL;
+const bridge = buildDatacenterBridge();
+const bridgeJson = JSON.stringify(bridge);
+const dcHome = datacenterHref(base);
+const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
+---
+
+<section
+  class="dc-bridge"
+  id="dc-bridge"
+  aria-labelledby="dc-bridge-title"
+  data-radar-base={base}
+  data-screener-url={screenerUrl}
+>
+  <div class="dc-bridge__head">
+    <div>
+      <p class="board-eyebrow">AI buildout</p>
+      <h2 id="dc-bridge-title">AI Data Center</h2>
+      <p class="dc-bridge__lede">
+        Same StocksWatch board language — six layers, 
+        <strong class="mono">{bridge.tickerCount}</strong> thematic names.
+        Overlaps on the master list get a layer chip. Jump into the full screener for map,
+        rack, and research tools.
+      </p>
+    </div>
+    <nav class="checkin-jump dc-bridge__jump" aria-label="AI Data Center links">
+      <a href={dcHome}>Open screener</a>
+      <a href={`${base}datacenter.html?mode=datacenter`}>Map</a>
+      <a href={`${base}datacenter.html?mode=analyst`}>Analyst</a>
+    </nav>
+  </div>
+
+  <ul class="dc-bridge__layers" aria-label="Data center layers">
+    {
+      bridge.layers.map((layer) => (
+        <li>
+          <a
+            class={`dc-layer-chip dc-layer-chip--${layer.id}`}
+            href={datacenterHref(base, { layer: layer.id })}
+            title={layer.name}
+          >
+            <span class="dc-layer-chip__dot" aria-hidden="true"></span>
+            <span class="dc-layer-chip__label">{layer.label}</span>
+            <span class="dc-layer-chip__count mono">{layer.count}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="dc-bridge__movers" id="dc-bridge-movers" aria-live="polite">
+    <p class="dc-bridge__movers-loading">Loading thematic movers…</p>
+  </div>
+</section>
+
+<script is:inline define:vars={{ bridgeJson }}>
+  window.__DC_BRIDGE__ = JSON.parse(bridgeJson);
+</script>
+
+<script is:inline>
+  (function () {
+    var root = document.getElementById("dc-bridge");
+    var moversEl = document.getElementById("dc-bridge-movers");
+    if (!root || !moversEl) return;
+
+    var screenerUrl = root.getAttribute("data-screener-url") || "/screener.json";
+    var base = root.getAttribute("data-radar-base") || "/";
+    if (base.slice(-1) !== "/") base += "/";
+
+    function escapeHtml(t) {
+      return String(t)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fmtChg(v) {
+      if (v == null || isNaN(v)) return "—";
+      var sign = v > 0 ? "+" : "";
+      return sign + Number(v).toFixed(2) + "%";
+    }
+
+    function dcLink(ticker) {
+      return base + "datacenter.html?q=" + encodeURIComponent(ticker);
+    }
+
+    fetch(screenerUrl + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var seen = {};
+        var rows = [];
+        (data.layers || []).forEach(function (layer) {
+          (layer.holdings || []).forEach(function (h) {
+            var t = String(h.ticker || "").toUpperCase();
+            if (!t || seen[t]) return;
+            seen[t] = true;
+            var m = h.market || {};
+            if (m.ok === false || m.change_pct == null || isNaN(m.change_pct)) return;
+            rows.push({
+              ticker: t,
+              name: h.name || t,
+              chg: Number(m.change_pct),
+              layerId: layer.id,
+            });
+          });
+        });
+
+        if (!rows.length) {
+          moversEl.innerHTML =
+            '<p class="dc-bridge__movers-loading">Movers unavailable — open the screener or refresh the snapshot.</p>';
+          return;
+        }
+
+        rows.sort(function (a, b) {
+          return b.chg - a.chg;
+        });
+        var gainers = rows.slice(0, 3);
+        var losers = rows.slice(-3).reverse();
+
+        function chip(row) {
+          var cls = row.chg >= 0 ? "up" : "down";
+          return (
+            '<a class="dc-mover ' +
+            cls +
+            '" href="' +
+            dcLink(row.ticker) +
+            '" title="' +
+            escapeHtml(row.name) +
+            '">' +
+            "<strong>" +
+            escapeHtml(row.ticker) +
+            "</strong>" +
+            '<span class="mono">' +
+            fmtChg(row.chg) +
+            "</span>" +
+            "</a>"
+          );
+        }
+
+        moversEl.innerHTML =
+          '<div class="dc-bridge__movers-grid">' +
+          '<div class="dc-bridge__movers-col">' +
+          '<span class="dc-bridge__movers-label">Top gainers</span>' +
+          '<div class="dc-bridge__movers-list">' +
+          gainers.map(chip).join("") +
+          "</div></div>" +
+          '<div class="dc-bridge__movers-col">' +
+          '<span class="dc-bridge__movers-label">Top losers</span>' +
+          '<div class="dc-bridge__movers-list">' +
+          losers.map(chip).join("") +
+          "</div></div>" +
+          "</div>";
+      })
+      .catch(function () {
+        moversEl.innerHTML =
+          '<p class="dc-bridge__movers-loading">Couldn’t load screener movers — <a href="' +
+          base +
+          'datacenter.html">open AI Data Center</a>.</p>';
+      });
+  })();
+</script>

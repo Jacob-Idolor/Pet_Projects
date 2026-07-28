@@ -12,6 +12,7 @@
     "checkInPulse": true,
     "technicalView": true,
     "dayMood": true,
+    "datacenterBridge": true,
     "otelScripts": false
   },
   "quotes": {

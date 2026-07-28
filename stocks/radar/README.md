@@ -4,6 +4,8 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 
 > Not financial advice. Personal tooling for tracking tickers and theses.
 
+**Design:** [StocksWatch Figma](https://www.figma.com/design/24Rzh5v3d95ngIMQdv5wTz) (shared tokens for Home + AI Data Center).
+
 ## What you get
 
 - **Unified tracking list** — every ticker in one place (no owned vs watching split)
@@ -18,8 +20,8 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Production config** — `site-settings.json` + `/settings.json` + `/health.json` for ops ([PRODUCTION.md](PRODUCTION.md); not shown on the public board)
 - **Go-live bootstrap** — gated CI + `infra/go-live.sh` + preflight ([GO_LIVE.md](GO_LIVE.md))
 - **Security posture** — private S3/OAC, `_private/` blocked, hardened IAM/alerts ([SECURITY.md](SECURITY.md))
-- **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
-- **AI Data Center screener** — six-layer thematic board at `/datacenter.html` (map, rack explorer, composite score, copy-paste AI research prompts)
+- **Group feed** — post ticker notes; auto-detects symbols; emailed to you via free [Web3Forms](https://web3forms.com) when `PUBLIC_WEB3FORMS_ACCESS_KEY` is set (also kept in the browser until merged in git)
+- **AI Data Center screener** — six-layer thematic board at `/datacenter.html` (map, rack explorer, composite score, copy-paste AI research prompts). Home bridges in with a layer teaser + chips on overlapping tickers (`features.datacenterBridge`).
 
 ## Quick start
 
@@ -104,6 +106,16 @@ Optional personal signal emails (ops only, not shown on the public board): [ALER
 Weekday **quote-only refresh** (no full rebuild): **Stocks Radar — refresh quotes** — see [DEPLOY.md](DEPLOY.md).
 
 Custom domain when you are ready to buy: [DOMAIN.md](DOMAIN.md) (`include_www_alias` covers apex + www in one ACM cert).
+
+## Group suggestions (email you)
+
+Friend notes save in the visitor’s browser **and** can email you for free via [Web3Forms](https://web3forms.com):
+
+1. Create an access key (free tier) pointed at your inbox
+2. Set `PUBLIC_WEB3FORMS_ACCESS_KEY` in local `.env` and as a GitHub Actions **variable** (or secret)
+3. Redeploy — the deploy workflow already passes the key into `npm run build`
+
+Without the key, the form still works locally (IndexedDB only) and shows a soft “device only” status.
 
 ## Manual deploy
 

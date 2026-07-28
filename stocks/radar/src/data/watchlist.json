@@ -166,6 +166,17 @@
       "priority": "medium",
       "thesis": "AI data engineering and digital transformation services.",
       "addedBy": "J"
+    },
+    {
+      "id": "be",
+      "symbol": "BE",
+      "name": "Bloom Energy",
+      "category": "tracking",
+      "sector": "Power / Energy",
+      "tags": ["power", "datacenter", "fuel-cell"],
+      "priority": "medium",
+      "thesis": "On-site fuel-cell power — signing data-center deals (speculative).",
+      "addedBy": "J"
     }
   ]
 }

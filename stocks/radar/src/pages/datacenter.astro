@@ -23,12 +23,15 @@ const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://")
   </header>
 
   <nav class="mainnav" id="mainnav" aria-label="View">
-    <button data-mode="screener" class="active">📊 Screener</button>
-    <button data-mode="datacenter">🏭 Data Center Map</button>
-    <button data-mode="rack">🔬 Rack Explorer</button>
-    <button data-mode="analyst">🧠 AI Analyst</button>
-    <button data-mode="lookup">🔎 Stock Lookup</button>
+    <button type="button" data-mode="screener" class="active">Screener</button>
+    <button type="button" data-mode="datacenter">Data Center Map</button>
+    <button type="button" data-mode="rack">Rack Explorer</button>
+    <button type="button" data-mode="analyst">AI Analyst</button>
+    <button type="button" data-mode="lookup">Stock Lookup</button>
   </nav>
+  <p class="mode-purpose" id="modePurpose">
+    Screener — rank holdings by valuation, momentum, quality, and composite score
+  </p>
 
   <div class="filterbar">
     <div class="seg" id="viewToggle" role="tablist" aria-label="View">
@@ -71,7 +74,7 @@ const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://")
   <div class="focus-banner hidden" id="focusBanner"></div>
   <div class="alerts hidden" id="alerts"></div>
 
-  <main id="layers"><div class="loading">Fetching live market data…</div></main>
+  <main id="layers"><div class="loading">Loading the latest market snapshot…</div></main>
 
   <section class="datacenter hidden" id="datacenter">
     <div class="dc-intro">

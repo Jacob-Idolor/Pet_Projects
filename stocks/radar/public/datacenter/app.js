@@ -52,17 +52,25 @@ function savePrefs() {
 }
 
 const _p = loadPrefs();
+const _params = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
+const _qParam = (_params.get("q") || _params.get("ticker") || "").trim();
+const _layerParam = (_params.get("layer") || "").trim();
+const _modeParam = (_params.get("mode") || "").trim();
+const _allowedModes = new Set(["screener", "datacenter", "rack", "analyst", "lookup"]);
+
 let STATE = {
   layers: [], marketState: null,
   sort: _p.sort || { col: "market_cap", asc: false },
   view: _p.view || "layers",
-  query: "",
+  query: _qParam || "",
   exposure: new Set(_p.exposure || []),
   collapsed: new Set(_p.collapsed || []),
   valuation: _p.valuation || {},        // metric key -> { min, max } (display units)
   panelOpen: _p.panelOpen || false,
-  mode: _p.mode || "screener",
-  focusLayer: null,
+  mode: _allowedModes.has(_modeParam)
+    ? _modeParam
+    : (_layerParam || _qParam ? "screener" : (_p.mode || "screener")),
+  focusLayer: _layerParam || null,
   colset: _p.colset || "valuation",     // which numeric column group to show
   scoreMode: _p.scoreMode || "universe", // score basis: percentile vs whole universe or vs same-layer peers
   openNews: new Set(),                  // tickers whose news row is expanded (transient)
@@ -260,7 +268,8 @@ async function load(refresh = false) {
     if (STATE.mode === "rack" && window.RackExplorer) window.RackExplorer.render();
     if (STATE.mode === "analyst") initAnalyst();
   } catch (e) {
-    $("#status").textContent = "Failed to load data — is the server running?";
+    $("#status").textContent =
+      "Couldn’t load the screener snapshot. Try Refresh, or rebuild with npm run update-screener.";
     console.error(e);
   } finally {
     btn.disabled = false;
@@ -737,20 +746,44 @@ $("#filtersBtn").addEventListener("click", () => {
 });
 
 // ---- mode (screener vs data-center map) --------------------------------
+const MODE_PURPOSE = {
+  screener: "Screener — rank holdings by valuation, momentum, quality, and composite score",
+  datacenter: "Data Center Map — explore the six-layer buildout, then drill into a layer’s stocks",
+  rack: "Rack Explorer — zoom from hall to rack to GPU die and see who builds each piece",
+  analyst: "AI Analyst — copy a grounded research prompt for Claude, Gemini, or ChatGPT",
+  lookup: "Stock Lookup — pin a universe ticker locally in this browser",
+};
+
 function applyMode() {
   const m = STATE.mode, screener = m === "screener";
   document.querySelectorAll("#mainnav button").forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
+  const purpose = $("#modePurpose");
+  if (purpose) {
+    purpose.style.opacity = "0";
+    purpose.textContent = MODE_PURPOSE[m] || "";
+    requestAnimationFrame(() => { purpose.style.opacity = "1"; });
+  }
   // screener chrome shows only in screener mode
   $(".filterbar").classList.toggle("hidden", !screener);
   $("#filtersPanel").classList.toggle("hidden", !screener || !STATE.panelOpen);
   $(".statusbar").classList.toggle("hidden", !screener);
-  $("#layers").classList.toggle("hidden", !screener);
+  const layersEl = $("#layers");
+  layersEl.classList.toggle("hidden", !screener);
+  layersEl.classList.toggle("view-pane", screener);
   $("#search").classList.toggle("hidden", !screener);
   renderAlerts();   // hides the alerts strip outside screener mode
-  $("#datacenter").classList.toggle("hidden", m !== "datacenter");
-  $("#rackexplorer").classList.toggle("hidden", m !== "rack");
-  $("#analyst").classList.toggle("hidden", m !== "analyst");
-  $("#lookup").classList.toggle("hidden", m !== "lookup");
+  const panes = [
+    ["#datacenter", "datacenter"],
+    ["#rackexplorer", "rack"],
+    ["#analyst", "analyst"],
+    ["#lookup", "lookup"],
+  ];
+  for (const [sel, mode] of panes) {
+    const el = $(sel);
+    const on = m === mode;
+    el.classList.toggle("hidden", !on);
+    el.classList.toggle("view-pane", on);
+  }
   updateFocusBanner();
   if (m === "datacenter" && window.DataCenter) window.DataCenter.render();
   if (m === "rack" && window.RackExplorer) window.RackExplorer.render();
@@ -1043,6 +1076,10 @@ async function removeStock(ticker, layer) {
 
 $("#refresh").addEventListener("click", () => load(true));
 $("#search").addEventListener("input", (e) => { STATE.query = e.target.value; render(); });
+
+// Deep-links from StocksWatch home (?q=TICKER&layer=compute)
+if (STATE.query && $("#search")) $("#search").value = STATE.query;
+if (STATE.focusLayer) STATE.view = "layers";
 
 applyMode();
 load();

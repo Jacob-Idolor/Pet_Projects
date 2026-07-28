@@ -107,6 +107,7 @@ export function clientSettingsPayload() {
       checkInPulse: s.features.checkInPulse !== false,
       technicalView: s.features.technicalView !== false,
       dayMood: s.features.dayMood !== false,
+      datacenterBridge: s.features.datacenterBridge !== false,
     },
     quotes: {
       staleAfterHours: s.quotes.staleAfterHours,
