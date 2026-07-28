@@ -1,6 +1,6 @@
-# Stocks Radar
+# StocksWatch (stocks/radar)
 
-A single-page group watchlist — one tracking list, live quotes, and a clean mobile layout. Built for **100+ tickers**, zero API keys, low hosting cost.
+Group watchlist + AI data-center thematic screener. Static Astro site on **S3 + CloudFront** — no app server, zero API keys for market data.
 
 > Not financial advice. Personal tooling for tracking tickers and theses.
 
@@ -8,6 +8,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 
 ## What you get
 
+<<<<<<< Updated upstream
 - **Unified tracking list** — every ticker in one place (no owned vs watching split)
 - **Live prices** — free Yahoo quotes on deploy + weekday refresh workflow; browser falls back when stale
 - **Quote health bar** — age, coverage (e.g. 13/14), partial/stale/error states; last-good prices kept on Yahoo misses
@@ -22,6 +23,21 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Security posture** — private S3/OAC, `_private/` blocked, hardened IAM/alerts ([SECURITY.md](SECURITY.md))
 - **Group feed** — post ticker notes; auto-detects symbols; emailed to you via free [Web3Forms](https://web3forms.com) when `PUBLIC_WEB3FORMS_ACCESS_KEY` is set (also kept in the browser until merged in git)
 - **AI Data Center screener** — six-layer thematic board at `/datacenter.html` (map, rack explorer, composite score, copy-paste AI research prompts). Home bridges in with a layer teaser + chips on overlapping tickers (`features.datacenterBridge`).
+=======
+**Group watchlist (`/`)**
+
+- Unified tracking list with theses, tags, and conviction
+- Yahoo quotes on deploy + weekday refresh; browser fallback when stale
+- Day mood, macro strip, technical lean / radar signals — [SCORE.md](SCORE.md)
+- Optional group feed, AdSense, alerts, OTel — see docs below
+
+**AI Data Center (`/datacenter.html`)**
+
+- Six-layer universe (land → power → cooling → compute → networking → software)
+- Screener table (valuation / momentum / quality / consensus / trends), map, rack explorer
+- Composite score + copy-paste AI research prompts
+- Build/CI Yahoo snapshot (`screener.json`) — not a live Python server
+>>>>>>> Stashed changes
 
 ## Quick start
 
@@ -31,48 +47,52 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:4321
+- Watchlist: http://localhost:4321  
+- Data center: http://localhost:4321/datacenter.html  
 
-## Watchlist data
-
-Edit `src/data/watchlist.json`:
-
-| Field | Purpose |
-|-------|---------|
-| `category` | `tracking` (single list) |
-| `sector` | Grouping label |
-| `tags` | Themes (`semi`, `photonics`, …) |
-| `priority` | `high` · `medium` · `low` |
-| `thesis` | One-liner shown on cards and rows |
-
-Bulk import via CSV: `npm run import-csv -- my-tickers.csv`
-
-## AI Data Center screener
-
-Thematic universe lives in `src/data/datacenter-universe.json` (six layers: land → power → cooling → compute → networking → software). The UI is at `/datacenter.html`.
+### Screener snapshot (Python)
 
 ```bash
 pip install -r scripts/datacenter/requirements.txt
-npm run update-screener   # writes public/screener.json (+ news)
+npm run update-screener   # → public/screener.json (+ public/datacenter/news.json)
 ```
 
-Build-time Yahoo snapshots power the table (same static hosting as the watchlist — no Flask server). AI Analyst runs in **copy-prompt** mode (paste into Claude/Gemini). Trends/history and locally added stocks use the browser's `localStorage`.
+`prebuild` runs this via `fetch-screener-soft.mjs`: soft-fail locally if Python/Yahoo fails; **hard-fail in production CI** so stale data is not silently shipped.
 
-## Local rebuild loop (test then ship)
+## Data you edit
 
-Cheapest path: edit locally → preview the static build → push → Actions syncs to the same Terraform S3/CloudFront stack.
+| File | Purpose |
+|------|---------|
+| `src/data/watchlist.json` | Group list (symbol, sector, tags, thesis, priority) |
+| `src/data/datacenter-universe.json` | AI DC layers + holdings + `dataOverrides` |
+| `src/data/site-settings.json` | Features, quote freshness, board defaults |
+
+CSV import for the watchlist: `npm run import-csv -- my-tickers.csv`
+
+### Screener limits (by design on static hosting)
+
+| Feature | Behavior |
+|---------|----------|
+| Prices / fundamentals | Snapshot from last `update-screener` / deploy / quote-refresh job |
+| Refresh button | Reloads `screener.json` from the CDN — does not call Yahoo from the browser |
+| News | From `datacenter/news.json` (generated with the screener fetch) |
+| AI Analyst | Copy-prompt only (paste into Claude/Gemini) |
+| Stock Lookup | Pins names already in the universe (browser `localStorage`); expand the shared list by editing `datacenter-universe.json` |
+| Trends / history | Browser `localStorage` only |
+
+## Local rebuild → ship
 
 ```bash
 cd stocks/radar
 npm install
-npm run dev          # hot reload + AdSense preview boxes
-# …or full static parity:
-npm run rebuild      # quotes + SEO files + build + preview
+npm run dev          # or:
+npm run rebuild      # quotes + screener soft-fetch + build + preview
 ```
 
-Then either push to `main` (auto-deploy) or:
+Push to `main` (gated deploy) or:
 
 ```bash
+<<<<<<< Updated upstream
 npm run build
 ./infra/deploy.sh    # laptop → S3 + invalidate (needs AWS profile)
 ```
@@ -121,9 +141,23 @@ Without the key, the form still works locally (IndexedDB only) and shows a soft 
 
 ```bash
 cd stocks/radar
+=======
+pip install -r scripts/datacenter/requirements.txt
+>>>>>>> Stashed changes
 npm ci && npm run build
-./infra/deploy.sh
+./infra/deploy.sh    # needs AWS profile
 ```
+
+Infra: **Terraform S3 + CloudFront** (~$0.50–3/mo). See [DEPLOY.md](DEPLOY.md), [DOMAIN.md](DOMAIN.md), [ADSENSE.md](ADSENSE.md), [GO_LIVE.md](GO_LIVE.md).
+
+## Deploy (AWS)
+
+1. `terraform apply` in `infra/terraform/`
+2. `bash infra/go-live.sh` (secrets) — [GO_LIVE.md](GO_LIVE.md)
+3. Set `STOCKS_RADAR_DEPLOY_ENABLED=true` → **Stocks Radar — deploy**
+4. Weekday quote + screener refresh: **Stocks Radar — refresh quotes**
+
+Live site: `https://stockswatch.cc/` (or your CloudFront domain).
 
 ## Project layout
 
@@ -131,19 +165,29 @@ npm ci && npm run build
 stocks/radar/
   src/data/watchlist.json
   src/data/datacenter-universe.json
+  src/pages/index.astro
   src/pages/datacenter.astro
-  public/datacenter/        # screener UI + assets
+  public/quotes.json
+  public/screener.json
+  public/datacenter/          # UI (app.js, static-api.js, map, rack, CSS, assets)
   scripts/fetch-quotes.mjs
-  scripts/fetch-screener.py # build-time Yahoo fundamentals for /datacenter
-  infra/                    # Terraform + deploy.sh
-  GO_LIVE.md                # One checklist: TF → secrets → enable CI
-  SECURITY.md               # Audit posture + residual risks
-  DEPLOY.md                 # AWS + GitHub secrets guide
-  DOMAIN.md                 # Cheapest domain (Cloudflare/Porkbun) + DNS
-  ADSENSE.md                # Publisher ads after domain approval
-  PRODUCTION.md             # Production readiness
-  FRIENDS_FEEDBACK.md       # Apply → share → digest → destroy
+  scripts/fetch-screener.py
+  scripts/fetch-screener-soft.mjs
+  infra/                      # Terraform + deploy.sh
 ```
+
+## Docs
+
+| Doc | Topic |
+|-----|--------|
+| [SCORE.md](SCORE.md) | Radar lean buy / sell |
+| [DEPLOY.md](DEPLOY.md) | AWS + GitHub Actions |
+| [DOMAIN.md](DOMAIN.md) | Custom domain |
+| [PRODUCTION.md](PRODUCTION.md) | Ops readiness |
+| [SECURITY.md](SECURITY.md) | Hardening |
+| [ADSENSE.md](ADSENSE.md) | Ads |
+| [ALERTS.md](ALERTS.md) | Personal signal emails |
+| [GO_LIVE.md](GO_LIVE.md) | One checklist |
 
 ## License
 

@@ -128,7 +128,7 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
             --paths "/" "/index.html" "/404.html" "/quotes.json" "/screener.json" \
-                   "/datacenter" "/datacenter.html" "/build-meta.json" \
+                   "/datacenter.html" "/datacenter/*" "/build-meta.json" \
                    "/health.json" "/settings.json" \
                    "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
 
@@ -143,7 +143,7 @@ jobs:
           url="${url%/}"
           # CloudFront may lag briefly after invalidation
           sleep 12
-          for path in /health.json /settings.json /quotes.json /; do
+          for path in /health.json /settings.json /quotes.json /screener.json /datacenter.html /; do
             code=$(curl -sS -o /tmp/body -w "%{http_code}" --retry 5 --retry-delay 4 --retry-all-errors "$url$path" || echo "000")
             echo "$path → HTTP $code"
             if [ "$code" != "200" ]; then

@@ -387,6 +387,9 @@
           price: m.price,
           market_cap: m.market_cap,
           currency: m.currency || "USD",
+          // app.js expects recommend / ranked (Flask contract)
+          recommend: best,
+          ranked: ranked,
           recommendation: best,
           rankings: ranked,
         };
@@ -398,7 +401,7 @@
       ticker: t,
       ok: false,
       error:
-        "Live Yahoo lookup needs the desktop app. Add this ticker to src/data/datacenter-universe.json and re-run npm run update-screener — or pick a name already in the universe.",
+        "That ticker isn’t in the curated universe. Edit src/data/datacenter-universe.json, run npm run update-screener, and redeploy — or look up a name already on this page.",
     };
   }
 
@@ -423,7 +426,9 @@
     if (path.startsWith("/api/news/")) {
       const ticker = decodeURIComponent(path.slice("/api/news/".length));
       const map = await loadNewsMap();
-      return jsonResponse({ ticker, news: (map.news && map.news[ticker]) || [] });
+      const items = (map.news && map.news[ticker]) || [];
+      // app.js expects { items }; keep `news` as a back-compat alias
+      return jsonResponse({ ticker, items, news: items });
     }
 
     if (path === "/api/snapshot" && method === "POST") {
@@ -492,13 +497,20 @@
     }
 
     if (path === "/api/add-stock" && method === "POST") {
+      const tags = Array.isArray(body.tags)
+        ? body.tags
+        : String(body.tags || "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+      const item = { ...body, tags };
       const items = loadUserStocks().filter(
-        (x) => !(x.ticker === body.ticker && x.layer === body.layer)
+        (x) => !(x.ticker === item.ticker && x.layer === item.layer)
       );
-      items.push(body);
+      items.push(item);
       saveUserStocks(items);
       screenCache = null;
-      return jsonResponse({ ok: true });
+      return jsonResponse({ ok: true, item });
     }
 
     if (path === "/api/remove-stock" && method === "POST") {
@@ -511,7 +523,9 @@
     }
 
     if (path === "/api/user-stocks") {
-      return jsonResponse({ stocks: loadUserStocks() });
+      const items = loadUserStocks();
+      // app.js expects { items }; keep `stocks` as a back-compat alias
+      return jsonResponse({ items, stocks: items });
     }
 
     return jsonResponse({ ok: false, error: "Unknown API route: " + path }, 404);

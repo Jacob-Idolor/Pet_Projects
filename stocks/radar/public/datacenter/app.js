@@ -248,7 +248,7 @@ const activeColKeys = () => [...BASE_COLS, ...(COLSETS[STATE.colset] || [])];
 async function load(refresh = false) {
   const btn = $("#refresh");
   btn.disabled = true;
-  $("#status").textContent = refresh ? "Forcing a fresh pull from Yahoo…" : "Loading universe…";
+  $("#status").textContent = refresh ? "Reloading Yahoo snapshot…" : "Loading universe…";
   try {
     const res = await fetch(refresh ? "/api/refresh" : "/api/screen");
     const data = await res.json();
@@ -268,8 +268,12 @@ async function load(refresh = false) {
     if (STATE.mode === "rack" && window.RackExplorer) window.RackExplorer.render();
     if (STATE.mode === "analyst") initAnalyst();
   } catch (e) {
+<<<<<<< Updated upstream
     $("#status").textContent =
       "Couldn’t load the screener snapshot. Try Refresh, or rebuild with npm run update-screener.";
+=======
+    $("#status").textContent = "Failed to load screener.json — try Refresh, or re-run npm run update-screener.";
+>>>>>>> Stashed changes
     console.error(e);
   } finally {
     btn.disabled = false;
@@ -903,7 +907,7 @@ async function initAnalyst() {
       b.addEventListener("click", () => runAnalysis(b.dataset.type)));
     $("#anKeyNote").innerHTML = data.has_key
       ? `<b style="color:var(--green)">Connected to ${data.provider}</b> — reports generate automatically.`
-      : `No LLM key set, so reports give you a ready-to-paste prompt. Set <code>GEMINI_API_KEY</code> (free at <b>aistudio.google.com</b>) or <code>ANTHROPIC_API_KEY</code> and restart to auto-generate.`;
+      : `Copy-prompt mode — each report builds a ready-to-paste prompt with this page’s snapshot data. Paste into Claude or Gemini yourself.`;
   } catch (e) {
     $("#anReports").innerHTML = `<span class="muted">Couldn't load report types.</span>`;
   }
@@ -942,7 +946,7 @@ async function runAnalysis(type, force) {
         (data.prompt ? `<div class="an-note">You can still run it manually:</div>` + promptBox(data.prompt) : "");
     }
   } catch (e) {
-    out.innerHTML = `<div class="an-note err">Request failed — is the server running?</div>`;
+    out.innerHTML = `<div class="an-note err">Request failed — could not build the prompt. Try Refresh, then run again.</div>`;
   }
 }
 
@@ -979,7 +983,7 @@ async function lookupStock() {
     LK_DATA = await res.json();
     renderLookupResult(LK_DATA);
   } catch (e) {
-    out.innerHTML = `<div class="lk-note err">Lookup failed — is the server running?</div>`;
+    out.innerHTML = `<div class="lk-note err">Lookup failed — reload the page and try a ticker already in the universe.</div>`;
   }
 }
 
