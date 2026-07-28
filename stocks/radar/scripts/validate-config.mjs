@@ -46,9 +46,9 @@ if (strict) {
     if (!config.adsense.client.startsWith("ca-pub-")) {
       errors.push("PUBLIC_ADSENSE_CLIENT must be a ca-pub-… id when ads are enabled");
     }
-    if (!config.adsense.slots.hero || !config.adsense.slots.board || !config.adsense.slots.footer) {
+    if (!config.adsense.slots.board || !config.adsense.slots.footer) {
       warnings.push(
-        "AdSense slots incomplete — units stay hidden until hero/board/footer IDs are set (OK while pending review)"
+        "AdSense board/footer slots incomplete — units stay hidden until PUBLIC_ADSENSE_SLOT_BOARD/FOOTER are set (OK while pending review)"
       );
     }
     if (config.rawSettings.seo?.requireCustomDomainForAds) {

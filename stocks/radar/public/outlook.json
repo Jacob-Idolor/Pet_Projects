@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-07-28T22:10:43.822Z",
-  "fetchedAt": "2026-07-28T22:10:43.822Z",
+  "updatedAt": "2026-07-28T23:00:42.027Z",
+  "fetchedAt": "2026-07-28T23:00:42.027Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -121,7 +121,7 @@
         "forwardPE": -105.17476,
         "pegRatio": 0.63,
         "priceToBook": 6.001839,
-        "evToEbitda": -1252.207,
+        "evToEbitda": -1131.52,
         "profitMargin": 0.93086,
         "revenueGrowth": 6.839,
         "targetMeanPrice": 258.13333,
@@ -659,7 +659,7 @@
         "forwardPE": 60.115578,
         "pegRatio": 2.28,
         "priceToBook": 4.993484,
-        "evToEbitda": -43.467,
+        "evToEbitda": -43.984,
         "profitMargin": -0.17185,
         "revenueGrowth": 0.169,
         "targetMeanPrice": 95,
@@ -718,7 +718,7 @@
         "forwardPE": 21.028812,
         "pegRatio": 0.51,
         "priceToBook": 3.1608508,
-        "evToEbitda": 56.449,
+        "evToEbitda": 53.985,
         "profitMargin": -0.04104,
         "revenueGrowth": 0.104,
         "targetMeanPrice": 143.66667,
@@ -848,14 +848,27 @@
       },
       "news": [
         {
-          "title": "Dow Jones Futures: Market Strong Outside AI; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
+          "title": "Dow Jones Futures Fall, Oil Jumps On Iran News; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
           "publisher": "Investor's Business Daily",
-          "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures%3A-market.html",
-          "publishedAt": "2026-07-28T21:59:20.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
+          "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures-fall%2C-oil.html",
+          "publishedAt": "2026-07-28T22:55:59.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
           "sentimentHits": [
-            "strong"
+            "jumps",
+            "fall"
+          ]
+        },
+        {
+          "title": "Why Bloom Energy (BE) Is Down 26.3% After Record Q2 And A $25 Billion Brookfield Deal",
+          "publisher": "Simply Wall St.",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/why-bloom-energy-down-26-221023397.html",
+          "publishedAt": "2026-07-28T22:10:23.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 2,
+          "sentimentHits": [
+            "deal",
+            "record"
           ]
         },
         {
@@ -868,28 +881,16 @@
           "sentimentHits": [
             "soars"
           ]
-        },
-        {
-          "title": "Bloom Energy Jumps On Blowout Earnings, Strong Guidance For AI Infrastructure Play",
-          "publisher": "Investor's Business Daily",
-          "link": "https://finance.yahoo.com/m/06f15e12-4bda-3a35-9188-c52868b34a56/bloom-energy-jumps-on-blowout.html",
-          "publishedAt": "2026-07-28T21:16:59.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 2,
-          "sentimentHits": [
-            "jumps",
-            "strong"
-          ]
         }
       ],
       "newsCheck": {
         "tilt": "positive",
-        "positive": 3,
+        "positive": 2,
         "negative": 0,
-        "neutral": 0,
-        "net": 3,
+        "neutral": 1,
+        "net": 2,
         "scoreDelta": 2,
-        "label": "News check: positive (+2) · 3+ / 0−",
+        "label": "News check: positive (+2) · 2+ / 0−",
         "method": "headline-lexicon-v1"
       }
     }

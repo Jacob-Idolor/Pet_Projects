@@ -4,7 +4,7 @@
   "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "production",
-  "builtAt": "2026-07-28T22:10:44.123Z",
+  "builtAt": "2026-07-28T23:00:42.300Z",
   "gitSha": "local",
   "siteUrl": null,
   "checks": {
@@ -13,6 +13,8 @@
   },
   "paths": {
     "quotes": "/quotes.json",
+    "screener": "/screener.json",
+    "datacenter": "/datacenter.html",
     "settings": "/settings.json",
     "health": "/health.json"
   }

@@ -5,11 +5,23 @@ import SiteHeader from "../components/SiteHeader.astro";
 interface Props {
   title: string;
   description?: string;
+  /**
+   * Load the AdSense script + allow units on this document.
+   * Only set true on pages with substantial publisher content (home board).
+   * Never true on 404 / alerts / under-construction screens.
+   */
+  allowAds?: boolean;
+  /** Search engines: use noindex on error / empty utility pages */
+  noindex?: boolean;
+  activeNav?: "watchlist" | "datacenter";
 }
 
 const {
   title,
   description = "Track stocks you own, price targets you're waiting on, and long-term watchlist picks — one page for the whole group.",
+  allowAds = false,
+  noindex = false,
+  activeNav = "watchlist",
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
@@ -17,6 +29,8 @@ const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
 const canonical = site ? `${site}/` : undefined;
 const pageTitle = `${title} | StocksWatch`;
 const ads = getAdSenseConfig();
+/** Script only when this page opts in AND live ads (or verify meta) are configured. */
+const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(ads.verifyMeta));
 ---
 
 <!doctype html>
@@ -29,25 +43,25 @@ const ads = getAdSenseConfig();
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content={description} />
-    <meta name="robots" content="index,follow" />
+    <meta name="robots" content={noindex ? "noindex,nofollow" : "index,follow"} />
     <title>{pageTitle}</title>
-    {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && !noindex && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
-    {canonical && <meta property="og:url" content={canonical} />}
+    {canonical && !noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:site_name" content="StocksWatch" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     {
-      ads.verifyMeta && (
+      allowAds && ads.verifyMeta && (
         <meta name="google-adsense-account" content={ads.verifyMeta} />
       )
     }
     {
-      ads.enabled && ads.client && (
+      loadAdScript && (
         <script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ads.client}`}
@@ -57,7 +71,7 @@ const ads = getAdSenseConfig();
     }
   </head>
   <body>
-    <SiteHeader active="watchlist" />
+    <SiteHeader active={activeNav} />
     <main>
       <slot />
     </main>

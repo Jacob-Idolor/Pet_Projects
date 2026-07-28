@@ -1,20 +1,21 @@
 ---
-import { getAdSenseConfig, slotIdFor } from "../lib/adsense";
+import { canShowAdSlot, getAdSenseConfig, slotIdFor } from "../lib/adsense";
 
 interface Props {
   placement: "hero" | "board" | "footer";
-  /** Accessible label for the region */
+  /** Accessible label for the region — use “Sponsored”, not navigation chrome */
   label?: string;
   class?: string;
 }
 
-const { placement, label = "Advertisement", class: className = "" } = Astro.props;
+const { placement, label = "Sponsored", class: className = "" } = Astro.props;
 const ads = getAdSenseConfig();
 const slot = slotIdFor(ads, placement);
 
 /** Live units need client + slot. Preview boxes are local/dev only — never ship those hints to production. */
-const showLive = ads.enabled && Boolean(slot) && Boolean(ads.client);
-const show = showLive || ads.preview;
+const allowed = canShowAdSlot(ads, placement);
+const showLive = allowed && ads.enabled && Boolean(slot) && Boolean(ads.client);
+const show = allowed && (showLive || ads.preview);
 ---
 
 {
@@ -25,6 +26,7 @@ const show = showLive || ads.preview;
       data-ad-placement={placement}
       data-ad-mode={showLive ? "live" : "preview"}
     >
+      <p class="ad-slot__label">{label}</p>
       {showLive ? (
         <>
           <ins
@@ -44,8 +46,8 @@ const show = showLive || ads.preview;
           <span class="ad-slot-preview__badge">AdSense preview</span>
           <span class="ad-slot-preview__place">{placement}</span>
           <p class="ad-slot-preview__hint">
-            Local layout placeholder. On production, units appear after AdSense
-            approval and slot IDs are set (<code>PUBLIC_ADSENSE_SLOT_*</code>).
+            Local layout placeholder (after publisher content). Production units
+            need approval + <code>PUBLIC_ADSENSE_SLOT_*</code>.
           </p>
         </div>
       )}

@@ -7,9 +7,10 @@ import MacroStrip from "../components/MacroStrip.astro";
 import DatacenterBridge from "../components/DatacenterBridge.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
+import PublisherContent from "../components/PublisherContent.astro";
 import AdSlot from "../components/AdSlot.astro";
 import { meta, stocks } from "../data/watchlist";
-import { canShowAdSlot, getAdSenseConfig } from "../lib/adsense";
+import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
 import { featureEnabled, getSiteSettings } from "../lib/site-config";
 
 const description =
@@ -23,12 +24,18 @@ const showSubmissions = featureEnabled("groupSubmissions");
 const showDcBridge = featureEnabled("datacenterBridge");
 const adsFeature = featureEnabled("adsense");
 const showMood = featureEnabled("dayMood");
-const showHeroAd = adsFeature && canShowAdSlot(ads, "hero");
-const showBoardAd = adsFeature && canShowAdSlot(ads, "board");
-const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
+
+/** Policy: only serve units when this page has real publisher content. */
+const contentOk = hasPublisherContent(5);
+const allowAds = adsFeature && contentOk;
+const showBoardAd = allowAds && canShowAdSlot(ads, "board");
+const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
+// Hero/top ads disabled by default (PUBLIC_ADSENSE_ALLOW_HERO) — keeps inventory
+// below the watchlist so we never paint ads on a chrome-only first screen.
+const showHeroAd = allowAds && canShowAdSlot(ads, "hero");
 ---
 
-<BaseLayout title={meta.groupName} description={description}>
+<BaseLayout title={meta.groupName} description={description} allowAds={allowAds}>
   <div class="app-shell">
     <LiveStatus />
     {showMood && <DayMoodBanner />}
@@ -37,7 +44,9 @@ const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
         <p class="hero-brand">StocksWatch</p>
         <h1>{meta.groupName}</h1>
         <p class="tagline">{meta.tagline}</p>
-        <p class="hero-mobile-hint mobile-only">Rates → pulse → list. Use the bar at the bottom anytime.</p>
+        <p class="hero-mobile-hint mobile-only">
+          Rates → pulse → list. Expand any ticker for valuation and headlines.
+        </p>
       </div>
       <dl class="hero-kpis" aria-label="Watchlist summary">
         <div class="hero-kpi">
@@ -46,7 +55,7 @@ const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
         </div>
         <div class="hero-kpi">
           <dt>Purpose</dt>
-          <dd>Check-in</dd>
+          <dd>Research</dd>
         </div>
         <div class="hero-kpi desktop-only">
           <dt>Version</dt>
@@ -54,25 +63,41 @@ const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
         </div>
       </dl>
     </section>
-    {
-      showHeroAd && (
-        <div class="container">
-          <AdSlot placement="hero" label="Sponsored — top" />
-        </div>
-      )
-    }
+
     <div class="container board-stage">
       <MacroStrip />
       {showPulse && <CheckInPulse />}
       {showDcBridge && <DatacenterBridge />}
+
+      {/* Publisher content first — ads only after the board */}
+      <WatchlistBoard />
+
       {
         showBoardAd && (
-          <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />
+          <AdSlot
+            placement="board"
+            label="Sponsored"
+            class="ad-slot--after-board"
+          />
         )
       }
-      <WatchlistBoard />
+
+      <PublisherContent />
+
       {showSubmissions && <GroupSubmissions />}
-      {showFooterAd && <AdSlot placement="footer" label="Sponsored — footer" />}
+
+      {
+        showFooterAd && (
+          <AdSlot placement="footer" label="Sponsored" class="ad-slot--footer" />
+        )
+      }
+
+      {
+        /* Optional: only if PUBLIC_ADSENSE_ALLOW_HERO=true — still placed after content */
+        showHeroAd && (
+          <AdSlot placement="hero" label="Sponsored" class="ad-slot--late-hero" />
+        )
+      }
     </div>
   </div>
 </BaseLayout>

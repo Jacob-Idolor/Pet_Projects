@@ -2,13 +2,47 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="Not found" description="That page is not on Stocks Radar.">
-  <div class="container" style="padding: 3rem 1.15rem 4rem; text-align: center;">
-    <p class="hero-brand">Stocks Radar</p>
-    <h1 style="margin: 0.35rem 0 0.75rem; font-size: 1.75rem;">Page not found</h1>
-    <p style="color: var(--muted); max-width: 28rem; margin: 0 auto 1.5rem;">
-      The ticker board is at the home page. If a file 404'd (quotes, board script), redeploy so assets are in the bucket.
+{/* No AdSense script / units — error screens must not carry Google-served ads. */}
+<BaseLayout
+  title="Not found"
+  description="That page is not on StocksWatch."
+  allowAds={false}
+  noindex={true}
+>
+  <div class="container error-page">
+    <p class="hero-brand">StocksWatch</p>
+    <h1>Page not found</h1>
+    <p class="error-page__lead">
+      The research board lives on the home page. If a file 404’d (quotes, board script),
+      redeploy so assets are in the bucket.
     </p>
-    <a class="btn btn-primary" href={import.meta.env.BASE_URL}>Back to watchlist</a>
+    <p class="error-page__links">
+      <a class="btn btn-primary" href={import.meta.env.BASE_URL}>Back to watchlist</a>
+      <a class="header-link" href={`${import.meta.env.BASE_URL}datacenter.html`}>AI Data Center</a>
+    </p>
   </div>
 </BaseLayout>
+
+<style>
+  .error-page {
+    padding: 3rem 1.15rem 4rem;
+    text-align: center;
+  }
+  .error-page h1 {
+    margin: 0.35rem 0 0.75rem;
+    font-size: 1.75rem;
+  }
+  .error-page__lead {
+    color: var(--muted);
+    max-width: 28rem;
+    margin: 0 auto 1.5rem;
+    line-height: 1.5;
+  }
+  .error-page__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
