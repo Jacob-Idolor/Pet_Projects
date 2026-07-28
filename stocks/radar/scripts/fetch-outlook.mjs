@@ -14,6 +14,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getYahooSession, yahooHeaders, yahooQuoteSummaryUrl, rawNum } from "./yahoo-session.mjs";
+import { annotateNews } from "./news-sentiment.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -175,10 +176,12 @@ export async function fetchOutlook() {
     }
     await delay(200);
 
+    const annotated = annotateNews(news);
     bySymbol[sym] = {
       symbol: sym,
       fundamentals,
-      news,
+      news: annotated.news,
+      newsCheck: annotated.newsCheck,
     };
   }
 
@@ -186,9 +189,9 @@ export async function fetchOutlook() {
   const payload = {
     updatedAt: now,
     fetchedAt: now,
-    schemaVersion: 1,
+    schemaVersion: 2,
     hierarchy:
-      "Valuation + news drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
+      "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
     macro,
     stocks: bySymbol,
   };

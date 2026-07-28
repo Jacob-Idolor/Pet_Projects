@@ -20,6 +20,7 @@ import { scoreWatchlist } from "./radar-score.mjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const WATCHLIST = resolve(ROOT, "src/data/watchlist.json");
+const OUTLOOK = resolve(ROOT, "public/outlook.json");
 
 const distId = process.env.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID?.trim();
 const topicArn = process.env.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN?.trim();
@@ -160,7 +161,15 @@ if (mood.ok) {
 try {
   const watchlist = JSON.parse(readFileSync(WATCHLIST, "utf8"));
   const quotes = mood.data?.quotes || {};
-  const scored = scoreWatchlist(watchlist.stocks || [], quotes);
+  let outlookStocks = {};
+  if (existsSync(OUTLOOK)) {
+    try {
+      outlookStocks = JSON.parse(readFileSync(OUTLOOK, "utf8")).stocks || {};
+    } catch {
+      outlookStocks = {};
+    }
+  }
+  const scored = scoreWatchlist(watchlist.stocks || [], quotes, outlookStocks);
   lines.push("", "--- Radar signals ---");
   if (scored.buy.length) {
     lines.push(`Lean buy: ${scored.buy.map((r) => `${r.symbol}(${r.score})`).join(", ")}`);

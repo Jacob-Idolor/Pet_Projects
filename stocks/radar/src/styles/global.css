@@ -2260,6 +2260,56 @@ body[data-day-mood="mixed"] .site-header {
   color: var(--dim);
 }
 
+.outlook-news-check {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.outlook-news-check--positive {
+  color: var(--green);
+}
+
+.outlook-news-check--negative {
+  color: var(--red);
+}
+
+.outlook-news-check--mixed {
+  color: var(--amber);
+}
+
+.outlook-news-check--neutral {
+  color: var(--muted);
+}
+
+.news-sent {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.news-sent--positive {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+}
+
+.news-sent--negative {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+}
+
+.news-sent--neutral {
+  color: var(--dim);
+  background: color-mix(in srgb, var(--dim) 12%, transparent);
+}
+
 .outlook-news {
   margin: 0;
   padding: 0;

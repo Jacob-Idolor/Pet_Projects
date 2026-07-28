@@ -43,8 +43,8 @@ function stockMatchesRule(stock, rule) {
   return true;
 }
 
-function evaluateSignal(rule, stock, q) {
-  const bias = actionBias(q);
+function evaluateSignal(rule, stock, q, newsCheck = null) {
+  const bias = actionBias(q, { newsCheck });
   const price = q?.price ?? null;
   const signal = rule.signal;
   const minScore = rule.minScore ?? 2;
@@ -188,7 +188,7 @@ function evaluateSignal(rule, stock, q) {
 /**
  * @returns {Array<{ rule, stock, hit, fireKey }>}
  */
-export function matchAlertRules(rulesConfig, watchlistStocks, quotes) {
+export function matchAlertRules(rulesConfig, watchlistStocks, quotes, outlookBySymbol) {
   const rules = (rulesConfig.rules || []).filter((r) => r && r.enabled !== false);
   const hits = [];
 
@@ -203,7 +203,8 @@ export function matchAlertRules(rulesConfig, watchlistStocks, quotes) {
       if (!stockMatchesRule(stock, rule)) continue;
       const q = quotes[stock.symbol];
       if (!q) continue;
-      const hit = evaluateSignal(rule, stock, q);
+      const newsCheck = outlookBySymbol?.[stock.symbol]?.newsCheck ?? null;
+      const hit = evaluateSignal(rule, stock, q, newsCheck);
       if (!hit) continue;
 
       // Cooldown key: rule + symbol so multi-symbol rules re-fire per name

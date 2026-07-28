@@ -36,9 +36,10 @@ export function isPreMomentum(q) {
 
 /**
  * @param {object|undefined} q quote row from quotes.json
+ * @param {{ newsCheck?: { tilt?: string, scoreDelta?: number }|null }} [opts]
  * @returns {{ label: string, cls: BiasCls, reason: string, score: number, setup: SetupKind }}
  */
-export function actionBias(q) {
+export function actionBias(q, opts = {}) {
   if (!q || q.price == null) {
     return { label: "—", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
   }
@@ -110,6 +111,15 @@ export function actionBias(q) {
     bits.push("quiet near highs (−1)");
   }
 
+  // --- News tape check (from outlook.json lexicon tilt) ---
+  const delta = opts?.newsCheck?.scoreDelta;
+  if (typeof delta === "number" && delta !== 0) {
+    score += delta;
+    const sign = delta > 0 ? `+${delta}` : String(delta);
+    const tilt = opts?.newsCheck?.tilt || (delta > 0 ? "positive" : "negative");
+    bits.push(`news ${tilt} (${sign})`);
+  }
+
   // Classify setup flavor for UI (independent of lean threshold)
   /** @type {SetupKind} */
   let setup = "mixed";
@@ -145,8 +155,11 @@ export function distanceToTarget(price, targetPrice) {
 
 /**
  * Rank watchlist symbols by radar score using quotes map + optional targets from watchlist.
+ * @param {object[]} watchlistStocks
+ * @param {Record<string, object>} quotes
+ * @param {Record<string, { newsCheck?: object }>|undefined} [outlookBySymbol]
  */
-export function scoreWatchlist(watchlistStocks, quotes) {
+export function scoreWatchlist(watchlistStocks, quotes, outlookBySymbol) {
   const buy = [];
   const sell = [];
   const nearTarget = [];
@@ -162,7 +175,8 @@ export function scoreWatchlist(watchlistStocks, quotes) {
       missing.push(stock.symbol);
       continue;
     }
-    const bias = actionBias(q);
+    const newsCheck = outlookBySymbol?.[stock.symbol]?.newsCheck ?? null;
+    const bias = actionBias(q, { newsCheck });
     const row = {
       symbol: stock.symbol,
       name: stock.name || q.name || stock.symbol,
@@ -174,6 +188,7 @@ export function scoreWatchlist(watchlistStocks, quotes) {
       changePct: q.changePct,
       targetPrice: stock.targetPrice ?? null,
       distPct: distanceToTarget(q.price, stock.targetPrice),
+      newsTilt: newsCheck?.tilt ?? null,
     };
     if (bias.cls === "buy") buy.push(row);
     if (bias.cls === "sell") sell.push(row);

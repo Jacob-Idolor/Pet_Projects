@@ -141,12 +141,27 @@ export interface OutlookNewsItem {
   publisher?: string;
   link?: string;
   publishedAt?: string | null;
+  sentiment?: "positive" | "negative" | "neutral" | string;
+  sentimentScore?: number;
+  sentimentHits?: string[];
+}
+
+export interface NewsCheck {
+  tilt?: "positive" | "negative" | "mixed" | "neutral" | string;
+  positive?: number;
+  negative?: number;
+  neutral?: number;
+  net?: number;
+  scoreDelta?: number;
+  label?: string;
+  method?: string;
 }
 
 export interface OutlookStock {
   symbol?: string;
   fundamentals?: OutlookFundamentals | null;
   news?: OutlookNewsItem[];
+  newsCheck?: NewsCheck | null;
 }
 
 function fmtMultiple(v: number | null | undefined) {
@@ -167,6 +182,24 @@ function biasLabel(bias: string | null | undefined) {
   return null;
 }
 
+function sentimentBadge(sentiment: string | undefined) {
+  const s = (sentiment || "neutral").toLowerCase();
+  const cls = s === "positive" || s === "negative" || s === "neutral" ? s : "neutral";
+  const text = cls === "positive" ? "+" : cls === "negative" ? "−" : "~";
+  const label = cls === "positive" ? "Positive" : cls === "negative" ? "Negative" : "Neutral";
+  return `<span class="news-sent news-sent--${cls}" title="${escapeHtml(label)} headline">${text} ${escapeHtml(label)}</span>`;
+}
+
+function newsCheckHtml(check: NewsCheck | null | undefined) {
+  if (!check?.tilt) return "";
+  const tilt = String(check.tilt);
+  const cls =
+    tilt === "positive" ? "positive" : tilt === "negative" ? "negative" : tilt === "mixed" ? "mixed" : "neutral";
+  const label = check.label || `News check: ${tilt}`;
+  return `<p class="outlook-news-check outlook-news-check--${cls}">${escapeHtml(label)}</p>
+    <p class="outlook-disclaimer">Headline lexicon — quick tape check, not a thesis. Read the links.</p>`;
+}
+
 /** Valuation + news first — friend feedback: more important than technical momentum. */
 export function renderOutlookDetail(row: OutlookStock | null | undefined) {
   const f = row?.fundamentals;
@@ -182,7 +215,7 @@ export function renderOutlookDetail(row: OutlookStock | null | undefined) {
       f.note ||
       f.catalyst);
 
-  if (!hasMetrics && !news.length) {
+  if (!hasMetrics && !news.length && !row?.newsCheck) {
     return `<div class="outlook-detail">
       <h4>Valuation + news</h4>
       <p class="outlook-empty">Outlook refreshes with quotes — run <code>npm run update-quotes</code> or wait for CI.</p>
@@ -212,7 +245,7 @@ export function renderOutlookDetail(row: OutlookStock | null | undefined) {
           const title = escapeHtml(n.title || "Headline");
           const pub = escapeHtml(n.publisher || "");
           const href = escapeHtml(n.link || "#");
-          return `<li><a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
+          return `<li>${sentimentBadge(n.sentiment)} <a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
         })
         .join("")}</ul>`
     : `<p class="outlook-empty">No recent headlines in the feed.</p>`;
@@ -224,7 +257,8 @@ export function renderOutlookDetail(row: OutlookStock | null | undefined) {
     ${f?.catalyst ? `<p class="outlook-catalyst"><strong>Catalyst:</strong> ${escapeHtml(f.catalyst)}</p>` : ""}
     ${metrics ? `<div class="outlook-metrics">${metrics}</div>` : ""}
     <p class="outlook-disclaimer">Multiples without peer context are not a buy/sell — they’re chat fuel next to the thesis.</p>
-    <h5 class="outlook-news-title">Headlines</h5>
+    <h5 class="outlook-news-title">News check</h5>
+    ${newsCheckHtml(row?.newsCheck)}
     ${newsHtml}
   </div>`;
 }
@@ -279,7 +313,10 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
     </div>`;
 }
 
-export function actionBias(q: QuoteData | undefined): {
+export function actionBias(
+  q: QuoteData | undefined,
+  opts?: { newsCheck?: NewsCheck | null }
+): {
   label: string;
   cls: "buy" | "sell" | "watch" | "idle";
   reason: string;
@@ -356,6 +393,15 @@ export function actionBias(q: QuoteData | undefined): {
     bits.push("quiet near highs (−1)");
   }
 
+  // News tape check (primary outlook layer — lexicon tilt from outlook.json)
+  const delta = opts?.newsCheck?.scoreDelta;
+  if (typeof delta === "number" && delta !== 0) {
+    score += delta;
+    const sign = delta > 0 ? `+${delta}` : String(delta);
+    const tilt = opts?.newsCheck?.tilt || (delta > 0 ? "positive" : "negative");
+    bits.push(`news ${tilt} (${sign})`);
+  }
+
   let setup: "washed-out" | "pre-momentum" | "trending" | "extended" | "mixed" | "idle" = "mixed";
   if (isPreMomentum(q)) setup = "pre-momentum";
   else if (
@@ -395,8 +441,8 @@ export function isPreMomentum(q: QuoteData | undefined): boolean {
   return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
 }
 
-export function actionBadge(q: QuoteData | undefined) {
-  const a = actionBias(q);
+export function actionBadge(q: QuoteData | undefined, opts?: { newsCheck?: NewsCheck | null }) {
+  const a = actionBias(q, opts);
   return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
 
@@ -411,12 +457,15 @@ export function sma50Plain(q: QuoteData | undefined): string {
 }
 
 /** Short pulse row blurb: lean signal + setup flavor + SMA50. */
-export function pulseExplain(q: QuoteData | undefined): {
+export function pulseExplain(
+  q: QuoteData | undefined,
+  opts?: { newsCheck?: NewsCheck | null }
+): {
   bias: ReturnType<typeof actionBias>;
   sma: string;
   line: string;
 } {
-  const bias = actionBias(q);
+  const bias = actionBias(q, opts);
   const sma = sma50Plain(q);
   const lean =
     bias.cls === "buy"

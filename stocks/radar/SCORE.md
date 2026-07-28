@@ -6,11 +6,25 @@ Not financial advice. Same playbook on every ticker.
 
 | Priority | Layer | Where |
 |---------:|-------|--------|
-| **1** | **Valuation + news** | Expand any ticker — PE / forward PE / PEG, optional group lean (`cheap` / `fair` / `rich`), headlines |
+| **1** | **Valuation + news** | Expand any ticker — PE / forward PE / PEG, optional group lean (`cheap` / `fair` / `rich`), headlines with **positive / negative** sentiment check |
 | **2** | **Macro rates** | Strip at top — 10Y, front-end bills, 5Y, TLT, dollar. Yields frame multiples |
 | **3** | **Technical momentum** | Pulse lean buy / sell / watch — may or may not hold |
 
 Raw PE alone is **not** a buy/sell. Without peer context it’s chat fuel next to the thesis. Human `valuation.bias` / `valuation.note` / `catalyst` on the watchlist beat lonely multiples.
+
+### News sentiment check
+
+Recent Yahoo headlines are tagged **positive / negative / neutral** with a simple finance lexicon (not an LLM). The net tilt becomes a checklist item and a light score weight:
+
+| Net tilt | Score |
+|----------|------:|
+| Clear positive (net ≥ +2) | **+2** |
+| Mild positive (net +1) | **+1** |
+| Mixed / neutral | 0 |
+| Mild negative (net −1) | **−1** |
+| Clear negative (net ≤ −2) | **−2** |
+
+Read the links — lexicon misses sarcasm and “sell the news” nuance.
 
 Data: `public/outlook.json` from `node scripts/fetch-outlook.mjs` (also runs soft-fail at the end of `update-quotes`).
 
@@ -33,6 +47,7 @@ Data: `public/outlook.json` from `node scripts/fetch-outlook.mjs` (also runs sof
 | Deep below / extended above SMA50 (>10%) | **+2** | **−2** | Cheap vs stretched vs ~2.5 months |
 | Near ATH (within ~3%) | | **−2** | Extra stretch risk |
 | Quiet coil / **pre-momentum** | **+2** | | See below — names that haven’t run yet |
+| **News tilt** (headline lexicon) | **+1…+2** | **−1…−2** | Primary tape check — see above |
 | RSI soft (≤40) / elevated (≥65) | +1 | −1 | Mild version of RSI |
 | Bullish / bearish trend | +1 | −1 | Context only — can fight mean-reversion |
 | Quiet volume near highs | | −1 | Sleepy + expensive is less interesting |

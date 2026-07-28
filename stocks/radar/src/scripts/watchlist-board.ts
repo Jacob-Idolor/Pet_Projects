@@ -232,9 +232,9 @@ function matchesFilter(stock: StockRow) {
     case "high-priority":
       return stock.priority === "high";
     case "lean-buy":
-      return actionBias(getQuote(stock)).cls === "buy";
+      return stockBias(stock).cls === "buy";
     case "lean-sell":
-      return actionBias(getQuote(stock)).cls === "sell";
+      return stockBias(stock).cls === "sell";
     default:
       if (filter.startsWith("tech-")) {
         return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
@@ -326,8 +326,8 @@ function sortStocks(list: StockRow[]) {
       }
       case "action": {
         const order: Record<string, number> = { buy: 0, watch: 1, sell: 2, idle: 3 };
-        av = order[actionBias(getQuote(a)).cls] ?? 4;
-        bv = order[actionBias(getQuote(b)).cls] ?? 4;
+        av = order[stockBias(a).cls] ?? 4;
+        bv = order[stockBias(b).cls] ?? 4;
         return sortDir * ((av as number) - (bv as number));
       }
       default:
@@ -379,7 +379,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td>${actionBadge(q)}</td>
+      <td>${actionBadge(q, biasOpts(stock))}</td>
       <td>${trendBadge(q?.trend)}</td>
       <td class="num">${maCell(price, q?.sma?.[50], q?.vsSma?.[50])}</td>
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
@@ -402,7 +402,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
       <td class="num">${chgHtml}</td>
-      <td>${actionBadge(q)}</td>
+      <td>${actionBadge(q, biasOpts(stock))}</td>
       <td class="ath-cell">${athIndicator(q)}</td>
       <td class="num mono">${stock.targetPrice != null ? fmtPrice(stock.targetPrice) : "—"}</td>
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
@@ -429,7 +429,16 @@ function outlookFor(stock: StockRow): OutlookStock | undefined {
     symbol: sym,
     fundamentals,
     news: fetched?.news || [],
+    newsCheck: fetched?.newsCheck || null,
   };
+}
+
+function biasOpts(stock: StockRow) {
+  return { newsCheck: outlookFor(stock)?.newsCheck };
+}
+
+function stockBias(stock: StockRow) {
+  return actionBias(getQuote(stock), biasOpts(stock));
 }
 
 function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
@@ -511,7 +520,7 @@ function renderOverview() {
     <div class="overview-metric tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
 
-  const leanBuy = allStocks.filter((s) => actionBias(getQuote(s)).cls === "buy").length;
+  const leanBuy = allStocks.filter((s) => stockBias(s).cls === "buy").length;
 
   el.innerHTML = `
     <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">On master list</span></div>
@@ -537,7 +546,7 @@ function renderCheckIn() {
       const q = getQuote(s);
       const price = getPrice(s);
       const chg = q?.changePct ?? null;
-      const explain = pulseExplain(q);
+      const explain = pulseExplain(q, biasOpts(s));
       return { stock: s, q, price, chg, bias: explain.bias, explain };
     })
     .filter((x) => x.price != null);
@@ -908,7 +917,7 @@ function renderMobileCard(stock: StockRow) {
   const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "—";
 
   const high = sanitizePriority(stock.priority) === "high";
-  const action = actionBias(q);
+  const action = stockBias(stock);
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
     <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
@@ -916,7 +925,7 @@ function renderMobileCard(stock: StockRow) {
         <div class="scm-identity">
           <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
-          ${actionBadge(q)}
+          ${actionBadge(q, biasOpts(stock))}
         </div>
         <div class="scm-quote">
           <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
