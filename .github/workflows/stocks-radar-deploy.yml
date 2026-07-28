@@ -56,6 +56,14 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install screener Python deps
+        working-directory: stocks/radar
+        run: pip install -r scripts/datacenter/requirements.txt
+
       - name: Resolve public site URL
         id: url
         env:
@@ -117,7 +125,8 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" \
+            --paths "/" "/index.html" "/404.html" "/quotes.json" "/screener.json" \
+                   "/datacenter" "/datacenter.html" "/build-meta.json" \
                    "/health.json" "/settings.json" \
                    "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
 

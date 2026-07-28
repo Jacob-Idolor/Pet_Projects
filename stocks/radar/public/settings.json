@@ -2,7 +2,7 @@
   "app": {
     "name": "StocksWatch",
     "version": "0.2.0",
-    "environment": "development",
+    "environment": "production",
     "production": false
   },
   "features": {
@@ -11,8 +11,7 @@
     "groupSubmissions": true,
     "checkInPulse": true,
     "technicalView": true,
-    "dayMood": true,
-    "otelScripts": true
+    "dayMood": true
   },
   "quotes": {
     "staleAfterHours": 6,
@@ -38,6 +37,6 @@
     "healthPath": "/health.json",
     "settingsPath": "/settings.json"
   },
-  "siteUrl": "https://d18obfsjwqu836.cloudfront.net",
-  "generatedAt": "2026-07-27T23:09:45.583Z"
+  "siteUrl": null,
+  "generatedAt": "2026-07-28T19:08:42.907Z"
 }

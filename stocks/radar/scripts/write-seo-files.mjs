@@ -31,6 +31,11 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>${site}/datacenter.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
 `;
 

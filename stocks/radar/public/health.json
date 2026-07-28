@@ -3,10 +3,10 @@
   "status": "ok",
   "service": "StocksWatch",
   "version": "0.2.0",
-  "environment": "development",
-  "builtAt": "2026-07-27T23:09:45.584Z",
+  "environment": "production",
+  "builtAt": "2026-07-28T19:08:42.908Z",
   "gitSha": "local",
-  "siteUrl": "https://d18obfsjwqu836.cloudfront.net",
+  "siteUrl": null,
   "checks": {
     "settings": true,
     "quotesExpected": true

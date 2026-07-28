@@ -1,0 +1,160 @@
+---
+import DatacenterLayout from "../layouts/DatacenterLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://");
+---
+
+<DatacenterLayout
+  title="AI Data Center Screener"
+  description="Organize the AI data-center buildout into six layers with live market data, scoring, map, and research prompts."
+>
+  <header class="topbar">
+    <div class="title-wrap">
+      <h1>AI Data Center <span>Screener</span></h1>
+      <p class="subtitle">
+        The buildout, layer by layer — land → power → cooling → compute → networking → software
+      </p>
+    </div>
+    <div class="controls">
+      <input id="search" type="search" placeholder="Filter by ticker, name, or tag…" autocomplete="off" />
+      <button id="refresh" title="Reload the latest build-time Yahoo snapshot">↻ Refresh</button>
+    </div>
+  </header>
+
+  <nav class="mainnav" id="mainnav" aria-label="View">
+    <button data-mode="screener" class="active">📊 Screener</button>
+    <button data-mode="datacenter">🏭 Data Center Map</button>
+    <button data-mode="rack">🔬 Rack Explorer</button>
+    <button data-mode="analyst">🧠 AI Analyst</button>
+    <button data-mode="lookup">🔎 Stock Lookup</button>
+  </nav>
+
+  <div class="filterbar">
+    <div class="seg" id="viewToggle" role="tablist" aria-label="View">
+      <button data-view="layers" class="active">By layer</button>
+      <button data-view="flat">All names</button>
+    </div>
+    <div class="exposure-filter" id="exposureFilter" aria-label="Exposure filter">
+      <span class="flabel">Exposure:</span>
+      <button data-exp="pure">Pure</button>
+      <button data-exp="high">High</button>
+      <button data-exp="moderate">Moderate</button>
+      <button data-exp="diversified">Diversified</button>
+    </div>
+    <button id="filtersBtn" class="filters-btn" aria-expanded="false">⚙ Filters</button>
+    <span class="flabel cols-label">Columns:</span>
+    <div class="seg" id="colset" role="tablist" aria-label="Column set">
+      <button data-cs="valuation" class="active">Valuation</button>
+      <button data-cs="momentum">Momentum</button>
+      <button data-cs="quality">Quality</button>
+      <button data-cs="consensus">Consensus</button>
+      <button data-cs="trends">Trends</button>
+    </div>
+    <span class="flabel cols-label" title="Rank score factors against the whole universe, or only against same-layer peers">
+      Score vs:
+    </span>
+    <div class="seg" id="scoreMode" role="tablist" aria-label="Score basis">
+      <button data-sm="universe" class="active">Universe</button>
+      <button data-sm="layer">Layer</button>
+    </div>
+    <div class="movers" id="movers"></div>
+  </div>
+
+  <div class="filters-panel hidden" id="filtersPanel"></div>
+
+  <section class="statusbar">
+    <span id="status">Loading universe…</span>
+    <span id="meta" class="muted"></span>
+  </section>
+
+  <div class="focus-banner hidden" id="focusBanner"></div>
+  <div class="alerts hidden" id="alerts"></div>
+
+  <main id="layers"><div class="loading">Fetching live market data…</div></main>
+
+  <section class="datacenter hidden" id="datacenter">
+    <div class="dc-intro">
+      <h2>The AI factory, in cross-section</h2>
+      <p class="muted">
+        Electricity and data go in; intelligence comes out. Hover a zone to preview it, click to pin
+        its details, then jump straight to that layer's stocks.
+      </p>
+    </div>
+    <div class="dc-stage">
+      <div class="dc-svgwrap" id="dcSvgWrap"></div>
+      <aside class="dc-panel" id="dcPanel"></aside>
+    </div>
+    <div class="dc-legend" id="dcLegend"></div>
+  </section>
+
+  <section class="lookup hidden" id="lookup">
+    <div class="lk-head">
+      <h2>Stock Lookup — add any company to a layer</h2>
+      <p class="muted">
+        Search tickers already in the curated universe to pin them locally in this browser. To expand
+        the shared list, edit <code>src/data/datacenter-universe.json</code> and redeploy.
+      </p>
+    </div>
+    <div class="lk-bar">
+      <input
+        id="lkTicker"
+        type="search"
+        placeholder="Ticker already in the universe — e.g. VRT, ETN, CRDO…"
+        autocomplete="off"
+      />
+      <button id="lkGo">Look up</button>
+    </div>
+    <div class="lk-result" id="lkResult"></div>
+    <div class="lk-added" id="lkAdded"></div>
+  </section>
+
+  <section class="analyst hidden" id="analyst">
+    <div class="an-head">
+      <h2>AI Analyst — 10 research workflows</h2>
+      <p class="muted">
+        Pick a company, then a report. StockWatch builds a ready-to-paste prompt grounded in this
+        page's live snapshot (financials, score, peers, headlines).
+        <span id="anKeyNote"></span>
+      </p>
+    </div>
+    <div class="an-bar">
+      <label class="an-pick">
+        Company
+        <select id="anTicker"></select>
+      </label>
+      <div class="an-reports" id="anReports"></div>
+    </div>
+    <div class="an-output" id="anOutput"><div class="muted">Choose a report above to begin.</div></div>
+  </section>
+
+  <section class="rackx hidden" id="rackexplorer">
+    <div class="rackx-head">
+      <div>
+        <h2>Inside the rack — zoom through the build</h2>
+        <p class="muted">
+          From a data-hall row down to the GPU die &amp; HBM. Scroll, use the buttons, or click a
+          stage. Each level is drawn to scale and names who builds it.
+        </p>
+      </div>
+      <div class="rackx-rail" id="rxRail"></div>
+    </div>
+    <div class="rackx-stage">
+      <div class="rackx-svgwrap" id="rxStage"></div>
+      <aside class="rackx-info" id="rxInfo"></aside>
+    </div>
+  </section>
+
+  <footer class="foot muted">
+    Part of <a href={base}>StocksWatch</a> · Data: Yahoo Finance (build-time snapshot) · Research /
+    education only — not investment advice · Edit
+    <code>src/data/datacenter-universe.json</code> to change holdings.<br />
+    Backdrop photos: Wikimedia Commons under CC BY / CC BY-SA — credits in
+    <code>public/datacenter/assets/ATTRIBUTIONS.md</code>.
+  </footer>
+
+  <script is:inline src={`${dcBase}static-api.js`}></script>
+  <script is:inline src={`${dcBase}app.js`}></script>
+  <script is:inline src={`${dcBase}datacenter.js`}></script>
+  <script is:inline src={`${dcBase}rackexplorer.js`}></script>
+</DatacenterLayout>

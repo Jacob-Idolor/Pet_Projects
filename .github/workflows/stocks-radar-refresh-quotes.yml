@@ -50,6 +50,10 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -57,27 +61,39 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Fetch quotes
+      - name: Fetch quotes + screener
         working-directory: stocks/radar
         env:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
         run: |
           npm ci
+          pip install -r scripts/datacenter/requirements.txt
           npm run update-quotes
+          npm run update-screener
 
-      - name: Sync quotes.json to S3
+      - name: Sync quotes.json + screener.json to S3
         run: |
           aws s3 cp stocks/radar/public/quotes.json \
             "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/quotes.json" \
             --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
             --content-type "application/json"
+          aws s3 cp stocks/radar/public/screener.json \
+            "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/screener.json" \
+            --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+            --content-type "application/json"
+          if [ -f stocks/radar/public/datacenter/news.json ]; then
+            aws s3 cp stocks/radar/public/datacenter/news.json \
+              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/datacenter/news.json" \
+              --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+              --content-type "application/json"
+          fi
 
       - name: Invalidate CloudFront quotes
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/quotes.json"
+            --paths "/quotes.json" "/screener.json" "/datacenter/news.json"
 
       - name: Resolve public site URL
         id: url

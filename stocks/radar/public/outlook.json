@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-07-28T17:54:43.739Z",
-  "fetchedAt": "2026-07-28T17:54:43.739Z",
+  "updatedAt": "2026-07-28T19:08:42.634Z",
+  "fetchedAt": "2026-07-28T19:08:42.634Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -10,8 +10,8 @@
       "label": "US 10Y",
       "unit": "yield",
       "blurb": "10-year Treasury yield — gravity for equity valuations",
-      "price": 4.602,
-      "changePct": -0.840331733190635,
+      "price": 4.604,
+      "changePct": -0.7972375705366592,
       "name": "CBOE Interest Rate 10 Year T No"
     },
     "us13w": {
@@ -30,8 +30,8 @@
       "label": "US 5Y",
       "unit": "yield",
       "blurb": "5-year yield — mid-curve growth vs inflation bet",
-      "price": 4.357,
-      "changePct": -0.9097074700984438,
+      "price": 4.361,
+      "changePct": -0.8187363500342796,
       "name": "Treasury Yield 5 Years"
     },
     "tlt": {
@@ -40,8 +40,8 @@
       "label": "TLT",
       "unit": "price",
       "blurb": "Long-bond ETF — yields down ≈ TLT up",
-      "price": 84.2,
-      "changePct": 0.5373134328358243,
+      "price": 84.235,
+      "changePct": 0.5791044776119396,
       "name": "iShares 20+ Year Treasury Bond ETF"
     },
     "uup": {
@@ -50,8 +50,8 @@
       "label": "USD",
       "unit": "price",
       "blurb": "Dollar proxy — strong USD often pressures risk assets",
-      "price": 28.555,
-      "changePct": -0.15734398905422084,
+      "price": 28.56,
+      "changePct": -0.13986147180489045,
       "name": "Invesco DB US Dollar Index Bullish Fund"
     }
   },
@@ -59,7 +59,7 @@
     "SMH": {
       "symbol": "SMH",
       "fundamentals": {
-        "trailingPE": 34.22948,
+        "trailingPE": 34.39197,
         "forwardPE": null,
         "pegRatio": null,
         "priceToBook": null,
@@ -121,10 +121,10 @@
     "NBIS": {
       "symbol": "NBIS",
       "fundamentals": {
-        "trailingPE": 63.918922,
-        "forwardPE": -102.608765,
+        "trailingPE": 64.34942,
+        "forwardPE": -103.29984,
         "pegRatio": 0.63,
-        "priceToBook": 5.8554096,
+        "priceToBook": 5.8948464,
         "evToEbitda": -1252.207,
         "profitMargin": 0.93086,
         "revenueGrowth": 6.839,
@@ -177,10 +177,10 @@
     "COHR": {
       "symbol": "COHR",
       "fundamentals": {
-        "trailingPE": 115.830154,
-        "forwardPE": 29.201172,
+        "trailingPE": 115.80383,
+        "forwardPE": 29.194536,
         "pegRatio": 0.92,
-        "priceToBook": 4.43371,
+        "priceToBook": 4.4327025,
         "evToEbitda": 41.423,
         "profitMargin": 0.07102,
         "revenueGrowth": 0.205,
@@ -191,6 +191,26 @@
         "catalyst": null
       },
       "news": [
+        {
+          "title": "Why Corning Stock Is Having Its Worst Day in 6 Years After Earnings",
+          "publisher": "Barrons.com",
+          "link": "https://finance.yahoo.com/m/d4e10d4e-1e60-3253-b7ce-b020844e1695/why-corning-stock-is-having.html",
+          "publishedAt": "2026-07-28T18:18:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "AI Infrastructure Demand is Reshaping Coherent's Growth Story",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/ai-infrastructure-demand-reshaping-coherents-165000033.html",
+          "publishedAt": "2026-07-28T16:50:00.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "growth"
+          ]
+        },
         {
           "title": "Coherent Sinks 11%, Applied Optoelectronics Falls 10%, Lumentum Drops 9% as Traders Question AI Spending Spree",
           "publisher": "24/7 Wall St.",
@@ -204,44 +224,26 @@
             "falls",
             "question"
           ]
-        },
-        {
-          "title": "Coherent (COHR) Could Be 29% Undervalued Following Its Recent Pullback",
-          "publisher": "Simply Wall St.",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/coherent-cohr-could-29-undervalued-161037701.html",
-          "publishedAt": "2026-07-28T16:10:37.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "A New AI Shortage Is Coming. One CEO Just Predicted it Will Be “Bigger Than Memory.”",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/a32ccf38-166f-3c5c-a424-bc299072d74b/a-new-ai-shortage-is-coming..html",
-          "publishedAt": "2026-07-28T14:53:15.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "negative",
-        "positive": 0,
+        "tilt": "mixed",
+        "positive": 1,
         "negative": 1,
-        "neutral": 2,
-        "net": -1,
-        "scoreDelta": -1,
-        "label": "News check: negative (-1) · 0+ / 1−",
+        "neutral": 1,
+        "net": 0,
+        "scoreDelta": 0,
+        "label": "News check: mixed (1+ / 1−)",
         "method": "headline-lexicon-v1"
       }
     },
     "TSEM": {
       "symbol": "TSEM",
       "fundamentals": {
-        "trailingPE": 94.7093,
-        "forwardPE": 34.977077,
-        "pegRatio": 6.72,
-        "priceToBook": 7.706938,
+        "trailingPE": 94.88372,
+        "forwardPE": 35.041492,
+        "pegRatio": 6.46,
+        "priceToBook": 7.721131,
         "evToEbitda": 44.444,
         "profitMargin": 0.15131,
         "revenueGrowth": 0.155,
@@ -295,9 +297,9 @@
       "symbol": "AAOI",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 18.315172,
+        "forwardPE": 18.375944,
         "pegRatio": 0.78,
-        "priceToBook": 6.2406282,
+        "priceToBook": 6.2613354,
         "evToEbitda": -280.087,
         "profitMargin": -0.085480005,
         "revenueGrowth": 0.514,
@@ -415,45 +417,46 @@
     "META": {
       "symbol": "META",
       "fundamentals": {
-        "trailingPE": 21.553635,
-        "forwardPE": 16.01441,
+        "trailingPE": 21.623274,
+        "forwardPE": 16.06615,
         "pegRatio": 0.87,
-        "priceToBook": 6.1733823,
+        "priceToBook": 6.193328,
         "evToEbitda": 13.842,
         "profitMargin": 0.32837,
         "revenueGrowth": 0.331,
-        "targetMeanPrice": 825.841,
-        "recommendationMean": 1.34921,
+        "targetMeanPrice": 824.68036,
+        "recommendationMean": 1.35484,
         "bias": "fair",
         "note": "Quality compounder — not a deep-value name; thesis is cash flow + AI ads, not PE compression.",
         "catalyst": null
       },
       "news": [
         {
-          "title": "Sector Update: Tech Stocks Fall Tuesday Afternoon",
-          "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-tuesday-173428394.html",
-          "publishedAt": "2026-07-28T17:34:28.000Z",
+          "title": "Earnings Showdown: Is Microsoft or Meta More at Risk When July 29 Earnings Drop?",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/ec4526a4-de12-327d-9e8c-0eb4217f87ae/earnings-showdown%3A-is.html",
+          "publishedAt": "2026-07-28T18:46:15.000Z",
           "sentiment": "negative",
-          "sentimentScore": -1,
+          "sentimentScore": -2,
           "sentimentHits": [
-            "fall"
+            "drop",
+            "risk"
           ]
         },
         {
-          "title": "Meta's $14 Billion AI Move Comes With a Twist",
-          "publisher": "GuruFocus.com",
-          "link": "https://finance.yahoo.com/technology/ai/articles/metas-14-billion-ai-move-172423686.html",
-          "publishedAt": "2026-07-28T17:24:23.000Z",
+          "title": "Why Investors Should Wait For Meta’s Post Earnings Dip",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/9da7ee94-2f43-37cc-997b-c820a9f0983f/why-investors-should-wait-for.html",
+          "publishedAt": "2026-07-28T18:45:26.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Sector Update: Tech",
-          "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/sector-tech-170418744.html",
-          "publishedAt": "2026-07-28T17:04:18.000Z",
+          "title": "Apple stock hits $5 trillion market cap for the first time",
+          "publisher": "Quartz",
+          "link": "https://finance.yahoo.com/m/054261bc-68b8-3c33-86f8-1dc8374fa69b/apple-stock-hits-%245-trillion.html",
+          "publishedAt": "2026-07-28T18:31:20.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
@@ -473,7 +476,7 @@
     "DRAM": {
       "symbol": "DRAM",
       "fundamentals": {
-        "trailingPE": 21.419216,
+        "trailingPE": 21.678146,
         "forwardPE": null,
         "pegRatio": null,
         "priceToBook": null,
@@ -537,9 +540,9 @@
       "symbol": "OUST",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": -735.11115,
+        "forwardPE": -743.99994,
         "pegRatio": null,
-        "priceToBook": 7.616855,
+        "priceToBook": 7.7089567,
         "evToEbitda": -30.799,
         "profitMargin": -0.30122,
         "revenueGrowth": 0.489,
@@ -596,15 +599,15 @@
     "VPG": {
       "symbol": "VPG",
       "fundamentals": {
-        "trailingPE": 197.2,
-        "forwardPE": 49.027626,
-        "pegRatio": 5.8,
-        "priceToBook": 3.526326,
+        "trailingPE": 203.04445,
+        "forwardPE": 50.480667,
+        "pegRatio": 5.68,
+        "priceToBook": 3.6308365,
         "evToEbitda": 51.277,
         "profitMargin": 0.0185,
         "revenueGrowth": 0.176,
         "targetMeanPrice": 94.66667,
-        "recommendationMean": null,
+        "recommendationMean": 1,
         "bias": null,
         "note": null,
         "catalyst": null
@@ -656,19 +659,28 @@
       "symbol": "AMBA",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 58.87788,
+        "forwardPE": 59.871525,
         "pegRatio": 2.28,
-        "priceToBook": 4.890675,
+        "priceToBook": 4.973212,
         "evToEbitda": -43.467,
         "profitMargin": -0.17185,
         "revenueGrowth": 0.169,
         "targetMeanPrice": 95,
-        "recommendationMean": null,
+        "recommendationMean": 2.14286,
         "bias": null,
         "note": null,
         "catalyst": null
       },
       "news": [
+        {
+          "title": "Microchip's Hailo Buyout Strengthens Edge AI Ambitions: What's Ahead?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/microchips-hailo-buyout-strengthens-edge-165200336.html",
+          "publishedAt": "2026-07-28T16:52:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
         {
           "title": "Kalanick’s Atoms raises $1.7B in a16z-led round for industrial AI",
           "publisher": "Investing.com",
@@ -689,15 +701,6 @@
             "upgraded to",
             "upgraded"
           ]
-        },
-        {
-          "title": "3 Picks-and-Shovels Stocks Powering the Humanoid Robotics Buildout",
-          "publisher": "MarketBeat",
-          "link": "https://finance.yahoo.com/m/d6dcb5b3-8fd3-3453-b87e-3257b9dda7c3/3-picks-and-shovels-stocks.html",
-          "publishedAt": "2026-07-17T13:45:00.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
         }
       ],
       "newsCheck": {
@@ -715,9 +718,9 @@
       "symbol": "SYNA",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 21.030235,
+        "forwardPE": 21.033554,
         "pegRatio": 0.51,
-        "priceToBook": 3.1610646,
+        "priceToBook": 3.1615634,
         "evToEbitda": 56.449,
         "profitMargin": -0.04104,
         "revenueGrowth": 0.104,
@@ -773,10 +776,10 @@
     "INOD": {
       "symbol": "INOD",
       "fundamentals": {
-        "trailingPE": 51.30357,
-        "forwardPE": 28.73,
+        "trailingPE": 51.517857,
+        "forwardPE": 28.85,
         "pegRatio": 0.87,
-        "priceToBook": 14.628309,
+        "priceToBook": 14.689409,
         "evToEbitda": 35.195,
         "profitMargin": 0.13864,
         "revenueGrowth": 0.544,

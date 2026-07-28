@@ -19,6 +19,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Go-live bootstrap** — gated CI + `infra/go-live.sh` + preflight ([GO_LIVE.md](GO_LIVE.md))
 - **Security posture** — private S3/OAC, `_private/` blocked, hardened IAM/alerts ([SECURITY.md](SECURITY.md))
 - **Group feed** (desktop) — post ticker notes; auto-detects symbols (device-local until merged in git)
+- **AI Data Center screener** — six-layer thematic board at `/datacenter.html` (map, rack explorer, composite score, copy-paste AI research prompts)
 
 ## Quick start
 
@@ -43,6 +44,17 @@ Edit `src/data/watchlist.json`:
 | `thesis` | One-liner shown on cards and rows |
 
 Bulk import via CSV: `npm run import-csv -- my-tickers.csv`
+
+## AI Data Center screener
+
+Thematic universe lives in `src/data/datacenter-universe.json` (six layers: land → power → cooling → compute → networking → software). The UI is at `/datacenter.html`.
+
+```bash
+pip install -r scripts/datacenter/requirements.txt
+npm run update-screener   # writes public/screener.json (+ news)
+```
+
+Build-time Yahoo snapshots power the table (same static hosting as the watchlist — no Flask server). AI Analyst runs in **copy-prompt** mode (paste into Claude/Gemini). Trends/history and locally added stocks use the browser's `localStorage`.
 
 ## Local rebuild loop (test then ship)
 
@@ -106,10 +118,11 @@ npm ci && npm run build
 ```
 stocks/radar/
   src/data/watchlist.json
-  src/components/AdSlot.astro
-  src/scripts/watchlist-board.ts
+  src/data/datacenter-universe.json
+  src/pages/datacenter.astro
+  public/datacenter/        # screener UI + assets
   scripts/fetch-quotes.mjs
-  scripts/write-seo-files.mjs
+  scripts/fetch-screener.py # build-time Yahoo fundamentals for /datacenter
   infra/                    # Terraform + deploy.sh
   GO_LIVE.md                # One checklist: TF → secrets → enable CI
   SECURITY.md               # Audit posture + residual risks

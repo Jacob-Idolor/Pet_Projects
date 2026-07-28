@@ -1,0 +1,938 @@
+{
+  "exposureLevels": [
+    "pure",
+    "high",
+    "moderate",
+    "diversified"
+  ],
+  "dataOverrides": {
+    "KLAC": {
+      "exclude": true
+    }
+  },
+  "layers": [
+    {
+      "id": "land",
+      "name": "Layer 1 \u2014 Land & Physical Shell",
+      "blurb": "Real estate, data-center REITs, construction/engineering firms and the raw materials (aggregates, steel) that build the shell. 18\u201336 months from groundbreaking to move-in.",
+      "holdings": [
+        {
+          "ticker": "DLR",
+          "name": "Digital Realty Trust",
+          "exposure": "high",
+          "tags": [
+            "reit"
+          ],
+          "thesis": "Largest pure-play data-center REIT; landlord to hyperscalers."
+        },
+        {
+          "ticker": "EQIX",
+          "name": "Equinix",
+          "exposure": "high",
+          "tags": [
+            "reit",
+            "colocation"
+          ],
+          "thesis": "Global interconnection / colocation REIT."
+        },
+        {
+          "ticker": "IRM",
+          "name": "Iron Mountain",
+          "exposure": "moderate",
+          "tags": [
+            "reit"
+          ],
+          "thesis": "Records giant pivoting hard into data-center capacity."
+        },
+        {
+          "ticker": "AMT",
+          "name": "American Tower",
+          "exposure": "diversified",
+          "tags": [
+            "reit",
+            "towers"
+          ],
+          "thesis": "Tower REIT with growing data-center/edge exposure."
+        },
+        {
+          "ticker": "PWR",
+          "name": "Quanta Services",
+          "exposure": "moderate",
+          "tags": [
+            "construction",
+            "electrical"
+          ],
+          "thesis": "Builds the electrical & grid infrastructure feeding sites."
+        },
+        {
+          "ticker": "EME",
+          "name": "EMCOR Group",
+          "exposure": "moderate",
+          "tags": [
+            "construction",
+            "mechanical"
+          ],
+          "thesis": "Mechanical/electrical construction for large facilities."
+        },
+        {
+          "ticker": "FIX",
+          "name": "Comfort Systems USA",
+          "exposure": "high",
+          "tags": [
+            "construction",
+            "hvac"
+          ],
+          "thesis": "HVAC/mechanical contractor; heavy data-center backlog."
+        },
+        {
+          "ticker": "STRL",
+          "name": "Sterling Infrastructure",
+          "exposure": "moderate",
+          "tags": [
+            "construction",
+            "sitework"
+          ],
+          "thesis": "Site development / earthwork for big data-center pads."
+        },
+        {
+          "ticker": "MTZ",
+          "name": "MasTec",
+          "exposure": "diversified",
+          "tags": [
+            "construction",
+            "electrical"
+          ],
+          "thesis": "Infrastructure construction incl. power & communications."
+        },
+        {
+          "ticker": "VMC",
+          "name": "Vulcan Materials",
+          "exposure": "diversified",
+          "tags": [
+            "materials",
+            "aggregates"
+          ],
+          "thesis": "Aggregates for the concrete/roads of massive campuses."
+        },
+        {
+          "ticker": "MLM",
+          "name": "Martin Marietta",
+          "exposure": "diversified",
+          "tags": [
+            "materials",
+            "aggregates"
+          ],
+          "thesis": "Aggregates & heavy building materials."
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "name": "Layer 2 \u2014 Power Infrastructure (the bottleneck)",
+      "blurb": "Grid connection, transformers, switchgear, UPS, generators and the utilities / power generators (incl. nuclear & SMRs) that feed the factory. Power is the single defining constraint on growth.",
+      "holdings": [
+        {
+          "ticker": "ETN",
+          "name": "Eaton",
+          "exposure": "moderate",
+          "tags": [
+            "switchgear",
+            "ups",
+            "electrical"
+          ],
+          "thesis": "Core electrical gear across the grid-to-rack power chain."
+        },
+        {
+          "ticker": "VRT",
+          "name": "Vertiv Holdings",
+          "exposure": "pure",
+          "tags": [
+            "ups",
+            "power",
+            "cooling"
+          ],
+          "thesis": "Power & thermal management; pure data-center play."
+        },
+        {
+          "ticker": "GEV",
+          "name": "GE Vernova",
+          "exposure": "high",
+          "tags": [
+            "generation",
+            "grid",
+            "turbines"
+          ],
+          "thesis": "Gas turbines, grid equipment & nuclear \u2014 generation side."
+        },
+        {
+          "ticker": "POWL",
+          "name": "Powell Industries",
+          "exposure": "high",
+          "tags": [
+            "switchgear",
+            "electrical"
+          ],
+          "thesis": "Switchgear & electrical distribution; sold-out backlog."
+        },
+        {
+          "ticker": "HUBB",
+          "name": "Hubbell",
+          "exposure": "moderate",
+          "tags": [
+            "electrical",
+            "grid"
+          ],
+          "thesis": "Electrical & utility-grade connection products."
+        },
+        {
+          "ticker": "NVT",
+          "name": "nVent Electric",
+          "exposure": "high",
+          "tags": [
+            "electrical",
+            "enclosures",
+            "cooling"
+          ],
+          "thesis": "Electrical enclosures, connections & liquid-cooling gear."
+        },
+        {
+          "ticker": "GNRC",
+          "name": "Generac",
+          "exposure": "moderate",
+          "tags": [
+            "generators",
+            "backup"
+          ],
+          "thesis": "Backup generation / standby power."
+        },
+        {
+          "ticker": "CMI",
+          "name": "Cummins",
+          "exposure": "diversified",
+          "tags": [
+            "generators",
+            "backup"
+          ],
+          "thesis": "Diesel/gas gensets for facility-scale backup."
+        },
+        {
+          "ticker": "BE",
+          "name": "Bloom Energy",
+          "exposure": "high",
+          "tags": [
+            "fuel-cell",
+            "onsite-power"
+          ],
+          "thesis": "On-site fuel-cell power; signing data-center deals (speculative)."
+        },
+        {
+          "ticker": "SBGSY",
+          "name": "Schneider Electric (ADR)",
+          "exposure": "moderate",
+          "tags": [
+            "switchgear",
+            "ups",
+            "electrical"
+          ],
+          "thesis": "Global leader in data-center electrical & energy mgmt."
+        },
+        {
+          "ticker": "ABBNY",
+          "name": "ABB (ADR)",
+          "exposure": "diversified",
+          "tags": [
+            "electrical",
+            "transformer",
+            "grid"
+          ],
+          "thesis": "Electrification & grid automation incl. transformers."
+        },
+        {
+          "ticker": "SIEGY",
+          "name": "Siemens (ADR)",
+          "exposure": "diversified",
+          "tags": [
+            "electrical",
+            "grid",
+            "automation"
+          ],
+          "thesis": "Grid tech, switchgear & industrial automation."
+        },
+        {
+          "ticker": "CEG",
+          "name": "Constellation Energy",
+          "exposure": "high",
+          "tags": [
+            "utility",
+            "nuclear",
+            "generation"
+          ],
+          "thesis": "Largest US nuclear fleet; PPAs to power AI campuses."
+        },
+        {
+          "ticker": "VST",
+          "name": "Vistra",
+          "exposure": "high",
+          "tags": [
+            "utility",
+            "generation",
+            "nuclear"
+          ],
+          "thesis": "Independent power producer; nuclear + gas for AI demand."
+        },
+        {
+          "ticker": "TLN",
+          "name": "Talen Energy",
+          "exposure": "high",
+          "tags": [
+            "utility",
+            "nuclear",
+            "generation"
+          ],
+          "thesis": "Nuclear-adjacent IPP signing data-center power deals."
+        },
+        {
+          "ticker": "NRG",
+          "name": "NRG Energy",
+          "exposure": "moderate",
+          "tags": [
+            "utility",
+            "generation"
+          ],
+          "thesis": "Power generation & retail exposed to load growth."
+        },
+        {
+          "ticker": "NEE",
+          "name": "NextEra Energy",
+          "exposure": "diversified",
+          "tags": [
+            "utility",
+            "renewables",
+            "generation"
+          ],
+          "thesis": "Largest US utility; huge data-center power pipeline."
+        },
+        {
+          "ticker": "CCJ",
+          "name": "Cameco",
+          "exposure": "moderate",
+          "tags": [
+            "nuclear",
+            "uranium",
+            "fuel"
+          ],
+          "thesis": "Uranium fuel supply for the nuclear build."
+        },
+        {
+          "ticker": "OKLO",
+          "name": "Oklo",
+          "exposure": "pure",
+          "tags": [
+            "nuclear",
+            "smr"
+          ],
+          "thesis": "Small modular reactor developer (speculative)."
+        },
+        {
+          "ticker": "SMR",
+          "name": "NuScale Power",
+          "exposure": "pure",
+          "tags": [
+            "nuclear",
+            "smr"
+          ],
+          "thesis": "SMR technology (speculative)."
+        }
+      ]
+    },
+    {
+      "id": "cooling",
+      "name": "Layer 3 \u2014 Cooling Systems",
+      "blurb": "Liquid cooling, rear-door heat exchangers, CRAH/CRAC, cooling towers. AI racks run 120\u2013600 kW; air cooling alone no longer works.",
+      "holdings": [
+        {
+          "ticker": "VRT",
+          "name": "Vertiv Holdings",
+          "exposure": "pure",
+          "tags": [
+            "cooling",
+            "liquid",
+            "thermal"
+          ],
+          "thesis": "Thermal management & liquid cooling for AI racks."
+        },
+        {
+          "ticker": "MOD",
+          "name": "Modine Manufacturing",
+          "exposure": "high",
+          "tags": [
+            "cooling",
+            "liquid",
+            "thermal"
+          ],
+          "thesis": "Data-center cooling / coolant distribution units."
+        },
+        {
+          "ticker": "SPXC",
+          "name": "SPX Technologies",
+          "exposure": "moderate",
+          "tags": [
+            "cooling",
+            "towers",
+            "thermal"
+          ],
+          "thesis": "Cooling towers & heat rejection for large facilities."
+        },
+        {
+          "ticker": "TT",
+          "name": "Trane Technologies",
+          "exposure": "moderate",
+          "tags": [
+            "cooling",
+            "hvac"
+          ],
+          "thesis": "HVAC & chillers for facility-scale heat rejection."
+        },
+        {
+          "ticker": "JCI",
+          "name": "Johnson Controls",
+          "exposure": "diversified",
+          "tags": [
+            "cooling",
+            "hvac",
+            "controls"
+          ],
+          "thesis": "Building HVAC, chillers & controls."
+        },
+        {
+          "ticker": "CARR",
+          "name": "Carrier Global",
+          "exposure": "diversified",
+          "tags": [
+            "cooling",
+            "hvac"
+          ],
+          "thesis": "Cooling & thermal management systems."
+        },
+        {
+          "ticker": "FIX",
+          "name": "Comfort Systems USA",
+          "exposure": "high",
+          "tags": [
+            "cooling",
+            "hvac",
+            "construction"
+          ],
+          "thesis": "Installs the mechanical cooling backbone."
+        },
+        {
+          "ticker": "NVT",
+          "name": "nVent Electric",
+          "exposure": "high",
+          "tags": [
+            "cooling",
+            "liquid"
+          ],
+          "thesis": "Liquid-cooling & enclosure thermal solutions."
+        }
+      ]
+    },
+    {
+      "id": "compute",
+      "name": "Layer 4 \u2014 Compute Hardware (GPUs, HBM, packaging)",
+      "blurb": "The brain: GPUs, HBM memory, CoWoS packaging, the foundry and the semicap tools behind them, plus server OEMs. Bottleneck has moved upstream to packaging & memory substrates.",
+      "holdings": [
+        {
+          "ticker": "NVDA",
+          "name": "NVIDIA",
+          "exposure": "high",
+          "tags": [
+            "gpu",
+            "networking",
+            "software"
+          ],
+          "thesis": "Dominant AI GPU + NVLink + CUDA ecosystem."
+        },
+        {
+          "ticker": "AMD",
+          "name": "Advanced Micro Devices",
+          "exposure": "high",
+          "tags": [
+            "gpu",
+            "cpu"
+          ],
+          "thesis": "MI-series GPUs; #2 merchant AI accelerator."
+        },
+        {
+          "ticker": "AVGO",
+          "name": "Broadcom",
+          "exposure": "high",
+          "tags": [
+            "asic",
+            "networking",
+            "custom-silicon"
+          ],
+          "thesis": "Custom AI ASICs + networking silicon for hyperscalers."
+        },
+        {
+          "ticker": "MRVL",
+          "name": "Marvell Technology",
+          "exposure": "high",
+          "tags": [
+            "asic",
+            "networking",
+            "custom-silicon"
+          ],
+          "thesis": "Custom silicon & optical DSPs for AI infra."
+        },
+        {
+          "ticker": "TSM",
+          "name": "TSMC (ADR)",
+          "exposure": "moderate",
+          "tags": [
+            "foundry",
+            "cowos",
+            "packaging"
+          ],
+          "thesis": "Near-monopoly foundry + CoWoS advanced packaging."
+        },
+        {
+          "ticker": "MU",
+          "name": "Micron Technology",
+          "exposure": "moderate",
+          "tags": [
+            "hbm",
+            "memory"
+          ],
+          "thesis": "HBM memory supplier ramping into AI demand."
+        },
+        {
+          "ticker": "ONTO",
+          "name": "Onto Innovation",
+          "exposure": "high",
+          "tags": [
+            "semicap",
+            "packaging",
+            "metrology"
+          ],
+          "thesis": "Advanced-packaging metrology \u2014 direct CoWoS/HBM bottleneck play."
+        },
+        {
+          "ticker": "AMKR",
+          "name": "Amkor Technology",
+          "exposure": "high",
+          "tags": [
+            "packaging",
+            "osat",
+            "cowos"
+          ],
+          "thesis": "OSAT \u2014 outsourced advanced packaging & test for AI accelerators."
+        },
+        {
+          "ticker": "ASX",
+          "name": "ASE Technology (ADR)",
+          "exposure": "moderate",
+          "tags": [
+            "packaging",
+            "osat"
+          ],
+          "thesis": "World's largest OSAT; advanced-packaging capacity."
+        },
+        {
+          "ticker": "CAMT",
+          "name": "Camtek",
+          "exposure": "high",
+          "tags": [
+            "semicap",
+            "packaging",
+            "inspection"
+          ],
+          "thesis": "Inspection/metrology for advanced packaging (HBM & CoWoS)."
+        },
+        {
+          "ticker": "BESIY",
+          "name": "BE Semiconductor (ADR)",
+          "exposure": "high",
+          "tags": [
+            "semicap",
+            "packaging",
+            "hybrid-bonding"
+          ],
+          "thesis": "Hybrid-bonding die-attach tools for next-gen packaging."
+        },
+        {
+          "ticker": "MPWR",
+          "name": "Monolithic Power Systems",
+          "exposure": "high",
+          "tags": [
+            "power-mgmt",
+            "vrm",
+            "analog"
+          ],
+          "thesis": "Power-management / VRM silicon feeding GPU boards."
+        },
+        {
+          "ticker": "000660.KS",
+          "name": "SK Hynix",
+          "exposure": "high",
+          "tags": [
+            "hbm",
+            "memory",
+            "foreign"
+          ],
+          "thesis": "Leading HBM supplier to NVIDIA \u2014 the memory bottleneck (KRW-listed)."
+        },
+        {
+          "ticker": "005930.KS",
+          "name": "Samsung Electronics",
+          "exposure": "diversified",
+          "tags": [
+            "hbm",
+            "memory",
+            "foundry",
+            "foreign"
+          ],
+          "thesis": "Memory + foundry giant racing to catch up in HBM (KRW-listed)."
+        },
+        {
+          "ticker": "4062.T",
+          "name": "Ibiden",
+          "exposure": "high",
+          "tags": [
+            "substrate",
+            "packaging",
+            "foreign"
+          ],
+          "thesis": "Top IC-substrate maker for advanced AI packages (JPY-listed)."
+        },
+        {
+          "ticker": "2317.TW",
+          "name": "Hon Hai (Foxconn)",
+          "exposure": "moderate",
+          "tags": [
+            "odm",
+            "server",
+            "integration",
+            "foreign"
+          ],
+          "thesis": "World's largest EMS; major AI-server & rack integrator (TWD-listed)."
+        },
+        {
+          "ticker": "6669.TW",
+          "name": "Wiwynn",
+          "exposure": "high",
+          "tags": [
+            "odm",
+            "server",
+            "foreign"
+          ],
+          "thesis": "AI-server ODM building hyperscaler racks at scale (TWD-listed)."
+        },
+        {
+          "ticker": "ASML",
+          "name": "ASML (ADR)",
+          "exposure": "moderate",
+          "tags": [
+            "semicap",
+            "lithography"
+          ],
+          "thesis": "EUV lithography monopoly \u2014 upstream of every chip."
+        },
+        {
+          "ticker": "AMAT",
+          "name": "Applied Materials",
+          "exposure": "moderate",
+          "tags": [
+            "semicap",
+            "packaging"
+          ],
+          "thesis": "Wafer-fab & advanced-packaging equipment."
+        },
+        {
+          "ticker": "LRCX",
+          "name": "Lam Research",
+          "exposure": "moderate",
+          "tags": [
+            "semicap",
+            "etch"
+          ],
+          "thesis": "Etch/deposition tools; HBM & advanced nodes."
+        },
+        {
+          "ticker": "KLAC",
+          "name": "KLA Corp",
+          "exposure": "moderate",
+          "tags": [
+            "semicap",
+            "inspection"
+          ],
+          "thesis": "Process control / inspection for advanced packaging."
+        },
+        {
+          "ticker": "ARM",
+          "name": "Arm Holdings (ADR)",
+          "exposure": "moderate",
+          "tags": [
+            "ip",
+            "cpu"
+          ],
+          "thesis": "CPU IP inside Grace & custom data-center silicon."
+        },
+        {
+          "ticker": "SMCI",
+          "name": "Super Micro Computer",
+          "exposure": "pure",
+          "tags": [
+            "server",
+            "oem",
+            "liquid"
+          ],
+          "thesis": "AI server / rack OEM with liquid-cooling focus."
+        },
+        {
+          "ticker": "DELL",
+          "name": "Dell Technologies",
+          "exposure": "moderate",
+          "tags": [
+            "server",
+            "oem"
+          ],
+          "thesis": "AI server systems integrator at scale."
+        },
+        {
+          "ticker": "HPE",
+          "name": "Hewlett Packard Enterprise",
+          "exposure": "moderate",
+          "tags": [
+            "server",
+            "oem"
+          ],
+          "thesis": "AI/HPC servers (Cray) & systems."
+        }
+      ]
+    },
+    {
+      "id": "networking",
+      "name": "Layer 5 \u2014 Networking (making GPUs act as one)",
+      "blurb": "NVLink, InfiniBand/Ethernet fabrics, optical transceivers and the fiber/copper that connect tens of thousands of GPUs. Elevated to the same strategic level as power.",
+      "holdings": [
+        {
+          "ticker": "ANET",
+          "name": "Arista Networks",
+          "exposure": "high",
+          "tags": [
+            "ethernet",
+            "switching"
+          ],
+          "thesis": "High-end Ethernet switching for AI back-end fabrics."
+        },
+        {
+          "ticker": "COHR",
+          "name": "Coherent",
+          "exposure": "high",
+          "tags": [
+            "optical",
+            "transceivers",
+            "laser"
+          ],
+          "thesis": "Optical transceivers & laser components for AI fabrics."
+        },
+        {
+          "ticker": "GLW",
+          "name": "Corning",
+          "exposure": "moderate",
+          "tags": [
+            "fiber",
+            "optical"
+          ],
+          "thesis": "Optical fiber & cabling \u2014 demand surging with cluster size."
+        },
+        {
+          "ticker": "LITE",
+          "name": "Lumentum",
+          "exposure": "high",
+          "tags": [
+            "optical",
+            "transceivers",
+            "laser"
+          ],
+          "thesis": "Lasers & optical components for datacom."
+        },
+        {
+          "ticker": "CIEN",
+          "name": "Ciena",
+          "exposure": "high",
+          "tags": [
+            "optical",
+            "transport"
+          ],
+          "thesis": "Optical transport / DCI between campuses."
+        },
+        {
+          "ticker": "FN",
+          "name": "Fabrinet",
+          "exposure": "high",
+          "tags": [
+            "optical",
+            "manufacturing"
+          ],
+          "thesis": "Contract manufacturer of optical/photonic modules."
+        },
+        {
+          "ticker": "CRDO",
+          "name": "Credo Technology",
+          "exposure": "pure",
+          "tags": [
+            "connectivity",
+            "serdes"
+          ],
+          "thesis": "Active electrical cables & SerDes for AI racks."
+        },
+        {
+          "ticker": "ALAB",
+          "name": "Astera Labs",
+          "exposure": "pure",
+          "tags": [
+            "connectivity",
+            "interconnect"
+          ],
+          "thesis": "Connectivity silicon (PCIe/CXL) inside AI servers."
+        },
+        {
+          "ticker": "APH",
+          "name": "Amphenol",
+          "exposure": "diversified",
+          "tags": [
+            "connectors",
+            "cable"
+          ],
+          "thesis": "High-speed connectors & cabling (incl. NVLink copper)."
+        },
+        {
+          "ticker": "TEL",
+          "name": "TE Connectivity",
+          "exposure": "diversified",
+          "tags": [
+            "connectors",
+            "cable"
+          ],
+          "thesis": "High-speed connectors & interconnect for AI servers."
+        }
+      ]
+    },
+    {
+      "id": "software",
+      "name": "Layer 6 \u2014 Software, Operations & Demand",
+      "blurb": "CUDA, orchestration, monitoring, security, digital-twin design \u2014 plus the hyperscalers / neoclouds whose capex funds the whole buildout (the demand side).",
+      "holdings": [
+        {
+          "ticker": "MSFT",
+          "name": "Microsoft",
+          "exposure": "moderate",
+          "tags": [
+            "hyperscaler",
+            "cloud",
+            "demand"
+          ],
+          "thesis": "Azure capex + OpenAI; primary demand driver."
+        },
+        {
+          "ticker": "GOOGL",
+          "name": "Alphabet",
+          "exposure": "moderate",
+          "tags": [
+            "hyperscaler",
+            "cloud",
+            "tpu",
+            "demand"
+          ],
+          "thesis": "Google Cloud + TPU; major buildout spender."
+        },
+        {
+          "ticker": "AMZN",
+          "name": "Amazon",
+          "exposure": "moderate",
+          "tags": [
+            "hyperscaler",
+            "cloud",
+            "demand"
+          ],
+          "thesis": "AWS + Trainium; largest cloud capex."
+        },
+        {
+          "ticker": "META",
+          "name": "Meta Platforms",
+          "exposure": "moderate",
+          "tags": [
+            "hyperscaler",
+            "demand"
+          ],
+          "thesis": "Prometheus 1GW supercluster; huge GPU buyer."
+        },
+        {
+          "ticker": "ORCL",
+          "name": "Oracle",
+          "exposure": "high",
+          "tags": [
+            "cloud",
+            "demand"
+          ],
+          "thesis": "OCI capacity deals; fast-growing AI cloud backlog."
+        },
+        {
+          "ticker": "CRWV",
+          "name": "CoreWeave",
+          "exposure": "pure",
+          "tags": [
+            "neocloud",
+            "gpu-cloud",
+            "demand"
+          ],
+          "thesis": "GPU-native neocloud renting out AI capacity."
+        },
+        {
+          "ticker": "NBIS",
+          "name": "Nebius Group",
+          "exposure": "pure",
+          "tags": [
+            "neocloud",
+            "gpu-cloud",
+            "demand"
+          ],
+          "thesis": "European GPU-cloud / neocloud (speculative)."
+        },
+        {
+          "ticker": "SNPS",
+          "name": "Synopsys",
+          "exposure": "moderate",
+          "tags": [
+            "eda",
+            "digital-twin",
+            "software"
+          ],
+          "thesis": "EDA & chip design software; AI-design tailwind."
+        },
+        {
+          "ticker": "CDNS",
+          "name": "Cadence Design Systems",
+          "exposure": "moderate",
+          "tags": [
+            "eda",
+            "software"
+          ],
+          "thesis": "EDA + system design & data-center digital twins."
+        },
+        {
+          "ticker": "PLTR",
+          "name": "Palantir",
+          "exposure": "high",
+          "tags": [
+            "software",
+            "ai-apps"
+          ],
+          "thesis": "Application/ops layer monetizing deployed AI (speculative)."
+        }
+      ]
+    }
+  ]
+}

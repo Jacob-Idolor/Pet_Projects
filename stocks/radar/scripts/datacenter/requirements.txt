@@ -1,0 +1,3 @@
+# Build-time deps for the AI Data Center screener snapshot.
+yfinance>=0.2.40
+requests>=2.31
