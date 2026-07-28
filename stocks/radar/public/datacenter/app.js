@@ -55,6 +55,8 @@ const _p = loadPrefs();
 const _params = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
 const _qParam = (_params.get("q") || _params.get("ticker") || "").trim();
 const _layerParam = (_params.get("layer") || "").trim();
+const _modeParam = (_params.get("mode") || "").trim();
+const _allowedModes = new Set(["screener", "datacenter", "rack", "analyst", "lookup"]);
 
 let STATE = {
   layers: [], marketState: null,
@@ -65,7 +67,9 @@ let STATE = {
   collapsed: new Set(_p.collapsed || []),
   valuation: _p.valuation || {},        // metric key -> { min, max } (display units)
   panelOpen: _p.panelOpen || false,
-  mode: _layerParam || _qParam ? "screener" : (_p.mode || "screener"),
+  mode: _allowedModes.has(_modeParam)
+    ? _modeParam
+    : (_layerParam || _qParam ? "screener" : (_p.mode || "screener")),
   focusLayer: _layerParam || null,
   colset: _p.colset || "valuation",     // which numeric column group to show
   scoreMode: _p.scoreMode || "universe", // score basis: percentile vs whole universe or vs same-layer peers

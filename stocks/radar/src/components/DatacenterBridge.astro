@@ -20,13 +20,17 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
       <p class="board-eyebrow">AI buildout</p>
       <h2 id="dc-bridge-title">AI Data Center</h2>
       <p class="dc-bridge__lede">
-        Six layers from land to software —
-        <strong class="mono">{bridge.tickerCount}</strong> names on the thematic board.
-        Overlaps with this watchlist get a layer chip below; open the full screener for map,
+        Same StocksWatch board language — six layers, 
+        <strong class="mono">{bridge.tickerCount}</strong> thematic names.
+        Overlaps on the master list get a layer chip. Jump into the full screener for map,
         rack, and research tools.
       </p>
     </div>
-    <a class="btn btn-primary dc-bridge__cta" href={dcHome}>Open screener</a>
+    <nav class="checkin-jump dc-bridge__jump" aria-label="AI Data Center links">
+      <a href={dcHome}>Open screener</a>
+      <a href={`${base}datacenter.html?mode=datacenter`}>Map</a>
+      <a href={`${base}datacenter.html?mode=analyst`}>Analyst</a>
+    </nav>
   </div>
 
   <ul class="dc-bridge__layers" aria-label="Data center layers">
@@ -48,7 +52,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
   </ul>
 
   <div class="dc-bridge__movers" id="dc-bridge-movers" aria-live="polite">
-    <p class="dc-bridge__movers-loading muted">Loading thematic movers…</p>
+    <p class="dc-bridge__movers-loading">Loading thematic movers…</p>
   </div>
 </section>
 
@@ -110,7 +114,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
 
         if (!rows.length) {
           moversEl.innerHTML =
-            '<p class="muted">Movers unavailable — open the screener or refresh the snapshot.</p>';
+            '<p class="dc-bridge__movers-loading">Movers unavailable — open the screener or refresh the snapshot.</p>';
           return;
         }
 
@@ -156,7 +160,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
       })
       .catch(function () {
         moversEl.innerHTML =
-          '<p class="muted">Couldn’t load screener movers — <a href="' +
+          '<p class="dc-bridge__movers-loading">Couldn’t load screener movers — <a href="' +
           base +
           'datacenter.html">open AI Data Center</a>.</p>';
       });
