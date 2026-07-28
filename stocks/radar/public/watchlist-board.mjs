@@ -129,53 +129,81 @@ function renderTechnicalDetail(q, price) {
 }
 function actionBias(q) {
   if (!q || q.price == null) {
-    return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0 };
+    return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
   }
   let score = 0;
   const bits = [];
   if (q.rsi14 != null && q.rsi14 <= 30) {
-    score += 2;
-    bits.push("RSI oversold");
+    score += 3;
+    bits.push("RSI oversold (+3)");
   } else if (q.rsi14 != null && q.rsi14 <= 40) {
     score += 1;
-    bits.push("RSI soft");
+    bits.push("RSI soft (+1)");
   } else if (q.rsi14 != null && q.rsi14 >= 70) {
-    score -= 2;
-    bits.push("RSI overbought");
+    score -= 3;
+    bits.push("RSI overbought (\u22123)");
   } else if (q.rsi14 != null && q.rsi14 >= 65) {
     score -= 1;
-    bits.push("RSI elevated");
+    bits.push("RSI elevated (\u22121)");
   }
   if (q.range52Pct != null && q.range52Pct <= 20) {
-    score += 1;
-    bits.push("near 52w low");
+    score += 2;
+    bits.push("near 52w low (+2)");
   } else if (q.range52Pct != null && q.range52Pct >= 85) {
-    score -= 1;
-    bits.push("near 52w high");
+    score -= 2;
+    bits.push("near 52w high (\u22122)");
   }
   if (q.pctFromAth != null && q.pctFromAth >= -3) {
-    score -= 1;
-    bits.push("near ATH");
+    score -= 2;
+    bits.push("near ATH (\u22122)");
+  }
+  if (q.signals?.includes("deep-below-50") || q.vsSma?.[50] != null && q.vsSma[50] < -10) {
+    score += 2;
+    bits.push("deep below SMA50 (+2)");
+  }
+  if (q.signals?.includes("extended-above-50") || q.vsSma?.[50] != null && q.vsSma[50] > 10) {
+    score -= 2;
+    bits.push("extended above SMA50 (\u22122)");
   }
   if (q.trend === "bullish") {
     score += 1;
-    bits.push("bullish trend");
+    bits.push("bullish trend (+1)");
   } else if (q.trend === "bearish") {
     score -= 1;
-    bits.push("bearish trend");
+    bits.push("bearish trend (\u22121)");
   }
-  if (q.signals?.includes("deep-below-50")) {
-    score += 1;
-    bits.push("deep below SMA50");
-  }
-  if (q.signals?.includes("extended-above-50")) {
+  if (isPreMomentum(q)) {
+    score += 2;
+    bits.push("quiet coil / pre-momentum (+2)");
+  } else if (q.volRatio != null && q.volRatio < 0.7 && q.range52Pct != null && q.range52Pct >= 80) {
     score -= 1;
-    bits.push("extended above SMA50");
+    bits.push("quiet near highs (\u22121)");
   }
-  const reason = bits.length ? bits.slice(0, 3).join(" \xB7 ") : "Neutral setup";
-  if (score >= 2) return { label: "Lean buy", cls: "buy", reason, score };
-  if (score <= -2) return { label: "Lean sell", cls: "sell", reason, score };
-  return { label: "Watch", cls: "watch", reason, score };
+  let setup = "mixed";
+  if (isPreMomentum(q)) setup = "pre-momentum";
+  else if (q.rsi14 != null && q.rsi14 <= 35 || q.vsSma?.[50] != null && q.vsSma[50] < -10 || q.range52Pct != null && q.range52Pct <= 20) {
+    setup = "washed-out";
+  } else if (q.rsi14 != null && q.rsi14 >= 65 || q.vsSma?.[50] != null && q.vsSma[50] > 10 || q.range52Pct != null && q.range52Pct >= 85 || q.pctFromAth != null && q.pctFromAth >= -5) {
+    setup = "extended";
+  } else if (q.trend === "bullish" || q.trend === "bearish") {
+    setup = "trending";
+  }
+  const reason = bits.length ? bits.slice(0, 4).join(" \xB7 ") : "Neutral setup";
+  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
+  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  return { label: "Watch", cls: "watch", reason, score, setup };
+}
+function isPreMomentum(q) {
+  if (!q || q.price == null) return false;
+  const volQuiet = q.volRatio != null && q.volRatio < 0.75;
+  const rsi = q.rsi14;
+  const rsiMid = rsi != null && rsi >= 35 && rsi <= 55;
+  const vs50 = q.vsSma?.[50];
+  const nearOrUnder50 = vs50 != null && vs50 > -12 && vs50 <= 3;
+  const range = q.range52Pct;
+  const notHigh = range == null || range < 70;
+  const notAth = q.pctFromAth == null || q.pctFromAth < -8;
+  return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
 }
 function actionBadge(q) {
   const a = actionBias(q);
@@ -192,8 +220,10 @@ function sma50Plain(q) {
 function pulseExplain(q) {
   const bias = actionBias(q);
   const sma = sma50Plain(q);
-  const lean = bias.cls === "buy" ? "Lean buy \u2014 checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on our checklist" : bias.cls === "watch" ? "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
+  const lean = bias.cls === "buy" ? "Lean buy \u2014 weighted checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on the weighted checklist" : bias.cls === "watch" ? bias.setup === "pre-momentum" ? "Watch \u2014 quiet coil / pre-momentum (no run yet)" : "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
+  const setupLabel = bias.setup === "pre-momentum" ? "pre-momentum" : bias.setup === "washed-out" ? "washed-out" : bias.setup === "extended" ? "extended" : null;
   const bits = [lean];
+  if (setupLabel && bias.cls !== "idle") bits.push(setupLabel);
   if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
   bits.push(sma);
   return { bias, sma, line: bits.join(" \xB7 ") };
@@ -640,12 +670,14 @@ function renderCheckIn() {
   const buyN = priced.filter((x) => x.bias.cls === "buy").length;
   const sellN = priced.filter((x) => x.bias.cls === "sell").length;
   const watchN = priced.filter((x) => x.bias.cls === "watch").length;
+  const preN = priced.filter((x) => x.bias.setup === "pre-momentum").length;
   const upN = priced.filter((x) => (x.chg ?? 0) > 0).length;
   const downN = priced.filter((x) => (x.chg ?? 0) < 0).length;
   if (tallyEl) {
     tallyEl.innerHTML = `
       <span class="checkin-tally__stat checkin-tally__stat--buy"><strong>${buyN}</strong> buy</span>
       <span class="checkin-tally__stat checkin-tally__stat--watch"><strong>${watchN}</strong> watch</span>
+      <span class="checkin-tally__stat checkin-tally__stat--coil"><strong>${preN}</strong> pre-mom</span>
       <span class="checkin-tally__stat checkin-tally__stat--sell"><strong>${sellN}</strong> sell</span>
       <span class="checkin-tally__sep" aria-hidden="true"></span>
       <span class="checkin-tally__stat"><strong class="up">${upN}</strong> up</span>
@@ -666,10 +698,14 @@ function renderCheckIn() {
     const sym = sanitizeSymbol(x.stock.symbol) || escapeHtml(String(x.stock.symbol ?? ""));
     const chg = x.chg;
     const chgHtml = chg == null ? `<span class="checkin-rank__val dim">\u2014</span>` : `<span class="checkin-rank__val mono ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(1)}%</span>`;
-    return `<li class="checkin-rank__row">
+    const setupTag = x.bias.setup === "pre-momentum" ? `<span class="checkin-setup-tag">pre-mom</span>` : x.bias.setup === "washed-out" ? `<span class="checkin-setup-tag checkin-setup-tag--wash">wash</span>` : x.bias.setup === "extended" ? `<span class="checkin-setup-tag checkin-setup-tag--ext">ext</span>` : "";
+    return `<li class="checkin-rank__row checkin-rank__row--signal">
       <span class="checkin-rank__n">${i + 1}</span>
       <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
-      <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+      <span class="checkin-rank__meta">
+        <span class="checkin-rank__name">${escapeHtml(x.stock.name)} ${setupTag}</span>
+        <span class="checkin-rank__why">${escapeHtml(x.bias.reason)}</span>
+      </span>
       ${chgHtml}
     </li>`;
   };
@@ -689,7 +725,12 @@ function renderCheckIn() {
   if (setupsEl) {
     setupsEl.innerHTML = setups.length ? setups.map(signalRow).join("") : `<li class="checkin-rank__empty">None right now.</li>`;
   }
-  const watch = [...priced].filter((x) => x.bias.cls === "watch").sort((a, b) => Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0)).slice(0, 8);
+  const watch = [...priced].filter((x) => x.bias.cls === "watch").sort((a, b) => {
+    const ap = a.bias.setup === "pre-momentum" ? 1 : 0;
+    const bp = b.bias.setup === "pre-momentum" ? 1 : 0;
+    if (bp !== ap) return bp - ap;
+    return Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0);
+  }).slice(0, 8);
   if (watchEl) {
     watchEl.innerHTML = watch.length ? watch.map(signalRow).join("") : `<li class="checkin-rank__empty">None right now.</li>`;
   }

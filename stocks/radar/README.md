@@ -13,7 +13,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Day mood banner** — quick read on how the list is doing today
 - **Theme tags** — filter by semi, photonics, ai, etc.
 - **Technical view** (desktop) — SMA 20/50/200, RSI, 52-week range, trend badges
-- **Radar signals** — Lean buy / Watch / Lean sell on the board
+- **Radar signals** — Weighted lean buy / watch / lean sell (+ pre-momentum coils) — [SCORE.md](SCORE.md)
 - **Optional OpenTelemetry** — CI/script traces for Yahoo fetch ([OBSERVABILITY.md](OBSERVABILITY.md); off by default)
 - **Production config** — `site-settings.json` + `/settings.json` + `/health.json` for ops ([PRODUCTION.md](PRODUCTION.md); not shown on the public board)
 - **Go-live bootstrap** — gated CI + `infra/go-live.sh` + preflight ([GO_LIVE.md](GO_LIVE.md))

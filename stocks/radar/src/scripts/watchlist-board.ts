@@ -532,6 +532,7 @@ function renderCheckIn() {
   const buyN = priced.filter((x) => x.bias.cls === "buy").length;
   const sellN = priced.filter((x) => x.bias.cls === "sell").length;
   const watchN = priced.filter((x) => x.bias.cls === "watch").length;
+  const preN = priced.filter((x) => x.bias.setup === "pre-momentum").length;
   const upN = priced.filter((x) => (x.chg ?? 0) > 0).length;
   const downN = priced.filter((x) => (x.chg ?? 0) < 0).length;
 
@@ -539,6 +540,7 @@ function renderCheckIn() {
     tallyEl.innerHTML = `
       <span class="checkin-tally__stat checkin-tally__stat--buy"><strong>${buyN}</strong> buy</span>
       <span class="checkin-tally__stat checkin-tally__stat--watch"><strong>${watchN}</strong> watch</span>
+      <span class="checkin-tally__stat checkin-tally__stat--coil"><strong>${preN}</strong> pre-mom</span>
       <span class="checkin-tally__stat checkin-tally__stat--sell"><strong>${sellN}</strong> sell</span>
       <span class="checkin-tally__sep" aria-hidden="true"></span>
       <span class="checkin-tally__stat"><strong class="up">${upN}</strong> up</span>
@@ -564,10 +566,21 @@ function renderCheckIn() {
       chg == null
         ? `<span class="checkin-rank__val dim">—</span>`
         : `<span class="checkin-rank__val mono ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(1)}%</span>`;
-    return `<li class="checkin-rank__row">
+    const setupTag =
+      x.bias.setup === "pre-momentum"
+        ? `<span class="checkin-setup-tag">pre-mom</span>`
+        : x.bias.setup === "washed-out"
+          ? `<span class="checkin-setup-tag checkin-setup-tag--wash">wash</span>`
+          : x.bias.setup === "extended"
+            ? `<span class="checkin-setup-tag checkin-setup-tag--ext">ext</span>`
+            : "";
+    return `<li class="checkin-rank__row checkin-rank__row--signal">
       <span class="checkin-rank__n">${i + 1}</span>
       <button type="button" class="checkin-rank__sym" data-jump="${sym}">${sym}</button>
-      <span class="checkin-rank__name">${escapeHtml(x.stock.name)}</span>
+      <span class="checkin-rank__meta">
+        <span class="checkin-rank__name">${escapeHtml(x.stock.name)} ${setupTag}</span>
+        <span class="checkin-rank__why">${escapeHtml(x.bias.reason)}</span>
+      </span>
       ${chgHtml}
     </li>`;
   };
@@ -617,7 +630,13 @@ function renderCheckIn() {
 
   const watch = [...priced]
     .filter((x) => x.bias.cls === "watch")
-    .sort((a, b) => Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0))
+    .sort((a, b) => {
+      // Pre-momentum quiet coils first — answer “what hasn’t run yet?”
+      const ap = a.bias.setup === "pre-momentum" ? 1 : 0;
+      const bp = b.bias.setup === "pre-momentum" ? 1 : 0;
+      if (bp !== ap) return bp - ap;
+      return Math.abs(b.bias.score) - Math.abs(a.bias.score) || Math.abs(b.chg ?? 0) - Math.abs(a.chg ?? 0);
+    })
     .slice(0, 8);
 
   if (watchEl) {

@@ -1110,9 +1110,67 @@ body[data-day-mood="mixed"] .site-header {
 
 .checkin-lede {
   margin: 0;
-  max-width: 36rem;
+  max-width: 40rem;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.checkin-guide {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0 0 0.85rem;
+}
+
+.checkin-guide__card {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.checkin-guide__card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.checkin-guide__card p {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.checkin-guide__card--buy {
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border-subtle));
+}
+
+.checkin-guide__card--buy h3 {
+  color: var(--green);
+}
+
+.checkin-guide__card--sell {
+  border-color: color-mix(in srgb, var(--red) 35%, var(--border-subtle));
+}
+
+.checkin-guide__card--sell h3 {
+  color: var(--red);
+}
+
+.checkin-guide__card--watch {
+  border-color: color-mix(in srgb, #fbbf24 35%, var(--border-subtle));
+}
+
+.checkin-guide__card--watch h3 {
+  color: #fbbf24;
+}
+
+.checkin-guide__card--sma h3 {
+  color: #7dd3fc;
 }
 
 .checkin-tally {
@@ -1149,6 +1207,10 @@ body[data-day-mood="mixed"] .site-header {
   color: #fbbf24;
 }
 
+.checkin-tally__stat--coil strong {
+  color: #7dd3fc;
+}
+
 .checkin-tally__stat--sell strong {
   color: var(--red);
 }
@@ -1166,6 +1228,47 @@ body[data-day-mood="mixed"] .site-header {
   height: 0.9rem;
   background: var(--border);
   align-self: center;
+}
+
+.checkin-setup-tag {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  color: #7dd3fc;
+  background: color-mix(in srgb, #38bdf8 16%, transparent);
+}
+
+.checkin-setup-tag--wash {
+  color: #86efac;
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+}
+
+.checkin-setup-tag--ext {
+  color: #fca5a5;
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+}
+
+.checkin-rank__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.checkin-rank__why {
+  font-size: 0.68rem;
+  color: var(--dim);
+  line-height: 1.3;
+}
+
+.checkin-rank__row--signal {
+  align-items: start;
 }
 
 .checkin-jump {
@@ -1439,6 +1542,10 @@ body[data-day-mood="mixed"] .site-header {
 }
 
 @media (max-width: 960px) {
+  .checkin-guide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .checkin-grid {
     grid-template-columns: 1fr;
     gap: 0;

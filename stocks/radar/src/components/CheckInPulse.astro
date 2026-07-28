@@ -7,7 +7,8 @@
       <p class="board-eyebrow">Friend check-in</p>
       <h2 id="checkin-title">Today’s pulse</h2>
       <p class="checkin-lede">
-        Who’s moving and where the list leans — for the group chat, not advice.
+        Weighted radar score (≥+3 lean buy, ≤−3 lean sell). Quiet coils that haven’t
+        run yet show up under Watch as <strong>pre-momentum</strong> — chat bait, not advice.
       </p>
     </div>
     <nav class="checkin-jump desktop-only" aria-label="Jump to sections">
@@ -15,6 +16,25 @@
       <a href="#watchlist-board">Master list</a>
       <a href="#submissions">Suggest</a>
     </nav>
+  </div>
+
+  <div class="checkin-guide" aria-label="How the weighted score works">
+    <article class="checkin-guide__card checkin-guide__card--buy">
+      <h3>Heavier (+)</h3>
+      <p>RSI washouts (+3), near year-lows (+2), deep below SMA50 (+2). Soft RSI and trend count less.</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--sell">
+      <h3>Heavier (−)</h3>
+      <p>RSI overbought (−3), near year-highs / ATH (−2), stretched above SMA50 (−2).</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--watch">
+      <h3>Pre-momentum</h3>
+      <p>Quiet volume + mid RSI + coiling near/under the 50-day — names that haven’t caught a run yet (+2).</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--sma">
+      <h3>Thresholds</h3>
+      <p>Lean buy ≥ +3 · Watch −2…+2 · Lean sell ≤ −3. Same playbook on every ticker.</p>
+    </article>
   </div>
 
   <div class="checkin-tally" id="checkin-tally" aria-live="polite">
@@ -59,7 +79,8 @@
 
     <article class="checkin-panel checkin-panel--watch" data-checkin-panel="watch" aria-labelledby="watch-title">
       <header class="checkin-panel__head">
-        <h3 id="watch-title">Watch</h3>
+        <h3 id="watch-title">Watch / pre-momentum</h3>
+        <p>Mixed scores — quiet coils float to the top</p>
       </header>
       <ol class="checkin-rank" id="checkin-watch" aria-live="polite">
         <li class="checkin-rank__empty">Scoring master list…</li>

@@ -176,62 +176,115 @@ export function actionBias(q: QuoteData | undefined): {
   cls: "buy" | "sell" | "watch" | "idle";
   reason: string;
   score: number;
+  setup: "washed-out" | "pre-momentum" | "trending" | "extended" | "mixed" | "idle";
 } {
   if (!q || q.price == null) {
-    return { label: "—", cls: "idle", reason: "Waiting on quotes", score: 0 };
+    return { label: "—", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
   }
 
   let score = 0;
   const bits: string[] = [];
 
+  // Heavy: RSI extremes
   if (q.rsi14 != null && q.rsi14 <= 30) {
-    score += 2;
-    bits.push("RSI oversold");
+    score += 3;
+    bits.push("RSI oversold (+3)");
   } else if (q.rsi14 != null && q.rsi14 <= 40) {
     score += 1;
-    bits.push("RSI soft");
+    bits.push("RSI soft (+1)");
   } else if (q.rsi14 != null && q.rsi14 >= 70) {
-    score -= 2;
-    bits.push("RSI overbought");
+    score -= 3;
+    bits.push("RSI overbought (−3)");
   } else if (q.rsi14 != null && q.rsi14 >= 65) {
     score -= 1;
-    bits.push("RSI elevated");
+    bits.push("RSI elevated (−1)");
   }
 
+  // Heavy: year range
   if (q.range52Pct != null && q.range52Pct <= 20) {
-    score += 1;
-    bits.push("near 52w low");
+    score += 2;
+    bits.push("near 52w low (+2)");
   } else if (q.range52Pct != null && q.range52Pct >= 85) {
-    score -= 1;
-    bits.push("near 52w high");
+    score -= 2;
+    bits.push("near 52w high (−2)");
   }
 
+  // Medium-heavy: ATH stretch
   if (q.pctFromAth != null && q.pctFromAth >= -3) {
-    score -= 1;
-    bits.push("near ATH");
+    score -= 2;
+    bits.push("near ATH (−2)");
   }
 
+  // Heavy: SMA50 stretch
+  if (q.signals?.includes("deep-below-50") || (q.vsSma?.[50] != null && q.vsSma[50] < -10)) {
+    score += 2;
+    bits.push("deep below SMA50 (+2)");
+  }
+  if (q.signals?.includes("extended-above-50") || (q.vsSma?.[50] != null && q.vsSma[50] > 10)) {
+    score -= 2;
+    bits.push("extended above SMA50 (−2)");
+  }
+
+  // Light: trend is context
   if (q.trend === "bullish") {
     score += 1;
-    bits.push("bullish trend");
+    bits.push("bullish trend (+1)");
   } else if (q.trend === "bearish") {
     score -= 1;
-    bits.push("bearish trend");
+    bits.push("bearish trend (−1)");
   }
 
-  if (q.signals?.includes("deep-below-50")) {
-    score += 1;
-    bits.push("deep below SMA50");
-  }
-  if (q.signals?.includes("extended-above-50")) {
+  // Pre-momentum: quiet / coiling names that haven't run
+  if (isPreMomentum(q)) {
+    score += 2;
+    bits.push("quiet coil / pre-momentum (+2)");
+  } else if (
+    q.volRatio != null &&
+    q.volRatio < 0.7 &&
+    q.range52Pct != null &&
+    q.range52Pct >= 80
+  ) {
     score -= 1;
-    bits.push("extended above SMA50");
+    bits.push("quiet near highs (−1)");
   }
 
-  const reason = bits.length ? bits.slice(0, 3).join(" · ") : "Neutral setup";
-  if (score >= 2) return { label: "Lean buy", cls: "buy", reason, score };
-  if (score <= -2) return { label: "Lean sell", cls: "sell", reason, score };
-  return { label: "Watch", cls: "watch", reason, score };
+  let setup: "washed-out" | "pre-momentum" | "trending" | "extended" | "mixed" | "idle" = "mixed";
+  if (isPreMomentum(q)) setup = "pre-momentum";
+  else if (
+    (q.rsi14 != null && q.rsi14 <= 35) ||
+    (q.vsSma?.[50] != null && q.vsSma[50] < -10) ||
+    (q.range52Pct != null && q.range52Pct <= 20)
+  ) {
+    setup = "washed-out";
+  } else if (
+    (q.rsi14 != null && q.rsi14 >= 65) ||
+    (q.vsSma?.[50] != null && q.vsSma[50] > 10) ||
+    (q.range52Pct != null && q.range52Pct >= 85) ||
+    (q.pctFromAth != null && q.pctFromAth >= -5)
+  ) {
+    setup = "extended";
+  } else if (q.trend === "bullish" || q.trend === "bearish") {
+    setup = "trending";
+  }
+
+  const reason = bits.length ? bits.slice(0, 4).join(" · ") : "Neutral setup";
+  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
+  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  return { label: "Watch", cls: "watch", reason, score, setup };
+}
+
+/** Quiet volume + mid RSI + near/under SMA50 + not at highs → coil before momentum. */
+export function isPreMomentum(q: QuoteData | undefined): boolean {
+  if (!q || q.price == null) return false;
+  const volQuiet = q.volRatio != null && q.volRatio < 0.75;
+  const rsi = q.rsi14;
+  const rsiMid = rsi != null && rsi >= 35 && rsi <= 55;
+  const vs50 = q.vsSma?.[50];
+  const nearOrUnder50 = vs50 != null && vs50 > -12 && vs50 <= 3;
+  const range = q.range52Pct;
+  const notHigh = range == null || range < 70;
+  const notAth = q.pctFromAth == null || q.pctFromAth < -8;
+  return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
 }
 
 export function actionBadge(q: QuoteData | undefined) {
@@ -249,7 +302,7 @@ export function sma50Plain(q: QuoteData | undefined): string {
   return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
 }
 
-/** Short pulse row blurb: lean signal + SMA50 in normal language. */
+/** Short pulse row blurb: lean signal + setup flavor + SMA50. */
 export function pulseExplain(q: QuoteData | undefined): {
   bias: ReturnType<typeof actionBias>;
   sma: string;
@@ -259,13 +312,24 @@ export function pulseExplain(q: QuoteData | undefined): {
   const sma = sma50Plain(q);
   const lean =
     bias.cls === "buy"
-      ? "Lean buy — checklist tips constructive (not advice)"
+      ? "Lean buy — weighted checklist tips constructive (not advice)"
       : bias.cls === "sell"
-        ? "Lean sell — stretched or soft on our checklist"
+        ? "Lean sell — stretched or soft on the weighted checklist"
         : bias.cls === "watch"
-          ? "Watch — mixed / wait for a clearer setup"
+          ? bias.setup === "pre-momentum"
+            ? "Watch — quiet coil / pre-momentum (no run yet)"
+            : "Watch — mixed / wait for a clearer setup"
           : "Waiting on quotes";
+  const setupLabel =
+    bias.setup === "pre-momentum"
+      ? "pre-momentum"
+      : bias.setup === "washed-out"
+        ? "washed-out"
+        : bias.setup === "extended"
+          ? "extended"
+          : null;
   const bits = [lean];
+  if (setupLabel && bias.cls !== "idle") bits.push(setupLabel);
   if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
   bits.push(sma);
   return { bias, sma, line: bits.join(" · ") };
@@ -275,22 +339,22 @@ export const PULSE_SIGNAL_GUIDE = [
   {
     id: "buy",
     title: "Lean buy",
-    blurb: "Our checklist is constructive (RSI soft, near lows, or cool vs averages). Discussion only — not a buy order.",
+    blurb: "Weighted score ≥ +3. RSI washouts and year-lows count more than trend.",
   },
   {
     id: "watch",
     title: "Watch",
-    blurb: "Mixed tape. Fine to hold the conversation; nothing screaming buy or trim on our simple score.",
+    blurb: "Score between −2 and +2. Includes quiet coils that haven’t caught momentum yet.",
   },
   {
     id: "sell",
     title: "Lean sell",
-    blurb: "Extended or soft (hot RSI, near highs, stretched above averages). A caution flag for the group chat.",
+    blurb: "Weighted score ≤ −3. Overbought / year-highs / SMA50 stretch weigh heavier.",
   },
   {
     id: "sma50",
-    title: "SMA50",
-    blurb: "50-day average ≈ typical price over ~2.5 months. Above it = running hot lately; below = cooler vs recent weeks.",
+    title: "SMA50 + quiet",
+    blurb: "50-day avg = recent typical price. Low volume near it can flag a coil before a move.",
   },
 ] as const;
 
