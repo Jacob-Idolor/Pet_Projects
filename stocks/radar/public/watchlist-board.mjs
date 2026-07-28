@@ -89,6 +89,59 @@ function athIndicator(q) {
 function hasTechnical(q) {
   return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
 }
+function fmtMultiple(v) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
+  return v.toFixed(1);
+}
+function fmtGrowth(v) {
+  if (v == null || Number.isNaN(v)) return "\u2014";
+  return `${(v * 100).toFixed(0)}%`;
+}
+function biasLabel(bias) {
+  const b = (bias || "").toLowerCase();
+  if (b === "cheap") return { text: "Group lean: cheap vs story", cls: "cheap" };
+  if (b === "fair") return { text: "Group lean: fair", cls: "fair" };
+  if (b === "rich") return { text: "Group lean: rich vs story", cls: "rich" };
+  return null;
+}
+function renderOutlookDetail(row) {
+  const f = row?.fundamentals;
+  const news = Array.isArray(row?.news) ? row.news : [];
+  const hasMetrics = f && (f.trailingPE != null || f.forwardPE != null || f.pegRatio != null || f.priceToBook != null || f.evToEbitda != null || f.bias || f.note || f.catalyst);
+  if (!hasMetrics && !news.length) {
+    return `<div class="outlook-detail">
+      <h4>Valuation + news</h4>
+      <p class="outlook-empty">Outlook refreshes with quotes \u2014 run <code>npm run update-quotes</code> or wait for CI.</p>
+    </div>`;
+  }
+  const lean = biasLabel(f?.bias);
+  const metrics = [
+    ["Trailing PE", fmtMultiple(f?.trailingPE)],
+    ["Forward PE", fmtMultiple(f?.forwardPE)],
+    ["PEG", fmtMultiple(f?.pegRatio)],
+    ["P/B", fmtMultiple(f?.priceToBook)],
+    ["EV/EBITDA", fmtMultiple(f?.evToEbitda)],
+    ["Rev growth", fmtGrowth(f?.revenueGrowth)]
+  ].filter(([, v]) => v !== "\u2014").map(
+    ([label, v]) => `<span class="outlook-metric"><span class="outlook-metric__label">${escapeHtml(label)}</span><span class="mono">${escapeHtml(v)}</span></span>`
+  ).join("");
+  const newsHtml = news.length ? `<ul class="outlook-news">${news.slice(0, 3).map((n) => {
+    const title = escapeHtml(n.title || "Headline");
+    const pub = escapeHtml(n.publisher || "");
+    const href = escapeHtml(n.link || "#");
+    return `<li><a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
+  }).join("")}</ul>` : `<p class="outlook-empty">No recent headlines in the feed.</p>`;
+  return `<div class="outlook-detail">
+    <h4>Valuation + news <span class="tech-detail__sub">(primary)</span></h4>
+    ${lean ? `<p class="outlook-bias outlook-bias--${lean.cls}">${escapeHtml(lean.text)}</p>` : ""}
+    ${f?.note ? `<p class="outlook-note">${escapeHtml(f.note)}</p>` : ""}
+    ${f?.catalyst ? `<p class="outlook-catalyst"><strong>Catalyst:</strong> ${escapeHtml(f.catalyst)}</p>` : ""}
+    ${metrics ? `<div class="outlook-metrics">${metrics}</div>` : ""}
+    <p class="outlook-disclaimer">Multiples without peer context are not a buy/sell \u2014 they\u2019re chat fuel next to the thesis.</p>
+    <h5 class="outlook-news-title">Headlines</h5>
+    ${newsHtml}
+  </div>`;
+}
 function renderTechnicalDetail(q, price) {
   if (!hasTechnical(q)) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy \u2014 run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
@@ -105,7 +158,7 @@ function renderTechnicalDetail(q, price) {
   const action = actionBias(q);
   return `
     <div class="tech-detail">
-      <h4>Technical snapshot</h4>
+      <h4>Momentum <span class="tech-detail__sub">(secondary)</span></h4>
       <div class="tech-summary-row">
         ${actionBadge(q)}
         ${trendBadge(q?.trend)}
@@ -268,6 +321,7 @@ var PREFS_KEY = "stocks-radar-prefs";
 var baseStocks = [];
 var allStocks = [];
 var quotes = {};
+var outlookBySymbol = {};
 var filter = "all";
 var tagFilter = null;
 var search = "";
@@ -561,6 +615,22 @@ function renderRow(stock, compact = false, mode = "default") {
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
   `;
 }
+function outlookFor(stock) {
+  const sym = stock.symbol?.toUpperCase();
+  const fetched = sym ? outlookBySymbol[sym] : void 0;
+  const human = stock.valuation || {};
+  const fundamentals = {
+    ...fetched?.fundamentals || {},
+    bias: human.bias || fetched?.fundamentals?.bias || null,
+    note: human.note || fetched?.fundamentals?.note || null,
+    catalyst: stock.catalyst || fetched?.fundamentals?.catalyst || null
+  };
+  return {
+    symbol: sym,
+    fundamentals,
+    news: fetched?.news || []
+  };
+}
 function renderDetailRow(stock, price, q, colspan) {
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
@@ -568,10 +638,11 @@ function renderDetailRow(stock, price, q, colspan) {
   return `<tr class="detail-row" data-detail-for="${sid}">
         <td colspan="${colspan}">
           <div class="detail-panel">
-            ${renderTechnicalDetail(q, price)}
+            ${renderOutlookDetail(outlookFor(stock))}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            ${renderTechnicalDetail(q, price)}
             <div class="pt-inline" data-pt-inline="${sym}">
               <strong>Price target:</strong>
               <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${sym}" />
@@ -1115,6 +1186,23 @@ async function initWatchlistBoard(stocksJson) {
   });
   renderAll();
   startQuoteLoader();
+  loadOutlook().then((ok) => {
+    if (ok) renderAll();
+  });
+}
+async function loadOutlook() {
+  const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
+  try {
+    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const stocks = data?.stocks;
+    if (!stocks || typeof stocks !== "object") return false;
+    outlookBySymbol = stocks;
+    return true;
+  } catch {
+    return false;
+  }
 }
 function isUsMarketOpen() {
   const et = new Date((/* @__PURE__ */ new Date()).toLocaleString("en-US", { timeZone: "America/New_York" }));

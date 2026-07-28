@@ -1,0 +1,86 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="macro-strip" id="macro-rates" aria-labelledby="macro-title" data-radar-base={base}>
+  <div class="macro-strip__head">
+    <div>
+      <p class="board-eyebrow">Macro tape</p>
+      <h2 id="macro-title">Rates · bonds · dollar</h2>
+      <p class="macro-strip__lede">
+        For the market’s mood, this matters more than any single ticker’s chart.
+        Yields up → equity valuations usually compress. Watch the curve, then the names.
+      </p>
+    </div>
+  </div>
+  <div class="macro-strip__grid" id="macro-grid" aria-live="polite">
+    <p class="macro-strip__loading">Loading yields…</p>
+  </div>
+</section>
+
+<script is:inline define:vars={{ base }}>
+  (function () {
+    var grid = document.getElementById("macro-grid");
+    if (!grid) return;
+    var root = base || "/";
+    if (root.slice(-1) !== "/") root += "/";
+
+    function fmtPx(v, unit) {
+      if (v == null || isNaN(v)) return "—";
+      if (unit === "yield") return Number(v).toFixed(3) + "%";
+      return Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+
+    function fmtChg(v) {
+      if (v == null || isNaN(v)) return "";
+      var sign = v > 0 ? "+" : "";
+      return sign + v.toFixed(2) + "%";
+    }
+
+    fetch(root + "outlook.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var macro = data.macro || {};
+        var keys = Object.keys(macro);
+        if (!keys.length) {
+          grid.innerHTML =
+            '<p class="macro-strip__loading">Macro series unavailable — retry quote refresh.</p>';
+          return;
+        }
+        grid.innerHTML = keys
+          .map(function (id) {
+            var m = macro[id];
+            var chg = m.changePct;
+            var cls = chg == null ? "" : chg >= 0 ? "up" : "down";
+            return (
+              '<article class="macro-card" title="' +
+              (m.blurb || "").replace(/"/g, "&quot;") +
+              '">' +
+              '<span class="macro-card__label">' +
+              (m.label || id) +
+              "</span>" +
+              '<span class="macro-card__px mono">' +
+              fmtPx(m.price, m.unit) +
+              "</span>" +
+              '<span class="macro-card__chg mono ' +
+              cls +
+              '">' +
+              fmtChg(chg) +
+              "</span>" +
+              '<span class="macro-card__blurb">' +
+              (m.blurb || "") +
+              "</span>" +
+              "</article>"
+            );
+          })
+          .join("");
+      })
+      .catch(function () {
+        grid.innerHTML =
+          '<p class="macro-strip__loading">Could not load outlook.json yet — run quote refresh.</p>';
+      });
+  })();
+</script>

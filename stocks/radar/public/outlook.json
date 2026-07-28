@@ -1,0 +1,541 @@
+{
+  "updatedAt": "2026-07-28T17:43:34.727Z",
+  "fetchedAt": "2026-07-28T17:43:34.727Z",
+  "schemaVersion": 1,
+  "hierarchy": "Valuation + news drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
+  "macro": {
+    "us10y": {
+      "id": "us10y",
+      "symbol": "^TNX",
+      "label": "US 10Y",
+      "unit": "yield",
+      "blurb": "10-year Treasury yield — gravity for equity valuations",
+      "price": 4.6,
+      "changePct": -0.88342589584463,
+      "name": "CBOE Interest Rate 10 Year T No"
+    },
+    "us13w": {
+      "id": "us13w",
+      "symbol": "^IRX",
+      "label": "US 13W",
+      "unit": "yield",
+      "blurb": "Short bill yield — front-end rates / Fed path proxy",
+      "price": 3.7599998,
+      "changePct": -0.9744569924823708,
+      "name": "13 WEEK TREASURY BILL"
+    },
+    "us5y": {
+      "id": "us5y",
+      "symbol": "^FVX",
+      "label": "US 5Y",
+      "unit": "yield",
+      "blurb": "5-year yield — mid-curve growth vs inflation bet",
+      "price": 4.357,
+      "changePct": -0.9097074700984438,
+      "name": "Treasury Yield 5 Years"
+    },
+    "tlt": {
+      "id": "tlt",
+      "symbol": "TLT",
+      "label": "TLT",
+      "unit": "price",
+      "blurb": "Long-bond ETF — yields down ≈ TLT up",
+      "price": 84.225,
+      "changePct": 0.5671641791044708,
+      "name": "iShares 20+ Year Treasury Bond ETF"
+    },
+    "uup": {
+      "id": "uup",
+      "symbol": "UUP",
+      "label": "USD",
+      "unit": "price",
+      "blurb": "Dollar proxy — strong USD often pressures risk assets",
+      "price": 28.55,
+      "changePct": -0.17482650630355126,
+      "name": "Invesco DB US Dollar Index Bullish Fund"
+    }
+  },
+  "stocks": {
+    "SMH": {
+      "symbol": "SMH",
+      "fundamentals": {
+        "trailingPE": 34.298103,
+        "forwardPE": null,
+        "pegRatio": null,
+        "priceToBook": null,
+        "evToEbitda": null,
+        "profitMargin": null,
+        "revenueGrowth": null,
+        "targetMeanPrice": null,
+        "recommendationMean": null,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Update: US Equity Indexes Mixed as Chipmakers Restrain Nasdaq, Crude Oil Slides",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-mixed-chipmakers-173518246.html",
+          "publishedAt": "2026-07-28T17:35:18.000Z"
+        },
+        {
+          "title": "Dow Jones rises 659 points on Coca-Cola, Sherwin-Williams earnings",
+          "publisher": "Quartz",
+          "link": "https://finance.yahoo.com/m/425d975c-54c3-383c-b038-2f790d7b5e9b/dow-jones-rises-659-points-on.html",
+          "publishedAt": "2026-07-28T17:03:48.000Z"
+        },
+        {
+          "title": "Update: US Equity Indexes Mixed as Chipmakers Mount Pressure on Nasdaq",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-mixed-chipmakers-165322246.html",
+          "publishedAt": "2026-07-28T16:53:22.000Z"
+        }
+      ]
+    },
+    "NBIS": {
+      "symbol": "NBIS",
+      "fundamentals": {
+        "trailingPE": 64.061775,
+        "forwardPE": -102.83809,
+        "pegRatio": 0.63,
+        "priceToBook": 5.8684964,
+        "evToEbitda": -1252.207,
+        "profitMargin": 0.93086,
+        "revenueGrowth": 6.839,
+        "targetMeanPrice": 258.13333,
+        "recommendationMean": 1.82353,
+        "bias": "fair",
+        "note": "Growth story carries the multiple — watch dilution and AI infra spend cadence.",
+        "catalyst": "Capacity / GPU cloud bookings commentary"
+      },
+      "news": [
+        {
+          "title": "CRWV Powers Anam's AI Avatars With Low-Latency Cloud Infrastructure",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/crwv-powers-anams-ai-avatars-133200920.html",
+          "publishedAt": "2026-07-28T13:32:00.000Z"
+        },
+        {
+          "title": "Can Nebius Stock Turn a $10,000 Investment Into $1 Million?",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/ac023908-7d38-30ef-a192-d4c5dc9073a8/can-nebius-stock-turn-a.html",
+          "publishedAt": "2026-07-28T13:02:12.000Z"
+        },
+        {
+          "title": "Coreweave is $71 After Falling 43% in a Year: One Analyst Thinks It Can Rocket to $250",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/9d3caebd-897d-3d5b-b971-9e3ee105694a/coreweave-is-%2471-after.html",
+          "publishedAt": "2026-07-27T16:44:24.000Z"
+        }
+      ]
+    },
+    "COHR": {
+      "symbol": "COHR",
+      "fundamentals": {
+        "trailingPE": 116.00001,
+        "forwardPE": 29.243992,
+        "pegRatio": 0.92,
+        "priceToBook": 4.440212,
+        "evToEbitda": 41.423,
+        "profitMargin": 0.07102,
+        "revenueGrowth": 0.205,
+        "targetMeanPrice": 391.45267,
+        "recommendationMean": 1.63636,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Coherent Sinks 11%, Applied Optoelectronics Falls 10%, Lumentum Drops 9% as Traders Question AI Spending Spree",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/d8f866bf-152c-3a33-b407-0d835dd68abd/coherent-sinks-11%25%2C-applied.html",
+          "publishedAt": "2026-07-28T16:15:54.000Z"
+        },
+        {
+          "title": "Coherent (COHR) Could Be 29% Undervalued Following Its Recent Pullback",
+          "publisher": "Simply Wall St.",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/coherent-cohr-could-29-undervalued-161037701.html",
+          "publishedAt": "2026-07-28T16:10:37.000Z"
+        },
+        {
+          "title": "A New AI Shortage Is Coming. One CEO Just Predicted it Will Be “Bigger Than Memory.”",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/a32ccf38-166f-3c5c-a424-bc299072d74b/a-new-ai-shortage-is-coming..html",
+          "publishedAt": "2026-07-28T14:53:15.000Z"
+        }
+      ]
+    },
+    "TSEM": {
+      "symbol": "TSEM",
+      "fundamentals": {
+        "trailingPE": 95.17855,
+        "forwardPE": 35.150375,
+        "pegRatio": 6.72,
+        "priceToBook": 7.7451234,
+        "evToEbitda": 44.444,
+        "profitMargin": 0.15131,
+        "revenueGrowth": 0.155,
+        "targetMeanPrice": 313.83334,
+        "recommendationMean": 1.4,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "New LUMA ETF Charges 0.64% to Give You Diversified Photonics Exposure",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/a015e15e-959b-3385-afcf-0c1b989663ac/new-luma-etf-charges-0.64%25-to.html",
+          "publishedAt": "2026-07-17T18:53:51.000Z"
+        },
+        {
+          "title": "A $3 Billion Reason to Buy Tower Semiconductor Stock Here",
+          "publisher": "Barchart",
+          "link": "https://finance.yahoo.com/m/e7ce1d1d-98bc-3d11-b6fc-0adda434fc0b/a-%243-billion-reason-to-buy.html",
+          "publishedAt": "2026-07-16T16:45:32.000Z"
+        },
+        {
+          "title": "Tower Semiconductor (TSEM) Stock Could Be Overvalued As AI Chip Expansion Grows",
+          "publisher": "Simply Wall St.",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/tower-semiconductor-tsem-stock-could-161302169.html",
+          "publishedAt": "2026-07-16T16:13:02.000Z"
+        }
+      ]
+    },
+    "AAOI": {
+      "symbol": "AAOI",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": 18.411568,
+        "pegRatio": 0.78,
+        "priceToBook": 6.2734737,
+        "evToEbitda": -280.087,
+        "profitMargin": -0.085480005,
+        "revenueGrowth": 0.514,
+        "targetMeanPrice": 157.3,
+        "recommendationMean": 2.33333,
+        "bias": "cheap",
+        "note": "Screen looks cheap vs optical peers if execution sticks — scrub balance sheet risk in chat.",
+        "catalyst": "Datacenter transceiver wins / next earnings"
+      },
+      "news": [
+        {
+          "title": "Coherent Sinks 11%, Applied Optoelectronics Falls 10%, Lumentum Drops 9% as Traders Question AI Spending Spree",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/d8f866bf-152c-3a33-b407-0d835dd68abd/coherent-sinks-11%25%2C-applied.html",
+          "publishedAt": "2026-07-28T16:15:54.000Z"
+        },
+        {
+          "title": "A New AI Shortage Is Coming. One CEO Just Predicted it Will Be “Bigger Than Memory.”",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/a32ccf38-166f-3c5c-a424-bc299072d74b/a-new-ai-shortage-is-coming..html",
+          "publishedAt": "2026-07-28T14:53:15.000Z"
+        },
+        {
+          "title": "These high-flying tech stocks are down 65% — here's how to shop the sell-off: One Big Investment Idea",
+          "publisher": "Yahoo Finance",
+          "link": "https://finance.yahoo.com/markets/article/these-high-flying-tech-stocks-are-down-65--heres-how-to-shop-the-sell-off-one-big-investment-idea-131623103.html",
+          "publishedAt": "2026-07-23T13:16:23.000Z"
+        }
+      ]
+    },
+    "SIVEF": {
+      "symbol": "SIVEF",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": null,
+        "pegRatio": null,
+        "priceToBook": null,
+        "evToEbitda": null,
+        "profitMargin": -0.74379,
+        "revenueGrowth": -0.215,
+        "targetMeanPrice": null,
+        "recommendationMean": null,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Crypto’s 24/7 Playbook Comes for Wall Street’s Beloved AI Stocks",
+          "publisher": "Bloomberg",
+          "link": "https://finance.yahoo.com/markets/crypto/articles/crypto-24-7-playbook-comes-091500678.html",
+          "publishedAt": "2026-07-28T09:15:00.000Z"
+        },
+        {
+          "title": "Update on Expiry of Lock-up Undertaking and Insider Transactions in Sivers Semiconductors",
+          "publisher": "PR Newswire",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/expiry-lock-undertaking-insider-transactions-180600981.html",
+          "publishedAt": "2026-07-21T18:06:00.000Z"
+        },
+        {
+          "title": "Sivers Board Completes Purchase of Shares as Approved at the June 2026 AGM",
+          "publisher": "PR Newswire",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/sivers-board-completes-purchase-shares-052200448.html",
+          "publishedAt": "2026-07-13T05:22:00.000Z"
+        }
+      ]
+    },
+    "META": {
+      "symbol": "META",
+      "fundamentals": {
+        "trailingPE": 21.59309,
+        "forwardPE": 16.043724,
+        "pegRatio": 0.87,
+        "priceToBook": 6.1846833,
+        "evToEbitda": 13.842,
+        "profitMargin": 0.32837,
+        "revenueGrowth": 0.331,
+        "targetMeanPrice": 825.841,
+        "recommendationMean": 1.34921,
+        "bias": "fair",
+        "note": "Quality compounder — not a deep-value name; thesis is cash flow + AI ads, not PE compression.",
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Sector Update: Tech Stocks Fall Tuesday Afternoon",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-tuesday-173428394.html",
+          "publishedAt": "2026-07-28T17:34:28.000Z"
+        },
+        {
+          "title": "Meta's $14 Billion AI Move Comes With a Twist",
+          "publisher": "GuruFocus.com",
+          "link": "https://finance.yahoo.com/technology/ai/articles/metas-14-billion-ai-move-172423686.html",
+          "publishedAt": "2026-07-28T17:24:23.000Z"
+        },
+        {
+          "title": "Sector Update: Tech",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/sector-tech-170418744.html",
+          "publishedAt": "2026-07-28T17:04:18.000Z"
+        }
+      ]
+    },
+    "DRAM": {
+      "symbol": "DRAM",
+      "fundamentals": {
+        "trailingPE": 21.484556,
+        "forwardPE": null,
+        "pegRatio": null,
+        "priceToBook": null,
+        "evToEbitda": null,
+        "profitMargin": null,
+        "revenueGrowth": null,
+        "targetMeanPrice": null,
+        "recommendationMean": null,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Buy or Sell the Memory Plunge? SanDisk Sinks 9%, Micron Drops 7%, Western Digital Falls 8%",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/2ed34129-7195-3e3b-98eb-22514d647dc8/buy-or-sell-the-memory.html",
+          "publishedAt": "2026-07-28T13:39:45.000Z"
+        },
+        {
+          "title": "Cash, Chips, and Chaos: What’s Really Driving ETF Flows",
+          "publisher": "etf.com",
+          "link": "https://finance.yahoo.com/m/4e8715a5-b7b2-33ca-a430-a1a82febda65/cash%2C-chips%2C-and-chaos%3A.html",
+          "publishedAt": "2026-07-27T19:00:00.000Z"
+        },
+        {
+          "title": "ETF Zoo: Leveraged Lunacy Surpasses $65B in Gains",
+          "publisher": "etf.com",
+          "link": "https://finance.yahoo.com/m/459405a2-5d3a-3792-bb06-b9a3991db48b/etf-zoo%3A-leveraged-lunacy.html",
+          "publishedAt": "2026-07-25T05:33:35.000Z"
+        }
+      ]
+    },
+    "OUST": {
+      "symbol": "OUST",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": -737.5733,
+        "pegRatio": null,
+        "priceToBook": 7.642367,
+        "evToEbitda": -30.799,
+        "profitMargin": -0.30122,
+        "revenueGrowth": 0.489,
+        "targetMeanPrice": 52.14286,
+        "recommendationMean": 1.28571,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "These high-flying tech stocks are down 65% — here's how to shop the sell-off: One Big Investment Idea",
+          "publisher": "Yahoo Finance",
+          "link": "https://finance.yahoo.com/markets/article/these-high-flying-tech-stocks-are-down-65--heres-how-to-shop-the-sell-off-one-big-investment-idea-131623103.html",
+          "publishedAt": "2026-07-23T13:16:23.000Z"
+        },
+        {
+          "title": "Ouster Names Shaluinn Fullove as Chief People Officer to Drive Global Growth and Talent Strategy",
+          "publisher": "Business Wire",
+          "link": "https://finance.yahoo.com/technology/ai/articles/ouster-names-shaluinn-fullove-chief-100000743.html",
+          "publishedAt": "2026-07-23T10:00:00.000Z"
+        },
+        {
+          "title": "Kalanick’s Atoms raises $1.7B in a16z-led round for industrial AI",
+          "publisher": "Investing.com",
+          "link": "https://finance.yahoo.com/technology/ai/articles/kalanick-atoms-raises-1-7b-212701007.html",
+          "publishedAt": "2026-07-22T21:27:01.000Z"
+        }
+      ]
+    },
+    "VPG": {
+      "symbol": "VPG",
+      "fundamentals": {
+        "trailingPE": 199.41112,
+        "forwardPE": 49.57735,
+        "pegRatio": 5.8,
+        "priceToBook": 3.5658653,
+        "evToEbitda": 51.277,
+        "profitMargin": 0.0185,
+        "revenueGrowth": 0.176,
+        "targetMeanPrice": 94.66667,
+        "recommendationMean": null,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "CTS (CTS) Q2 Earnings and Revenues Beat Estimates",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/cts-cts-q2-earnings-revenues-131503953.html",
+          "publishedAt": "2026-07-28T13:15:03.000Z"
+        },
+        {
+          "title": "TEL or VPG: Which Is the Better Value Stock Right Now?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/tel-vpg-better-value-stock-154002294.html",
+          "publishedAt": "2026-07-24T15:40:02.000Z"
+        },
+        {
+          "title": "3 Stocks to Buy Before Wall Street Catches On Before the End of July",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/b40346a5-13f3-3cca-a84f-5878e6627443/3-stocks-to-buy-before-wall.html",
+          "publishedAt": "2026-07-24T12:00:10.000Z"
+        }
+      ]
+    },
+    "AMBA": {
+      "symbol": "AMBA",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": 59.304974,
+        "pegRatio": 2.28,
+        "priceToBook": 4.9261513,
+        "evToEbitda": -43.467,
+        "profitMargin": -0.17185,
+        "revenueGrowth": 0.169,
+        "targetMeanPrice": 95,
+        "recommendationMean": null,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Kalanick’s Atoms raises $1.7B in a16z-led round for industrial AI",
+          "publisher": "Investing.com",
+          "link": "https://finance.yahoo.com/technology/ai/articles/kalanick-atoms-raises-1-7b-212701007.html",
+          "publishedAt": "2026-07-22T21:27:01.000Z"
+        },
+        {
+          "title": "Ambarella (AMBA) Upgraded to Buy: What Does It Mean for the Stock?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/ambarella-amba-upgraded-buy-does-160002994.html",
+          "publishedAt": "2026-07-21T16:00:02.000Z"
+        },
+        {
+          "title": "3 Picks-and-Shovels Stocks Powering the Humanoid Robotics Buildout",
+          "publisher": "MarketBeat",
+          "link": "https://finance.yahoo.com/m/d6dcb5b3-8fd3-3453-b87e-3257b9dda7c3/3-picks-and-shovels-stocks.html",
+          "publishedAt": "2026-07-17T13:45:00.000Z"
+        }
+      ]
+    },
+    "SYNA": {
+      "symbol": "SYNA",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": 21.130285,
+        "pegRatio": 0.51,
+        "priceToBook": 3.1761034,
+        "evToEbitda": 56.449,
+        "profitMargin": -0.04104,
+        "revenueGrowth": 0.104,
+        "targetMeanPrice": 143.66667,
+        "recommendationMean": 2.69231,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Amkor Technology (AMKR) Q2 Earnings and Revenues Beat Estimates",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/amkor-technology-amkr-q2-earnings-213502773.html",
+          "publishedAt": "2026-07-27T21:35:02.000Z"
+        },
+        {
+          "title": "What This Synaptics CFO Filing Signals for Long-Term Investors With Revenue Up 10%",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/cf23528e-764a-39fc-8bc2-f6a928a4b516/what-this-synaptics-cfo.html",
+          "publishedAt": "2026-07-22T01:20:57.000Z"
+        },
+        {
+          "title": "Synaptics Has 35-Plus Robotics Customers. Its Product Chief Just Held His Stake",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/fc86c568-0672-35fd-94e6-2c65ffb0dd14/synaptics-has-35-plus.html",
+          "publishedAt": "2026-07-22T01:00:47.000Z"
+        }
+      ]
+    },
+    "INOD": {
+      "symbol": "INOD",
+      "fundamentals": {
+        "trailingPE": 51.375,
+        "forwardPE": 28.77,
+        "pegRatio": 0.87,
+        "priceToBook": 14.648677,
+        "evToEbitda": 35.195,
+        "profitMargin": 0.13864,
+        "revenueGrowth": 0.544,
+        "targetMeanPrice": 122.75,
+        "recommendationMean": 1.25,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Innodata vs. Genpact: Which AI Services Stock Is the Better Buy?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/innodata-vs-genpact-ai-services-170600488.html",
+          "publishedAt": "2026-07-27T17:06:00.000Z"
+        },
+        {
+          "title": "Is Innodata's 40% Growth Outlook Just the Start of an AI Gold Rush?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/innodatas-40-growth-outlook-just-140500518.html",
+          "publishedAt": "2026-07-21T14:05:00.000Z"
+        },
+        {
+          "title": "Innodata (INOD) Stock Looks Expensive As AI Data Growth Drives Optimism",
+          "publisher": "Simply Wall St.",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/innodata-inod-stock-looks-expensive-211121017.html",
+          "publishedAt": "2026-07-17T21:11:21.000Z"
+        }
+      ]
+    }
+  }
+}

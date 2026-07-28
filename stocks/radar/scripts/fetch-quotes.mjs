@@ -265,5 +265,14 @@ await withOtel("stocks-radar-quotes", async (otel) => {
         process.exitCode = 1;
       }
     }
+
+    // Outlook layer: valuations + news + macro rates (soft-fail)
+    try {
+      const { fetchOutlook } = await import("./fetch-outlook.mjs");
+      console.log("Fetching outlook (valuations, news, macro rates)…");
+      await otel.withSpan("fetch-outlook.run", () => fetchOutlook());
+    } catch (e) {
+      console.warn(`⚠ outlook fetch failed (quotes still saved): ${e.message || e}`);
+    }
   });
 });

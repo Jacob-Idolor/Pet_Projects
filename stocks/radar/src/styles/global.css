@@ -1630,7 +1630,7 @@ body[data-day-mood="mixed"] .site-header {
 
   .mobile-dock {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.35rem;
     position: fixed;
     left: max(0.65rem, env(safe-area-inset-left));
@@ -2097,6 +2097,191 @@ body[data-day-mood="mixed"] .site-header {
 
 .board-stage {
   padding-bottom: 1rem;
+}
+
+/* Macro rates / bonds / dollar — primary macro tape */
+.macro-strip {
+  margin: 0 0 1.35rem;
+  padding: 1rem 0 0.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.macro-strip__head {
+  margin-bottom: 0.85rem;
+}
+
+.macro-strip__head h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.macro-strip__lede {
+  margin: 0.35rem 0 0;
+  max-width: 42rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.macro-strip__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.65rem 0.85rem;
+}
+
+.macro-strip__loading {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+
+.macro-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.macro-card__label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.macro-card__px {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.macro-card__chg {
+  font-size: 0.75rem;
+}
+
+.macro-card__chg.up {
+  color: var(--green);
+}
+
+.macro-card__chg.down {
+  color: var(--red);
+}
+
+.macro-card__blurb {
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--dim);
+}
+
+.outlook-detail {
+  margin: 0 0 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.outlook-detail h4,
+.tech-detail h4 {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.tech-detail__sub {
+  font-weight: 400;
+  color: var(--dim);
+  font-size: 0.72rem;
+}
+
+.outlook-bias {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.outlook-bias--cheap {
+  color: var(--green);
+}
+
+.outlook-bias--fair {
+  color: var(--amber);
+}
+
+.outlook-bias--rich {
+  color: var(--red);
+}
+
+.outlook-note,
+.outlook-catalyst {
+  margin: 0 0 0.4rem;
+  color: var(--text);
+}
+
+.outlook-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.outlook-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 4.5rem;
+}
+
+.outlook-metric__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.outlook-disclaimer,
+.outlook-empty {
+  margin: 0.35rem 0;
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+
+.outlook-news-title {
+  margin: 0.65rem 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.outlook-news {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.outlook-news li {
+  margin: 0 0 0.4rem;
+  line-height: 1.35;
+}
+
+.outlook-news a {
+  display: inline;
+  margin: 0;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.outlook-news__pub {
+  font-size: 0.72rem;
+  color: var(--dim);
 }
 
 .board-header {

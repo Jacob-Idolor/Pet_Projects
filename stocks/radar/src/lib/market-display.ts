@@ -121,6 +121,114 @@ export function hasTechnical(q: QuoteData | undefined) {
   return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
 }
 
+export interface OutlookFundamentals {
+  trailingPE?: number | null;
+  forwardPE?: number | null;
+  pegRatio?: number | null;
+  priceToBook?: number | null;
+  evToEbitda?: number | null;
+  profitMargin?: number | null;
+  revenueGrowth?: number | null;
+  targetMeanPrice?: number | null;
+  recommendationMean?: number | null;
+  bias?: string | null;
+  note?: string | null;
+  catalyst?: string | null;
+}
+
+export interface OutlookNewsItem {
+  title?: string;
+  publisher?: string;
+  link?: string;
+  publishedAt?: string | null;
+}
+
+export interface OutlookStock {
+  symbol?: string;
+  fundamentals?: OutlookFundamentals | null;
+  news?: OutlookNewsItem[];
+}
+
+function fmtMultiple(v: number | null | undefined) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return v.toFixed(1);
+}
+
+function fmtGrowth(v: number | null | undefined) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return `${(v * 100).toFixed(0)}%`;
+}
+
+function biasLabel(bias: string | null | undefined) {
+  const b = (bias || "").toLowerCase();
+  if (b === "cheap") return { text: "Group lean: cheap vs story", cls: "cheap" };
+  if (b === "fair") return { text: "Group lean: fair", cls: "fair" };
+  if (b === "rich") return { text: "Group lean: rich vs story", cls: "rich" };
+  return null;
+}
+
+/** Valuation + news first — friend feedback: more important than technical momentum. */
+export function renderOutlookDetail(row: OutlookStock | null | undefined) {
+  const f = row?.fundamentals;
+  const news = Array.isArray(row?.news) ? row!.news! : [];
+  const hasMetrics =
+    f &&
+    (f.trailingPE != null ||
+      f.forwardPE != null ||
+      f.pegRatio != null ||
+      f.priceToBook != null ||
+      f.evToEbitda != null ||
+      f.bias ||
+      f.note ||
+      f.catalyst);
+
+  if (!hasMetrics && !news.length) {
+    return `<div class="outlook-detail">
+      <h4>Valuation + news</h4>
+      <p class="outlook-empty">Outlook refreshes with quotes — run <code>npm run update-quotes</code> or wait for CI.</p>
+    </div>`;
+  }
+
+  const lean = biasLabel(f?.bias);
+  const metrics = [
+    ["Trailing PE", fmtMultiple(f?.trailingPE)],
+    ["Forward PE", fmtMultiple(f?.forwardPE)],
+    ["PEG", fmtMultiple(f?.pegRatio)],
+    ["P/B", fmtMultiple(f?.priceToBook)],
+    ["EV/EBITDA", fmtMultiple(f?.evToEbitda)],
+    ["Rev growth", fmtGrowth(f?.revenueGrowth)],
+  ]
+    .filter(([, v]) => v !== "—")
+    .map(
+      ([label, v]) =>
+        `<span class="outlook-metric"><span class="outlook-metric__label">${escapeHtml(label)}</span><span class="mono">${escapeHtml(v)}</span></span>`
+    )
+    .join("");
+
+  const newsHtml = news.length
+    ? `<ul class="outlook-news">${news
+        .slice(0, 3)
+        .map((n) => {
+          const title = escapeHtml(n.title || "Headline");
+          const pub = escapeHtml(n.publisher || "");
+          const href = escapeHtml(n.link || "#");
+          return `<li><a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
+        })
+        .join("")}</ul>`
+    : `<p class="outlook-empty">No recent headlines in the feed.</p>`;
+
+  return `<div class="outlook-detail">
+    <h4>Valuation + news <span class="tech-detail__sub">(primary)</span></h4>
+    ${lean ? `<p class="outlook-bias outlook-bias--${lean.cls}">${escapeHtml(lean.text)}</p>` : ""}
+    ${f?.note ? `<p class="outlook-note">${escapeHtml(f.note)}</p>` : ""}
+    ${f?.catalyst ? `<p class="outlook-catalyst"><strong>Catalyst:</strong> ${escapeHtml(f.catalyst)}</p>` : ""}
+    ${metrics ? `<div class="outlook-metrics">${metrics}</div>` : ""}
+    <p class="outlook-disclaimer">Multiples without peer context are not a buy/sell — they’re chat fuel next to the thesis.</p>
+    <h5 class="outlook-news-title">Headlines</h5>
+    ${newsHtml}
+  </div>`;
+}
+
 export function renderTechnicalDetail(q: QuoteData | undefined, price: number | null) {
   if (!hasTechnical(q)) {
     return `<p class="tech-unavailable">Technical data refreshes on deploy — run <code>npm run update-quotes</code> locally or wait for CI.</p>`;
@@ -148,7 +256,7 @@ export function renderTechnicalDetail(q: QuoteData | undefined, price: number | 
   const action = actionBias(q);
   return `
     <div class="tech-detail">
-      <h4>Technical snapshot</h4>
+      <h4>Momentum <span class="tech-detail__sub">(secondary)</span></h4>
       <div class="tech-summary-row">
         ${actionBadge(q)}
         ${trendBadge(q?.trend)}

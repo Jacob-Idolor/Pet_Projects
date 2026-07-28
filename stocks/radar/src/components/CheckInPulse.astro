@@ -7,33 +7,35 @@
       <p class="board-eyebrow">Friend check-in</p>
       <h2 id="checkin-title">Today’s pulse</h2>
       <p class="checkin-lede">
-        Weighted radar score (≥+3 lean buy, ≤−3 lean sell). Quiet coils that haven’t
-        run yet show up under Watch as <strong>pre-momentum</strong> — chat bait, not advice.
+        Stock outlook starts with <strong>valuation + news</strong> (expand any ticker).
+        Macro mood is <a href="#macro-rates">rates / bonds / yields</a> above.
+        This pulse is secondary — weighted technical momentum that may or may not hold.
       </p>
     </div>
     <nav class="checkin-jump desktop-only" aria-label="Jump to sections">
+      <a href="#macro-rates">Rates</a>
       <a href="#checkin" class="is-active">Pulse</a>
       <a href="#watchlist-board">Master list</a>
       <a href="#submissions">Suggest</a>
     </nav>
   </div>
 
-  <div class="checkin-guide" aria-label="How the weighted score works">
+  <div class="checkin-guide" aria-label="How to read the board">
     <article class="checkin-guide__card checkin-guide__card--buy">
-      <h3>Heavier (+)</h3>
-      <p>RSI washouts (+3), near year-lows (+2), deep below SMA50 (+2). Soft RSI and trend count less.</p>
-    </article>
-    <article class="checkin-guide__card checkin-guide__card--sell">
-      <h3>Heavier (−)</h3>
-      <p>RSI overbought (−3), near year-highs / ATH (−2), stretched above SMA50 (−2).</p>
-    </article>
-    <article class="checkin-guide__card checkin-guide__card--watch">
-      <h3>Pre-momentum</h3>
-      <p>Quiet volume + mid RSI + coiling near/under the 50-day — names that haven’t caught a run yet (+2).</p>
+      <h3>1 · Valuation + news</h3>
+      <p>Expand a name for PE / forward PE, group valuation lean, and recent headlines. That’s the stock outlook.</p>
     </article>
     <article class="checkin-guide__card checkin-guide__card--sma">
+      <h3>2 · Rates tape</h3>
+      <p>10Y / front-end / long bonds / dollar above — gravity for multiples. Macro first, then tickers.</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--watch">
+      <h3>3 · Momentum (pulse)</h3>
+      <p>Weighted RSI / 52w / SMA50 / pre-momentum coils. Useful for timing talk — not the thesis.</p>
+    </article>
+    <article class="checkin-guide__card checkin-guide__card--sell">
       <h3>Thresholds</h3>
-      <p>Lean buy ≥ +3 · Watch −2…+2 · Lean sell ≤ −3. Same playbook on every ticker.</p>
+      <p>Lean buy ≥ +3 · Watch −2…+2 · Lean sell ≤ −3. Same checklist on every ticker — chat bait, not advice.</p>
     </article>
   </div>
 
@@ -99,6 +101,9 @@
 </section>
 
 <nav class="mobile-dock" aria-label="Primary">
+  <a href="#macro-rates" class="mobile-dock__link" data-dock="rates">
+    <span class="mobile-dock__label">Rates</span>
+  </a>
   <a href="#checkin" class="mobile-dock__link is-active" data-dock="checkin">
     <span class="mobile-dock__label">Pulse</span>
   </a>
@@ -139,11 +144,12 @@
     function syncDock() {
       var y = window.scrollY + 120;
       var sections = [
+        { id: "macro-rates", key: "rates" },
         { id: "checkin", key: "checkin" },
         { id: "watchlist-board", key: "list" },
         { id: "submissions", key: "suggest" },
       ];
-      var active = "checkin";
+      var active = "rates";
       for (var i = 0; i < sections.length; i++) {
         var el = document.getElementById(sections[i].id);
         if (el && el.offsetTop <= y) active = sections[i].key;

@@ -13,6 +13,7 @@
     "rebuild": "npm run prebuild && npm run build && npm run preview",
     "import-csv": "node scripts/csv-to-watchlist.mjs",
     "update-quotes": "node scripts/fetch-quotes.mjs",
+    "update-outlook": "node scripts/fetch-outlook.mjs",
     "seo": "node scripts/write-seo-files.mjs",
     "health": "node scripts/write-health.mjs",
     "digest": "node scripts/daily-digest.mjs",

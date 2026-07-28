@@ -2,12 +2,14 @@ import { escapeHtml, sanitizeId, sanitizePriority, sanitizeSymbol, yahooUrl } fr
 import {
   type QuoteData,
   type QuoteMap,
+  type OutlookStock,
   fmtPrice,
   trendBadge,
   maCell,
   rangeBar,
   renderMaStrip,
   renderTechnicalDetail,
+  renderOutlookDetail,
   hasTechnical,
   matchesTechnicalFilter,
   rsiLabel,
@@ -32,6 +34,11 @@ export interface StockRow {
   priority?: string;
   sector?: string;
   custom?: boolean;
+  catalyst?: string;
+  valuation?: {
+    bias?: "cheap" | "fair" | "rich" | "unknown" | string;
+    note?: string;
+  };
 }
 
 const CUSTOM_STORE = "stocks-radar-custom";
@@ -48,6 +55,7 @@ const CAT_LABEL: Record<string, string> = {
 let baseStocks: StockRow[] = [];
 let allStocks: StockRow[] = [];
 let quotes: QuoteMap = {};
+let outlookBySymbol: Record<string, OutlookStock> = {};
 let filter = "all";
 let tagFilter: string | null = null;
 let search = "";
@@ -407,6 +415,23 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
   `;
 }
 
+function outlookFor(stock: StockRow): OutlookStock | undefined {
+  const sym = stock.symbol?.toUpperCase();
+  const fetched = sym ? outlookBySymbol[sym] : undefined;
+  const human = stock.valuation || {};
+  const fundamentals = {
+    ...(fetched?.fundamentals || {}),
+    bias: human.bias || fetched?.fundamentals?.bias || null,
+    note: human.note || fetched?.fundamentals?.note || null,
+    catalyst: stock.catalyst || fetched?.fundamentals?.catalyst || null,
+  };
+  return {
+    symbol: sym,
+    fundamentals,
+    news: fetched?.news || [],
+  };
+}
+
 function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | undefined, colspan: number) {
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
@@ -414,10 +439,11 @@ function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | u
   return `<tr class="detail-row" data-detail-for="${sid}">
         <td colspan="${colspan}">
           <div class="detail-panel">
-            ${renderTechnicalDetail(q, price)}
+            ${renderOutlookDetail(outlookFor(stock))}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
+            ${renderTechnicalDetail(q, price)}
             <div class="pt-inline" data-pt-inline="${sym}">
               <strong>Price target:</strong>
               <input type="number" class="pt-inline-price" step="0.01" min="0.01" placeholder="e.g. 18" value="${ptVal}" aria-label="Target price for ${sym}" />
@@ -1216,6 +1242,24 @@ export async function initWatchlistBoard(stocksJson: string) {
 
   renderAll();
   startQuoteLoader();
+  loadOutlook().then((ok) => {
+    if (ok) renderAll();
+  });
+}
+
+async function loadOutlook() {
+  const base = document.querySelector<HTMLElement>("[data-radar-base]")?.dataset.radarBase ?? "/";
+  try {
+    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const stocks = data?.stocks;
+    if (!stocks || typeof stocks !== "object") return false;
+    outlookBySymbol = stocks as Record<string, OutlookStock>;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function isUsMarketOpen() {

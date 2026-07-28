@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import LiveStatus from "../components/LiveStatus.astro";
 import DayMoodBanner from "../components/DayMoodBanner.astro";
 import CheckInPulse from "../components/CheckInPulse.astro";
+import MacroStrip from "../components/MacroStrip.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
 import AdSlot from "../components/AdSlot.astro";
@@ -12,7 +13,7 @@ import { featureEnabled, getSiteSettings } from "../lib/site-config";
 
 const description =
   meta.tagline ||
-  "Group check-in: pulse with gainers, losers, watch names, and lean buy/sell in plain English.";
+  "Group check-in: valuations, news, rates, and a weighted technical lean for discussion.";
 
 const settings = getSiteSettings();
 const ads = getAdSenseConfig();
@@ -34,7 +35,7 @@ const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
         <p class="hero-brand">StocksWatch</p>
         <h1>{meta.groupName}</h1>
         <p class="tagline">{meta.tagline}</p>
-        <p class="hero-mobile-hint mobile-only">Pulse → list → suggest. Use the bar at the bottom anytime.</p>
+        <p class="hero-mobile-hint mobile-only">Rates → pulse → list. Use the bar at the bottom anytime.</p>
       </div>
       <dl class="hero-kpis" aria-label="Watchlist summary">
         <div class="hero-kpi">
@@ -59,6 +60,7 @@ const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
       )
     }
     <div class="container board-stage">
+      <MacroStrip />
       {showPulse && <CheckInPulse />}
       {
         showBoardAd && (

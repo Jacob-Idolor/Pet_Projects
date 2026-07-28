@@ -1,8 +1,8 @@
 {
   "meta": {
     "groupName": "StocksWatch",
-    "tagline": "Group check-in — master watchlist, movers, and buy setups from our radar score.",
-    "lastUpdated": "2026-07-27"
+    "tagline": "Valuation + news first, rates for macro, technical lean for momentum — group check-in, not advice.",
+    "lastUpdated": "2026-07-28"
   },
   "stocks": [
     {
@@ -26,6 +26,11 @@
       "tags": ["ai", "high-conviction"],
       "priority": "high",
       "thesis": "Favorite investment for the next few years — highest conviction name on the list.",
+      "valuation": {
+        "bias": "fair",
+        "note": "Growth story carries the multiple — watch dilution and AI infra spend cadence."
+      },
+      "catalyst": "Capacity / GPU cloud bookings commentary",
       "addedBy": "J",
       "holder": "J"
     },
@@ -60,6 +65,11 @@
       "tags": ["photonics", "transceiver", "datacenter"],
       "priority": "high",
       "thesis": "Pluggable transceiver play — highly disrespected by the market relative to the setup.",
+      "valuation": {
+        "bias": "cheap",
+        "note": "Screen looks cheap vs optical peers if execution sticks — scrub balance sheet risk in chat."
+      },
+      "catalyst": "Datacenter transceiver wins / next earnings",
       "addedBy": "J",
       "holder": "J"
     },
@@ -84,6 +94,10 @@
       "tags": ["mag7", "ai"],
       "priority": "high",
       "thesis": "Highest upside in Mag 7 outside NVDA — AI + ads + efficiency story.",
+      "valuation": {
+        "bias": "fair",
+        "note": "Quality compounder — not a deep-value name; thesis is cash flow + AI ads, not PE compression."
+      },
       "addedBy": "J",
       "holder": "J"
     },
