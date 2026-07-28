@@ -1,25 +1,60 @@
-# Production readiness — Stocks Radar
+# Production readiness — StocksWatch
 
-What “professional / production-ready” means for this **static** product, what is already in code, and what you still flip on in AWS / Google.
+What “production-ready” means for this **static** product: predictable deploys, no silent stale data, visible snapshot age, CDN invalidation that matches what changed, and health checks that prove both surfaces work.
 
 ## Architecture (keep this)
 
 ```text
 GitHub Actions  →  S3 (tiered cache)  →  CloudFront
        │                                    │
-       ├─ quote refresh + OTel (optional)   ├─ /health.json
-       └─ personal alerts (SNS)             └─ /settings.json
+       ├─ quote + screener refresh          ├─ /health.json
+       └─ optional OTel / alerts (SNS)      ├─ /quotes.json
+                                            ├─ /screener.json
+                                            └─ /datacenter.html
 ```
 
 No app servers. Scale = CloudFront. Cost stays low ([PASSIVE_INCOME.md](PASSIVE_INCOME.md)).
+
+## Already live — operating model
+
+Treat every merge to `main` as a **production release**.
+
+**Keep forever:** static hosting, Yahoo snapshots in CI, copy-prompt AI Analyst, browser `localStorage` for trends — not a live Flask/LLM server.
+
+**On every deploy/refresh (already wired):**
+
+- Screener Python deps in Actions; screener fetch **hard-fails** if `ok_count` is 0
+- Invalidate `/quotes.json`, `/screener.json`, `/datacenter.html`, `/datacenter/*`
+- Health-curl `/`, `/health.json`, `/quotes.json`, `/screener.json`, `/datacenter.html`
+- **Freshness assert** — `node scripts/check-live-freshness.mjs --url $HOST` (quotes ≤12h, screener ≤24h, coverage ≥85%, news present)
+- Datacenter status bar shows **snapshot age** (amber/red when stale)
+
+**After every upload, spot-check:**
+
+1. Home board loads quotes
+2. `/datacenter.html` loads the table
+3. Expand one row — headlines present
+
+## Next hardening (do in this order)
+
+| Priority | Item | Why |
+|----------|------|-----|
+| **Now** | ~~Freshness assert~~ **done** — `npm run freshness` + deploy step | Catch silent stale JSON |
+| **Now** | ~~Visible snapshot age~~ **done** — datacenter status bar | Trust / “is this live?” |
+| **Next** | `prebuild` sync `src/styles/tokens.css` → `public/tokens.css` | No Home/DC token drift |
+| **Next** | Shorter cache or content-hash for `public/datacenter/*.js` | Shim/UI fixes ship same day |
+| **Next** | CI smoke: non-empty `news.json` + screener schema check | Stop contract regressions |
+| **Later** | Finish custom domain / AdSense ([DOMAIN.md](DOMAIN.md)) | Shareable URL + monetize |
+| **Later** | Optional OTel on fetch scripts ([OBSERVABILITY.md](OBSERVABILITY.md)) | Yahoo failure visibility |
+| **Defer** | Live Yahoo / in-app LLM backend | Breaks the $0.50–3/mo model |
 
 ## Configuration model
 
 | Layer | Where | Holds |
 |-------|--------|--------|
-| **Site settings** | `src/data/site-settings.json` | Features, quote staleness, board defaults, alert defaults |
+| **Site settings** | `src/data/site-settings.json` | Features, quote staleness, board defaults |
 | **Env / CI vars** | `.env`, GitHub Actions vars | Site URL, AdSense IDs, OTEL endpoint |
-| **Secrets** | GitHub Secrets + `terraform.tfvars` | AWS keys, SNS ARNs, subscriber emails |
+| **Secrets** | GitHub Secrets + `terraform.tfvars` | AWS keys, SNS ARNs |
 | **Runtime public** | `/settings.json`, `/health.json` | Safe snapshot for ops + UI |
 
 ```bash
@@ -27,43 +62,34 @@ npm run config:validate           # PR / local (lenient)
 npm run config:validate:prod      # strict — requires real STOCKS_RADAR_SITE
 ```
 
-Edit product knobs in `site-settings.json`, then rebuild. Toggle features with booleans under `features.*`. The public board does **not** show a settings or personal-alerts panel — those are ops-only (`/settings.json`, [ALERTS.md](ALERTS.md)).
-
 ## Production checklist
 
-### A. Code / repo (this PR)
+### A. Code / repo
 
 - [x] Unified settings + validation
 - [x] Health + public settings endpoints
 - [x] Quote resilience + stale UI
-- [x] Personal alert rules
+- [x] Datacenter screener on static hosting
 - [x] Tiered caching / narrow invalidation
 - [x] Optional OTel on scripts
-- [ ] Merge PR #38 to `main`
+- [ ] Ship latest UI/API/news fixes to `main`
 
-### B. AWS go-live — see [GO_LIVE.md](GO_LIVE.md)
+### B. AWS — see [GO_LIVE.md](GO_LIVE.md)
 
-- [ ] `terraform apply` (budget email on)
-- [ ] IAM policy from `infra/iam/deploy-policy.json` (narrowed — [SECURITY.md](SECURITY.md))
-- [ ] `bash infra/go-live.sh` (secrets + `STOCKS_RADAR_SITE`)
-- [ ] `npm run go-live:preflight -- --strict`
-- [ ] Set `STOCKS_RADAR_DEPLOY_ENABLED=true`
-- [ ] Confirm `/health.json` and `/settings.json` on CloudFront
-- [ ] Confirm `/_private/alert-state.json` is **not** publicly readable (403/404)
-- [ ] Optional: digest + `alert_subscribers` + `STOCKS_RADAR_ALERT_TOPICS` — [ALERTS.md](ALERTS.md)
+- [x] Deploy enabled (`STOCKS_RADAR_DEPLOY_ENABLED`) when live
+- [ ] Confirm `/_private/alert-state.json` is **not** publicly readable
+- [ ] Optional: digest + alert subscribers — [ALERTS.md](ALERTS.md)
 
-### C. Domain + AdSense (passive income)
+### C. Domain + AdSense
 
-- [ ] Buy domain — [DOMAIN.md](DOMAIN.md)
-- [ ] `enable_custom_domain = true` + ACM CNAMEs
-- [ ] Update variable `STOCKS_RADAR_SITE=https://yourdomain.com`
-- [ ] AdSense site approval + slots — [ADSENSE.md](ADSENSE.md)
-- [x] Deploy workflow runs `config:validate:prod` when `STOCKS_RADAR_ENV=production`
+- [ ] Custom domain fully wired — [DOMAIN.md](DOMAIN.md)
+- [ ] `STOCKS_RADAR_SITE=https://stockswatch.cc` (or your domain)
+- [ ] AdSense approval + slots — [ADSENSE.md](ADSENSE.md)
 
 ### D. Observability
 
-- [ ] Optional `OTEL_EXPORTER_OTLP_ENDPOINT` (Grafana Cloud / Honeycomb free) — [OBSERVABILITY.md](OBSERVABILITY.md)
-- [ ] Watch AWS budget + AdSense RPM monthly
+- [ ] Optional `OTEL_EXPORTER_OTLP_ENDPOINT` — [OBSERVABILITY.md](OBSERVABILITY.md)
+- [ ] Watch AWS budget monthly — [infra/terraform/COST.md](infra/terraform/COST.md)
 
 ## Environments
 
@@ -77,15 +103,19 @@ Edit product knobs in `site-settings.json`, then rebuild. Toggle features with b
 
 | Item | Why wait |
 |------|----------|
-| App server / DB | Breaks cost model; IndexedDB + git is enough |
+| App server / DB | Breaks cost model |
 | WAF | ~$5+/mo before revenue |
 | Self-serve alert signup UI | Needs backend auth |
 | Full browser RUM | Sample later when traffic exists |
+| In-app LLM generation | Needs API keys + server; copy-prompt is enough |
 
 ## Quick verify after deploy
 
 ```bash
-curl -sS https://YOUR_HOST/health.json | jq .
-curl -sS https://YOUR_HOST/settings.json | jq .features
-curl -sS https://YOUR_HOST/quotes.json | jq '{count,total,partial,fetchedAt}'
+HOST=https://stockswatch.cc   # or your CloudFront domain
+curl -sS "$HOST/health.json" | jq .
+curl -sS "$HOST/settings.json" | jq .features
+curl -sS "$HOST/quotes.json" | jq '{fetchedAt,count:(.quotes|length)}'
+curl -sS "$HOST/screener.json" | jq '{fetched_at_iso,ok_count,ticker_count}'
+curl -sS -o /dev/null -w "%{http_code}\n" "$HOST/datacenter.html"
 ```

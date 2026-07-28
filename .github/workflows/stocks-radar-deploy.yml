@@ -161,6 +161,17 @@ jobs:
           echo "## Health OK" >> "$GITHUB_STEP_SUMMARY"
           echo "\`$url/health.json\`" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Post-deploy freshness assert
+        working-directory: stocks/radar
+        env:
+          QUOTES_MAX_AGE_HOURS: "12"
+          SCREENER_MAX_AGE_HOURS: "24"
+          SCREENER_MIN_OK_RATIO: "0.85"
+        run: |
+          node scripts/check-live-freshness.mjs --url "${{ steps.url.outputs.site }}"
+          echo "## Freshness OK" >> "$GITHUB_STEP_SUMMARY"
+          echo "Quotes ≤12h · screener ≤24h · coverage ≥85% · news present" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Deployment summary
         run: |
           echo "## Stocks Radar deployed" >> "$GITHUB_STEP_SUMMARY"

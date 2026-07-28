@@ -109,12 +109,23 @@ jobs:
             echo "site=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Live freshness assert
+        if: ${{ steps.url.outputs.site != '' }}
+        working-directory: stocks/radar
+        env:
+          QUOTES_MAX_AGE_HOURS: "12"
+          SCREENER_MAX_AGE_HOURS: "24"
+          SCREENER_MIN_OK_RATIO: "0.85"
+        run: |
+          sleep 8
+          node scripts/check-live-freshness.mjs --url "${{ steps.url.outputs.site }}"
+
       - name: Summary
         env:
           SITE_URL: ${{ steps.url.outputs.site }}
         run: |
-          echo "## Quotes refreshed" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Quotes + screener refreshed" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Site:** ${SITE_URL:-"(set STOCKS_RADAR_SITE)"}" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Paths invalidated:** \`/quotes.json\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Paths invalidated:** \`/quotes.json\` \`/screener.json\` \`/datacenter/news.json\`" >> "$GITHUB_STEP_SUMMARY"
           node -e "const q=require('./stocks/radar/public/quotes.json'); console.log('Coverage:', q.count+'/'+q.total, q.partial?'(partial)':''); console.log('Fetched:', q.fetchedAt||q.updatedAt);" >> "$GITHUB_STEP_SUMMARY"

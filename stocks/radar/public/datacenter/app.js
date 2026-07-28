@@ -140,7 +140,9 @@ function newsHtml(ticker) {
   const c = NEWS_CACHE[ticker];
   if (c === undefined || c === "loading") return `<div class="news-status">Loading news…</div>`;
   if (c === "error") return `<div class="news-status">Couldn't load news right now.</div>`;
-  if (!c.length) return `<div class="news-status">No recent news found for ${ticker}.</div>`;
+  if (!c.length) {
+    return `<div class="news-status">No headlines in the latest snapshot for ${ticker}. Re-run <code>npm run update-screener</code> to refresh news.json.</div>`;
+  }
   return `<div class="news-list">` + c.map((it) =>
     `<a class="news-item" href="${encodeURI(it.url)}" target="_blank" rel="noopener noreferrer">` +
     `<span class="news-title">${escapeHtml(it.title)}</span>` +
@@ -153,9 +155,10 @@ const td = (inner, cls) => `<td class="${cls || ""}">${inner}</td>`;
 function nameInner(h, showLayers) {
   const cur = h.market && h.market.currency;
   const curChip = (cur && cur !== "USD") ? `<span class="chip cur" title="prices converted from ${cur} to USD at live FX">${cur}→USD</span>` : "";
+  const tagList = Array.isArray(h.tags) ? h.tags : String(h.tags || "").split(",").map((t) => t.trim()).filter(Boolean);
   const chips = showLayers
     ? (h.layers || []).map((l) => `<span class="chip">${l}</span>`).join("")
-    : (h.tags || []).filter((t) => t !== "foreign").map((t) => `<span class="chip">${t}</span>`).join("") +
+    : tagList.filter((t) => t !== "foreign").map((t) => `<span class="chip">${t}</span>`).join("") +
       (h.also_in || []).map((l) => `<span class="chip also">also: ${l}</span>`).join("");
   return `<div class="name">${h.name}</div><div class="thesis">${h.thesis || ""}</div><div class="tags">${chips}${curChip}</div>`;
 }
@@ -244,6 +247,21 @@ const COLSETS = {
 };
 const activeColKeys = () => [...BASE_COLS, ...(COLSETS[STATE.colset] || [])];
 
+function formatSnapshotAge(fetchedAtSec) {
+  if (fetchedAtSec == null || !Number.isFinite(Number(fetchedAtSec))) return null;
+  const ms = Date.now() - Number(fetchedAtSec) * 1000;
+  if (ms < 0) return "just now";
+  const mins = Math.round(ms / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return mins + "m ago";
+  const hrs = Math.round(mins / 60);
+  if (hrs < 48) return hrs + "h ago";
+  return Math.round(hrs / 24) + "d ago";
+}
+
+/** Soft stale threshold for UI (hours). Matches weekday refresh cadence. */
+const SNAPSHOT_STALE_HOURS = 24;
+
 // ---- data load ----------------------------------------------------------
 async function load(refresh = false) {
   const btn = $("#refresh");
@@ -255,11 +273,41 @@ async function load(refresh = false) {
     STATE.layers = data.layers;
     STATE.marketState = data.market_state;
     attachScores();
-    const when = new Date(data.fetched_at * 1000).toLocaleTimeString();
+    const fetchedSec = Number(data.fetched_at);
+    const whenLocal = Number.isFinite(fetchedSec)
+      ? new Date(fetchedSec * 1000).toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "—";
+    const ageLabel = formatSnapshotAge(fetchedSec);
+    const ageHours = Number.isFinite(fetchedSec)
+      ? (Date.now() - fetchedSec * 1000) / 3_600_000
+      : null;
+    const stale = ageHours != null && ageHours > SNAPSHOT_STALE_HOURS;
+    const uniq = uniqueHoldings().length;
     $("#status").innerHTML =
-      `<b>${uniqueHoldings().length}</b> names · ${data.layers.length} layers · ` +
-      `${data.ok_count}/${data.ticker_count} with live data ${marketPill()}`;
-    $("#meta").textContent = `${data.cached ? "cached" : "fresh"} · updated ${when}`;
+      `<b>${uniq}</b> names · ${data.layers.length} layers · ` +
+      `${data.ok_count}/${data.ticker_count} with data ${marketPill()}`;
+    $("#meta").textContent = ageLabel
+      ? `snapshot ${ageLabel}${stale ? " · stale" : ""} · ${whenLocal}`
+      : `${data.cached ? "cached" : "fresh"} · ${whenLocal}`;
+    const kpiNames = $("#kpiNames");
+    const kpiOk = $("#kpiOk");
+    if (kpiNames) kpiNames.textContent = String(uniq);
+    if (kpiOk) kpiOk.textContent = `${data.ok_count}/${data.ticker_count}`;
+    const dot = $("#statusDot");
+    if (dot) {
+      const ratio = data.ticker_count ? data.ok_count / data.ticker_count : 0;
+      let color = "var(--green)";
+      if (stale || ratio < 0.5) color = "var(--red)";
+      else if (ratio < 0.9 || (ageHours != null && ageHours > 12)) color = "var(--amber)";
+      dot.style.background = color;
+      dot.style.boxShadow = `0 0 6px ${color}`;
+      dot.title = ageLabel ? `Snapshot ${ageLabel}` : "Snapshot age unknown";
+    }
     buildFiltersPanel();
     renderMovers();
     render();
@@ -717,7 +765,8 @@ function syncToolbar() {
   document.querySelectorAll("#colset button").forEach((b) => b.classList.toggle("active", b.dataset.cs === STATE.colset));
   document.querySelectorAll("#scoreMode button").forEach((b) => b.classList.toggle("active", b.dataset.sm === STATE.scoreMode));
   const fb = $("#filtersBtn"), n = activeFilterCount();
-  fb.textContent = n ? `⚙ Filters (${n})` : "⚙ Filters";
+  fb.textContent = n ? `Filters (${n})` : "Filters";
+  fb.setAttribute("aria-expanded", STATE.panelOpen ? "true" : "false");
   fb.classList.toggle("active", STATE.panelOpen || n > 0);
   fb.setAttribute("aria-expanded", String(STATE.panelOpen));
 }
@@ -764,13 +813,13 @@ function applyMode() {
     requestAnimationFrame(() => { purpose.style.opacity = "1"; });
   }
   // screener chrome shows only in screener mode
-  $(".filterbar").classList.toggle("hidden", !screener);
+  const boardChrome = $(".board-chrome");
+  if (boardChrome) boardChrome.classList.toggle("hidden", !screener);
   $("#filtersPanel").classList.toggle("hidden", !screener || !STATE.panelOpen);
-  $(".statusbar").classList.toggle("hidden", !screener);
+  // statusbar is inside board-chrome; no separate hide needed when chrome hides
   const layersEl = $("#layers");
   layersEl.classList.toggle("hidden", !screener);
   layersEl.classList.toggle("view-pane", screener);
-  $("#search").classList.toggle("hidden", !screener);
   renderAlerts();   // hides the alerts strip outside screener mode
   const panes = [
     ["#datacenter", "datacenter"],

@@ -28,6 +28,8 @@ const health = {
   },
   paths: {
     quotes: "/quotes.json",
+    screener: "/screener.json",
+    datacenter: "/datacenter.html",
     settings: config.ops.settingsPath,
     health: config.ops.healthPath,
   },
