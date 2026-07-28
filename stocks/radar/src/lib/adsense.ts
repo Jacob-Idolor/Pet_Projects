@@ -4,16 +4,16 @@
  * Google policy: no Google-served ads on screens without (or with low-value)
  * publisher content, under construction, or used only for alerts/navigation.
  *
- * Rules enforced here:
- * - Live units only on pages that opt in (`allowAds` / content gates)
- * - Prefer mid-content + footer; hero/top-of-page is off by default
- * - Optional custom-domain requirement before serving live units
- * - Local preview boxes never ship in production builds
- *
- * Turn OFF “Auto ads” in the AdSense console — only use the manual units
- * we place after substantial content.
+ * Pure gates live in scripts/lib/adsense-policy.mjs (unit-tested).
+ * Turn OFF “Auto ads” in the AdSense console — only use manual units after content.
  */
 
+import {
+  canShowAdSlot as canShowAdSlotPure,
+  evaluateLiveAdsGate,
+  hasPublisherContent as hasPublisherContentCount,
+  isCustomDomain,
+} from "../../scripts/lib/adsense-policy.mjs";
 import { getSiteSettings } from "./site-config";
 import { stocks } from "../data/watchlist";
 
@@ -32,6 +32,8 @@ export interface AdSenseConfig {
   blockReason: string | null;
 }
 
+export { isCustomDomain };
+
 function env(name: string): string {
   const fromImport = import.meta.env[name];
   if (typeof fromImport === "string" && fromImport.trim()) return fromImport.trim();
@@ -49,22 +51,9 @@ function siteUrl(): string {
   ).replace(/\/$/, "");
 }
 
-function isCustomDomain(url: string): boolean {
-  if (!url) return false;
-  try {
-    const host = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
-    if (!host || host === "localhost") return false;
-    if (/\.cloudfront\.net$/i.test(host)) return false;
-    if (/\.amazonaws\.com$/i.test(host)) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /** Enough publisher content to justify ad inventory on the home board. */
 export function hasPublisherContent(minTickers = 5): boolean {
-  return Array.isArray(stocks) && stocks.length >= minTickers;
+  return hasPublisherContentCount(stocks.length, minTickers);
 }
 
 export function getAdSenseConfig(): AdSenseConfig {
@@ -88,28 +77,16 @@ export function getAdSenseConfig(): AdSenseConfig {
     footer: true,
   };
 
-  let blockReason: string | null = null;
   const requireDomain = settings.seo?.requireCustomDomainForAds !== false;
-  const url = siteUrl();
-
-  if (!client) {
-    blockReason = "PUBLIC_ADSENSE_CLIENT unset";
-  } else if (enabledFlag === "false") {
-    blockReason = "PUBLIC_ADSENSE_ENABLED=false";
-  } else if (preview) {
-    blockReason = "preview mode (dev)";
-  } else if (requireDomain && !isCustomDomain(url)) {
-    blockReason =
-      "Live ads require a custom domain (seo.requireCustomDomainForAds) — see DOMAIN.md";
-  } else if (!hasPublisherContent(5)) {
-    blockReason = "Watchlist too small for ads (need ≥5 tickers with theses)";
-  }
-
-  const enabled =
-    Boolean(client) &&
-    enabledFlag !== "false" &&
-    !preview &&
-    blockReason === null;
+  const { enabled, blockReason } = evaluateLiveAdsGate({
+    client,
+    enabledFlag,
+    preview,
+    siteUrl: siteUrl(),
+    requireCustomDomain: requireDomain,
+    tickerCount: stocks.length,
+    minTickers: 5,
+  });
 
   return {
     client,
@@ -132,11 +109,5 @@ export function slotIdFor(config: AdSenseConfig, placement: AdPlacement): string
 
 /** Whether any live or preview unit can render for this placement. */
 export function canShowAdSlot(config: AdSenseConfig, placement: AdPlacement): boolean {
-  if (!config.allowedPlacements[placement]) return false;
-  if (config.preview) return true;
-  return (
-    config.enabled &&
-    Boolean(config.client) &&
-    Boolean(config.slots[placement])
-  );
+  return canShowAdSlotPure(config, placement);
 }

@@ -611,11 +611,12 @@ function renderCheckIn() {
     .filter((x) => x.price != null);
 
   const emptyAll = (msg: string) => {
-    const empty = `<li class="checkin-rank__empty">${msg}</li>`;
+    const safe = escapeHtml(msg);
+    const empty = `<li class="checkin-rank__empty">${safe}</li>`;
     for (const el of [gainersEl, losersEl, setupsEl, watchEl, cautionEl, moversEl]) {
       if (el) el.innerHTML = empty;
     }
-    if (tallyEl) tallyEl.innerHTML = `<span class="checkin-tally__loading">${msg}</span>`;
+    if (tallyEl) tallyEl.innerHTML = `<span class="checkin-tally__loading">${safe}</span>`;
   };
 
   if (!priced.length) {
@@ -796,7 +797,7 @@ function renderOpportunities() {
       return `<button type="button" class="opp-chip ${cls}" data-jump="${sanitizeSymbol(stock.symbol)}" title="${escapeHtml(stock.thesis ?? "")}">
         <strong>${sanitizeSymbol(stock.symbol) || escapeHtml(stock.symbol)}</strong>
         <span>${fmtPrice(price)} → ${fmtPrice(stock.targetPrice!)}</span>
-        <em>${text}</em>
+        <em>${escapeHtml(text)}</em>
       </button>`;
     })
     .join("");
@@ -1446,7 +1447,9 @@ export function initBucketSections() {
 
 function autoInit() {
   const dataEl = document.getElementById("watchlist-data");
-  const raw = dataEl?.textContent ?? window.__STOCKS_RADAR_DATA__;
+  const raw =
+    dataEl?.textContent ??
+    (window as Window & { __STOCKS_RADAR_DATA__?: string }).__STOCKS_RADAR_DATA__;
   if (raw) initWatchlistBoard(raw);
 }
 

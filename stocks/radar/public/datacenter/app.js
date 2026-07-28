@@ -109,6 +109,15 @@ function fmtEarnings(ts) {
   return `${date} · ${days}d`;
 }
 const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeHttpUrl = (raw, fallback = "#") => {
+  const s = String(raw || "").trim();
+  if (!s) return fallback;
+  try {
+    const u = new URL(s);
+    if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+  } catch { /* ignore */ }
+  return fallback;
+};
 function timeAgo(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -144,7 +153,7 @@ function newsHtml(ticker) {
     return `<div class="news-status">No headlines in the latest snapshot for ${ticker}. Re-run <code>npm run update-screener</code> to refresh news.json.</div>`;
   }
   return `<div class="news-list">` + c.map((it) =>
-    `<a class="news-item" href="${encodeURI(it.url)}" target="_blank" rel="noopener noreferrer">` +
+    `<a class="news-item" href="${escapeHtml(safeHttpUrl(it.url))}" target="_blank" rel="noopener noreferrer">` +
     `<span class="news-title">${escapeHtml(it.title)}</span>` +
     `<span class="news-meta">${escapeHtml(it.publisher)}${it.published ? " · " + timeAgo(it.published) : ""}</span></a>`
   ).join("") + `</div><div class="news-src">Headlines via Yahoo Finance</div>`;
@@ -154,13 +163,16 @@ function newsHtml(ticker) {
 const td = (inner, cls) => `<td class="${cls || ""}">${inner}</td>`;
 function nameInner(h, showLayers) {
   const cur = h.market && h.market.currency;
-  const curChip = (cur && cur !== "USD") ? `<span class="chip cur" title="prices converted from ${cur} to USD at live FX">${cur}→USD</span>` : "";
+  const curSafe = escapeHtml(String(cur || ""));
+  const curChip = (cur && cur !== "USD")
+    ? `<span class="chip cur" title="prices converted from ${curSafe} to USD at live FX">${curSafe}→USD</span>`
+    : "";
   const tagList = Array.isArray(h.tags) ? h.tags : String(h.tags || "").split(",").map((t) => t.trim()).filter(Boolean);
   const chips = showLayers
-    ? (h.layers || []).map((l) => `<span class="chip">${l}</span>`).join("")
-    : tagList.filter((t) => t !== "foreign").map((t) => `<span class="chip">${t}</span>`).join("") +
-      (h.also_in || []).map((l) => `<span class="chip also">also: ${l}</span>`).join("");
-  return `<div class="name">${h.name}</div><div class="thesis">${h.thesis || ""}</div><div class="tags">${chips}${curChip}</div>`;
+    ? (h.layers || []).map((l) => `<span class="chip">${escapeHtml(String(l))}</span>`).join("")
+    : tagList.filter((t) => t !== "foreign").map((t) => `<span class="chip">${escapeHtml(String(t))}</span>`).join("") +
+      (h.also_in || []).map((l) => `<span class="chip also">also: ${escapeHtml(String(l))}</span>`).join("");
+  return `<div class="name">${escapeHtml(h.name || "")}</div><div class="thesis">${escapeHtml(h.thesis || "")}</div><div class="tags">${chips}${curChip}</div>`;
 }
 const scoreColor = (s) => (s >= 66 ? "var(--green)" : s >= 40 ? "var(--amber)" : "var(--red)");
 function scoreBadge(h) {
@@ -202,9 +214,12 @@ function detailHtml(h) {
   </div>`;
 }
 const COLUMNS = {
-  ticker:         { label: "Ticker",  align: "left",   get: (h) => h.ticker, cell: (h) => td(`<span class="news-toggle">${STATE.openNews.has(h.ticker) ? "▾" : "▸"}</span><span class="tkr">${h.ticker}</span>`, "left") },
+  ticker:         { label: "Ticker",  align: "left",   get: (h) => h.ticker, cell: (h) => td(`<span class="news-toggle">${STATE.openNews.has(h.ticker) ? "▾" : "▸"}</span><span class="tkr">${escapeHtml(h.ticker || "")}</span>`, "left") },
   name:           { label: "Company", align: "left",   get: (h) => h.name,   cell: (h, sl) => td(nameInner(h, sl), "left") },
-  exposure:       { label: "Exposure", align: "center", get: (h) => EXPOSURE_RANK[h.exposure] ?? 9, cell: (h) => td(`<span class="exp ${h.exposure}">${h.exposure}</span>`, "center") },
+  exposure:       { label: "Exposure", align: "center", get: (h) => EXPOSURE_RANK[h.exposure] ?? 9, cell: (h) => {
+    const exp = Object.prototype.hasOwnProperty.call(EXPOSURE_RANK, h.exposure) ? h.exposure : "diversified";
+    return td(`<span class="exp ${exp}">${escapeHtml(exp)}</span>`, "center");
+  } },
   score:          { label: "Score",   align: "center", get: (h) => h.score, cell: (h) => td(scoreBadge(h), "center") },
   price:          { label: "Price",    get: (h) => h.market.price,          cell: (h) => td(fmtPrice(h.market.price)) },
   change_pct:     { label: "Chg %",    get: (h) => h.market.change_pct,     cell: (h) => td(fmtPct(h.market.change_pct), pctClass(h.market.change_pct)) },
@@ -935,7 +950,7 @@ async function initAnalyst() {
   const sel = $("#anTicker");
   const uniq = uniqueHoldings().sort((a, b) => a.name.localeCompare(b.name));
   if (uniq.length && sel.options.length !== uniq.length) {
-    sel.innerHTML = uniq.map((h) => `<option value="${h.ticker}">${h.name} (${h.ticker})</option>`).join("");
+    sel.innerHTML = uniq.map((h) => `<option value="${escapeHtml(h.ticker)}">${escapeHtml(h.name)} (${escapeHtml(h.ticker)})</option>`).join("");
     if (uniq.some((h) => h.ticker === "NVDA")) sel.value = "NVDA";
     ANALYST.ticker = sel.value;
   }

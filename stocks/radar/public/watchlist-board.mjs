@@ -1,6 +1,6 @@
-// src/lib/format.ts
+// scripts/lib/sanitize.mjs
 function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(text ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function sanitizeSymbol(raw) {
   const s = String(raw ?? "").trim().toUpperCase();
@@ -12,6 +12,18 @@ function sanitizeId(raw) {
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(s)) return "";
   return s;
 }
+function safeHttpUrl(raw, fallback = "#") {
+  const s = String(raw ?? "").trim();
+  if (!s) return fallback;
+  try {
+    const u = new URL(s);
+    if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+  } catch {
+  }
+  return fallback;
+}
+
+// src/lib/format.ts
 function sanitizePriority(raw) {
   const s = String(raw ?? "").toLowerCase();
   if (s === "high" || s === "medium" || s === "low") return s;
@@ -143,7 +155,7 @@ function renderOutlookDetail(row) {
   const newsHtml = news.length ? `<ul class="outlook-news">${news.slice(0, 3).map((n) => {
     const title = escapeHtml(n.title || "Headline");
     const pub = escapeHtml(n.publisher || "");
-    const href = escapeHtml(n.link || "#");
+    const href = escapeHtml(safeHttpUrl(n.link));
     return `<li>${sentimentBadge(n.sentiment)} <a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
   }).join("")}</ul>` : `<p class="outlook-empty">No recent headlines in the feed.</p>`;
   return `<div class="outlook-detail">
@@ -794,11 +806,12 @@ function renderCheckIn() {
     return { stock: s, q, price, chg, bias: explain.bias, explain };
   }).filter((x) => x.price != null);
   const emptyAll = (msg) => {
-    const empty = `<li class="checkin-rank__empty">${msg}</li>`;
+    const safe = escapeHtml(msg);
+    const empty = `<li class="checkin-rank__empty">${safe}</li>`;
     for (const el of [gainersEl, losersEl, setupsEl, watchEl, cautionEl, moversEl]) {
       if (el) el.innerHTML = empty;
     }
-    if (tallyEl) tallyEl.innerHTML = `<span class="checkin-tally__loading">${msg}</span>`;
+    if (tallyEl) tallyEl.innerHTML = `<span class="checkin-tally__loading">${safe}</span>`;
   };
   if (!priced.length) {
     emptyAll("Waiting on quotes for the master list\u2026");

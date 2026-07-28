@@ -53,5 +53,11 @@ override.tf.json
 tests_artifacts/
 *.db
 
+# Terraform plan binaries (any name — tfplan, tfplan2, tfplan-domain, …)
 tfplan
+tfplan*
 *.tfplan
+**/infra/terraform/*.tfvars
+!**/infra/terraform/*.tfvars.example
+**/infra/terraform/terraform.tfstate*
+**/infra/terraform/.terraform/

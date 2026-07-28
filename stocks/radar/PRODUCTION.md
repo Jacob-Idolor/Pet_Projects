@@ -41,7 +41,7 @@ Treat every merge to `main` as a **production release**.
 |----------|------|-----|
 | **Now** | ~~Freshness assert~~ **done** — `npm run freshness` + deploy step | Catch silent stale JSON |
 | **Now** | ~~Visible snapshot age~~ **done** — datacenter status bar | Trust / “is this live?” |
-| **Next** | `prebuild` sync `src/styles/tokens.css` → `public/tokens.css` | No Home/DC token drift |
+| **Now** | ~~tokens.css sync~~ **done** — `npm run sync:tokens` in prebuild | No Home/DC token drift |
 | **Next** | Shorter cache or content-hash for `public/datacenter/*.js` | Shim/UI fixes ship same day |
 | **Next** | CI smoke: non-empty `news.json` + screener schema check | Stop contract regressions |
 | **Later** | Finish custom domain / AdSense ([DOMAIN.md](DOMAIN.md)) | Shareable URL + monetize |

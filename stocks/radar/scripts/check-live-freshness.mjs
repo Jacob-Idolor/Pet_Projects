@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeConfig } from "./config.mjs";
+import { ageHours, coverageRatio } from "./lib/freshness-utils.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -37,18 +38,6 @@ const minOkRatio = num(process.env.SCREENER_MIN_OK_RATIO, 0.85);
 function num(v, fallback) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
-}
-
-function ageHours(isoOrSec) {
-  if (isoOrSec == null || isoOrSec === "") return null;
-  let ms;
-  if (typeof isoOrSec === "number") {
-    ms = isoOrSec < 1e12 ? isoOrSec * 1000 : isoOrSec;
-  } else {
-    ms = Date.parse(String(isoOrSec));
-  }
-  if (!Number.isFinite(ms)) return null;
-  return (Date.now() - ms) / 3_600_000;
 }
 
 function fmtAge(h) {
@@ -123,7 +112,7 @@ async function main() {
     const age = ageHours(fetched);
     const okCount = Number(screener.ok_count) || 0;
     const tickerCount = Number(screener.ticker_count) || 0;
-    const ratio = tickerCount > 0 ? okCount / tickerCount : 0;
+    const ratio = coverageRatio(okCount, tickerCount) ?? 0;
     report.checks.screener = {
       fetchedAt: fetched,
       ageHours: age,

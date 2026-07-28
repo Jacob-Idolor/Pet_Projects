@@ -5,9 +5,13 @@
   "private": true,
   "scripts": {
     "bundle:watchlist": "node scripts/bundle-watchlist.mjs",
+    "sync:tokens": "node scripts/sync-tokens.mjs",
     "config:validate": "node scripts/validate-config.mjs",
     "config:validate:prod": "node scripts/validate-config.mjs --production",
-    "dev": "npm run bundle:watchlist && astro dev",
+    "screener:schema": "node scripts/validate-screener-schema.mjs",
+    "test": "node --test tests/**/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev": "npm run sync:tokens && npm run bundle:watchlist && astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "rebuild": "npm run prebuild && npm run build && npm run preview",
@@ -22,7 +26,7 @@
     "digest": "node scripts/daily-digest.mjs",
     "alerts": "node scripts/signal-alerts.mjs",
     "go-live:preflight": "node scripts/go-live-preflight.mjs",
-    "prebuild": "npm run config:validate && npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/fetch-screener-soft.mjs && node scripts/write-build-meta.mjs && node scripts/write-seo-files.mjs && node scripts/write-health.mjs",
+    "prebuild": "npm run config:validate && npm run sync:tokens && npm run bundle:watchlist && node scripts/fetch-quotes.mjs && node scripts/fetch-screener-soft.mjs && npm run screener:schema && node scripts/write-build-meta.mjs && node scripts/write-seo-files.mjs && node scripts/write-health.mjs",
     "update-quotes:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/fetch-quotes.mjs",
     "alerts:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/signal-alerts.mjs"
   },
@@ -34,5 +38,10 @@
     "@opentelemetry/sdk-trace-node": "^2.9.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "astro": "^7.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3"
   }
 }

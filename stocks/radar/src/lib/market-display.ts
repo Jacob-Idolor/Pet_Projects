@@ -1,4 +1,4 @@
-import { escapeHtml } from "./format";
+import { escapeHtml, safeHttpUrl } from "./format";
 
 export type Trend = "bullish" | "bearish" | "mixed" | "unknown";
 
@@ -244,7 +244,7 @@ export function renderOutlookDetail(row: OutlookStock | null | undefined) {
         .map((n) => {
           const title = escapeHtml(n.title || "Headline");
           const pub = escapeHtml(n.publisher || "");
-          const href = escapeHtml(n.link || "#");
+          const href = escapeHtml(safeHttpUrl(n.link));
           return `<li>${sentimentBadge(n.sentiment)} <a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>${pub ? ` <span class="outlook-news__pub">${pub}</span>` : ""}</li>`;
         })
         .join("")}</ul>`

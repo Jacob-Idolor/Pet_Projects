@@ -74,6 +74,15 @@ npm install
 npm run dev
 ```
 
+Useful checks (also run in CI validate):
+
+```bash
+npm test                 # unit tests (ads gates, freshness math, sanitize, radar-score)
+npm run screener:schema  # offline screener.json shape/coverage
+npm run typecheck        # tsc --noEmit
+npm run freshness        # local quotes/screener age
+```
+
 | Page | URL |
 |------|-----|
 | Watchlist | http://localhost:4321 |
@@ -96,7 +105,7 @@ npm run freshness         # local age/coverage assert
 | `src/data/watchlist.json` | Group list |
 | `src/data/datacenter-universe.json` | AI DC layers + holdings |
 | `src/data/site-settings.json` | Features, quote staleness |
-| `src/styles/tokens.css` | Shared design tokens (copy → `public/tokens.css` when changing) |
+| `src/styles/tokens.css` | Shared design tokens (`npm run sync:tokens` → `public/tokens.css` on prebuild) |
 
 CSV → watchlist: `npm run import-csv -- my-tickers.csv`
 

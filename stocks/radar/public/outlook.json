@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-07-28T23:00:42.027Z",
-  "fetchedAt": "2026-07-28T23:00:42.027Z",
+  "updatedAt": "2026-07-28T23:24:49.327Z",
+  "fetchedAt": "2026-07-28T23:24:49.327Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -837,7 +837,7 @@
         "forwardPE": 36.704674,
         "pegRatio": 0.91,
         "priceToBook": 51.46206,
-        "evToEbitda": 233.234,
+        "evToEbitda": 207.023,
         "profitMargin": 0.00246,
         "revenueGrowth": 1.304,
         "targetMeanPrice": 286.2,
@@ -851,7 +851,7 @@
           "title": "Dow Jones Futures Fall, Oil Jumps On Iran News; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
           "publisher": "Investor's Business Daily",
           "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures-fall%2C-oil.html",
-          "publishedAt": "2026-07-28T22:55:59.000Z",
+          "publishedAt": "2026-07-28T23:09:36.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": [
@@ -872,25 +872,23 @@
           ]
         },
         {
-          "title": "BE Stock Soars 10% After-Hours On Beating Q2 Expectations, Raised 2026 Revenue Outlook — CEO Says Order Backlog Outpacing Revenue",
-          "publisher": "Stocktwits",
-          "link": "https://finance.yahoo.com/m/a326afed-b6c5-34d6-bade-9bdf3b18f356/be-stock-soars-10%25.html",
-          "publishedAt": "2026-07-28T21:38:09.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "soars"
-          ]
+          "title": "Bloom Energy (BE) Q2 Earnings and Revenues Surpass Estimates",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/bloom-energy-q2-earnings-revenues-220004609.html",
+          "publishedAt": "2026-07-28T22:00:04.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
         }
       ],
       "newsCheck": {
         "tilt": "positive",
-        "positive": 2,
+        "positive": 1,
         "negative": 0,
-        "neutral": 1,
-        "net": 2,
-        "scoreDelta": 2,
-        "label": "News check: positive (+2) · 2+ / 0−",
+        "neutral": 2,
+        "net": 1,
+        "scoreDelta": 1,
+        "label": "News check: positive (+1) · 1+ / 0−",
         "method": "headline-lexicon-v1"
       }
     }

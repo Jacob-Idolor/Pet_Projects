@@ -23,13 +23,14 @@ Audit posture for this **static** S3 + CloudFront site (no app servers, no user 
 
 ## Fixes applied in this audit
 
-1. Removed committed `tfplan` (contained email + account ID) and gitignored `*.tfplan`
+1. Removed committed `tfplan` (contained email + account ID) and gitignored `tfplan*` / `*.tfplan` (covers `tfplan2`, `tfplan-domain`, etc.)
 2. Scrubbed real email from `FRIENDS_FEEDBACK.md`
 3. Alert state → `s3://…/_private/alert-state.json` + CF deny on `_private/*`
 4. IAM: dropped `s3:*` / `sns:*` on `*`; SNS limited to `stocks-radar-*`; Deny IAM privilege-escalation actions
 5. Personal alert publish no longer falls back to shared SNS by default
 6. Workflows: `permissions: contents: read` + `environment: stockwatch` on quotes/digest/alerts
 7. Public alert panel no longer renders personal `note` text
+8. Datacenter `nameInner` / news hrefs HTML-escaped; outlook links restricted to `http(s)` via `safeHttpUrl`
 
 ## Residual risks (accepted or next)
 

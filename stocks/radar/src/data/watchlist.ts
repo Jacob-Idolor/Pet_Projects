@@ -84,4 +84,4 @@ export function distanceToTarget(
 }
 
 export const meta: WatchlistMeta = raw.meta;
-export const stocks: Stock[] = raw.stocks;
+export const stocks: Stock[] = raw.stocks as Stock[];
