@@ -15,7 +15,8 @@ html {
 
 #checkin,
 #watchlist-board,
-#submissions {
+#submissions,
+#dc-bridge {
   scroll-margin-top: 4.5rem;
 }
 
@@ -2168,6 +2169,216 @@ body[data-day-mood="mixed"] .site-header {
   margin: 0;
   font-size: 0.85rem;
   color: var(--dim);
+}
+
+/* AI Data Center bridge — thematic teaser into /datacenter.html */
+.dc-bridge {
+  margin: 0 0 1.5rem;
+  padding: 1.1rem 0 1.15rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dc-bridge__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.dc-bridge__head h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.dc-bridge__lede {
+  margin: 0.35rem 0 0;
+  max-width: 42rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.dc-bridge__cta {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.dc-bridge__cta:hover {
+  text-decoration: none;
+}
+
+.dc-bridge__layers {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dc-layer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dc-layer-chip:hover {
+  text-decoration: none;
+  border-color: var(--border);
+  background: var(--surface-hover);
+}
+
+.dc-layer-chip__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 2px;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+
+.dc-layer-chip--land .dc-layer-chip__dot { background: var(--layer-land); }
+.dc-layer-chip--power .dc-layer-chip__dot { background: var(--layer-power); }
+.dc-layer-chip--cooling .dc-layer-chip__dot { background: var(--layer-cooling); }
+.dc-layer-chip--compute .dc-layer-chip__dot { background: var(--layer-compute); }
+.dc-layer-chip--networking .dc-layer-chip__dot { background: var(--layer-networking); }
+.dc-layer-chip--software .dc-layer-chip__dot { background: var(--layer-software); }
+
+.dc-layer-chip__count {
+  color: var(--dim);
+  font-size: 0.72rem;
+}
+
+.dc-bridge__movers-loading,
+.dc-bridge__movers .muted {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.dc-bridge__movers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+
+.dc-bridge__movers-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.4rem;
+}
+
+.dc-bridge__movers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dc-mover {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dc-mover:hover {
+  text-decoration: none;
+  border-color: var(--border);
+}
+
+.dc-mover.up span {
+  color: var(--green);
+}
+
+.dc-mover.down span {
+  color: var(--red);
+}
+
+.dc-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--dim) 14%, transparent);
+  border: 1px solid var(--border-subtle);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.dc-badge:hover {
+  text-decoration: none;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.dc-badge--land { color: #94a3b8; border-color: color-mix(in srgb, var(--layer-land) 40%, var(--border-subtle)); }
+.dc-badge--power { color: #fcd34d; border-color: color-mix(in srgb, var(--layer-power) 40%, var(--border-subtle)); }
+.dc-badge--cooling { color: #67e8f9; border-color: color-mix(in srgb, var(--layer-cooling) 40%, var(--border-subtle)); }
+.dc-badge--compute { color: #6ee7b7; border-color: color-mix(in srgb, var(--layer-compute) 40%, var(--border-subtle)); }
+.dc-badge--networking { color: #c4b5fd; border-color: color-mix(in srgb, var(--layer-networking) 40%, var(--border-subtle)); }
+.dc-badge--software { color: #93c5fd; border-color: color-mix(in srgb, var(--layer-software) 40%, var(--border-subtle)); }
+
+.dc-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.dc-detail__link {
+  margin-left: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.scm-identity .dc-badge {
+  margin-left: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  #dc-bridge {
+    scroll-margin-top: 1rem;
+    scroll-margin-bottom: 5.5rem;
+  }
+
+  .dc-bridge__cta {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.85rem;
+  }
 }
 
 .macro-card {

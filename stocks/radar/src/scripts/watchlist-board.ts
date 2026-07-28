@@ -19,6 +19,22 @@ import {
   pulseExplain,
 } from "../lib/market-display";
 
+declare global {
+  interface Window {
+    __DC_BRIDGE__?: {
+      byTicker: Record<
+        string,
+        {
+          ticker: string;
+          primary: { id: string; label: string; name: string; exposure?: string };
+          layers: { id: string; label: string; name: string; exposure?: string }[];
+        }
+      >;
+    };
+    __RADAR_SETTINGS__?: Record<string, unknown>;
+  }
+}
+
 export interface StockRow {
   id: string;
   symbol: string;
@@ -348,6 +364,46 @@ function renderTagsHtml(stock: StockRow) {
     .join("");
 }
 
+function dcBridgeEntry(symbol: string | undefined) {
+  const map = typeof window !== "undefined" ? window.__DC_BRIDGE__?.byTicker : undefined;
+  if (!map || !symbol) return undefined;
+  return map[String(symbol).trim().toUpperCase()];
+}
+
+function radarBaseHref() {
+  const el = document.getElementById("watchlist-board");
+  let base = el?.getAttribute("data-radar-base") || "/";
+  if (!base.endsWith("/")) base += "/";
+  return base;
+}
+
+/** Compact layer chip linking into AI Data Center (overlap tickers only). */
+function renderDcLayerBadge(stock: StockRow) {
+  const entry = dcBridgeEntry(stock.symbol);
+  if (!entry) return "";
+  const primary = entry.primary;
+  const more = entry.layers.length > 1 ? ` +${entry.layers.length - 1}` : "";
+  const exp = primary.exposure ? ` · ${primary.exposure}` : "";
+  const href = `${radarBaseHref()}datacenter.html?q=${encodeURIComponent(entry.ticker)}&layer=${encodeURIComponent(primary.id)}`;
+  return `<a class="dc-badge dc-badge--${escapeHtml(primary.id)}" href="${href}" title="${escapeHtml(primary.name)}${escapeHtml(exp)}">DC · ${escapeHtml(primary.label)}${more}</a>`;
+}
+
+function renderDcDetail(stock: StockRow) {
+  const entry = dcBridgeEntry(stock.symbol);
+  if (!entry) return "";
+  const layers = entry.layers
+    .map((l) => {
+      const href = `${radarBaseHref()}datacenter.html?layer=${encodeURIComponent(l.id)}&q=${encodeURIComponent(entry.ticker)}`;
+      const exp = l.exposure ? ` (${escapeHtml(l.exposure)})` : "";
+      return `<a class="dc-badge dc-badge--${escapeHtml(l.id)}" href="${href}">${escapeHtml(l.label)}${exp}</a>`;
+    })
+    .join(" ");
+  return `<div class="dc-detail">
+      <strong>AI Data Center:</strong> ${layers}
+      <a class="dc-detail__link" href="${radarBaseHref()}datacenter.html?q=${encodeURIComponent(entry.ticker)}">Open in screener →</a>
+    </div>`;
+}
+
 function renderPriority(stock: StockRow) {
   if (!stock.priority) return "—";
   const p = sanitizePriority(stock.priority);
@@ -375,6 +431,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
     <tr data-id="${sid}" data-symbol="${sym}" class="data-row ${expanded ? "expanded" : ""}">
       <td class="mono sym sticky-col">
         <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
+        ${renderDcLayerBadge(stock)}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
@@ -398,6 +455,7 @@ function renderRow(stock: StockRow, compact = false, mode: "default" | "technica
         <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
         ${pri === "high" ? '<span class="conviction-dot" title="High conviction">●</span>' : ""}
         ${stock.custom ? '<span class="custom-tag" title="From group notes">★</span>' : ""}
+        ${renderDcLayerBadge(stock)}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
@@ -449,6 +507,7 @@ function renderDetailRow(stock: StockRow, price: number | null, q: QuoteData | u
         <td colspan="${colspan}">
           <div class="detail-panel">
             ${renderOutlookDetail(outlookFor(stock))}
+            ${renderDcDetail(stock)}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
@@ -926,6 +985,7 @@ function renderMobileCard(stock: StockRow) {
           <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
           ${actionBadge(q, biasOpts(stock))}
+          ${renderDcLayerBadge(stock)}
         </div>
         <div class="scm-quote">
           <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>

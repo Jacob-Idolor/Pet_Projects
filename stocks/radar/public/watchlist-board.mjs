@@ -578,6 +578,39 @@ function sortStocks(list) {
 function filteredStocks() {
   return sortStocks(allStocks.filter((s) => matchesFilter(s) && matchesSearch(s)));
 }
+function dcBridgeEntry(symbol) {
+  const map = typeof window !== "undefined" ? window.__DC_BRIDGE__?.byTicker : void 0;
+  if (!map || !symbol) return void 0;
+  return map[String(symbol).trim().toUpperCase()];
+}
+function radarBaseHref() {
+  const el = document.getElementById("watchlist-board");
+  let base = el?.getAttribute("data-radar-base") || "/";
+  if (!base.endsWith("/")) base += "/";
+  return base;
+}
+function renderDcLayerBadge(stock) {
+  const entry = dcBridgeEntry(stock.symbol);
+  if (!entry) return "";
+  const primary = entry.primary;
+  const more = entry.layers.length > 1 ? ` +${entry.layers.length - 1}` : "";
+  const exp = primary.exposure ? ` \xB7 ${primary.exposure}` : "";
+  const href = `${radarBaseHref()}datacenter.html?q=${encodeURIComponent(entry.ticker)}&layer=${encodeURIComponent(primary.id)}`;
+  return `<a class="dc-badge dc-badge--${escapeHtml(primary.id)}" href="${href}" title="${escapeHtml(primary.name)}${escapeHtml(exp)}">DC \xB7 ${escapeHtml(primary.label)}${more}</a>`;
+}
+function renderDcDetail(stock) {
+  const entry = dcBridgeEntry(stock.symbol);
+  if (!entry) return "";
+  const layers = entry.layers.map((l) => {
+    const href = `${radarBaseHref()}datacenter.html?layer=${encodeURIComponent(l.id)}&q=${encodeURIComponent(entry.ticker)}`;
+    const exp = l.exposure ? ` (${escapeHtml(l.exposure)})` : "";
+    return `<a class="dc-badge dc-badge--${escapeHtml(l.id)}" href="${href}">${escapeHtml(l.label)}${exp}</a>`;
+  }).join(" ");
+  return `<div class="dc-detail">
+      <strong>AI Data Center:</strong> ${layers}
+      <a class="dc-detail__link" href="${radarBaseHref()}datacenter.html?q=${encodeURIComponent(entry.ticker)}">Open in screener \u2192</a>
+    </div>`;
+}
 function renderPriority(stock) {
   if (!stock.priority) return "\u2014";
   const p = sanitizePriority(stock.priority);
@@ -600,6 +633,7 @@ function renderRow(stock, compact = false, mode = "default") {
     <tr data-id="${sid}" data-symbol="${sym}" class="data-row ${expanded ? "expanded" : ""}">
       <td class="mono sym sticky-col">
         <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
+        ${renderDcLayerBadge(stock)}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
@@ -622,6 +656,7 @@ function renderRow(stock, compact = false, mode = "default") {
         <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="sym-link">${sym}</a>
         ${pri === "high" ? '<span class="conviction-dot" title="High conviction">\u25CF</span>' : ""}
         ${stock.custom ? '<span class="custom-tag" title="From group notes">\u2605</span>' : ""}
+        ${renderDcLayerBadge(stock)}
       </td>
       <td class="name-cell">${escapeHtml(stock.name)}</td>
       <td class="num mono price-cell" data-price-for="${sym}">${fmtPrice(price)}</td>
@@ -669,6 +704,7 @@ function renderDetailRow(stock, price, q, colspan) {
         <td colspan="${colspan}">
           <div class="detail-panel">
             ${renderOutlookDetail(outlookFor(stock))}
+            ${renderDcDetail(stock)}
             ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
             ${stock.thesis ? `<p><strong>Thesis:</strong> ${escapeHtml(stock.thesis)}</p>` : ""}
             ${stock.targetNote ? `<p><strong>Target note:</strong> ${escapeHtml(stock.targetNote)}</p>` : ""}
@@ -937,6 +973,7 @@ function renderMobileCard(stock) {
           <span class="scm-sym">${sym}</span>
           ${high ? '<span class="scm-conviction">High</span>' : ""}
           ${actionBadge(q, biasOpts(stock))}
+          ${renderDcLayerBadge(stock)}
         </div>
         <div class="scm-quote">
           <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>

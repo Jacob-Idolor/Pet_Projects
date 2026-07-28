@@ -52,17 +52,21 @@ function savePrefs() {
 }
 
 const _p = loadPrefs();
+const _params = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
+const _qParam = (_params.get("q") || _params.get("ticker") || "").trim();
+const _layerParam = (_params.get("layer") || "").trim();
+
 let STATE = {
   layers: [], marketState: null,
   sort: _p.sort || { col: "market_cap", asc: false },
   view: _p.view || "layers",
-  query: "",
+  query: _qParam || "",
   exposure: new Set(_p.exposure || []),
   collapsed: new Set(_p.collapsed || []),
   valuation: _p.valuation || {},        // metric key -> { min, max } (display units)
   panelOpen: _p.panelOpen || false,
-  mode: _p.mode || "screener",
-  focusLayer: null,
+  mode: _layerParam || _qParam ? "screener" : (_p.mode || "screener"),
+  focusLayer: _layerParam || null,
   colset: _p.colset || "valuation",     // which numeric column group to show
   scoreMode: _p.scoreMode || "universe", // score basis: percentile vs whole universe or vs same-layer peers
   openNews: new Set(),                  // tickers whose news row is expanded (transient)
@@ -1068,6 +1072,10 @@ async function removeStock(ticker, layer) {
 
 $("#refresh").addEventListener("click", () => load(true));
 $("#search").addEventListener("input", (e) => { STATE.query = e.target.value; render(); });
+
+// Deep-links from StocksWatch home (?q=TICKER&layer=compute)
+if (STATE.query && $("#search")) $("#search").value = STATE.query;
+if (STATE.focusLayer) STATE.view = "layers";
 
 applyMode();
 load();

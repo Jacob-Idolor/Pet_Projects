@@ -4,6 +4,7 @@ import LiveStatus from "../components/LiveStatus.astro";
 import DayMoodBanner from "../components/DayMoodBanner.astro";
 import CheckInPulse from "../components/CheckInPulse.astro";
 import MacroStrip from "../components/MacroStrip.astro";
+import DatacenterBridge from "../components/DatacenterBridge.astro";
 import WatchlistBoard from "../components/WatchlistBoard.astro";
 import GroupSubmissions from "../components/GroupSubmissions.astro";
 import AdSlot from "../components/AdSlot.astro";
@@ -19,6 +20,7 @@ const settings = getSiteSettings();
 const ads = getAdSenseConfig();
 const showPulse = featureEnabled("checkInPulse");
 const showSubmissions = featureEnabled("groupSubmissions");
+const showDcBridge = featureEnabled("datacenterBridge");
 const adsFeature = featureEnabled("adsense");
 const showMood = featureEnabled("dayMood");
 const showHeroAd = adsFeature && canShowAdSlot(ads, "hero");
@@ -62,6 +64,7 @@ const showFooterAd = adsFeature && canShowAdSlot(ads, "footer");
     <div class="container board-stage">
       <MacroStrip />
       {showPulse && <CheckInPulse />}
+      {showDcBridge && <DatacenterBridge />}
       {
         showBoardAd && (
           <AdSlot placement="board" label="Sponsored — watchlist" class="ad-slot--after-board" />

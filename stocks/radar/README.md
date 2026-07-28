@@ -21,7 +21,7 @@ A single-page group watchlist — one tracking list, live quotes, and a clean mo
 - **Go-live bootstrap** — gated CI + `infra/go-live.sh` + preflight ([GO_LIVE.md](GO_LIVE.md))
 - **Security posture** — private S3/OAC, `_private/` blocked, hardened IAM/alerts ([SECURITY.md](SECURITY.md))
 - **Group feed** — post ticker notes; auto-detects symbols; emailed to you via free [Web3Forms](https://web3forms.com) when `PUBLIC_WEB3FORMS_ACCESS_KEY` is set (also kept in the browser until merged in git)
-- **AI Data Center screener** — six-layer thematic board at `/datacenter.html` (map, rack explorer, composite score, copy-paste AI research prompts)
+- **AI Data Center screener** — six-layer thematic board at `/datacenter.html` (map, rack explorer, composite score, copy-paste AI research prompts). Home bridges in with a layer teaser + chips on overlapping tickers (`features.datacenterBridge`).
 
 ## Quick start
 
