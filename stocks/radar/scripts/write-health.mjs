@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeConfig, publicSettingsPayload } from "./config.mjs";
-import { ageHours, coverageOk, coverageRatio } from "./lib/freshness-utils.mjs";
+import { ageHours, coverageOk, coverageRatio, quotesFreshCount, quotesFreshRatio } from "./lib/freshness-utils.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const config = loadRuntimeConfig();
@@ -48,18 +48,20 @@ if (quotesFile.data) {
       ? Object.keys(q.quotes).length
       : Number(q.count) || 0;
   const total = Number(q.total) || count;
+  const freshCount = quotesFreshCount(q);
   const age = ageHours(q.fetchedAt || q.updatedAt);
-  const ratio = coverageRatio(count, total) ?? (total > 0 ? 0 : null);
+  const ratio = quotesFreshRatio(q) ?? (total > 0 ? 0 : null);
   const ok =
     age != null &&
     age <= quotesMaxH &&
-    count >= 1 &&
+    freshCount >= 1 &&
     (ratio == null || ratio >= quotesMinRatio) &&
     !q.fetchFailed;
   checks.quotes = {
     ok,
     ageHours: age,
     count,
+    freshCount,
     total,
     coverage: ratio,
     partial: Boolean(q.partial),

@@ -197,19 +197,26 @@ async function savePriceTarget(
   return true;
 }
 
+function asFiniteNumber(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 function getQuote(stock: StockRow): QuoteData | undefined {
   return quotes[stock.symbol];
 }
 
 function getPrice(stock: StockRow) {
-  return quotes[stock.symbol]?.price ?? stock.lastPrice ?? null;
+  return asFiniteNumber(quotes[stock.symbol]?.price) ?? asFiniteNumber(stock.lastPrice);
 }
 
 function getChange(stock: StockRow) {
   const q = quotes[stock.symbol];
-  if (q?.changePct != null) return q.changePct;
+  const fromQuote = asFiniteNumber(q?.changePct);
+  if (fromQuote != null) return fromQuote;
   const price = getPrice(stock);
-  const prev = q?.prevClose;
+  const prev = asFiniteNumber(q?.prevClose);
   if (price != null && prev != null && prev !== 0) {
     return ((price - prev) / prev) * 100;
   }
@@ -604,7 +611,7 @@ function renderCheckIn() {
     .map((s) => {
       const q = getQuote(s);
       const price = getPrice(s);
-      const chg = q?.changePct ?? null;
+      const chg = getChange(s);
       const explain = pulseExplain(q, biasOpts(s));
       return { stock: s, q, price, chg, bias: explain.bias, explain };
     })
@@ -1403,6 +1410,7 @@ function startQuoteLoader() {
         lastJsonOk = true;
         return true;
       }
+      lastJsonOk = false;
     } catch {
       lastJsonOk = false;
     }

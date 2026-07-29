@@ -53,9 +53,11 @@ export function evaluateLiveAdsGate({
   tickerCount,
   minTickers = 5,
 }) {
+  const flagOn = enabledFlag === "true" || enabledFlag === "1";
+
   let blockReason = null;
   if (!client) blockReason = "PUBLIC_ADSENSE_CLIENT unset";
-  else if (enabledFlag === "false") blockReason = "PUBLIC_ADSENSE_ENABLED=false";
+  else if (!flagOn) blockReason = "PUBLIC_ADSENSE_ENABLED must be true";
   else if (preview) blockReason = "preview mode (dev)";
   else if (requireCustomDomain && !isCustomDomain(siteUrl || "")) {
     blockReason =
@@ -65,10 +67,7 @@ export function evaluateLiveAdsGate({
   }
 
   const enabled =
-    Boolean(client) &&
-    enabledFlag !== "false" &&
-    !preview &&
-    blockReason === null;
+    Boolean(client) && flagOn && !preview && blockReason === null;
 
   return { enabled, blockReason };
 }

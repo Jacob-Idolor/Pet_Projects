@@ -51,6 +51,18 @@ describe("evaluateLiveAdsGate", () => {
     assert.equal(r.enabled, false);
     assert.match(r.blockReason || "", /custom domain/i);
   });
+  it("requires explicit ENABLED=true", () => {
+    const r = evaluateLiveAdsGate({
+      client: "ca-pub-123",
+      enabledFlag: undefined,
+      preview: false,
+      siteUrl: "https://stockswatch.cc",
+      requireCustomDomain: true,
+      tickerCount: 14,
+    });
+    assert.equal(r.enabled, false);
+    assert.match(r.blockReason || "", /ENABLED/i);
+  });
 });
 
 describe("canShowAdSlot", () => {

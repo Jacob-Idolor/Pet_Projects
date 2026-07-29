@@ -79,7 +79,12 @@
   }
 
   function today() {
-    return new Date().toISOString().slice(0, 10);
+    // Local calendar day (not UTC) so evening US sessions don't jump to "tomorrow"
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   }
 
   function recordSnapshots(rows) {
@@ -126,9 +131,10 @@
       if (!rows.length) continue;
       const latest = rows[rows.length - 1];
       const prev1 = rows.length >= 2 ? rows[rows.length - 2] : null;
-      const cutoffDate = new Date(latest.date + "T00:00:00Z");
-      cutoffDate.setUTCDate(cutoffDate.getUTCDate() - 7);
-      const cutoff = cutoffDate.toISOString().slice(0, 10);
+      const [y, mo, da] = latest.date.split("-").map(Number);
+      const cutoffDate = new Date(y, mo - 1, da);
+      cutoffDate.setDate(cutoffDate.getDate() - 7);
+      const cutoff = `${cutoffDate.getFullYear()}-${String(cutoffDate.getMonth() + 1).padStart(2, "0")}-${String(cutoffDate.getDate()).padStart(2, "0")}`;
       let prev7 = null;
       for (let i = 0; i < rows.length - 1; i++) {
         if (rows[i].date <= cutoff) prev7 = rows[i];
@@ -390,6 +396,12 @@
       if (h) {
         const m = h.market || {};
         const { best, ranked } = recommendLayer("", "", (h.tags || []).join(" ") + " " + (h.thesis || ""));
+        const existing_layers = [];
+        for (const layer of payload.layers || []) {
+          if (layer.holdings.some((x) => x.ticker === t)) {
+            existing_layers.push(layer.name || layer.id);
+          }
+        }
         return {
           ticker: t,
           ok: true,
@@ -400,6 +412,12 @@
           price: m.price,
           market_cap: m.market_cap,
           currency: m.currency || "USD",
+          trailing_pe: m.trailing_pe ?? null,
+          forward_pe: m.forward_pe ?? null,
+          price_to_sales: m.price_to_sales ?? null,
+          ev_ebitda: m.ev_ebitda ?? null,
+          revenue_growth: m.revenue_growth ?? null,
+          existing_layers,
           // app.js expects recommend / ranked (Flask contract)
           recommend: best,
           ranked: ranked,
@@ -431,6 +449,7 @@
 
     if (path === "/api/screen" || path === "/api/refresh") {
       screenCache = null;
+      if (path === "/api/refresh") newsCache = null;
       const payload = mergeUserIntoPayload(await loadScreen());
       if (path === "/api/refresh") payload.cached = false;
       return jsonResponse(payload);

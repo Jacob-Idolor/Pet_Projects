@@ -19,7 +19,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeConfig } from "./config.mjs";
-import { ageHours, coverageRatio } from "./lib/freshness-utils.mjs";
+import { ageHours, coverageRatio, quotesFreshCount, quotesFreshRatio } from "./lib/freshness-utils.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -96,28 +96,33 @@ async function main() {
         ? Object.keys(quotes.quotes).length
         : quotes.count ?? 0;
     const total = Number(quotes.total) || count;
-    const ratio = coverageRatio(count, total) ?? (total > 0 ? 0 : null);
+    const freshCount = quotesFreshCount(quotes);
+    const ratio = quotesFreshRatio(quotes) ?? (total > 0 ? 0 : null);
     report.checks.quotes = {
       fetchedAt: fetched,
       ageHours: age,
       count,
+      freshCount,
       total,
       okRatio: ratio,
       partial: Boolean(quotes.partial),
       fetchFailed: Boolean(quotes.fetchFailed),
+      carriedForward: Array.isArray(quotes.carriedForward)
+        ? quotes.carriedForward.length
+        : 0,
     };
 
     if (age == null) passed = fail("quotes.json missing fetchedAt") && passed;
     else if (age > quotesMaxH) {
       passed = fail(`quotes.json stale (${fmtAge(age)} > ${quotesMaxH}h)`) && passed;
     } else {
-      ok(`quotes.json age ${fmtAge(age)} · ${count}/${total || count} symbols`);
+      ok(`quotes.json age ${fmtAge(age)} · ${freshCount}/${total || count} fresh`);
     }
-    if (count < 1) passed = fail("quotes.json has no symbols") && passed;
+    if (freshCount < 1) passed = fail("quotes.json has no fresh symbols") && passed;
     if (quotes.fetchFailed) passed = fail("quotes.json marked fetchFailed") && passed;
     if (ratio != null && ratio < quotesMinRatio) {
       passed =
-        fail(`quotes coverage ${(ratio * 100).toFixed(0)}% < ${quotesMinRatio * 100}%`) &&
+        fail(`quotes fresh coverage ${(ratio * 100).toFixed(0)}% < ${quotesMinRatio * 100}%`) &&
         passed;
     }
   } catch (e) {

@@ -31,7 +31,10 @@ export function safeHttpUrl(raw, fallback = "#") {
   if (!s) return fallback;
   try {
     const u = new URL(s);
-    if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+    if (u.protocol !== "http:" && u.protocol !== "https:") return fallback;
+    // Reject userinfo phishing (https://example.com@evil.com → host evil.com)
+    if (u.username || u.password) return fallback;
+    return u.href;
   } catch {
     /* ignore */
   }

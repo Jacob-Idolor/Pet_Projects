@@ -38,4 +38,8 @@ describe("safeHttpUrl", () => {
     assert.equal(safeHttpUrl("javascript:alert(1)"), "#");
     assert.equal(safeHttpUrl("data:text/html,hi"), "#");
   });
+  it("rejects userinfo phishing hosts", () => {
+    assert.equal(safeHttpUrl("https://example.com@evil.com/path"), "#");
+    assert.equal(safeHttpUrl("https://user:pass@evil.com/"), "#");
+  });
 });

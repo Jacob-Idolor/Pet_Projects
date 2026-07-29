@@ -23,6 +23,8 @@
   const EXP_COLOR = { pure: "#34d399", high: "#4da3ff", moderate: "#fbbf24", diversified: "#8a99ad" };
 
   const $ = (id) => document.getElementById(id);
+  const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const layerById = (id) => (window.STATE && window.STATE.layers || []).find((l) => l.id === id);
   const fmtP = (n) => (n == null ? "—" : "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
@@ -421,18 +423,18 @@
     const total = (layer && layer.holdings.length) || 0;
     const tk = holds.map((h) => {
       const sc = h.score == null ? "" :
-        `<span class="tk-score" style="background:${h.score >= 66 ? "#34d399" : h.score >= 40 ? "#fbbf24" : "#f87171"}" title="composite score">${h.score}</span>`;
-      return `<div class="tk"><span class="tk-exp" style="background:${EXP_COLOR[h.exposure] || "#8a99ad"}" title="${h.exposure} exposure"></span>` +
-        `<span class="tk-t">${h.ticker}</span><span class="tk-n">${h.name}</span>` +
+        `<span class="tk-score" style="background:${h.score >= 66 ? "#34d399" : h.score >= 40 ? "#fbbf24" : "#f87171"}" title="composite score">${escapeHtml(String(h.score))}</span>`;
+      return `<div class="tk"><span class="tk-exp" style="background:${EXP_COLOR[h.exposure] || "#8a99ad"}" title="${escapeHtml(h.exposure || "")} exposure"></span>` +
+        `<span class="tk-t">${escapeHtml(h.ticker)}</span><span class="tk-n">${escapeHtml(h.name || "")}</span>` +
         `${sc}<span class="tk-p">${fmtP(h.market.price)}</span></div>`;
     }).join("");
     $("dcPanel").innerHTML = `
-      <h3><span class="dot" style="background:${m.color}"></span>${m.label}</h3>
+      <h3><span class="dot" style="background:${m.color}"></span>${escapeHtml(m.label)}</h3>
       <div class="muted" style="font-size:11.5px">Layer ${m.num} · ${total} names</div>
-      <div class="layer-blurb">${layer ? layer.blurb : ""}</div>
-      <div class="bottleneck"><b>Bottleneck:</b> ${m.bottleneck}</div>
+      <div class="layer-blurb">${escapeHtml(layer ? layer.blurb : "")}</div>
+      <div class="bottleneck"><b>Bottleneck:</b> ${escapeHtml(m.bottleneck)}</div>
       <div class="tk-list">${tk || '<span class="muted">No data.</span>'}</div>
-      <button class="view-stocks" data-go="${id}">View these stocks →</button>
+      <button class="view-stocks" data-go="${escapeHtml(id)}">View these stocks →</button>
       ${total > 5 ? `<div class="more">+ ${total - 5} more in the screener</div>` : ""}`;
     $("dcPanel").querySelector(".view-stocks").addEventListener("click", () => window.focusScreenerLayer && window.focusScreenerLayer(id));
   }

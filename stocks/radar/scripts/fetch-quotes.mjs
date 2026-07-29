@@ -55,7 +55,9 @@ function loadPreviousQuotes() {
 }
 
 async function fetchSymbolOnce(symbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=max`;
+  // range=max often returns monthly bars while advertising interval=1d — SMA/RSI
+  // would then use month-scale windows. Prefer a bounded daily window.
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=2y`;
   const res = await fetch(url, {
     headers: HEADERS,
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -79,6 +81,13 @@ async function fetchSymbolOnce(symbol) {
   if (!meta?.regularMarketPrice) {
     const err = new Error(`no price for ${symbol}`);
     err.retryable = false;
+    throw err;
+  }
+
+  const gran = meta.dataGranularity;
+  if (gran && gran !== "1d") {
+    const err = new Error(`unexpected granularity ${gran} for ${symbol} (want 1d)`);
+    err.retryable = true;
     throw err;
   }
 
@@ -209,7 +218,39 @@ await withOtel("stocks-radar-quotes", async (otel) => {
     const now = new Date().toISOString();
     const missing = failed.filter((s) => !merged[s]);
     const partial = failed.length > 0;
+    const freshCount = Object.keys(fresh).length;
     const coverage = Object.keys(merged).length;
+    const freshRatio = symbols.length > 0 ? freshCount / symbols.length : 0;
+
+    // Zero fresh quotes: keep prior body + prior fetchedAt so freshness gates trip.
+    if (freshCount === 0) {
+      console.error("✗ No fresh quotes fetched this run");
+      root.setAttributes({ "radar.fetch_failed": true, "radar.fresh_count": 0 });
+      if (Object.keys(previous.quotes).length) {
+        const fallback = {
+          updatedAt: now,
+          fetchedAt: previous.fetchedAt || now,
+          marketTime: "US/Eastern",
+          schemaVersion: 4,
+          count: Object.keys(previous.quotes).length,
+          total: symbols.length,
+          freshCount: 0,
+          failedSymbols: symbols,
+          carriedForward: Object.keys(previous.quotes),
+          missingSymbols: [],
+          partial: true,
+          complete: false,
+          fetchFailed: true,
+          staleAfterHours: STALE_AFTER_HOURS,
+          quotes: previous.quotes,
+          note: "Yahoo fetch returned zero fresh symbols; kept previous quotes.json body",
+        };
+        writeFileSync(OUT, JSON.stringify(fallback, null, 2) + "\n");
+        console.warn("⚠ Wrote previous quotes with fetchFailed=true (fetchedAt unchanged)");
+      }
+      process.exitCode = 1;
+      return;
+    }
 
     const payload = {
       updatedAt: now,
@@ -218,7 +259,7 @@ await withOtel("stocks-radar-quotes", async (otel) => {
       schemaVersion: 4,
       count: coverage,
       total: symbols.length,
-      freshCount: Object.keys(fresh).length,
+      freshCount,
       failedSymbols: failed,
       carriedForward: carried,
       missingSymbols: missing,
@@ -237,6 +278,7 @@ await withOtel("stocks-radar-quotes", async (otel) => {
       "radar.missing_count": missing.length,
       "radar.coverage_count": coverage,
       "radar.coverage_total": symbols.length,
+      "radar.fresh_ratio": freshRatio,
       "radar.partial": partial,
       "radar.complete": payload.complete,
     });
@@ -248,47 +290,19 @@ await withOtel("stocks-radar-quotes", async (otel) => {
         : "✓";
 
     console.log(
-      `${status} quotes.json — ${payload.count}/${payload.total} symbols (${payload.fetchedAt})`
+      `${status} quotes.json — ${payload.freshCount}/${payload.total} fresh (${payload.fetchedAt})`
     );
 
-    if (coverage === 0) {
+    const minRatio = Number(process.env.QUOTES_MIN_OK_RATIO || 0.85);
+    const production =
+      process.env.STOCKS_RADAR_ENV === "production" ||
+      process.env.DEPLOY_PROVIDER === "github-actions" ||
+      Boolean(process.env.GITHUB_ACTIONS);
+    if (production && freshRatio < minRatio) {
       console.error(
-        "✗ No quotes fetched — refusing empty file overwrite of previous data would lose all prices."
+        `✗ Quote fresh coverage ${(freshRatio * 100).toFixed(0)}% < ${minRatio * 100}% in production — failing refresh`
       );
-      root.setAttributes({ "radar.fetch_failed": true });
-      if (Object.keys(previous.quotes).length) {
-        const fallback = {
-          ...payload,
-          fetchedAt: previous.fetchedAt || now,
-          updatedAt: now,
-          quotes: previous.quotes,
-          count: Object.keys(previous.quotes).length,
-          partial: true,
-          complete: false,
-          fetchFailed: true,
-          failedSymbols: symbols,
-          carriedForward: Object.keys(previous.quotes),
-          missingSymbols: [],
-          note: "Yahoo fetch returned zero symbols; kept previous quotes.json body",
-        };
-        writeFileSync(OUT, JSON.stringify(fallback, null, 2) + "\n");
-        console.warn("⚠ Wrote previous quotes with fetchFailed=true");
-        process.exitCode = 1;
-      } else {
-        process.exitCode = 1;
-      }
-    } else {
-      const minRatio = Number(process.env.QUOTES_MIN_OK_RATIO || 0.85);
-      const production =
-        process.env.STOCKS_RADAR_ENV === "production" ||
-        process.env.DEPLOY_PROVIDER === "github-actions" ||
-        Boolean(process.env.GITHUB_ACTIONS);
-      if (production && coverage < minRatio) {
-        console.error(
-          `✗ Quote coverage ${(coverage * 100).toFixed(0)}% < ${minRatio * 100}% in production — failing refresh`
-        );
-        process.exitCode = 1;
-      }
+      process.exitCode = 1;
     }
 
     // Outlook layer: valuations + news + macro rates (soft-fail)

@@ -11,8 +11,9 @@ on:
     - cron: "15 20 * * 1-5"
 
 concurrency:
-  group: stocks-radar-quotes
-  cancel-in-progress: true
+  # Share with deploy so weekday refresh cannot race a main deploy's S3 sync
+  group: stocks-radar-aws-mutate
+  cancel-in-progress: false
 
 jobs:
   refresh:
@@ -71,6 +72,7 @@ jobs:
           pip install -r scripts/datacenter/requirements.txt
           npm run update-quotes
           npm run update-screener
+          node scripts/write-health.mjs
 
       - name: Sync quotes.json + screener.json to S3
         run: |
@@ -94,12 +96,18 @@ jobs:
               --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
               --content-type "application/json"
           fi
+          if [ -f stocks/radar/public/health.json ]; then
+            aws s3 cp stocks/radar/public/health.json \
+              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/health.json" \
+              --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+              --content-type "application/json"
+          fi
 
       - name: Invalidate CloudFront quotes
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/quotes.json" "/outlook.json" "/screener.json" "/datacenter/news.json"
+            --paths "/quotes.json" "/outlook.json" "/screener.json" "/datacenter/news.json" "/health.json"
 
       - name: Resolve public site URL
         id: url

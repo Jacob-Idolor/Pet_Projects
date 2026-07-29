@@ -54,7 +54,8 @@ function savePrefs() {
 const _p = loadPrefs();
 const _params = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
 const _qParam = (_params.get("q") || _params.get("ticker") || "").trim();
-const _layerParam = (_params.get("layer") || "").trim();
+const _layerParamRaw = (_params.get("layer") || "").trim();
+const _layerParam = /^[a-zA-Z0-9_-]{1,64}$/.test(_layerParamRaw) ? _layerParamRaw : "";
 const _modeParam = (_params.get("mode") || "").trim();
 const _allowedModes = new Set(["screener", "datacenter", "rack", "analyst", "lookup"]);
 
@@ -380,7 +381,7 @@ const SCORE_FACTORS = [
     { k: "pct_vs_ma50", dir: 1 }, { k: "pct_vs_ma200", dir: 1 },
     { k: "range_pos", dir: 1 }, { k: "pct_off_high", dir: 1 } ] },
   { key: "health", label: "Financial health", weight: 0.10, metrics: [
-    { k: "debt_to_equity", dir: -1, pos: true }, { k: "current_ratio", dir: 1 } ] },
+    { k: "debt_to_equity", dir: -1 }, { k: "current_ratio", dir: 1 } ] },
   { key: "exposure", label: "Thematic exposure", weight: 0.15, special: "exposure" },
 ];
 
@@ -574,7 +575,7 @@ function renderAlerts() {
   el.innerHTML = `<span class="al-h">${alerts.length} alert${alerts.length > 1 ? "s" : ""}</span>` +
     alerts.map((a) => {
       const tk = escapeHtml(String(a.tk || ""));
-      const kind = ["warn", "info", "buy", "sell"].includes(a.kind) ? a.kind : "info";
+      const kind = ["warn", "info", "buy", "sell", "up", "down"].includes(a.kind) ? a.kind : "info";
       return `<button class="al-item ${kind}" data-tk="${tk}"><b>${tk}</b> ${escapeHtml(a.msg)}</button>`;
     }).join("");
   el.querySelectorAll(".al-item").forEach((b) =>
@@ -771,8 +772,8 @@ function render() {
 }
 function emptyMsg() {
   const bits = [];
-  if (STATE.query) bits.push(`“${STATE.query}”`);
-  if (STATE.exposure.size) bits.push(`exposure: ${[...STATE.exposure].join(", ")}`);
+  if (STATE.query) bits.push(`“${escapeHtml(STATE.query)}”`);
+  if (STATE.exposure.size) bits.push(`exposure: ${escapeHtml([...STATE.exposure].join(", "))}`);
   if (activeFilterCount()) bits.push(`${activeFilterCount()} metric filter(s)`);
   return `<div class="loading">No names match ${bits.join(" · ") || "the current filters"}.</div>`;
 }
@@ -870,7 +871,7 @@ function updateFocusBanner() {
   if (STATE.mode === "screener" && STATE.view === "layers" && STATE.focusLayer) {
     const layer = STATE.layers.find((l) => l.id === STATE.focusLayer);
     b.classList.remove("hidden");
-    b.innerHTML = `<span>Showing only <b>${layer ? layer.name : STATE.focusLayer}</b> — drilled in from the Data Center Map.</span>` +
+    b.innerHTML = `<span>Showing only <b>${escapeHtml(layer ? layer.name : STATE.focusLayer)}</b> — drilled in from the Data Center Map.</span>` +
       `<button id="clearFocus">Show all layers</button>`;
     b.querySelector("#clearFocus").addEventListener("click", () => { STATE.focusLayer = null; render(); });
   } else { b.classList.add("hidden"); b.innerHTML = ""; }
@@ -1081,7 +1082,7 @@ function renderLookupResult(d) {
         <div class="lk-prices">${fmtMoney(d.market_cap)} · ${fmtPrice(d.price)}</div>
       </div>
       <div class="lk-sub">${escapeHtml(d.sector || "—")}${d.industry ? " · " + escapeHtml(d.industry) : ""} · ${metricBits}</div>
-      ${existing.length ? `<div class="lk-exists">Already in the universe: <b>${existing.join(", ")}</b> — you can still add it to another layer.</div>` : ""}
+      ${existing.length ? `<div class="lk-exists">Already in the universe: <b>${existing.map((x) => escapeHtml(String(x))).join(", ")}</b> — you can still add it to another layer.</div>` : ""}
       ${d.summary ? `<p class="lk-summary">${escapeHtml(d.summary)}</p>` : ""}
       ${recBox}
       <div class="lk-form">
@@ -1103,15 +1104,27 @@ async function addStock(d) {
     ticker: d.ticker, name: d.name,
     layer: $("#lkLayer").value, exposure: $("#lkExposure").value,
     tags: $("#lkTags").value, thesis: $("#lkThesis").value,
+    market: {
+      ticker: d.ticker,
+      ok: d.ok !== false && d.price != null,
+      price: d.price ?? null,
+      market_cap: d.market_cap ?? null,
+      currency: d.currency || "USD",
+      trailing_pe: d.trailing_pe ?? null,
+      forward_pe: d.forward_pe ?? null,
+      price_to_sales: d.price_to_sales ?? null,
+      ev_ebitda: d.ev_ebitda ?? null,
+      revenue_growth: d.revenue_growth ?? null,
+    },
   };
   const msg = $("#lkAddMsg");
-  msg.innerHTML = `<span class="muted">Adding ${d.ticker}…</span>`;
+  msg.innerHTML = `<span class="muted">Adding ${escapeHtml(d.ticker)}…</span>`;
   try {
     const res = await fetch("/api/add-stock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const r = await res.json();
     if (!r.ok) { msg.innerHTML = `<span class="lk-note err">${escapeHtml(r.error || "Add failed.")}</span>`; return; }
-    msg.innerHTML = `<span class="lk-ok">✓ Added ${d.ticker} to ${body.layer}. Refreshing live data…</span>`;
-    await load(true);             // refetch so the new ticker gets market data everywhere
+    msg.innerHTML = `<span class="lk-ok">✓ Added ${escapeHtml(d.ticker)} to ${escapeHtml(body.layer)}. Reloading snapshot…</span>`;
+    await load(true);
     renderAddedList();
   } catch (e) {
     msg.innerHTML = `<span class="lk-note err">Add request failed.</span>`;

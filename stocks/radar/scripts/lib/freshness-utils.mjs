@@ -30,3 +30,31 @@ export function ageOk(ageH, maxHours) {
   if (ageH == null || !Number.isFinite(ageH)) return false;
   return ageH <= maxHours;
 }
+
+/**
+ * Prefer freshCount over merged row count so carried-forward quotes
+ * do not inflate coverage after a Yahoo outage.
+ */
+export function quotesFreshCount(quotes) {
+  if (!quotes || typeof quotes !== "object") return 0;
+  if (quotes.fetchFailed) return 0;
+  const fresh = Number(quotes.freshCount);
+  if (Number.isFinite(fresh)) return Math.max(0, fresh);
+  const map =
+    quotes.quotes && typeof quotes.quotes === "object" ? quotes.quotes : null;
+  const count = map ? Object.keys(map).length : Number(quotes.count) || 0;
+  const carried = Array.isArray(quotes.carriedForward)
+    ? quotes.carriedForward.length
+    : 0;
+  return Math.max(0, count - carried);
+}
+
+export function quotesFreshRatio(quotes) {
+  if (!quotes || typeof quotes !== "object") return null;
+  const total =
+    Number(quotes.total) ||
+    (quotes.quotes && typeof quotes.quotes === "object"
+      ? Object.keys(quotes.quotes).length
+      : Number(quotes.count) || 0);
+  return coverageRatio(quotesFreshCount(quotes), total);
+}

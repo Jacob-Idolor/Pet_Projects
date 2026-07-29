@@ -15,7 +15,7 @@ on:
     - cron: "0 15 * * 1-5"
 
 concurrency:
-  group: stocks-radar-deploy
+  group: stocks-radar-aws-mutate
   cancel-in-progress: false
 
 jobs:

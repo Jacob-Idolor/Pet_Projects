@@ -5,6 +5,8 @@ import {
   ageOk,
   coverageOk,
   coverageRatio,
+  quotesFreshCount,
+  quotesFreshRatio,
 } from "../scripts/lib/freshness-utils.mjs";
 
 describe("ageHours", () => {
@@ -28,6 +30,33 @@ describe("coverage", () => {
     assert.equal(coverageOk(68, 80, 0.85), true);
     assert.equal(coverageOk(67, 80, 0.85), false);
     assert.equal(coverageRatio(1, 0), null);
+  });
+});
+
+describe("quotesFreshCount / quotesFreshRatio", () => {
+  it("prefers freshCount over merged rows", () => {
+    const q = {
+      total: 10,
+      freshCount: 2,
+      count: 10,
+      carriedForward: ["A", "B", "C", "D", "E", "F", "G", "H"],
+      quotes: Object.fromEntries([...Array(10)].map((_, i) => [`T${i}`, {}])),
+    };
+    assert.equal(quotesFreshCount(q), 2);
+    assert.equal(quotesFreshRatio(q), 0.2);
+  });
+  it("treats fetchFailed as zero fresh", () => {
+    assert.equal(quotesFreshCount({ fetchFailed: true, freshCount: 10, total: 10 }), 0);
+    assert.equal(quotesFreshRatio({ fetchFailed: true, freshCount: 10, total: 10 }), 0);
+  });
+  it("falls back to count minus carried", () => {
+    const q = {
+      total: 5,
+      count: 5,
+      carriedForward: ["A", "B"],
+      quotes: { A: {}, B: {}, C: {}, D: {}, E: {} },
+    };
+    assert.equal(quotesFreshCount(q), 3);
   });
 });
 
