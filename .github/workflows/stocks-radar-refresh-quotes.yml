@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   refresh:
-    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -96,38 +96,39 @@ jobs:
       - name: Sync live JSON to S3
         env:
           REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
+          BUCKET: ${{ secrets.STOCKS_RADAR_S3_BUCKET }}
         run: |
           aws s3 cp stocks/radar/public/quotes.json \
-            "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/quotes.json" \
+            "s3://${BUCKET}/quotes.json" \
             --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
             --content-type "application/json"
           if [ -f stocks/radar/public/outlook.json ]; then
             aws s3 cp stocks/radar/public/outlook.json \
-              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/outlook.json" \
+              "s3://${BUCKET}/outlook.json" \
               --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
               --content-type "application/json"
           fi
           if [ -f stocks/radar/public/health.json ]; then
             aws s3 cp stocks/radar/public/health.json \
-              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/health.json" \
+              "s3://${BUCKET}/health.json" \
               --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
               --content-type "application/json"
           fi
           # Never upload checkout copies of screener/news on mid-session — would clobber live data
           if [ "$REFRESH_SCREENER" = "true" ]; then
             aws s3 cp stocks/radar/public/screener.json \
-              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/screener.json" \
+              "s3://${BUCKET}/screener.json" \
               --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
               --content-type "application/json"
             if [ -f stocks/radar/public/dc-movers.json ]; then
               aws s3 cp stocks/radar/public/dc-movers.json \
-                "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/dc-movers.json" \
+                "s3://${BUCKET}/dc-movers.json" \
                 --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
                 --content-type "application/json"
             fi
             if [ -f stocks/radar/public/datacenter/news.json ]; then
               aws s3 cp stocks/radar/public/datacenter/news.json \
-                "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/datacenter/news.json" \
+                "s3://${BUCKET}/datacenter/news.json" \
                 --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
                 --content-type "application/json"
             fi
@@ -136,6 +137,7 @@ jobs:
       - name: Invalidate CloudFront (cacheable live JSON only)
         env:
           REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
+          DIST_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           # quotes/health use CachingDisabled — invalidation is unnecessary spend
           paths=("/outlook.json")
@@ -143,7 +145,7 @@ jobs:
             paths+=("/screener.json" "/dc-movers.json" "/datacenter/news.json")
           fi
           aws cloudfront create-invalidation \
-            --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --distribution-id "$DIST_ID" \
             --paths "${paths[@]}"
 
       - name: Resolve public site URL

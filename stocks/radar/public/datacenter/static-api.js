@@ -529,13 +529,37 @@
     }
 
     if (path === "/api/add-stock" && method === "POST") {
+      const ticker = String(body.ticker || "")
+        .trim()
+        .toUpperCase();
+      if (!/^[A-Z0-9.^_-]{1,15}$/.test(ticker)) {
+        return jsonResponse({ ok: false, error: "Invalid ticker." }, 400);
+      }
+      const layer = String(body.layer || "").trim();
+      if (!/^[a-zA-Z0-9_-]{1,64}$/.test(layer)) {
+        return jsonResponse({ ok: false, error: "Invalid layer." }, 400);
+      }
+      const allowedExp = new Set(["pure", "high", "moderate", "diversified"]);
+      const exposure = allowedExp.has(String(body.exposure || ""))
+        ? String(body.exposure)
+        : "moderate";
       const tags = Array.isArray(body.tags)
         ? body.tags
         : String(body.tags || "")
             .split(",")
             .map((s) => s.trim())
-            .filter(Boolean);
-      const item = { ...body, tags };
+            .filter(Boolean)
+            .slice(0, 12)
+            .map((t) => String(t).slice(0, 40));
+      const item = {
+        ticker,
+        name: String(body.name || ticker).slice(0, 120),
+        layer,
+        exposure,
+        tags,
+        thesis: String(body.thesis || "").slice(0, 280),
+        market: body.market && typeof body.market === "object" ? body.market : undefined,
+      };
       const items = loadUserStocks().filter(
         (x) => !(x.ticker === item.ticker && x.layer === item.layer)
       );
@@ -567,15 +591,21 @@
   window.fetch = function (input, init) {
     const url = typeof input === "string" ? input : input && input.url;
     if (typeof url === "string") {
-      let path = url;
-      try {
-        if (url.startsWith("http")) path = new URL(url).pathname;
-      } catch {
-        /* keep path */
+      // Only intercept same-origin relative /api/ — never foreign hosts
+      let path = null;
+      if (url.startsWith("/api/")) {
+        path = url.split("?")[0];
+      } else if (url.startsWith("http")) {
+        try {
+          const u = new URL(url);
+          if (u.origin === location.origin && u.pathname.startsWith("/api/")) {
+            path = u.pathname;
+          }
+        } catch {
+          /* ignore */
+        }
       }
-      if (path.startsWith("/api/")) {
-        return handleApi(path, init);
-      }
+      if (path) return handleApi(path, init);
     }
     return origFetch(input, init);
   };

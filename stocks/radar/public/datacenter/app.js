@@ -98,6 +98,7 @@ const pctClass = (n) => (n == null ? "dim" : n > 0 ? "pos" : n < 0 ? "neg" : "")
 const fmtYield = (n) => (n == null ? "—" : n.toFixed(2) + "%");   // value already in percent units
 // analyst recommendationMean: 1 = strong buy … 5 = sell
 const RATING_LABEL = { strong_buy: "Strong Buy", buy: "Buy", hold: "Hold", underperform: "Underperform", sell: "Sell" };
+const EXPOSURES = ["pure", "high", "moderate", "diversified"];
 const ratingClass = (m) => (m == null ? "dim" : m <= 2.0 ? "pos" : m <= 3.0 ? "warn" : "neg");
 function fmtEarnings(ts) {
   if (ts == null) return "—";
@@ -109,15 +110,26 @@ function fmtEarnings(ts) {
   if (days === 0) return `${date} · today`;
   return `${date} · ${days}d`;
 }
-const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const safeHttpUrl = (raw, fallback = "#") => {
   const s = String(raw || "").trim();
   if (!s) return fallback;
   try {
     const u = new URL(s);
-    if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+    if (u.protocol !== "http:" && u.protocol !== "https:") return fallback;
+    if (u.username || u.password) return fallback;
+    return u.href;
   } catch { /* ignore */ }
   return fallback;
+};
+const allowExposure = (raw) => (EXPOSURES.includes(String(raw || "")) ? String(raw) : "moderate");
+const allowLayerId = (raw) => {
+  const s = String(raw || "").trim();
+  return /^[a-zA-Z0-9_-]{1,64}$/.test(s) ? s : "";
+};
+const allowRecKey = (raw) => {
+  const s = String(raw || "").trim().toLowerCase().replace(/\s+/g, "_");
+  return Object.prototype.hasOwnProperty.call(RATING_LABEL, s) ? s : "";
 };
 function timeAgo(iso) {
   if (!iso) return "";
@@ -179,8 +191,10 @@ const scoreColor = (s) => (s >= 66 ? "var(--green)" : s >= 40 ? "var(--amber)" :
 function scoreBadge(h) {
   if (h.score == null) return `<span class="score na">—</span>`;
   const p = h.scoreParts || {};
-  const tip = SCORE_FACTORS.map((f) => `${f.label} ${p[f.key] ?? "–"}`).join(" · ") + " — click row for breakdown";
-  return `<span class="score" style="--sc:${scoreColor(h.score)}" title="${tip}">${h.score}</span>`;
+  const tip = escapeHtml(
+    SCORE_FACTORS.map((f) => `${f.label} ${p[f.key] ?? "–"}`).join(" · ") + " — click row for breakdown"
+  );
+  return `<span class="score" style="--sc:${scoreColor(h.score)}" title="${tip}">${escapeHtml(String(h.score))}</span>`;
 }
 // full derivation, shown in the expandable row detail
 function scoreBreakdown(h) {
@@ -246,12 +260,16 @@ const COLUMNS = {
   price_d7:       { label: "Price 7d",  get: (h) => (dl(h.ticker) || {}).price_7d, cell: (h) => { const v = (dl(h.ticker) || {}).price_7d; return td(v == null ? "—" : fmtPct(v), pctClass(v)); } },
 };
 function ratingCell(h) {
-  const k = h.market.recommendation_key, mean = h.market.recommendation_mean, n = h.market.num_analysts;
+  const k = allowRecKey(h.market.recommendation_key);
+  const mean = h.market.recommendation_mean;
+  const n = h.market.num_analysts;
   if (!k && mean == null) return `<span class="dim">—</span>`;
-  const lbl = RATING_LABEL[k] || (k ? k.replace(/_/g, " ") : "—");
-  const tip = `consensus ${mean != null ? mean.toFixed(2) + "/5" : "n/a"}${n != null ? " · " + n + " analysts" : ""} (1=strong buy, 5=sell)`;
+  const lbl = escapeHtml(RATING_LABEL[k] || "—");
+  const tip = escapeHtml(
+    `consensus ${mean != null && Number.isFinite(Number(mean)) ? Number(mean).toFixed(2) + "/5" : "n/a"}${n != null ? " · " + n + " analysts" : ""} (1=strong buy, 5=sell)`
+  );
   return `<span class="rt ${ratingClass(mean)}" title="${tip}">${lbl}</span>` +
-    (n != null ? `<span class="rt-n">${n}</span>` : "");
+    (n != null ? `<span class="rt-n">${escapeHtml(String(n))}</span>` : "");
 }
 const BASE_COLS = ["ticker", "name", "exposure", "score", "price", "change_pct", "market_cap"];
 const COLSETS = {
@@ -512,8 +530,8 @@ function renderMovers() {
   const s = [...named].sort((a, b) => b.market.change_pct - a.market.change_pct);
   const top = s[0], bot = s[s.length - 1];
   $("#movers").innerHTML =
-    `<span class="mv">▲ <b>${top.ticker}</b> <span class="pos">${fmtPct(top.market.change_pct)}</span></span>` +
-    `<span class="mv">▼ <b>${bot.ticker}</b> <span class="neg">${fmtPct(bot.market.change_pct)}</span></span>`;
+    `<span class="mv">▲ <b>${escapeHtml(top.ticker)}</b> <span class="pos">${fmtPct(top.market.change_pct)}</span></span>` +
+    `<span class="mv">▼ <b>${escapeHtml(bot.ticker)}</b> <span class="neg">${fmtPct(bot.market.change_pct)}</span></span>`;
 }
 
 // ---- history / trends / alerts -----------------------------------------
@@ -754,7 +772,7 @@ function render() {
     el.className = "layer" + (collapsed ? " collapsed" : "");
     const head = document.createElement("div");
     head.className = "layer-head";
-    head.innerHTML = `<h2>${layer.name}</h2><span class="count">${visible.length} names</span><span class="caret">▾</span>`;
+    head.innerHTML = `<h2>${escapeHtml(layer.name)}</h2><span class="count">${visible.length} names</span><span class="caret">▾</span>`;
     head.addEventListener("click", () => {
       if (STATE.collapsed.has(layer.id)) STATE.collapsed.delete(layer.id);
       else STATE.collapsed.add(layer.id);
@@ -890,12 +908,27 @@ const ANALYST = { reports: null, hasKey: false, wired: false, ticker: null };
 // compact GitHub-flavored-markdown -> HTML (headings, bold/italic/code, links,
 // lists, blockquotes, hr, and pipe tables). Input is escaped first.
 function mdToHtml(md) {
-  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const inline = (s) => esc(s)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  const esc = (s) =>
+    String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  const inline = (s) =>
+    esc(s)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, hrefRaw) => {
+        const decoded = String(hrefRaw || "")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+        const safe = safeHttpUrl(decoded, "");
+        if (!safe || safe === "#") return text;
+        return `<a href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+      });
   const lines = md.replace(/\r/g, "").split("\n");
   let html = "", i = 0;
   const isTableSep = (s) => /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(s) && s.includes("-");
@@ -967,7 +1000,7 @@ async function initAnalyst() {
     ANALYST.hasKey = data.has_key;
     ANALYST.provider = data.provider;
     $("#anReports").innerHTML = data.reports.map((r) =>
-      `<button class="an-report" data-type="${r.id}">${r.icon} ${r.label}</button>`).join("");
+      `<button class="an-report" data-type="${escapeHtml(r.id)}">${escapeHtml(r.icon || "")} ${escapeHtml(r.label)}</button>`).join("");
     $("#anReports").querySelectorAll(".an-report").forEach((b) =>
       b.addEventListener("click", () => runAnalysis(b.dataset.type)));
     $("#anKeyNote").innerHTML = data.has_key
@@ -988,7 +1021,7 @@ async function runAnalysis(type, force) {
   const label = report ? report.label : type;
   const out = $("#anOutput");
   document.querySelectorAll(".an-report").forEach((b) => b.classList.toggle("active", b.dataset.type === type));
-  out.innerHTML = `<div class="an-loading">⏳ Preparing <b>${label}</b> for <b>${ticker}</b>${ANALYST.hasKey ? " — generating with Claude (this can take 20–60s)…" : "…"}</div>`;
+  out.innerHTML = `<div class="an-loading">⏳ Preparing <b>${escapeHtml(label)}</b> for <b>${escapeHtml(ticker)}</b>${ANALYST.hasKey ? " — generating with Claude (this can take 20–60s)…" : "…"}</div>`;
 
   // attach our computed score for context
   const h = (STATE.layers.flatMap((l) => l.holdings)).find((x) => x.ticker === ticker);
@@ -1028,7 +1061,6 @@ function promptBox(text) {
 
 // ---- Stock Lookup -------------------------------------------------------
 let LK_DATA = null;
-const EXPOSURES = ["pure", "high", "moderate", "diversified"];
 
 function initLookup() {
   renderAddedList();
@@ -1053,15 +1085,18 @@ async function lookupStock() {
 }
 
 function layerOptions(selectedId) {
-  return STATE.layers.map((l) =>
-    `<option value="${l.id}"${l.id === selectedId ? " selected" : ""}>${l.name}</option>`).join("");
+  return STATE.layers.map((l) => {
+    const id = allowLayerId(l.id);
+    if (!id) return "";
+    return `<option value="${escapeHtml(id)}"${id === selectedId ? " selected" : ""}>${escapeHtml(l.name || id)}</option>`;
+  }).join("");
 }
 
 function renderLookupResult(d) {
   const out = $("#lkResult");
   if (!d.ok) { out.innerHTML = `<div class="lk-note err">${escapeHtml(d.error || "No data for that ticker.")}</div>`; return; }
   const rec = d.recommend;
-  const curTag = d.currency && d.currency !== "USD" ? ` <span class="chip cur">${d.currency}→USD</span>` : "";
+  const curTag = d.currency && d.currency !== "USD" ? ` <span class="chip cur">${escapeHtml(String(d.currency))}→USD</span>` : "";
   const existing = (d.existing_layers || []);
   const metricBits = [
     `P/E ${fmtNum(d.trailing_pe)}`, `fwd ${fmtNum(d.forward_pe)}`,
@@ -1138,10 +1173,14 @@ async function renderAddedList() {
     const items = (await res.json()).items || [];
     if (!items.length) { el.innerHTML = ""; return; }
     el.innerHTML = `<div class="lk-added-h">Your added stocks (${items.length})</div>` +
-      items.map((it) => `<div class="lk-added-row"><span class="lk-tkr">${escapeHtml(it.ticker)}</span> ` +
-        `<span class="lk-added-name">${escapeHtml(it.name || "")}</span> <span class="chip">${escapeHtml(it.layer)}</span> ` +
-        `<span class="exp ${it.exposure}">${escapeHtml(it.exposure || "")}</span>` +
-        `<button class="lk-remove" data-t="${escapeHtml(it.ticker)}" data-l="${escapeHtml(it.layer)}">Remove</button></div>`).join("");
+      items.map((it) => {
+        const exp = allowExposure(it.exposure);
+        const layer = allowLayerId(it.layer) || escapeHtml(String(it.layer || ""));
+        return `<div class="lk-added-row"><span class="lk-tkr">${escapeHtml(it.ticker)}</span> ` +
+          `<span class="lk-added-name">${escapeHtml(it.name || "")}</span> <span class="chip">${escapeHtml(layer)}</span> ` +
+          `<span class="exp ${escapeHtml(exp)}">${escapeHtml(exp)}</span>` +
+          `<button class="lk-remove" data-t="${escapeHtml(it.ticker)}" data-l="${escapeHtml(layer)}">Remove</button></div>`;
+      }).join("");
     el.querySelectorAll(".lk-remove").forEach((b) =>
       b.addEventListener("click", () => removeStock(b.dataset.t, b.dataset.l)));
   } catch (e) { el.innerHTML = ""; }

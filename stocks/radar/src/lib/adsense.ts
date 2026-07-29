@@ -57,7 +57,8 @@ export function hasPublisherContent(minTickers = 5): boolean {
 }
 
 export function getAdSenseConfig(): AdSenseConfig {
-  const client = env("PUBLIC_ADSENSE_CLIENT");
+  const rawClient = env("PUBLIC_ADSENSE_CLIENT");
+  const client = /^ca-pub-\d+$/.test(rawClient) ? rawClient : "";
   const enabledFlag = env("PUBLIC_ADSENSE_ENABLED");
   const forcePreviewRequested = env("PUBLIC_ADSENSE_PREVIEW") === "true";
   const isDev = import.meta.env.DEV;

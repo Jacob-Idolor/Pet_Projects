@@ -23,15 +23,25 @@ variable "github_repository" {
   description = "GitHub repo (OWNER/NAME) allowed to assume the deploy role via OIDC"
   type        = string
   default     = "Jacob-Idolor/Pet_Projects"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_repository))
+    error_message = "github_repository must be OWNER/NAME with no wildcards."
+  }
 }
 
 variable "github_oidc_subjects" {
   description = <<-EOT
-    Additional sub claim patterns (beyond refs/heads/main and environment:stockwatch).
-    Example: ["repo:ORG/REPO:ref:refs/heads/release/*"]
+    Additional exact sub claims (beyond environment:stockwatch and refs/heads/main).
+    Must be exact strings — no wildcards (use StringEquals trust).
   EOT
   type        = list(string)
   default     = []
+
+  validation {
+    condition     = alltrue([for s in var.github_oidc_subjects : !strcontains(s, "*")])
+    error_message = "github_oidc_subjects must be exact OIDC subs (no * wildcards)."
+  }
 }
 
 data "tls_certificate" "github_actions" {
@@ -66,8 +76,11 @@ locals {
 
   github_oidc_subs = var.enable_github_oidc ? concat(
     [
-      "repo:${var.github_repository}:ref:refs/heads/main",
+      # Jobs with environment: stockwatch use the environment subject (not ref).
+      # Lock GitHub Environment → Deployment branches = main only (see OIDC.md).
       "repo:${var.github_repository}:environment:stockwatch",
+      # Also allow main without environment (defense in depth / future jobs)
+      "repo:${var.github_repository}:ref:refs/heads/main",
     ],
     var.github_oidc_subjects
   ) : []
@@ -93,7 +106,7 @@ data "aws_iam_policy_document" "github_assume" {
     }
 
     condition {
-      test     = "StringLike"
+      test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
       values   = local.github_oidc_subs
     }

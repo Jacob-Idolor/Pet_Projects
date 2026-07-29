@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -121,12 +121,16 @@ jobs:
 
       - name: Sync to S3 (tiered cache)
         working-directory: stocks/radar
-        run: DIST_DIR=dist ./infra/sync-s3-tiered.sh "${{ secrets.STOCKS_RADAR_S3_BUCKET }}"
+        env:
+          BUCKET: ${{ secrets.STOCKS_RADAR_S3_BUCKET }}
+        run: DIST_DIR=dist ./infra/sync-s3-tiered.sh "$BUCKET"
 
       - name: Invalidate CloudFront (HTML + live JSON)
+        env:
+          DIST_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --distribution-id "$DIST_ID" \
             --paths "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" "/dc-movers.json" \
                    "/datacenter.html" "/datacenter/news.json" "/build-meta.json" \
                    "/health.json" "/settings.json" \

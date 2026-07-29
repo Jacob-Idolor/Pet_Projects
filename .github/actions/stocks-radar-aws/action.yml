@@ -47,7 +47,7 @@ runs:
             echo "::error::STOCKS_RADAR_USE_OIDC=true but AWS_ROLE_ARN secret is empty"
             exit 1
           fi
-          echo "Auth mode: OIDC → ${ROLE_ARN}"
+          echo "Auth mode: OIDC"
         else
           if [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
             echo "::error::Set AWS_ACCESS_KEY_ID/SECRET or enable OIDC (STOCKS_RADAR_USE_OIDC + AWS_ROLE_ARN)"

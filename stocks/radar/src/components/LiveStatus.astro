@@ -102,7 +102,16 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
     const flagTxt = flags.length ? ` · ${flags.join(" · ")}` : "";
 
     if (statusEl) {
-      statusEl.innerHTML = `Quotes ${ageLabel(mins)} (${coverage})${flagTxt} · Deploy ${new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })} · ${deployLabel} · <code>${shortSha}</code>`;
+      var parts = [
+        "Quotes " + ageLabel(mins) + " (" + coverage + ")" + flagTxt,
+        "Deploy " + new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }),
+        String(deployLabel || ""),
+      ];
+      statusEl.textContent = "";
+      statusEl.appendChild(document.createTextNode(parts.filter(Boolean).join(" · ") + " · "));
+      var code = document.createElement("code");
+      code.textContent = String(shortSha || "");
+      statusEl.appendChild(code);
     }
 
     document.dispatchEvent(

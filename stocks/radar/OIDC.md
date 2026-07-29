@@ -69,8 +69,11 @@ Keep `AWS_REGION` secret set (e.g. `us-west-2`). You can leave old access-key se
 | IAM → Roles | `stocks-radar-github-actions` |
 | Role → Trust | GitHub repo `Jacob-Idolor/Pet_Projects` (main + environment `stockwatch`) |
 
-**Required:** GitHub → Settings → Environments → `stockwatch` → **Deployment branches** = `main` only.
-Otherwise the `environment:stockwatch` OIDC subject can be assumed from any branch that uses that environment.
+**Required:** GitHub → Settings → Environments → `stockwatch` → **Deployment branches** = `Selected branches` → `main` only.
+
+Terraform trust uses **exact** `StringEquals` subjects (no wildcards). Workflows also refuse `workflow_dispatch` off `main`.
+
+Without the Environment branch lock, `environment:stockwatch` OIDC can still be assumed from any branch that is allowed to use that environment.
 
 ## If something fails
 

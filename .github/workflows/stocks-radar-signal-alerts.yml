@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   alerts:
-    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
