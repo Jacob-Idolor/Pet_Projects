@@ -41,7 +41,7 @@ Rebuild the board bundle: `npm run bundle:watchlist` → `public/watchlist-board
 | `scripts/fetch/` | Yahoo quotes, outlook, screener, movers |
 | `scripts/ops/` | Health, SEO, validate, hash assets, bundle, go-live |
 | `scripts/alerts/` | Digest, signal alerts, radar score |
-| `scripts/lib/` | Shared pure helpers (`action-bias`, `sanitize`, `aws-cli`, freshness) |
+| `scripts/lib/` | Shared pure helpers (`action-bias`, `sanitize`, `aws-cli`, `alert-quote-guard`, freshness) |
 | `scripts/config.mjs` | Settings + env overlays (stays at scripts root) |
 | `scripts/datacenter/` | Python universe helpers for the screener |
 

@@ -17,8 +17,8 @@ Audit posture for this **static** S3 + CloudFront site (no app servers, no user 
 | Deploy gate | `STOCKS_RADAR_DEPLOY_ENABLED` — no PR → prod |
 | GITHUB_TOKEN | `contents: read` on deploy/quotes/digest/alerts |
 | Emails out of git | `terraform.tfvars` gitignored; `alert_subscribers` sensitive |
-| Personal alerts fail-closed | Missing topic map → skip (no broadcast leak) |
-| XSS hardening | Symbol/id/priority sanitized; text fields HTML-escaped |
+| Personal alerts fail-closed | Missing topic map → skip (no broadcast leak); empty rules never auto-broadcast; cooldown only after successful SNS publish |
+| XSS hardening | Symbol/id/priority sanitized; text fields HTML-escaped; DC score bar widths clamped |
 | Scripts | `execFileSync` argv arrays (no shell injection); Yahoo host fixed |
 
 ## Fixes applied in this audit

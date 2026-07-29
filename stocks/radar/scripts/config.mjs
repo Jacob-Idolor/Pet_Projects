@@ -77,7 +77,7 @@ export function loadRuntimeConfig(opts = {}) {
         settings.quotes?.staleAfterHours ?? 6
       ),
       pollIntervalMs: settings.quotes?.pollIntervalMs ?? 300_000,
-      browserFallback: settings.quotes?.browserFallback !== false,
+      browserFallback: settings.quotes?.browserFallback === true,
       yahooChunkSize: settings.quotes?.yahooChunkSize ?? 8,
       yahooMaxRetries: settings.quotes?.yahooMaxRetries ?? 3,
     },

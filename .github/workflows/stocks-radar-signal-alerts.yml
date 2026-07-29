@@ -11,7 +11,8 @@ on:
 
 concurrency:
   group: stocks-radar-signal-alerts
-  cancel-in-progress: true
+  # Finish in-flight publish/cooldown writes — canceling mid-SNS risks duplicate emails
+  cancel-in-progress: false
 
 jobs:
   alerts:

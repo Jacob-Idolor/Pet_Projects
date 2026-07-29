@@ -82,9 +82,13 @@ Edit [`src/data/alert-rules.json`](src/data/alert-rules.json). `subscriberId` mu
 
 More examples: [`src/data/alert-rules.example.json`](src/data/alert-rules.example.json).
 
-**Cooldown:** the same rule+symbol will not re-email until `cooldownHours` passes (default 24). State lives at `s3://$bucket/_private/alert-state.json` (CloudFront cannot read `_private/*`).
+**Cooldown:** the same rule+symbol will not re-email until `cooldownHours` passes (default 24). Cooldown is recorded **only after a successful SNS publish** (skipped topics / failed publishes do not burn the window). State lives at `s3://$bucket/_private/alert-state.json` (CloudFront cannot read `_private/*`).
 
 **Privacy:** personal hits only publish to `STOCKS_RADAR_ALERT_TOPICS[subscriberId]`. Missing map entries are **skipped** (no shared-topic fallback unless `ALERTS_ALLOW_BROADCAST_FALLBACK=true`).
+
+**Board-wide broadcast:** off by default. Set `ALERTS_BROADCAST=true` **and** `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN`. Empty `alert-rules.json` alone does **not** broadcast (and does **not** use the daily digest SNS topic).
+
+**Stale quotes:** alerts refuse `fetchFailed` payloads and skip `_carriedForward` quote rows so carried prices cannot fire rules.
 
 ## 4. Test locally
 

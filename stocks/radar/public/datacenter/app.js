@@ -201,15 +201,16 @@ function scoreBreakdown(h) {
   if (h.score == null || !h.scoreParts) return `<div class="news-status">No score available.</div>`;
   const cov = h.scoreCov || {};
   const rows = SCORE_FACTORS.map((f) => {
-    const v = h.scoreParts[f.key] ?? 0;
+    const v = Number(h.scoreParts[f.key] ?? 0);
+    const width = Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
     const c = cov[f.key];
     // flag thin factors: fewer than half the metrics had data (exposure has none to count)
     const thin = c && (() => { const [a, b] = c.split("/").map(Number); return b > 0 && a < Math.ceil(b / 2); })();
-    const covChip = c ? `<span class="sb-cov${thin ? " thin" : ""}" title="${c} of this factor's metrics had data">${c}</span>` : `<span class="sb-cov"></span>`;
+    const covChip = c ? `<span class="sb-cov${thin ? " thin" : ""}" title="${escapeHtml(String(c))} of this factor's metrics had data">${escapeHtml(String(c))}</span>` : `<span class="sb-cov"></span>`;
     return `<div class="sb-row">
-      <span class="sb-label">${f.label}</span>
-      <span class="sb-bar"><span class="sb-fill" style="width:${v}%;background:${scoreColor(v)}"></span></span>
-      <span class="sb-val">${v}</span>
+      <span class="sb-label">${escapeHtml(f.label)}</span>
+      <span class="sb-bar"><span class="sb-fill" style="width:${width}%;background:${scoreColor(width)}"></span></span>
+      <span class="sb-val">${escapeHtml(String(width))}</span>
       ${covChip}
       <span class="sb-wt">×${Math.round(f.weight * 100)}%</span></div>`;
   }).join("");
@@ -217,7 +218,7 @@ function scoreBreakdown(h) {
     ? "each factor = percentile rank vs same-layer peers, then weighted"
     : "each factor = percentile rank vs the whole universe, then weighted";
   return `<div class="sb">
-    <div class="sb-head">Score <b style="color:${scoreColor(h.score)}">${h.score}</b>/100
+    <div class="sb-head">Score <b style="color:${scoreColor(Number(h.score))}">${escapeHtml(String(h.score))}</b>/100
       <span class="sb-note">${basis} · the small chip is data coverage (metrics with data)</span></div>
     ${rows}</div>`;
 }
@@ -1107,8 +1108,11 @@ function renderLookupResult(d) {
     ? `<div class="lk-rec"><div class="lk-rec-h">📍 Suggested layer</div>
          <div class="lk-rec-main"><b>${escapeHtml(rec.name)}</b> <span class="lk-conf">${rec.confidence}% fit</span></div>
          <div class="lk-rec-why">matched: ${rec.matched.length ? rec.matched.map((m) => `<code>${escapeHtml(m)}</code>`).join(" ") : "—"}</div>
-         <div class="lk-ranked">${(d.ranked || []).filter((r) => r.score > 0).map((r) =>
-            `<button class="lk-rankchip" data-layer="${r.layer}">${escapeHtml(r.name.replace(/^Layer \d+ — /, ""))} · ${r.confidence}%</button>`).join("")}</div></div>`
+         <div class="lk-ranked">${(d.ranked || []).filter((r) => r.score > 0).map((r) => {
+            const lid = allowLayerId(r.layer);
+            if (!lid) return "";
+            return `<button class="lk-rankchip" data-layer="${lid}">${escapeHtml(r.name.replace(/^Layer \d+ — /, ""))} · ${escapeHtml(String(r.confidence))}%</button>`;
+          }).join("")}</div></div>`
     : `<div class="lk-rec"><div class="lk-rec-h">📍 Suggested layer</div><div class="lk-rec-why">Couldn't auto-classify from its profile — pick a layer below.</div></div>`;
   out.innerHTML = `
     <div class="lk-card">

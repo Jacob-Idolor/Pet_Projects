@@ -1183,7 +1183,8 @@ function bindEvents() {
   });
   document.getElementById("watchlist-board")?.addEventListener("change", (e) => {
     if (e.target.id === "page-size-select") {
-      state.pageSize = Number(e.target.value);
+      const raw = Number(e.target.value);
+      state.pageSize = [25, 50, 100, 200].includes(raw) ? raw : 50;
       state.page = 1;
       savePrefs();
       renderAll();
@@ -1279,6 +1280,15 @@ function bindEvents() {
   }));
 }
 
+// src/lib/day-mood.ts
+function isUsMarketOpen(now = /* @__PURE__ */ new Date()) {
+  const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const day = et.getDay();
+  if (day === 0 || day === 6) return false;
+  const mins = et.getHours() * 60 + et.getMinutes();
+  return mins >= 570 && mins < 960;
+}
+
 // src/client/board/quotes.ts
 async function loadOutlook() {
   const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
@@ -1313,13 +1323,6 @@ async function loadOutlook() {
   } catch {
     return false;
   }
-}
-function isUsMarketOpen() {
-  const et = new Date((/* @__PURE__ */ new Date()).toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const day = et.getDay();
-  if (day === 0 || day === 6) return false;
-  const mins = et.getHours() * 60 + et.getMinutes();
-  return mins >= 570 && mins < 960;
 }
 async function fetchOneQuote(symbol, attempt = 0) {
   try {
@@ -1398,12 +1401,25 @@ function startQuoteLoader() {
       browserFallbackInFlight = false;
     }
   }
-  const symbols = [...new Set(state.allStocks.map((s) => s.symbol))];
-  loadFromJson().then((ok) => {
-    if (!ok) maybeBrowserFallback(true);
-  });
   const liveStatusOwnsPoll = Boolean(document.querySelector("[data-live-status]"));
-  if (!liveStatusOwnsPoll) {
+  if (liveStatusOwnsPoll) {
+    const waitMs = 2500;
+    const onQuotes = () => {
+      lastJsonOk = true;
+      window.clearTimeout(fallbackTimer);
+      document.removeEventListener("radar:quotes", onQuotes);
+    };
+    const fallbackTimer = window.setTimeout(() => {
+      document.removeEventListener("radar:quotes", onQuotes);
+      loadFromJson().then((ok) => {
+        if (!ok) maybeBrowserFallback(true);
+      });
+    }, waitMs);
+    document.addEventListener("radar:quotes", onQuotes);
+  } else {
+    loadFromJson().then((ok) => {
+      if (!ok) maybeBrowserFallback(true);
+    });
     setInterval(() => {
       if (document.hidden) return;
       loadFromJson().then((ok) => {
@@ -1414,16 +1430,21 @@ function startQuoteLoader() {
   document.addEventListener("radar:stale-quotes", () => {
     maybeBrowserFallback(true);
   });
-  void symbols;
 }
 
 // src/client/board/init.ts
+var ALLOWED_PAGE_SIZES = /* @__PURE__ */ new Set([25, 50, 100, 200]);
+function clampPageSize(n, fallback = 50) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || !ALLOWED_PAGE_SIZES.has(v)) return fallback;
+  return v;
+}
 async function initWatchlistBoard(stocksJson) {
   const site = radarSettings();
-  if (site.board?.defaultPageSize) state.pageSize = site.board.defaultPageSize;
+  if (site.board?.defaultPageSize) state.pageSize = clampPageSize(site.board.defaultPageSize);
   if (site.board?.defaultSort) state.sortKey = site.board.defaultSort;
   const prefs = loadPrefs();
-  if (prefs.pageSize) state.pageSize = prefs.pageSize;
+  if (prefs.pageSize != null) state.pageSize = clampPageSize(prefs.pageSize, state.pageSize);
   if (prefs.sortKey) state.sortKey = prefs.sortKey;
   if (prefs.filter) state.filter = prefs.filter;
   state.baseStocks = JSON.parse(stocksJson);

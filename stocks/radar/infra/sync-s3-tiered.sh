@@ -47,7 +47,17 @@ aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   --exclude "_astro/*" \
   --exclude "datacenter/*.*.js" \
   --exclude "datacenter/*.*.css" \
+  --exclude "datacenter/app.js" \
+  --exclude "datacenter/static-api.js" \
+  --exclude "datacenter/datacenter.js" \
+  --exclude "datacenter/rackexplorer.js" \
+  --exclude "datacenter/style.css" \
   --cache-control "public,max-age=300,must-revalidate"
+
+# Drop stale unhashed datacenter sources if previously uploaded (page only loads hashed names).
+for f in app.js static-api.js datacenter.js rackexplorer.js style.css; do
+  aws s3 rm "s3://$BUCKET/datacenter/$f" "${PROFILE_ARGS[@]}" 2>/dev/null || true
+done
 
 echo "→ HTML + SEO (short cache; redeploys pick up quickly)…"
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \

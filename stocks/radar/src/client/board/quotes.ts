@@ -1,5 +1,8 @@
 import { type QuoteData, type OutlookStock } from "../../lib/market-display";
+import { isUsMarketOpen } from "../../lib/day-mood";
 import { state, radarSettings } from "./state";
+
+export { isUsMarketOpen };
 
 export async function loadOutlook() {
   const base = document.querySelector<HTMLElement>("[data-radar-base]")?.dataset.radarBase ?? "/";
@@ -40,14 +43,6 @@ export async function loadOutlook() {
   } catch {
     return false;
   }
-}
-
-export function isUsMarketOpen() {
-  const et = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const day = et.getDay();
-  if (day === 0 || day === 6) return false;
-  const mins = et.getHours() * 60 + et.getMinutes();
-  return mins >= 570 && mins < 960;
 }
 
 export async function fetchOneQuote(symbol: string, attempt = 0): Promise<QuoteData | null> {
@@ -132,15 +127,28 @@ export function startQuoteLoader() {
     }
   }
 
-  const symbols = [...new Set(state.allStocks.map((s) => s.symbol))];
-
-  loadFromJson().then((ok) => {
-    if (!ok) maybeBrowserFallback(true);
-  });
-
-  // LiveStatus owns the poll on the home page (dispatches radar:quotes). Avoid double GETs.
+  // LiveStatus owns fetch+poll on the home page (dispatches radar:quotes). Avoid double GETs.
   const liveStatusOwnsPoll = Boolean(document.querySelector("[data-live-status]"));
-  if (!liveStatusOwnsPoll) {
+
+  if (liveStatusOwnsPoll) {
+    // Wait briefly for LiveStatus's first dispatch; only fetch if it never arrives.
+    const waitMs = 2500;
+    const onQuotes = () => {
+      lastJsonOk = true;
+      window.clearTimeout(fallbackTimer);
+      document.removeEventListener("radar:quotes", onQuotes);
+    };
+    const fallbackTimer = window.setTimeout(() => {
+      document.removeEventListener("radar:quotes", onQuotes);
+      loadFromJson().then((ok) => {
+        if (!ok) maybeBrowserFallback(true);
+      });
+    }, waitMs);
+    document.addEventListener("radar:quotes", onQuotes);
+  } else {
+    loadFromJson().then((ok) => {
+      if (!ok) maybeBrowserFallback(true);
+    });
     setInterval(() => {
       if (document.hidden) return;
       loadFromJson().then((ok) => {
@@ -152,6 +160,4 @@ export function startQuoteLoader() {
   document.addEventListener("radar:stale-quotes", () => {
     maybeBrowserFallback(true);
   });
-
-  void symbols;
 }

@@ -37,18 +37,23 @@ export function publishSns(topicArn, subject, message, opts = {}) {
     console.log(`  subject: ${subject}`);
     return true;
   }
-  awsCli(
-    [
-      "sns",
-      "publish",
-      "--topic-arn",
-      topicArn,
-      "--subject",
-      subject.slice(0, 100),
-      "--message",
-      message,
-    ],
-    { region: opts.region, profile: opts.profile, json: true }
-  );
-  return true;
+  try {
+    awsCli(
+      [
+        "sns",
+        "publish",
+        "--topic-arn",
+        topicArn,
+        "--subject",
+        subject.slice(0, 100),
+        "--message",
+        message,
+      ],
+      { region: opts.region, profile: opts.profile, json: true }
+    );
+    return true;
+  } catch (err) {
+    console.error(`SNS publish failed (${subject}):`, err?.message || err);
+    return false;
+  }
 }

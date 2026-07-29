@@ -5,13 +5,14 @@
  * Personal rules: src/data/alert-rules.json (subscriberId + signal + symbols/tags)
  * Emails live in Terraform alert_subscribers (not in git) → per-person SNS topics.
  *
- * Also supports legacy broadcast mode (all lean-buy/sell to one topic) when
- * ALERTS_BROADCAST=true or no personal rules are enabled.
+ * Legacy board-wide broadcast (all lean-buy/sell to one topic) only when
+ * ALERTS_BROADCAST=true AND STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN is set.
+ * Empty personal rules do NOT auto-broadcast (prevents digest-topic spam).
  *
  * Env:
  *   STOCKS_RADAR_SITE / STOCKS_RADAR_CLOUDFRONT_DOMAIN — live quotes
  *   STOCKS_RADAR_ALERT_TOPICS — JSON map { "jacob": "arn:aws:sns:..." }
- *   STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN / DIGEST — broadcast fallback topic
+ *   STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN — board-wide broadcast topic (explicit only)
  *   STOCKS_RADAR_S3_BUCKET — optional; load/save cooldown under _private/ (not public via CF)
  *   ALERT_STATE_PATH — local state path (default .cache/alert-state.json)
  *   ALERT_STATE_S3_KEY — must be under _private/ (default _private/alert-state.json)
@@ -39,6 +40,7 @@ import {
 import { withOtel } from "../otel.mjs";
 import { loadRuntimeConfig } from "../config.mjs";
 import { awsCli, publishSns } from "../lib/aws-cli.mjs";
+import { prepareQuotesForAlerts } from "../lib/alert-quote-guard.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "../..");
@@ -69,10 +71,8 @@ const onlyOnSignal =
 const forceBroadcast = process.env.ALERTS_BROADCAST === "true";
 const allowBroadcastFallback = process.env.ALERTS_ALLOW_BROADCAST_FALLBACK === "true";
 
-const broadcastTopic =
-  process.env.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN?.trim() ||
-  process.env.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN?.trim() ||
-  "";
+// Board-wide / fallback topic — never silently use the daily digest ARN (spam risk).
+const broadcastTopic = process.env.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN?.trim() || "";
 
 let topicMap = {};
 try {
@@ -91,13 +91,29 @@ function aws(args, { json = true } = {}) {
   return awsCli(args, { region, profile, json });
 }
 
-function loadOutlookStocks() {
+function loadOutlookStocksLocal() {
   if (!existsSync(LOCAL_OUTLOOK)) return {};
   try {
     return JSON.parse(readFileSync(LOCAL_OUTLOOK, "utf8")).stocks || {};
   } catch {
     return {};
   }
+}
+
+async function loadOutlookStocks() {
+  if (site) {
+    try {
+      const res = await fetch(`${site}/outlook.json?t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        return data.stocks || {};
+      }
+      console.warn(`outlook.json HTTP ${res.status} from ${site} — falling back to local`);
+    } catch (err) {
+      console.warn(`outlook.json fetch failed — falling back to local:`, err?.message || err);
+    }
+  }
+  return loadOutlookStocksLocal();
 }
 
 async function loadQuotes() {
@@ -223,8 +239,17 @@ await withOtel("stocks-radar-alerts", async (otel) => {
       ? JSON.parse(readFileSync(RULES, "utf8"))
       : { rules: [], defaults: {} };
     const data = await otel.withSpan("alerts.load_quotes", () => loadQuotes());
-    const quotes = data.quotes || {};
-    const outlookStocks = loadOutlookStocks();
+    const prepared = prepareQuotesForAlerts(data);
+    if (!prepared.ok) {
+      console.warn(`Skipping alerts — ${prepared.reason}`);
+      root.setAttributes({
+        "radar.alerts_skipped": true,
+        "radar.skip_reason": prepared.reason,
+      });
+      return;
+    }
+    const quotes = prepared.quotes;
+    const outlookStocks = await otel.withSpan("alerts.load_outlook", () => loadOutlookStocks());
     const fetchedAt = data.fetchedAt || data.updatedAt || "unknown";
     const when = new Date().toISOString();
     const cooldownHours = rulesConfig.defaults?.cooldownHours ?? runtime.alerts.defaultCooldownHours;
@@ -239,7 +264,8 @@ await withOtel("stocks-radar-alerts", async (otel) => {
       "radar.hits_total": hits.length,
       "radar.hits_fresh": fresh.length,
       "radar.hits_cooldown": skipped.length,
-      "radar.quote_coverage": data.count ?? Object.keys(quotes).length,
+      "radar.quote_coverage": Object.keys(quotes).length,
+      "radar.quotes_skipped_carried": prepared.skippedCarried || 0,
       "radar.dry_run": dryRun,
     });
 
@@ -247,6 +273,9 @@ await withOtel("stocks-radar-alerts", async (otel) => {
     console.log(
       `Hits this run: ${hits.length} (${fresh.length} fresh, ${skipped.length} in cooldown)`
     );
+    if (prepared.skippedCarried) {
+      console.log(`Skipped ${prepared.skippedCarried} carried-forward quote row(s)`);
+    }
 
     const bySubscriber = new Map();
     for (const row of fresh) {
@@ -259,6 +288,8 @@ await withOtel("stocks-radar-alerts", async (otel) => {
 
     const outChunks = [];
     let published = 0;
+    /** @type {typeof fresh} */
+    const cooledHits = [];
 
     for (const [subscriberId, rows] of bySubscriber) {
       await otel.withSpan(
@@ -291,14 +322,22 @@ await withOtel("stocks-radar-alerts", async (otel) => {
           });
 
           if (onlyOnSignal && rows.length === 0) return;
-          if (publish(topic, subject, body)) published++;
+          try {
+            if (publish(topic, subject, body)) {
+              published++;
+              cooledHits.push(...rows);
+            }
+          } catch (err) {
+            console.error(`SNS publish failed for ${subscriberId}:`, err?.message || err);
+            span.recordException?.(err);
+          }
         },
         { "radar.subscriber_id": subscriberId }
       );
     }
 
-    // Legacy board-wide broadcast (optional)
-    if (forceBroadcast || (enabledRules.length === 0 && broadcastTopic)) {
+    // Legacy board-wide broadcast — explicit opt-in only (never implied by empty rules).
+    if (forceBroadcast && broadcastTopic) {
       await otel.withSpan("alerts.publish_broadcast", async (span) => {
         const scored = scoreWatchlist(watchlist.stocks || [], quotes, outlookStocks);
         const minBuy = Number(process.env.ALERT_MIN_BUY_SCORE || runtime.alerts.minBuyScore);
@@ -354,16 +393,24 @@ await withOtel("stocks-radar-alerts", async (otel) => {
           const subject = hasSignal
             ? `Radar signals: ${subjectParts.join(", ")}`
             : "Radar signals: quiet tape";
-          if (publish(broadcastTopic, subject, body)) published++;
+          try {
+            if (publish(broadcastTopic, subject, body)) published++;
+          } catch (err) {
+            console.error("SNS broadcast publish failed:", err?.message || err);
+          }
         }
       });
+    } else if (forceBroadcast && !broadcastTopic) {
+      console.warn("ALERTS_BROADCAST=true but STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN is unset — no broadcast");
+    } else if (enabledRules.length === 0) {
+      console.log("(no enabled personal rules — set ALERTS_BROADCAST=true for board-wide alerts)");
     }
 
-    if (fresh.length) {
-      const nextState = updateFiredState(state, fresh, when);
+    if (cooledHits.length) {
+      const nextState = updateFiredState(state, cooledHits, when);
       saveState(nextState);
     } else {
-      console.log("(no fresh hits — cooldown state unchanged)");
+      console.log("(no successfully published hits — cooldown state unchanged)");
     }
 
     root.setAttribute("radar.published_count", published);

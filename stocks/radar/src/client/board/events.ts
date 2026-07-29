@@ -111,7 +111,8 @@ export function bindEvents() {
 
   document.getElementById("watchlist-board")?.addEventListener("change", (e) => {
     if ((e.target as HTMLElement).id === "page-size-select") {
-      state.pageSize = Number((e.target as HTMLSelectElement).value);
+      const raw = Number((e.target as HTMLSelectElement).value);
+      state.pageSize = [25, 50, 100, 200].includes(raw) ? raw : 50;
       state.page = 1;
       savePrefs();
       renderAll();

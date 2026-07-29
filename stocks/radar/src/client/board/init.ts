@@ -10,13 +10,21 @@ import { syncLayoutClass } from "./render-mobile";
 import { bindEvents } from "./events";
 import { startQuoteLoader, loadOutlook } from "./quotes";
 
+const ALLOWED_PAGE_SIZES = new Set([25, 50, 100, 200]);
+
+function clampPageSize(n: unknown, fallback = 50): number {
+  const v = Number(n);
+  if (!Number.isFinite(v) || !ALLOWED_PAGE_SIZES.has(v)) return fallback;
+  return v;
+}
+
 export async function initWatchlistBoard(stocksJson: string) {
   const site = radarSettings();
-  if (site.board?.defaultPageSize) state.pageSize = site.board.defaultPageSize;
+  if (site.board?.defaultPageSize) state.pageSize = clampPageSize(site.board.defaultPageSize);
   if (site.board?.defaultSort) state.sortKey = site.board.defaultSort;
 
   const prefs = loadPrefs();
-  if (prefs.pageSize) state.pageSize = prefs.pageSize;
+  if (prefs.pageSize != null) state.pageSize = clampPageSize(prefs.pageSize, state.pageSize);
   if (prefs.sortKey) state.sortKey = prefs.sortKey;
   if (prefs.filter) state.filter = prefs.filter;
 
