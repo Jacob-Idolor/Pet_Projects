@@ -2,7 +2,7 @@
   "meta": {
     "groupName": "StocksWatch",
     "tagline": "Valuation + news first, rates for macro, technical lean for momentum — group check-in, not advice.",
-    "lastUpdated": "2026-07-28"
+    "lastUpdated": "2026-07-29"
   },
   "stocks": [
     {
@@ -110,6 +110,22 @@
       "tags": ["semi", "memory", "etf", "dram"],
       "priority": "medium",
       "thesis": "Memory / DRAM cycle exposure via ETF — tracks the memory chip theme.",
+      "addedBy": "J"
+    },
+    {
+      "id": "skhynix",
+      "symbol": "000660.KS",
+      "name": "SK Hynix",
+      "category": "tracking",
+      "sector": "Semiconductors",
+      "tags": ["semi", "memory", "hbm", "foreign"],
+      "priority": "high",
+      "thesis": "Leading HBM supplier to NVIDIA — record Q2 profit but alarming consensus miss; watch AI memory demand, LTA pricing, and post-miss reaction (KRW-listed).",
+      "valuation": {
+        "bias": "fair",
+        "note": "Record print still missed lofty targets — stock sold off hard; scrub whether this is mix/LTA noise or a real AI demand crack."
+      },
+      "catalyst": "Post-miss price action / HBM4 ramp + LTA commentary",
       "addedBy": "J"
     },
     {
