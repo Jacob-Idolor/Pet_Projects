@@ -116,7 +116,7 @@ If this AWS account is **only** Stocks Radar, you may set `budget_scope_to_proje
 |------|-------|-----|
 | `/_astro/*` | Long (immutable + CF behavior) | Hashed bundles |
 | HTML / SEO files | ~60s + must-revalidate | Fresh chrome after deploy |
-| `/quotes.json`, `/outlook.json`, `/screener.json`, `/dc-movers.json`, `/datacenter/news.json` | **live_json ~60s** (ignore query string) | Coalesce polls at 100×; CI invalidates on refresh |
+| `/quotes.json`, `/outlook.json`, `/screener.json`, `/dc-movers.json`, `/datacenter/news.json` | **CachingOptimized** + S3 `max-age=60` | Coalesce polls at 100×; CI invalidates on refresh |
 | `/health.json`, `/settings.json`, `/build-meta.json` | CachingDisabled | Ops / deploy probes |
 | Invalidation paths | HTML + live JSON — **not** `/*` | Keeps hashed assets warm |
 

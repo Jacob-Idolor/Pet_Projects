@@ -1,0 +1,167 @@
+name: Stocks Radar — enable live JSON edge cache
+
+# One-shot / repeatable: switch /quotes.json (etc.) from CachingDisabled → CachingOptimized
+# so S3 Cache-Control max-age=60 is honored at CloudFront. Uses OIDC (no local AWS keys).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: stocks-radar-aws-mutate
+  cancel-in-progress: false
+
+jobs:
+  enable-cache:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: stockwatch
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: ./.github/actions/stocks-radar-aws
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          use-oidc: ${{ vars.STOCKS_RADAR_USE_OIDC }}
+          role-arn: ${{ secrets.AWS_ROLE_ARN }}
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Patch CloudFront live JSON behaviors
+        env:
+          DIST_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json, os, subprocess, sys, tempfile
+
+          dist_id = os.environ["DIST_ID"]
+          CACHING_OPTIMIZED = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+          CACHING_DISABLED = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+          SECURITY_HEADERS = "67f7725c-6f97-4210-82d7-5512b31e9d03"
+
+          LIVE = {
+              "/quotes.json",
+              "/outlook.json",
+              "/screener.json",
+              "/dc-movers.json",
+              "/datacenter/news.json",
+          }
+          OPS = {"/build-meta.json", "/health.json", "/settings.json"}
+
+          raw = subprocess.check_output(
+              ["aws", "cloudfront", "get-distribution-config", "--id", dist_id],
+              text=True,
+          )
+          payload = json.loads(raw)
+          etag = payload["ETag"]
+          cfg = payload["DistributionConfig"]
+          origin_id = cfg["Origins"]["Items"][0]["Id"]
+
+          def behavior(path, cache_policy_id):
+              return {
+                  "PathPattern": path,
+                  "TargetOriginId": origin_id,
+                  "ViewerProtocolPolicy": "redirect-to-https",
+                  "AllowedMethods": {
+                      "Quantity": 3,
+                      "Items": ["HEAD", "GET", "OPTIONS"],
+                      "CachedMethods": {"Quantity": 2, "Items": ["HEAD", "GET"]},
+                  },
+                  "Compress": True,
+                  "CachePolicyId": cache_policy_id,
+                  "ResponseHeadersPolicyId": SECURITY_HEADERS,
+                  "SmoothStreaming": False,
+                  "FieldLevelEncryptionId": "",
+                  "LambdaFunctionAssociations": {"Quantity": 0},
+                  "FunctionAssociations": {"Quantity": 0},
+                  "GrpcConfig": {"Enabled": False},
+              }
+
+          existing = []
+          cb = cfg.get("CacheBehaviors") or {}
+          if cb.get("Items"):
+              existing = list(cb["Items"])
+
+          by_path = {b["PathPattern"]: b for b in existing}
+          # Keep non-live/non-ops behaviors (e.g. /_astro/*)
+          kept = [
+              b
+              for b in existing
+              if b["PathPattern"] not in LIVE and b["PathPattern"] not in OPS
+          ]
+
+          new_items = kept[:]
+          for path in sorted(LIVE):
+              b = by_path.get(path, behavior(path, CACHING_OPTIMIZED))
+              b["CachePolicyId"] = CACHING_OPTIMIZED
+              b["PathPattern"] = path
+              new_items.append(b)
+          for path in sorted(OPS):
+              b = by_path.get(path, behavior(path, CACHING_DISABLED))
+              b["CachePolicyId"] = CACHING_DISABLED
+              b["PathPattern"] = path
+              new_items.append(b)
+
+          # CloudFront evaluates more-specific patterns first when ordered; put live+ops before /*
+          cfg["CacheBehaviors"] = {"Quantity": len(new_items), "Items": new_items}
+
+          with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+              json.dump(cfg, f)
+              path = f.name
+
+          subprocess.check_call(
+              [
+                  "aws",
+                  "cloudfront",
+                  "update-distribution",
+                  "--id",
+                  dist_id,
+                  "--if-match",
+                  etag,
+                  "--distribution-config",
+                  f"file://{path}",
+              ]
+          )
+          print(f"Updated {dist_id}: live JSON → CachingOptimized ({len(LIVE)} paths)")
+          for p in sorted(LIVE):
+              print(f"  {p}")
+          PY
+
+      - name: Wait for distribution deploy
+        env:
+          DIST_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          set -euo pipefail
+          echo "Waiting for CloudFront status Deployed…"
+          for i in $(seq 1 60); do
+            status=$(aws cloudfront get-distribution --id "$DIST_ID" --query 'Distribution.Status' --output text)
+            echo "  [$i] $status"
+            [ "$status" = "Deployed" ] && break
+            sleep 15
+          done
+          [ "$(aws cloudfront get-distribution --id "$DIST_ID" --query 'Distribution.Status' --output text)" = "Deployed" ]
+
+      - name: Verify quotes.json edge cache
+        env:
+          SITE: ${{ vars.STOCKS_RADAR_SITE }}
+          CF_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
+        run: |
+          set -euo pipefail
+          base="${SITE:-}"
+          if [ -z "$base" ] && [ -n "${CF_DOMAIN:-}" ]; then
+            base="https://${CF_DOMAIN}"
+          fi
+          base="${base%/}"
+          curl -sI "$base/quotes.json" | tee /tmp/q1.hdr
+          sleep 2
+          curl -sI "$base/quotes.json" | tee /tmp/q2.hdr
+          grep -qi 'x-cache:.*Hit' /tmp/q2.hdr || {
+            echo "::warning::Second request was not a Hit yet (propagation). Check Cache-Control max-age=60."
+            grep -i 'cache-control\|x-cache\|age' /tmp/q2.hdr || true
+            exit 0
+          }
+          echo "✓ CloudFront Hit on /quotes.json"
