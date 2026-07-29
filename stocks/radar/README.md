@@ -6,6 +6,8 @@ Group watchlist + AI data-center screener. Static Astro on **S3 + CloudFront** �
 
 **Live:** [stockswatch.cc](https://stockswatch.cc) · **Surfaces:** `/` (watchlist) · `/datacenter.html` (six-layer screener)
 
+Code map: [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ---
 
 ## How it works
@@ -146,25 +148,28 @@ Infra ~$0.50–3/mo — [DEPLOY.md](DEPLOY.md) · [GO_LIVE.md](GO_LIVE.md) · [P
 stocks/radar/
   src/pages/index.astro          # watchlist
   src/pages/datacenter.astro     # screener
-  src/components/SiteHeader.astro
-  src/styles/tokens.css
+  src/client/board/              # watchlist UI modules
+  src/styles/home/               # CSS partials (via global.css)
   src/data/watchlist.json
   src/data/datacenter-universe.json
   public/quotes.json
   public/screener.json
   public/datacenter/             # UI + static-api.js
-  scripts/fetch-quotes.mjs
-  scripts/fetch-screener.py
-  scripts/check-live-freshness.mjs
+  scripts/fetch/                 # quotes, outlook, screener
+  scripts/ops/                   # health, SEO, validate, bundle
+  scripts/alerts/                # digest + signal alerts
+  scripts/lib/                   # shared helpers (action-bias, sanitize)
   infra/                         # Terraform + deploy
 ```
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
 ---
 
 ## Docs
 
 | Doc | Topic |
 |-----|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Code map + data flow |
 | [PRODUCTION.md](PRODUCTION.md) | Live ops + hardening |
 | [SCORE.md](SCORE.md) | Radar lean buy / sell |
 | [DEPLOY.md](DEPLOY.md) | AWS + Actions |

@@ -123,6 +123,40 @@ function actionBias(q, opts = {}) {
   return { label: "Watch", cls: "watch", reason, score, setup };
 }
 
+// scripts/lib/technical-filters.mjs
+function matchesTechnicalFilter(filter, q, price) {
+  if (!filter.startsWith("tech-")) return true;
+  if (!q) return false;
+  switch (filter) {
+    case "tech-above-50":
+      return q.sma?.[50] != null && price != null && price > q.sma[50];
+    case "tech-below-50":
+      return q.sma?.[50] != null && price != null && price < q.sma[50];
+    case "tech-above-200":
+      return q.sma?.[200] != null && price != null && price > q.sma[200];
+    case "tech-below-200":
+      return q.sma?.[200] != null && price != null && price < q.sma[200];
+    case "tech-bullish":
+      return q.trend === "bullish";
+    case "tech-bearish":
+      return q.trend === "bearish";
+    case "tech-near-low":
+      return q.range52Pct != null && q.range52Pct <= 20;
+    case "tech-near-high":
+      return q.range52Pct != null && q.range52Pct >= 80;
+    case "tech-near-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -5;
+    case "tech-at-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -0.5;
+    case "tech-oversold":
+      return q.rsi14 != null && q.rsi14 <= 35;
+    case "tech-overbought":
+      return q.rsi14 != null && q.rsi14 >= 65;
+    default:
+      return true;
+  }
+}
+
 // src/lib/market-format.ts
 function fmtPrice(v) {
   if (v == null || Number.isNaN(v)) return "\u2014";
@@ -212,38 +246,6 @@ function pulseExplain(q, opts) {
   if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
   bits.push(sma);
   return { bias, sma, line: bits.join(" \xB7 ") };
-}
-function matchesTechnicalFilter(filter, q, price) {
-  if (!filter.startsWith("tech-")) return true;
-  if (!q) return false;
-  switch (filter) {
-    case "tech-above-50":
-      return q.sma?.[50] != null && price != null && price > q.sma[50];
-    case "tech-below-50":
-      return q.sma?.[50] != null && price != null && price < q.sma[50];
-    case "tech-above-200":
-      return q.sma?.[200] != null && price != null && price > q.sma[200];
-    case "tech-below-200":
-      return q.sma?.[200] != null && price != null && price < q.sma[200];
-    case "tech-bullish":
-      return q.trend === "bullish";
-    case "tech-bearish":
-      return q.trend === "bearish";
-    case "tech-near-low":
-      return q.range52Pct != null && q.range52Pct <= 20;
-    case "tech-near-high":
-      return q.range52Pct != null && q.range52Pct >= 80;
-    case "tech-near-ath":
-      return q.pctFromAth != null && q.pctFromAth >= -5;
-    case "tech-at-ath":
-      return q.pctFromAth != null && q.pctFromAth >= -0.5;
-    case "tech-oversold":
-      return q.rsi14 != null && q.rsi14 <= 35;
-    case "tech-overbought":
-      return q.rsi14 != null && q.rsi14 >= 65;
-    default:
-      return true;
-  }
 }
 
 // src/lib/market-html.ts

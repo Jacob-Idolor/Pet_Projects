@@ -26,7 +26,7 @@ Recent Yahoo headlines are tagged **positive / negative / neutral** with a simpl
 
 Read the links — lexicon misses sarcasm and “sell the news” nuance.
 
-Data: `public/outlook.json` from `node scripts/fetch-outlook.mjs` (also runs soft-fail at the end of `update-quotes`).
+Data: `public/outlook.json` from `node scripts/fetch/fetch-outlook.mjs` (also runs soft-fail at the end of `update-quotes`).
 
 ---
 

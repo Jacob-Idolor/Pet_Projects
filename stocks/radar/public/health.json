@@ -1,19 +1,20 @@
 {
-  "ok": true,
-  "status": "ok",
+  "ok": false,
+  "status": "degraded",
   "buildOk": true,
   "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "production",
-  "builtAt": "2026-07-29T00:37:47.316Z",
+  "builtAt": "2026-07-29T23:34:47.020Z",
   "gitSha": "local",
   "siteUrl": null,
   "checks": {
     "settings": true,
     "quotes": {
-      "ok": true,
-      "ageHours": 0.15730944444444445,
+      "ok": false,
+      "ageHours": 23.10722722222222,
       "count": 14,
+      "freshCount": 14,
       "total": 14,
       "coverage": 1,
       "partial": false,
@@ -21,7 +22,7 @@
     },
     "screener": {
       "ok": true,
-      "ageHours": 2.257909722222222,
+      "ageHours": 0.0008583333333333333,
       "ok_count": 80,
       "ticker_count": 80,
       "coverage": 1

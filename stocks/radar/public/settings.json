@@ -15,7 +15,7 @@
   },
   "quotes": {
     "staleAfterHours": 6,
-    "pollIntervalMs": 60000,
+    "pollIntervalMs": 300000,
     "browserFallback": false
   },
   "board": {
@@ -38,5 +38,5 @@
     "settingsPath": "/settings.json"
   },
   "siteUrl": null,
-  "generatedAt": "2026-07-29T00:37:47.312Z"
+  "generatedAt": "2026-07-29T23:34:47.015Z"
 }

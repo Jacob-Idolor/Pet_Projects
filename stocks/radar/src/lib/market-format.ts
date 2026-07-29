@@ -1,5 +1,6 @@
 import { escapeHtml } from "./format";
 import { actionBias, isPreMomentum } from "../../scripts/lib/action-bias.mjs";
+import { matchesTechnicalFilter } from "../../scripts/lib/technical-filters.mjs";
 
 export type Trend = "bullish" | "bearish" | "mixed" | "unknown";
 
@@ -38,7 +39,7 @@ export interface NewsCheck {
   method?: string;
 }
 
-export { actionBias, isPreMomentum };
+export { actionBias, isPreMomentum, matchesTechnicalFilter };
 
 export function fmtPrice(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -195,37 +196,3 @@ export const PULSE_SIGNAL_GUIDE = [
     blurb: "50-day avg = recent typical price. Low volume near it can flag a coil before a move.",
   },
 ] as const;
-
-export function matchesTechnicalFilter(filter: string, q: QuoteData | undefined, price: number | null) {
-  if (!filter.startsWith("tech-")) return true;
-  if (!q) return false;
-
-  switch (filter) {
-    case "tech-above-50":
-      return q.sma?.[50] != null && price != null && price > q.sma[50];
-    case "tech-below-50":
-      return q.sma?.[50] != null && price != null && price < q.sma[50];
-    case "tech-above-200":
-      return q.sma?.[200] != null && price != null && price > q.sma[200];
-    case "tech-below-200":
-      return q.sma?.[200] != null && price != null && price < q.sma[200];
-    case "tech-bullish":
-      return q.trend === "bullish";
-    case "tech-bearish":
-      return q.trend === "bearish";
-    case "tech-near-low":
-      return q.range52Pct != null && q.range52Pct <= 20;
-    case "tech-near-high":
-      return q.range52Pct != null && q.range52Pct >= 80;
-    case "tech-near-ath":
-      return q.pctFromAth != null && q.pctFromAth >= -5;
-    case "tech-at-ath":
-      return q.pctFromAth != null && q.pctFromAth >= -0.5;
-    case "tech-oversold":
-      return q.rsi14 != null && q.rsi14 <= 35;
-    case "tech-overbought":
-      return q.rsi14 != null && q.rsi14 >= 65;
-    default:
-      return true;
-  }
-}

@@ -1,44 +1,44 @@
 {
-  "updatedAt": "2026-07-29T01:36:16.162Z",
-  "sourceFetchedAt": "2026-07-28T22:22:18.841662+00:00",
+  "updatedAt": "2026-07-29T23:34:46.193Z",
+  "sourceFetchedAt": "2026-07-29T23:34:43.930908+00:00",
   "gainers": [
-    {
-      "ticker": "TEL",
-      "name": "TE Connectivity",
-      "chg": 3.23248,
-      "layerId": "networking"
-    },
     {
       "ticker": "AMT",
       "name": "American Tower",
-      "chg": 2.85474,
+      "chg": 4.52478,
       "layerId": "land"
+    },
+    {
+      "ticker": "APH",
+      "name": "Amphenol",
+      "chg": 4.49078,
+      "layerId": "networking"
     },
     {
       "ticker": "GOOGL",
       "name": "Alphabet",
-      "chg": 2.1894884,
+      "chg": 0.8989842,
       "layerId": "software"
     }
   ],
   "losers": [
     {
-      "ticker": "AMKR",
-      "name": "Amkor Technology",
-      "chg": -24.74057,
-      "layerId": "compute"
+      "ticker": "VRT",
+      "name": "Vertiv Holdings",
+      "chg": -17.2578,
+      "layerId": "power"
     },
     {
-      "ticker": "STRL",
-      "name": "Sterling Infrastructure",
-      "chg": -15.212009,
-      "layerId": "land"
+      "ticker": "MOD",
+      "name": "Modine Manufacturing",
+      "chg": -14.4285,
+      "layerId": "cooling"
     },
     {
-      "ticker": "000660.KS",
-      "name": "SK Hynix",
-      "chg": -14.647577,
-      "layerId": "compute"
+      "ticker": "NBIS",
+      "name": "Nebius Group",
+      "chg": -12.652485,
+      "layerId": "software"
     }
   ]
 }
