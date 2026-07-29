@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-07-28T23:46:32.713Z",
-  "fetchedAt": "2026-07-28T23:46:32.713Z",
+  "updatedAt": "2026-07-29T00:28:31.988Z",
+  "fetchedAt": "2026-07-29T00:28:31.988Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -132,6 +132,15 @@
       },
       "news": [
         {
+          "title": "Bloom Energy (BE) Stock Looks Fully Priced After A Very Large Run",
+          "publisher": "Simply Wall St.",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/bloom-energy-stock-looks-fully-231644506.html",
+          "publishedAt": "2026-07-28T23:16:44.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
           "title": "CRWV Powers Anam's AI Avatars With Low-Latency Cloud Infrastructure",
           "publisher": "Zacks",
           "link": "https://finance.yahoo.com/technology/ai/articles/crwv-powers-anams-ai-avatars-133200920.html",
@@ -145,15 +154,6 @@
           "publisher": "Motley Fool",
           "link": "https://finance.yahoo.com/m/ac023908-7d38-30ef-a192-d4c5dc9073a8/can-nebius-stock-turn-a.html",
           "publishedAt": "2026-07-28T13:02:12.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Coreweave is $71 After Falling 43% in a Year: One Analyst Thinks It Can Rocket to $250",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/9d3caebd-897d-3d5b-b971-9e3ee105694a/coreweave-is-%2471-after.html",
-          "publishedAt": "2026-07-27T16:44:24.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
@@ -177,7 +177,7 @@
         "forwardPE": 29.351347,
         "pegRatio": 0.92,
         "priceToBook": 4.4565115,
-        "evToEbitda": 41.423,
+        "evToEbitda": 37.256,
         "profitMargin": 0.07102,
         "revenueGrowth": 0.205,
         "targetMeanPrice": 391.45267,
@@ -236,11 +236,11 @@
     "TSEM": {
       "symbol": "TSEM",
       "fundamentals": {
-        "trailingPE": 94.41395,
+        "trailingPE": 104.097435,
         "forwardPE": 34.868004,
         "pegRatio": 6.46,
         "priceToBook": 7.6829042,
-        "evToEbitda": 44.444,
+        "evToEbitda": 40.014,
         "profitMargin": 0.15131,
         "revenueGrowth": 0.155,
         "targetMeanPrice": 313.83334,
@@ -428,6 +428,15 @@
       },
       "news": [
         {
+          "title": "Hong Kong Data Center Loan Sale Shows Banks Hitting Sector Limits",
+          "publisher": "Bloomberg",
+          "link": "https://finance.yahoo.com/technology/ai/articles/hong-kong-data-center-loan-231158626.html",
+          "publishedAt": "2026-07-28T23:11:58.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
           "title": "Dow Ends Higher For Third Straight Session As Oil Cools, Nasdaq Slides On Chipmaker Rout — PYPL, SPCX, AAPL, V, F Stocks In Focus",
           "publisher": "Stocktwits",
           "link": "https://finance.yahoo.com/m/19716b81-bb1f-3883-839f-6f95477f2cc5/dow-ends-higher-for-third.html",
@@ -443,15 +452,6 @@
           "publisher": "Yahoo Finance Video",
           "link": "https://finance.yahoo.com/video/markets-brace-fed-decision-big-220000833.html",
           "publishedAt": "2026-07-28T22:00:00.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Coca-Cola Stock Is Rocking Like the 1990s, With a Higher P/E Than Most of the Magnificent 7",
-          "publisher": "Barrons.com",
-          "link": "https://finance.yahoo.com/m/2a64dcfb-563e-346f-bfb5-03778e6fe251/coca-cola-stock-is-rocking.html",
-          "publishedAt": "2026-07-28T21:30:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
@@ -538,7 +538,7 @@
         "forwardPE": -753.55554,
         "pegRatio": null,
         "priceToBook": 7.8079667,
-        "evToEbitda": -30.799,
+        "evToEbitda": -29.64,
         "profitMargin": -0.30122,
         "revenueGrowth": 0.489,
         "targetMeanPrice": 52.14286,
@@ -778,7 +778,7 @@
         "forwardPE": 28.78,
         "pegRatio": 0.87,
         "priceToBook": 14.653769,
-        "evToEbitda": 35.195,
+        "evToEbitda": 34.031,
         "profitMargin": 0.13864,
         "revenueGrowth": 0.544,
         "targetMeanPrice": 122.75,
@@ -849,34 +849,31 @@
       },
       "news": [
         {
-          "title": "Dow Jones Futures Fall, Oil Jumps On Iran News; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
-          "publisher": "Investor's Business Daily",
-          "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures-fall%2C-oil.html",
-          "publishedAt": "2026-07-28T23:36:18.000Z",
+          "title": "Bloom Energy Q2 Earnings Call Highlights",
+          "publisher": "MarketBeat",
+          "link": "https://finance.yahoo.com/m/09866029-512e-3009-ac9f-8380e62a28c3/bloom-energy-q2-earnings-call.html",
+          "publishedAt": "2026-07-29T00:03:55.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
-          "sentimentHits": [
-            "jumps",
-            "fall"
-          ]
+          "sentimentHits": []
         },
         {
-          "title": "Why Bloom Energy (BE) Is Down 26.3% After Record Q2 And A $25 Billion Brookfield Deal",
-          "publisher": "Simply Wall St.",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/why-bloom-energy-down-26-221023397.html",
-          "publishedAt": "2026-07-28T22:10:23.000Z",
+          "title": "Dow Jones Futures Rise, Oil Jumps On Iran News; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
+          "publisher": "Investor's Business Daily",
+          "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures-rise%2C-oil.html",
+          "publishedAt": "2026-07-28T23:58:54.000Z",
           "sentiment": "positive",
           "sentimentScore": 2,
           "sentimentHits": [
-            "deal",
-            "record"
+            "jumps",
+            "rise"
           ]
         },
         {
-          "title": "Bloom Energy (BE) Q2 Earnings and Revenues Surpass Estimates",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/bloom-energy-q2-earnings-revenues-220004609.html",
-          "publishedAt": "2026-07-28T22:00:04.000Z",
+          "title": "Bloom Energy (BE) Stock Looks Fully Priced After A Very Large Run",
+          "publisher": "Simply Wall St.",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/bloom-energy-stock-looks-fully-231644506.html",
+          "publishedAt": "2026-07-28T23:16:44.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []

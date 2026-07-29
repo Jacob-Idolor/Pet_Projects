@@ -30,10 +30,13 @@ jobs:
       - run: npm run config:validate
       - run: npm test
       - run: npm run screener:schema
+      - name: Generate Astro types
+        run: npx astro sync
       - run: npm run typecheck
       - run: npm run build
         env:
           STOCKS_RADAR_BASE: /
+          # Validate build uses a dummy host; live deploy uses STOCKS_RADAR_SITE (stockswatch.cc)
           STOCKS_RADAR_SITE: https://example.cloudfront.net
           STOCKS_RADAR_ENV: development
           SCREENER_SKIP: "1"
