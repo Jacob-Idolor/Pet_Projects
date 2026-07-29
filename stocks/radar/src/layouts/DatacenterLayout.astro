@@ -1,5 +1,6 @@
 ---
 import SiteHeader from "../components/SiteHeader.astro";
+import { datacenterAsset } from "../lib/datacenter-assets";
 
 interface Props {
   title: string;
@@ -17,6 +18,7 @@ const canonical = site ? `${site}/datacenter.html` : undefined;
 const pageTitle = `${title} | StocksWatch`;
 const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://");
 const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
+const styleHref = `${dcBase}${datacenterAsset("style.css")}`;
 ---
 
 <!doctype html>
@@ -42,7 +44,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
     <meta property="og:site_name" content="StocksWatch" />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <link rel="stylesheet" href={`${base}tokens.css`.replace(/\/{2,}/g, "/").replace(":/", "://")} />
-    <link rel="stylesheet" href={`${dcBase}style.css`} />
+    <link rel="stylesheet" href={styleHref} />
   </head>
   <body class="dc-page">
     <SiteHeader active="datacenter" />

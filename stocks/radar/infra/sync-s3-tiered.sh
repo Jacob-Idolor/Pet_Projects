@@ -30,13 +30,24 @@ aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   --include "*.png" --include "*.jpg" --include "*.jpeg" --include "*.webp" --include "*.svg" --include "*.ico" \
   --cache-control "public,max-age=31536000,immutable"
 
-echo "→ Board script + static JS/CSS (hashed or rarely changed)…"
+echo "→ Content-hashed datacenter JS/CSS (immutable)…"
+# Matches app.abc123def0.js / style.abc123def0.css produced by hash-datacenter-assets.mjs
+aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
+  "${EXCLUDE_STATE[@]}" \
+  --exclude "*" \
+  --include "datacenter/*.*.js" \
+  --include "datacenter/*.*.css" \
+  --cache-control "public,max-age=31536000,immutable"
+
+echo "→ Board script + remaining JS/CSS (short TTL — unhashed / fallback)…"
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   "${EXCLUDE_STATE[@]}" \
   --exclude "*" \
   --include "*.mjs" --include "*.js" --include "*.css" \
   --exclude "_astro/*" \
-  --cache-control "public,max-age=86400"
+  --exclude "datacenter/*.*.js" \
+  --exclude "datacenter/*.*.css" \
+  --cache-control "public,max-age=300,must-revalidate"
 
 echo "→ HTML + SEO (short cache; redeploys pick up quickly)…"
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \

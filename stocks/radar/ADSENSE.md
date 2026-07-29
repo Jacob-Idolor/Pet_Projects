@@ -27,6 +27,20 @@ Also keep quality high: real theses on tickers, the **About this page** editoria
 4. Site URL is the custom domain (`stockswatch.cc`), not CloudFront (`seo.requireCustomDomainForAds`).
 5. `https://stockswatch.cc/ads.txt` matches your `pub-…`.
 
+### Deploy, then request review
+
+```bash
+cd stocks/radar
+SCREENER_SKIP=1 npm run rebuild   # or let CI deploy from main
+npm run adsense:checklist         # build-side policy gates
+```
+
+1. **AdSense → Ads → Auto ads → turn OFF** for `stockswatch.cc` (mandatory).
+2. Deploy latest `main` (GitHub Actions → Stocks Radar — deploy, or push when `STOCKS_RADAR_DEPLOY_ENABLED=true`).
+3. Live spot-check: `/` has content above Sponsored units; `/nope` 404 has zero `pagead` requests.
+4. In AdSense → Sites → request review / fix issues.
+
+Local CI also runs `adsense:checklist` on every validate build.
 ## How it works here
 
 | Mode | When | What you see |

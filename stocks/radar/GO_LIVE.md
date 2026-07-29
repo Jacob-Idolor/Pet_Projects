@@ -39,6 +39,24 @@ Leave `enable_custom_domain = false` until you buy a name ([DOMAIN.md](DOMAIN.md
 
 ### 3. IAM + secrets bootstrap
 
+**Preferred: GitHub OIDC (no long-lived access keys)**
+
+```bash
+cd stocks/radar/infra/terraform
+# In terraform.tfvars:
+#   enable_github_oidc = true
+#   github_repository  = "Jacob-Idolor/Pet_Projects"
+terraform apply   # needs an admin/IAM-capable profile — not the narrowed deploy-policy user
+
+gh secret set AWS_ROLE_ARN --body "$(terraform output -raw github_actions_role_arn)"
+gh secret set AWS_REGION --body "us-west-2"
+gh variable set STOCKS_RADAR_USE_OIDC --body "true"
+```
+
+Workflows use [`.github/actions/stocks-radar-aws`](../../.github/actions/stocks-radar-aws) and assume the role when `STOCKS_RADAR_USE_OIDC=true`.
+
+**Fallback: IAM user access keys**
+
 Create the deploy IAM user with [`infra/iam/deploy-policy.json`](infra/iam/deploy-policy.json), then:
 
 ```bash
@@ -55,7 +73,8 @@ bash infra/go-live.sh --apply
 
 | Secret / var | Source |
 |--------------|--------|
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` | IAM user |
+| `AWS_ROLE_ARN` + **var** `STOCKS_RADAR_USE_OIDC=true` | OIDC (preferred) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` | IAM user (legacy) |
 | `STOCKS_RADAR_S3_BUCKET` | `s3_bucket_name` |
 | `STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID` | `cloudfront_distribution_id` |
 | `STOCKS_RADAR_CLOUDFRONT_DOMAIN` | `cloudfront_domain_name` (hostname only) |

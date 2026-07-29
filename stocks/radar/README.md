@@ -81,6 +81,8 @@ npm test                 # unit tests (ads gates, freshness math, sanitize, rada
 npm run screener:schema  # offline screener.json shape/coverage
 npm run typecheck        # tsc --noEmit
 npm run freshness        # local quotes/screener age
+npm run adsense:checklist  # after build — AdSense policy gates in dist/
+SCREENER_SKIP=1 npm run build && npm run test:e2e   # Playwright smoke
 ```
 
 | Page | URL |

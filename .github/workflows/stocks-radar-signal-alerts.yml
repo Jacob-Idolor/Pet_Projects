@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     environment: stockwatch
     steps:
       - uses: actions/checkout@v5
@@ -33,7 +34,13 @@ jobs:
         id: gate
         run: |
           ok=1
-          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+          use_oidc="${STOCKS_RADAR_USE_OIDC:-false}"
+          if [ "$use_oidc" = "true" ]; then
+            if [ -z "$AWS_ROLE_ARN" ] || [ -z "$AWS_REGION" ]; then
+              echo "::warning::OIDC enabled but AWS_ROLE_ARN/AWS_REGION missing — skip alerts"
+              ok=0
+            fi
+          elif [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
             echo "::warning::AWS credentials missing — skip alerts"
             ok=0
           fi
@@ -42,19 +49,24 @@ jobs:
           fi
           echo "ok=$ok" >> "$GITHUB_OUTPUT"
         env:
+          STOCKS_RADAR_USE_OIDC: ${{ vars.STOCKS_RADAR_USE_OIDC }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           STOCKS_RADAR_ALERT_TOPICS: ${{ secrets.STOCKS_RADAR_ALERT_TOPICS }}
           STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN }}
           STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN: ${{ secrets.STOCKS_RADAR_DIGEST_SNS_TOPIC_ARN }}
 
       - name: Configure AWS credentials
         if: steps.gate.outputs.ok == '1'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: ./.github/actions/stocks-radar-aws
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          use-oidc: ${{ vars.STOCKS_RADAR_USE_OIDC == 'true' && 'true' || 'false' }}
+          role-arn: ${{ secrets.AWS_ROLE_ARN }}
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Resolve public site URL
         id: url

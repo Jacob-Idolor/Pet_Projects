@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-07-28T23:24:49.327Z",
-  "fetchedAt": "2026-07-28T23:24:49.327Z",
+  "updatedAt": "2026-07-28T23:46:32.713Z",
+  "fetchedAt": "2026-07-28T23:46:32.713Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -428,6 +428,17 @@
       },
       "news": [
         {
+          "title": "Dow Ends Higher For Third Straight Session As Oil Cools, Nasdaq Slides On Chipmaker Rout — PYPL, SPCX, AAPL, V, F Stocks In Focus",
+          "publisher": "Stocktwits",
+          "link": "https://finance.yahoo.com/m/19716b81-bb1f-3883-839f-6f95477f2cc5/dow-ends-higher-for-third.html",
+          "publishedAt": "2026-07-28T22:44:01.000Z",
+          "sentiment": "negative",
+          "sentimentScore": -1,
+          "sentimentHits": [
+            "slides"
+          ]
+        },
+        {
           "title": "Markets brace for Fed decision and Big Tech earnings",
           "publisher": "Yahoo Finance Video",
           "link": "https://finance.yahoo.com/video/markets-brace-fed-decision-big-220000833.html",
@@ -444,29 +455,16 @@
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
-        },
-        {
-          "title": "Visa Announced Layoffs Ahead of Earnings Beat, as AI and Restructuring Accelerate",
-          "publisher": "Barrons.com",
-          "link": "https://finance.yahoo.com/m/e050b06c-401c-3510-a760-dd9c4f08ccb7/visa-announced-layoffs-ahead.html",
-          "publishedAt": "2026-07-28T21:12:00.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "beat",
-            "accelerate",
-            "layoffs"
-          ]
         }
       ],
       "newsCheck": {
-        "tilt": "positive",
-        "positive": 1,
-        "negative": 0,
+        "tilt": "negative",
+        "positive": 0,
+        "negative": 1,
         "neutral": 2,
-        "net": 1,
-        "scoreDelta": 1,
-        "label": "News check: positive (+1) · 1+ / 0−",
+        "net": -1,
+        "scoreDelta": -1,
+        "label": "News check: negative (-1) · 0+ / 1−",
         "method": "headline-lexicon-v1"
       }
     },
@@ -551,6 +549,18 @@
       },
       "news": [
         {
+          "title": "Ouster, Inc. (OUST) Stock Drops Despite Market Gains: Important Facts to Note",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/ouster-inc-oust-stock-drops-221502252.html",
+          "publishedAt": "2026-07-28T22:15:02.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": [
+            "gains",
+            "drops"
+          ]
+        },
+        {
           "title": "These high-flying tech stocks are down 65% — here's how to shop the sell-off: One Big Investment Idea",
           "publisher": "Yahoo Finance",
           "link": "https://finance.yahoo.com/markets/article/these-high-flying-tech-stocks-are-down-65--heres-how-to-shop-the-sell-off-one-big-investment-idea-131623103.html",
@@ -571,15 +581,6 @@
           "sentimentHits": [
             "growth"
           ]
-        },
-        {
-          "title": "Kalanick’s Atoms raises $1.7B in a16z-led round for industrial AI",
-          "publisher": "Investing.com",
-          "link": "https://finance.yahoo.com/technology/ai/articles/kalanick-atoms-raises-1-7b-212701007.html",
-          "publishedAt": "2026-07-22T21:27:01.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
         }
       ],
       "newsCheck": {
@@ -781,7 +782,7 @@
         "profitMargin": 0.13864,
         "revenueGrowth": 0.544,
         "targetMeanPrice": 122.75,
-        "recommendationMean": 1.25,
+        "recommendationMean": null,
         "bias": null,
         "note": null,
         "catalyst": null
@@ -851,7 +852,7 @@
           "title": "Dow Jones Futures Fall, Oil Jumps On Iran News; Seagate, SK Hynix, KLA, Bloom Energy Earnings Late",
           "publisher": "Investor's Business Daily",
           "link": "https://finance.yahoo.com/m/0eb51c4d-da78-36ad-bd11-f37d9adcc2f8/dow-jones-futures-fall%2C-oil.html",
-          "publishedAt": "2026-07-28T23:09:36.000Z",
+          "publishedAt": "2026-07-28T23:36:18.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": [

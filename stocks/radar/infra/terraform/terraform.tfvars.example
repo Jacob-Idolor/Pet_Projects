@@ -55,3 +55,12 @@ alert_subscribers = [
 ]
 # Cheapest CloudFront edges only (enforced in variables.tf)
 cloudfront_price_class = "PriceClass_100"
+
+# --- GitHub Actions OIDC (preferred over long-lived access keys) -------------
+# Apply with an admin AWS profile (IAM create role). Then:
+#   gh secret set AWS_ROLE_ARN --body "$(terraform output -raw github_actions_role_arn)"
+#   gh variable set STOCKS_RADAR_USE_OIDC --body true
+enable_github_oidc = false
+# Set false if token.actions.githubusercontent.com OIDC provider already exists in the account
+create_github_oidc_provider = true
+github_repository  = "Jacob-Idolor/Pet_Projects"

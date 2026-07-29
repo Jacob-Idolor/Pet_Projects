@@ -1,8 +1,12 @@
 ---
 import DatacenterLayout from "../layouts/DatacenterLayout.astro";
+import { datacenterAsset } from "../lib/datacenter-assets";
 
 const base = import.meta.env.BASE_URL;
 const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://");
+const scripts = ["static-api.js", "app.js", "datacenter.js", "rackexplorer.js"].map(
+  (name) => `${dcBase}${datacenterAsset(name)}`
+);
 ---
 
 <DatacenterLayout
@@ -206,8 +210,8 @@ const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://")
     </footer>
   </div>
 
-  <script is:inline src={`${dcBase}static-api.js`}></script>
-  <script is:inline src={`${dcBase}app.js`}></script>
-  <script is:inline src={`${dcBase}datacenter.js`}></script>
-  <script is:inline src={`${dcBase}rackexplorer.js`}></script>
+  <script is:inline src={scripts[0]}></script>
+  <script is:inline src={scripts[1]}></script>
+  <script is:inline src={scripts[2]}></script>
+  <script is:inline src={scripts[3]}></script>
 </DatacenterLayout>

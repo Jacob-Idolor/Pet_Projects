@@ -4,10 +4,14 @@ on:
   pull_request:
     paths:
       - "stocks/radar/**"
+      - ".github/workflows/stocks-radar-validate.yml"
+      - ".github/actions/stocks-radar-aws/**"
   push:
     branches: [main]
     paths:
       - "stocks/radar/**"
+      - ".github/workflows/stocks-radar-validate.yml"
+      - ".github/actions/stocks-radar-aws/**"
 
 jobs:
   build:
@@ -33,3 +37,9 @@ jobs:
           STOCKS_RADAR_SITE: https://example.cloudfront.net
           STOCKS_RADAR_ENV: development
           SCREENER_SKIP: "1"
+      - run: npm run adsense:checklist
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          CI: "true"

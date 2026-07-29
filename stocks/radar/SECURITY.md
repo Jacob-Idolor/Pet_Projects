@@ -36,7 +36,7 @@ Audit posture for this **static** S3 + CloudFront site (no app servers, no user 
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| Long-lived AWS access keys in GitHub | Medium | Prefer **OIDC → IAM role** (recommended before high traffic) |
+| Long-lived AWS access keys in GitHub | Medium | **Prefer OIDC** — `enable_github_oidc=true` + `STOCKS_RADAR_USE_OIDC` (see GO_LIVE.md); delete access keys after first green OIDC deploy |
 | CloudFront / ACM / Route53 still `Resource: *` | Medium | Separate AWS account or permission boundary for prod |
 | No WAF / access logs | Low–Med | Cost choice; enable if scraped or AdSense fraud appears |
 | Public `subscriberId` on alert rules panel | Low | Intentional for friends; omit panel via feature flag if needed |
