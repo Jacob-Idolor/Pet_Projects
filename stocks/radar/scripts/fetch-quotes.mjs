@@ -26,6 +26,12 @@ const ROOT = resolve(__dirname, "..");
 const WATCHLIST = resolve(ROOT, "src/data/watchlist.json");
 const OUT = resolve(ROOT, "public/quotes.json");
 const runtime = loadRuntimeConfig();
+/** Pretty JSON locally; compact in CI/production to cut transfer on every poll. */
+const JSON_SPACE =
+  process.env.QUOTES_PRETTY === "1" ||
+  (!process.env.GITHUB_ACTIONS && process.env.STOCKS_RADAR_ENV !== "production")
+    ? 2
+    : undefined;
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -245,7 +251,7 @@ await withOtel("stocks-radar-quotes", async (otel) => {
           quotes: previous.quotes,
           note: "Yahoo fetch returned zero fresh symbols; kept previous quotes.json body",
         };
-        writeFileSync(OUT, JSON.stringify(fallback, null, 2) + "\n");
+        writeFileSync(OUT, JSON.stringify(fallback, null, JSON_SPACE) + "\n");
         console.warn("⚠ Wrote previous quotes with fetchFailed=true (fetchedAt unchanged)");
       }
       process.exitCode = 1;
@@ -269,7 +275,7 @@ await withOtel("stocks-radar-quotes", async (otel) => {
       quotes: merged,
     };
 
-    writeFileSync(OUT, JSON.stringify(payload, null, 2) + "\n");
+    writeFileSync(OUT, JSON.stringify(payload, null, JSON_SPACE) + "\n");
 
     root.setAttributes({
       "radar.fresh_count": payload.freshCount,

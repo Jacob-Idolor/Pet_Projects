@@ -4,9 +4,7 @@ name: Stocks Radar — signal alerts
 
 on:
   workflow_dispatch:
-  schedule:
-    # Weekdays ~16:30 ET — after near-close quote refresh
-    - cron: "30 20 * * 1-5"
+  # After refresh only (no duplicate near-close cron — saves a full npm ci/job)
   workflow_run:
     workflows: ["Stocks Radar — refresh quotes"]
     types: [completed]
@@ -29,6 +27,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
+          cache: npm
+          cache-dependency-path: stocks/radar/package-lock.json
 
       - name: Require alert secrets
         id: gate
@@ -71,7 +71,7 @@ jobs:
       - name: Install deps
         if: steps.gate.outputs.ok == '1'
         working-directory: stocks/radar
-        run: npm ci
+        run: npm ci --omit=optional
 
       - name: Resolve public site URL
         id: url

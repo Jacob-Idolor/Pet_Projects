@@ -47,12 +47,18 @@ const base = import.meta.env.BASE_URL;
       return sign + n.toFixed(2) + "%";
     }
 
+    function publishOutlook(data) {
+      window.__OUTLOOK__ = data;
+      document.dispatchEvent(new CustomEvent("radar:outlook", { detail: data }));
+    }
+
     fetch(root + "outlook.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
       })
       .then(function (data) {
+        publishOutlook(data);
         var macro = data.macro || {};
         var keys = Object.keys(macro);
         if (!keys.length) {

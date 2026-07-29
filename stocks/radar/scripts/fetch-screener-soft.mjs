@@ -25,6 +25,14 @@ const strict =
 
 if (process.env.SCREENER_SKIP === "1") {
   console.log("SCREENER_SKIP=1 — leaving existing screener.json");
+  if (existsSync(OUT)) {
+    spawnSync(process.execPath, [resolve(ROOT, "scripts/write-dc-movers.mjs")], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env: process.env,
+      stdio: "inherit",
+    });
+  }
   process.exit(0);
 }
 
@@ -50,7 +58,13 @@ if (result.status === 0) {
     console.error("Could not validate screener.json:", e.message || e);
     process.exit(strict ? 1 : 0);
   }
-  process.exit(0);
+  const movers = spawnSync(process.execPath, [resolve(ROOT, "scripts/write-dc-movers.mjs")], {
+    cwd: ROOT,
+    encoding: "utf8",
+    env: process.env,
+    stdio: "inherit",
+  });
+  process.exit(movers.status === 0 ? 0 : strict ? movers.status || 1 : 0);
 }
 
 console.warn("fetch-screener.py failed.");
@@ -67,4 +81,10 @@ if (!existsSync(OUT)) {
 }
 
 console.warn("Keeping existing screener.json (local soft-fail).");
+spawnSync(process.execPath, [resolve(ROOT, "scripts/write-dc-movers.mjs")], {
+  cwd: ROOT,
+  encoding: "utf8",
+  env: process.env,
+  stdio: "inherit",
+});
 process.exit(0);

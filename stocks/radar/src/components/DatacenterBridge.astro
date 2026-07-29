@@ -5,7 +5,7 @@ const base = import.meta.env.BASE_URL;
 const bridge = buildDatacenterBridge();
 const bridgeJson = JSON.stringify(bridge);
 const dcHome = datacenterHref(base);
-const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
+const moversUrl = `${base}dc-movers.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
 ---
 
 <section
@@ -13,7 +13,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
   id="dc-bridge"
   aria-labelledby="dc-bridge-title"
   data-radar-base={base}
-  data-screener-url={screenerUrl}
+  data-movers-url={moversUrl}
 >
   <div class="dc-bridge__head">
     <div>
@@ -66,7 +66,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
     var moversEl = document.getElementById("dc-bridge-movers");
     if (!root || !moversEl) return;
 
-    var screenerUrl = root.getAttribute("data-screener-url") || "/screener.json";
+    var moversUrl = root.getAttribute("data-movers-url") || "/dc-movers.json";
     var base = root.getAttribute("data-radar-base") || "/";
     if (base.slice(-1) !== "/") base += "/";
 
@@ -79,71 +79,49 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
     }
 
     function fmtChg(v) {
-      if (v == null || isNaN(v)) return "—";
-      var sign = v > 0 ? "+" : "";
-      return sign + Number(v).toFixed(2) + "%";
+      var n = Number(v);
+      if (v == null || v === "" || !Number.isFinite(n)) return "—";
+      var sign = n > 0 ? "+" : "";
+      return sign + n.toFixed(2) + "%";
     }
 
     function dcLink(ticker) {
       return base + "datacenter.html?q=" + encodeURIComponent(ticker);
     }
 
-    fetch(screenerUrl + "?t=" + Date.now(), { cache: "no-store" })
+    function chip(row) {
+      var cls = row.chg >= 0 ? "up" : "down";
+      return (
+        '<a class="dc-mover ' +
+        cls +
+        '" href="' +
+        dcLink(row.ticker) +
+        '" title="' +
+        escapeHtml(row.name) +
+        '">' +
+        "<strong>" +
+        escapeHtml(row.ticker) +
+        "</strong>" +
+        '<span class="mono">' +
+        fmtChg(row.chg) +
+        "</span>" +
+        "</a>"
+      );
+    }
+
+    fetch(moversUrl + "?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
       })
       .then(function (data) {
-        var seen = {};
-        var rows = [];
-        (data.layers || []).forEach(function (layer) {
-          (layer.holdings || []).forEach(function (h) {
-            var t = String(h.ticker || "").toUpperCase();
-            if (!t || seen[t]) return;
-            seen[t] = true;
-            var m = h.market || {};
-            if (m.ok === false || m.change_pct == null || isNaN(m.change_pct)) return;
-            rows.push({
-              ticker: t,
-              name: h.name || t,
-              chg: Number(m.change_pct),
-              layerId: layer.id,
-            });
-          });
-        });
-
-        if (!rows.length) {
+        var gainers = data.gainers || [];
+        var losers = data.losers || [];
+        if (!gainers.length && !losers.length) {
           moversEl.innerHTML =
             '<p class="dc-bridge__movers-loading">Movers unavailable — open the screener or refresh the snapshot.</p>';
           return;
         }
-
-        rows.sort(function (a, b) {
-          return b.chg - a.chg;
-        });
-        var gainers = rows.slice(0, 3);
-        var losers = rows.slice(-3).reverse();
-
-        function chip(row) {
-          var cls = row.chg >= 0 ? "up" : "down";
-          return (
-            '<a class="dc-mover ' +
-            cls +
-            '" href="' +
-            dcLink(row.ticker) +
-            '" title="' +
-            escapeHtml(row.name) +
-            '">' +
-            "<strong>" +
-            escapeHtml(row.ticker) +
-            "</strong>" +
-            '<span class="mono">' +
-            fmtChg(row.chg) +
-            "</span>" +
-            "</a>"
-          );
-        }
-
         moversEl.innerHTML =
           '<div class="dc-bridge__movers-grid">' +
           '<div class="dc-bridge__movers-col">' +
@@ -160,7 +138,7 @@ const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/",
       })
       .catch(function () {
         moversEl.innerHTML =
-          '<p class="dc-bridge__movers-loading">Couldn’t load screener movers — <a href="' +
+          '<p class="dc-bridge__movers-loading">Couldn’t load movers — <a href="' +
           base +
           'datacenter.html">open AI Data Center</a>.</p>';
       });

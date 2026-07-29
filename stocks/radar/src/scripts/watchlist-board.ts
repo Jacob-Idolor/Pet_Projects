@@ -1326,14 +1326,40 @@ export async function initWatchlistBoard(stocksJson: string) {
 
 async function loadOutlook() {
   const base = document.querySelector<HTMLElement>("[data-radar-base]")?.dataset.radarBase ?? "/";
+
+  function apply(data: { stocks?: Record<string, OutlookStock> } | null | undefined) {
+    const stocks = data?.stocks;
+    if (!stocks || typeof stocks !== "object") return false;
+    outlookBySymbol = stocks;
+    return true;
+  }
+
+  const cached = (window as Window & { __OUTLOOK__?: { stocks?: Record<string, OutlookStock> } })
+    .__OUTLOOK__;
+  if (apply(cached)) return true;
+
+  const shared = await new Promise<{ stocks?: Record<string, OutlookStock> } | null>((resolve) => {
+    const timer = window.setTimeout(() => {
+      document.removeEventListener("radar:outlook", onOutlook);
+      resolve(
+        (window as Window & { __OUTLOOK__?: { stocks?: Record<string, OutlookStock> } }).__OUTLOOK__ ||
+          null
+      );
+    }, 1200);
+    function onOutlook(ev: Event) {
+      window.clearTimeout(timer);
+      resolve((ev as CustomEvent).detail || null);
+    }
+    document.addEventListener("radar:outlook", onOutlook, { once: true });
+  });
+  if (apply(shared)) return true;
+
   try {
     const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return false;
     const data = await res.json();
-    const stocks = data?.stocks;
-    if (!stocks || typeof stocks !== "object") return false;
-    outlookBySymbol = stocks as Record<string, OutlookStock>;
-    return true;
+    (window as Window & { __OUTLOOK__?: unknown }).__OUTLOOK__ = data;
+    return apply(data);
   } catch {
     return false;
   }
@@ -1435,12 +1461,16 @@ function startQuoteLoader() {
     if (!ok) maybeBrowserFallback(true);
   });
 
-  setInterval(() => {
-    if (document.hidden) return;
-    loadFromJson().then((ok) => {
-      if (!ok && lastJsonOk === false) maybeBrowserFallback();
-    });
-  }, radarSettings().quotes?.pollIntervalMs ?? 60_000);
+  // LiveStatus owns the poll on the home page (dispatches radar:quotes). Avoid double GETs.
+  const liveStatusOwnsPoll = Boolean(document.querySelector("[data-live-status]"));
+  if (!liveStatusOwnsPoll) {
+    setInterval(() => {
+      if (document.hidden) return;
+      loadFromJson().then((ok) => {
+        if (!ok && lastJsonOk === false) maybeBrowserFallback();
+      });
+    }, radarSettings().quotes?.pollIntervalMs ?? 180_000);
+  }
 
   document.addEventListener("radar:stale-quotes", () => {
     maybeBrowserFallback(true);

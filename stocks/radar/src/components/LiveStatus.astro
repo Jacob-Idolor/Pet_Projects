@@ -23,6 +23,7 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
 <div
   class="live-status"
   id="live-status"
+  data-live-status
   data-quotes-url={quotesUrl}
   data-stale-after-hours={staleAfterHours}
   data-poll-ms={pollIntervalMs}
@@ -120,12 +121,18 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
       })
     );
 
+    // Share payload with the board so we don't double-fetch quotes.json
+    if (data.quotes && typeof data.quotes === "object") {
+      document.dispatchEvent(new CustomEvent("radar:quotes", { detail: data.quotes }));
+    }
+
     if (isStale || fetchFailed) {
       document.dispatchEvent(new CustomEvent("radar:stale-quotes", { detail: { fetchedAt, health } }));
     }
   }
 
   async function refreshStatus() {
+    if (typeof document !== "undefined" && document.hidden) return;
     try {
       const res = await fetch(`${quotesUrl}?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("quotes fetch failed");
@@ -141,5 +148,8 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   }
 
   refreshStatus();
-  setInterval(refreshStatus, pollIntervalMs || 60_000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshStatus();
+  });
+  setInterval(refreshStatus, pollIntervalMs || 180_000);
 </script>

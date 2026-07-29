@@ -1,13 +1,15 @@
 name: Stocks Radar — refresh quotes
 
 # Enable with STOCKS_RADAR_DEPLOY_ENABLED=true (same flag as deploy).
+# Mid-session: quotes + outlook only (cheap).
+# Near-close + manual: also refresh screener + DC news (Yahoo-heavy).
 
 on:
   workflow_dispatch:
   schedule:
-    # Weekdays 14:30 UTC ≈ 10:30 ET — mid-session
+    # Weekdays 14:30 UTC ≈ 10:30 ET — mid-session (quotes only)
     - cron: "30 14 * * 1-5"
-    # Weekdays 20:15 UTC ≈ 16:15 ET — near close
+    # Weekdays 20:15 UTC ≈ 16:15 ET — near close (quotes + screener)
     - cron: "15 20 * * 1-5"
 
 concurrency:
@@ -41,6 +43,17 @@ jobs:
           STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
           STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
 
+      - name: Decide refresh scope
+        id: scope
+        run: |
+          # Mid-session cron skips screener (~80 Yahoo calls). Near-close + manual include it.
+          refresh_screener=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event.schedule }}" = "15 20 * * 1-5" ]; then
+            refresh_screener=true
+          fi
+          echo "screener=$refresh_screener" >> "$GITHUB_OUTPUT"
+          echo "Refresh screener: $refresh_screener"
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
@@ -50,6 +63,7 @@ jobs:
           cache-dependency-path: stocks/radar/package-lock.json
 
       - uses: actions/setup-python@v5
+        if: steps.scope.outputs.screener == 'true'
         with:
           python-version: "3.12"
 
@@ -62,19 +76,26 @@ jobs:
           access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Fetch quotes + screener
+      - name: Fetch quotes (+ screener when in scope)
         working-directory: stocks/radar
         env:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
         run: |
-          npm ci
-          pip install -r scripts/datacenter/requirements.txt
+          npm ci --omit=optional
           npm run update-quotes
-          npm run update-screener
+          if [ "$REFRESH_SCREENER" = "true" ]; then
+            pip install -r scripts/datacenter/requirements.txt
+            npm run update-screener
+          else
+            echo "Mid-session: skipped screener/news (runs near-close + workflow_dispatch)"
+          fi
           node scripts/write-health.mjs
 
-      - name: Sync quotes.json + screener.json to S3
+      - name: Sync live JSON to S3
+        env:
+          REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
         run: |
           aws s3 cp stocks/radar/public/quotes.json \
             "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/quotes.json" \
@@ -86,28 +107,44 @@ jobs:
               --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
               --content-type "application/json"
           fi
-          aws s3 cp stocks/radar/public/screener.json \
-            "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/screener.json" \
-            --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
-            --content-type "application/json"
-          if [ -f stocks/radar/public/datacenter/news.json ]; then
-            aws s3 cp stocks/radar/public/datacenter/news.json \
-              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/datacenter/news.json" \
-              --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
-              --content-type "application/json"
-          fi
           if [ -f stocks/radar/public/health.json ]; then
             aws s3 cp stocks/radar/public/health.json \
               "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/health.json" \
               --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
               --content-type "application/json"
           fi
+          # Never upload checkout copies of screener/news on mid-session — would clobber live data
+          if [ "$REFRESH_SCREENER" = "true" ]; then
+            aws s3 cp stocks/radar/public/screener.json \
+              "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/screener.json" \
+              --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+              --content-type "application/json"
+            if [ -f stocks/radar/public/dc-movers.json ]; then
+              aws s3 cp stocks/radar/public/dc-movers.json \
+                "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/dc-movers.json" \
+                --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+                --content-type "application/json"
+            fi
+            if [ -f stocks/radar/public/datacenter/news.json ]; then
+              aws s3 cp stocks/radar/public/datacenter/news.json \
+                "s3://${{ secrets.STOCKS_RADAR_S3_BUCKET }}/datacenter/news.json" \
+                --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+                --content-type "application/json"
+            fi
+          fi
 
-      - name: Invalidate CloudFront quotes
+      - name: Invalidate CloudFront (cacheable live JSON only)
+        env:
+          REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
         run: |
+          # quotes/health use CachingDisabled — invalidation is unnecessary spend
+          paths=("/outlook.json")
+          if [ "$REFRESH_SCREENER" = "true" ]; then
+            paths+=("/screener.json" "/dc-movers.json" "/datacenter/news.json")
+          fi
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/quotes.json" "/outlook.json" "/screener.json" "/datacenter/news.json" "/health.json"
+            --paths "${paths[@]}"
 
       - name: Resolve public site URL
         id: url
@@ -137,9 +174,10 @@ jobs:
       - name: Summary
         env:
           SITE_URL: ${{ steps.url.outputs.site }}
+          REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
         run: |
-          echo "## Quotes + screener refreshed" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Quotes refreshed" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Site:** ${SITE_URL:-"(set STOCKS_RADAR_SITE)"}" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Paths invalidated:** \`/quotes.json\` \`/outlook.json\` \`/screener.json\` \`/datacenter/news.json\`" >> "$GITHUB_STEP_SUMMARY"
-          node -e "const q=require('./stocks/radar/public/quotes.json'); console.log('Coverage:', q.count+'/'+q.total, q.partial?'(partial)':''); console.log('Fetched:', q.fetchedAt||q.updatedAt);" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Screener this run:** $REFRESH_SCREENER" >> "$GITHUB_STEP_SUMMARY"
+          node -e "const q=require('./stocks/radar/public/quotes.json'); console.log('Coverage:', (q.freshCount??q.count)+'/'+q.total, 'fresh'); console.log('Fetched:', q.fetchedAt||q.updatedAt);" >> "$GITHUB_STEP_SUMMARY"

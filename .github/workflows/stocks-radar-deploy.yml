@@ -10,9 +10,8 @@ on:
       - "stocks/radar/**"
       - ".github/workflows/stocks-radar-deploy.yml"
   workflow_dispatch:
-  # Full rebuild weekday midday UTC (quotes also refresh via dedicated workflow)
-  schedule:
-    - cron: "0 15 * * 1-5"
+  # No weekday schedule — quotes/screener freshness is stocks-radar-refresh-quotes.yml.
+  # Scheduled full builds duplicated Yahoo + npm ci cost for little HTML benefit.
 
 concurrency:
   group: stocks-radar-aws-mutate
@@ -111,7 +110,7 @@ jobs:
           OTEL_SDK_DISABLED: "true"
           OTEL_EXPORTER_OTLP_ENDPOINT: ""
         run: |
-          npm ci
+          npm ci --omit=optional
           if [ "${STOCKS_RADAR_ENV}" = "production" ]; then
             npm run config:validate:prod
           else
@@ -128,8 +127,8 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" \
-                   "/datacenter.html" "/datacenter/*" "/build-meta.json" \
+            --paths "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" "/dc-movers.json" \
+                   "/datacenter.html" "/datacenter/news.json" "/build-meta.json" \
                    "/health.json" "/settings.json" \
                    "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
 

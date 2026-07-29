@@ -1,7 +1,9 @@
 # Image attributions
 
-Background photos used in the Data Center Map and Rack Explorer are reused from
-Wikimedia Commons under Creative Commons licenses. Required attribution:
+Reference photos (not shipped to S3 / CloudFront — kept under `docs/datacenter-reference-photos/`
+for optional future UI). Originally considered for Data Center Map / Rack Explorer backdrops.
+
+Wikimedia Commons under Creative Commons licenses:
 
 | File | Title | Author | License | Source |
 |------|-------|--------|---------|--------|

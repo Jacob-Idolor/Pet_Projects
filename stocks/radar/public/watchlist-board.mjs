@@ -1280,14 +1280,34 @@ async function initWatchlistBoard(stocksJson) {
 }
 async function loadOutlook() {
   const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
-  try {
-    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) return false;
-    const data = await res.json();
+  function apply(data) {
     const stocks = data?.stocks;
     if (!stocks || typeof stocks !== "object") return false;
     outlookBySymbol = stocks;
     return true;
+  }
+  const cached = window.__OUTLOOK__;
+  if (apply(cached)) return true;
+  const shared = await new Promise((resolve) => {
+    const timer = window.setTimeout(() => {
+      document.removeEventListener("radar:outlook", onOutlook);
+      resolve(
+        window.__OUTLOOK__ || null
+      );
+    }, 1200);
+    function onOutlook(ev) {
+      window.clearTimeout(timer);
+      resolve(ev.detail || null);
+    }
+    document.addEventListener("radar:outlook", onOutlook, { once: true });
+  });
+  if (apply(shared)) return true;
+  try {
+    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json();
+    window.__OUTLOOK__ = data;
+    return apply(data);
   } catch {
     return false;
   }
@@ -1380,12 +1400,15 @@ function startQuoteLoader() {
   loadFromJson().then((ok) => {
     if (!ok) maybeBrowserFallback(true);
   });
-  setInterval(() => {
-    if (document.hidden) return;
-    loadFromJson().then((ok) => {
-      if (!ok && lastJsonOk === false) maybeBrowserFallback();
-    });
-  }, radarSettings().quotes?.pollIntervalMs ?? 6e4);
+  const liveStatusOwnsPoll = Boolean(document.querySelector("[data-live-status]"));
+  if (!liveStatusOwnsPoll) {
+    setInterval(() => {
+      if (document.hidden) return;
+      loadFromJson().then((ok) => {
+        if (!ok && lastJsonOk === false) maybeBrowserFallback();
+      });
+    }, radarSettings().quotes?.pollIntervalMs ?? 18e4);
+  }
   document.addEventListener("radar:stale-quotes", () => {
     maybeBrowserFallback(true);
   });

@@ -30,10 +30,26 @@ try {
   $env:DEPLOY_TIME = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
   npm ci
   npm run build
-  aws s3 sync dist "s3://$Bucket" --delete --profile $ProfileName --exclude "alert-state.json" --exclude "_private/*"
-  # Prefer bash tiered sync when available (Git Bash / WSL):
-  #   bash ./infra/sync-s3-tiered.sh $Bucket $ProfileName
-  aws cloudfront create-invalidation --distribution-id $DistId --paths "/" "/index.html" "/404.html" "/quotes.json" "/build-meta.json" "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs" --profile $ProfileName | Out-Null
+
+  $synced = $false
+  $bash = Get-Command bash -ErrorAction SilentlyContinue
+  if ($bash) {
+    Write-Host "==> tiered sync via sync-s3-tiered.sh"
+    $env:DIST_DIR = "dist"
+    & bash "./infra/sync-s3-tiered.sh" $Bucket $ProfileName
+    if ($LASTEXITCODE -eq 0) { $synced = $true }
+  }
+  if (-not $synced) {
+    Write-Warning "bash/tiered sync unavailable — flat sync (weaker Cache-Control). Install Git Bash for production-like cache headers."
+    aws s3 sync dist "s3://$Bucket" --delete --profile $ProfileName --exclude "alert-state.json" --exclude "_private/*"
+  }
+
+  aws cloudfront create-invalidation --distribution-id $DistId --paths `
+    "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" "/dc-movers.json" `
+    "/datacenter.html" "/datacenter/news.json" "/build-meta.json" `
+    "/health.json" "/settings.json" `
+    "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs" `
+    --profile $ProfileName | Out-Null
 } finally {
   Pop-Location
 }

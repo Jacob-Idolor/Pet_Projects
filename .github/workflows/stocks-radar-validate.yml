@@ -26,7 +26,7 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
-      - run: npm ci
+      - run: npm ci --omit=optional
       - run: npm run config:validate
       - run: npm test
       - run: npm run screener:schema

@@ -21,6 +21,11 @@ const ROOT = resolve(__dirname, "..");
 const WATCHLIST = resolve(ROOT, "src/data/watchlist.json");
 const MACRO = resolve(ROOT, "src/data/macro.json");
 const OUT = resolve(ROOT, "public/outlook.json");
+const JSON_SPACE =
+  process.env.QUOTES_PRETTY === "1" ||
+  (!process.env.GITHUB_ACTIONS && process.env.STOCKS_RADAR_ENV !== "production")
+    ? 2
+    : undefined;
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 const NEWS_PER_SYMBOL = 3;
@@ -196,7 +201,7 @@ export async function fetchOutlook() {
     stocks: bySymbol,
   };
 
-  writeFileSync(OUT, JSON.stringify(payload, null, 2) + "\n");
+  writeFileSync(OUT, JSON.stringify(payload, null, JSON_SPACE) + "\n");
   console.log(`✓ outlook.json — ${Object.keys(bySymbol).length} stocks, ${Object.keys(macro).length} macro`);
   return payload;
 }

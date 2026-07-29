@@ -24,6 +24,26 @@ Static hosting only: **S3 + CloudFront** (+ optional budget / custom domain / SN
 
 Passive-income math (AdSense vs hosting): **[../../PASSIVE_INCOME.md](../../PASSIVE_INCOME.md)**.
 
+## Ops cost controls (Actions + transfer)
+
+AWS is already in the $0.50–3 band. Recurring waste is mostly **GitHub Actions minutes** and **browser polls**, not CloudFront price class.
+
+| Control | Why |
+|---------|-----|
+| No weekday **scheduled full deploy** | Refresh workflow owns freshness; push deploy ships HTML |
+| Mid-session refresh = **quotes only**; near-close = quotes + screener | Cuts ~80 Yahoo calls mid-day |
+| Signal alerts via **`workflow_run` only** (no duplicate cron) | One `npm ci` per refresh, not two |
+| Invalidate **cacheable** JSON only on refresh (not CachingDisabled quotes/health) | Stay under CF invalidation free tier |
+| Don’t invalidate `/datacenter/*` on deploy | Hashed JS/CSS stay immutable at the edge |
+| Single browser quotes poller (LiveStatus) · **3 min** interval · skip when tab hidden | Halves origin GETs vs dual 60s polls |
+| Compact `quotes.json` / `outlook.json` in CI | ~25–30% smaller transfer per poll |
+| Home page loads `dc-movers.json` (~1–2 KB) not full `screener.json` | Cuts ~100 KB/home view |
+| MacroStrip shares `outlook.json` with the board (`radar:outlook`) | One fetch per page load |
+| OTel SDKs are `optionalDependencies`; CI uses `npm ci --omit=optional` | Smaller/faster Actions installs |
+| Reference JPGs kept under `docs/` (not `public/`) | Avoid shipping ~2.6 MB unused images |
+
+**Do not “save” money by:** opening `PriceClass_All`, adding WAF/Lambda, caching live quotes for hours, or shrinking Yahoo `range=2y` (breaks SMA/RSI).
+
 ## Budget alerts — do they make sense?
 
 **Yes — with the defaults, if you activate the `Project` cost-allocation tag.**

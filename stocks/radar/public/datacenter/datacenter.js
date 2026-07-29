@@ -287,7 +287,7 @@
       </defs>
 
       <!-- blueprint / engineering grid backdrop (photo backdrop retired for the
-           CAD look; static/assets/hall.jpg kept on disk) -->
+           CAD look; reference photos under docs/datacenter-reference-photos/) -->
       <rect x="0" y="0" width="1100" height="680" fill="#081019"/>
       <rect x="0" y="0" width="1100" height="680" fill="url(#bpFine)"/>
       <rect x="0" y="0" width="1100" height="680" fill="url(#bpMajor)"/>

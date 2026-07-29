@@ -21,7 +21,8 @@
     "import-csv": "node scripts/csv-to-watchlist.mjs",
     "update-quotes": "node scripts/fetch-quotes.mjs",
     "update-outlook": "node scripts/fetch-outlook.mjs",
-    "update-screener": "python scripts/fetch-screener.py",
+    "update-screener": "python scripts/fetch-screener.py && node scripts/write-dc-movers.mjs",
+    "dc-movers": "node scripts/write-dc-movers.mjs",
     "freshness": "node scripts/check-live-freshness.mjs",
     "freshness:live": "node scripts/check-live-freshness.mjs --url",
     "seo": "node scripts/write-seo-files.mjs",
@@ -34,13 +35,15 @@
     "alerts:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/signal-alerts.mjs"
   },
   "dependencies": {
+    "astro": "^7.1.3"
+  },
+  "optionalDependencies": {
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
     "@opentelemetry/resources": "^2.9.0",
     "@opentelemetry/sdk-trace-base": "^2.9.0",
     "@opentelemetry/sdk-trace-node": "^2.9.0",
-    "@opentelemetry/semantic-conventions": "^1.43.0",
-    "astro": "^7.1.3"
+    "@opentelemetry/semantic-conventions": "^1.43.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.1",

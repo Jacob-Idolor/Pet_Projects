@@ -1,0 +1,44 @@
+{
+  "updatedAt": "2026-07-29T01:36:16.162Z",
+  "sourceFetchedAt": "2026-07-28T22:22:18.841662+00:00",
+  "gainers": [
+    {
+      "ticker": "TEL",
+      "name": "TE Connectivity",
+      "chg": 3.23248,
+      "layerId": "networking"
+    },
+    {
+      "ticker": "AMT",
+      "name": "American Tower",
+      "chg": 2.85474,
+      "layerId": "land"
+    },
+    {
+      "ticker": "GOOGL",
+      "name": "Alphabet",
+      "chg": 2.1894884,
+      "layerId": "software"
+    }
+  ],
+  "losers": [
+    {
+      "ticker": "AMKR",
+      "name": "Amkor Technology",
+      "chg": -24.74057,
+      "layerId": "compute"
+    },
+    {
+      "ticker": "STRL",
+      "name": "Sterling Infrastructure",
+      "chg": -15.212009,
+      "layerId": "land"
+    },
+    {
+      "ticker": "000660.KS",
+      "name": "SK Hynix",
+      "chg": -14.647577,
+      "layerId": "compute"
+    }
+  ]
+}

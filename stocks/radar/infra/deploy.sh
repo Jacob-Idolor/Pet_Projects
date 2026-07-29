@@ -39,8 +39,8 @@ DIST_DIR=dist "$SCRIPT_DIR/sync-s3-tiered.sh" "$BUCKET" "$AWS_PROFILE"
 echo "Invalidating CloudFront (HTML + live JSON only — keep hashed assets cached)..."
 aws cloudfront create-invalidation \
   --distribution-id "$DIST_ID" \
-  --paths "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" \
-         "/datacenter.html" "/datacenter/*" "/build-meta.json" \
+  --paths "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" "/dc-movers.json" \
+         "/datacenter.html" "/datacenter/news.json" "/build-meta.json" \
          "/health.json" "/settings.json" \
          "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs" \
   --profile "$AWS_PROFILE" \
