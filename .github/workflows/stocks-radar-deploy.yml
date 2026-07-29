@@ -110,7 +110,7 @@ jobs:
           OTEL_SDK_DISABLED: "true"
           OTEL_EXPORTER_OTLP_ENDPOINT: ""
         run: |
-          npm ci --omit=optional
+          npm ci
           if [ "${STOCKS_RADAR_ENV}" = "production" ]; then
             npm run config:validate:prod
           else

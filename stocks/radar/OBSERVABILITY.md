@@ -17,11 +17,13 @@ Deeper visibility **without** putting a Collector in the AWS static-site stack.
 
 Off by default: no OTLP export unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
 
-OTel SDKs live in **`optionalDependencies`**. CI uses `npm ci --omit=optional` so default jobs stay lean. For local traces:
+OTel SDKs live in **`optionalDependencies`**. Quote-refresh / alert jobs use `npm ci --omit=optional` (no Astro build). **Deploy/validate must use full `npm ci`** — Astro’s Rolldown platform bindings are also optional and break with `--omit=optional`.
+
+For local traces:
 
 ```bash
 cd stocks/radar
-npm install   # installs optional OTel packages
+npm install   # includes optional OTel + platform bindings
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 npm run update-quotes
 ```

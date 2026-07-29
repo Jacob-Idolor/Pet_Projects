@@ -39,7 +39,7 @@ AWS is already in the $0.50–3 band. Recurring waste is mostly **GitHub Actions
 | Compact `quotes.json` / `outlook.json` in CI | ~25–30% smaller transfer per poll |
 | Home page loads `dc-movers.json` (~1–2 KB) not full `screener.json` | Cuts ~100 KB/home view |
 | MacroStrip shares `outlook.json` with the board (`radar:outlook`) | One fetch per page load |
-| OTel SDKs are `optionalDependencies`; CI uses `npm ci --omit=optional` | Smaller/faster Actions installs |
+| OTel SDKs are `optionalDependencies`; refresh/alerts use `npm ci --omit=optional` | Smaller installs on non-build jobs (deploy/validate keep full `npm ci` for Rolldown) |
 | Reference JPGs kept under `docs/` (not `public/`) | Avoid shipping ~2.6 MB unused images |
 
 **Do not “save” money by:** opening `PriceClass_All`, adding WAF/Lambda, caching live quotes for hours, or shrinking Yahoo `range=2y` (breaks SMA/RSI).
