@@ -36,7 +36,94 @@ function yahooUrl(symbol) {
   return `https://finance.yahoo.com/quote/${encodeURIComponent(sym)}`;
 }
 
-// src/lib/market-display.ts
+// scripts/lib/action-bias.mjs
+function isPreMomentum(q) {
+  if (!q || q.price == null) return false;
+  const volQuiet = q.volRatio != null && q.volRatio < 0.75;
+  const rsi = q.rsi14;
+  const rsiMid = rsi != null && rsi >= 35 && rsi <= 55;
+  const vs50 = q.vsSma?.[50];
+  const nearOrUnder50 = vs50 != null && vs50 > -12 && vs50 <= 3;
+  const range = q.range52Pct;
+  const notHigh = range == null || range < 70;
+  const notAth = q.pctFromAth == null || q.pctFromAth < -8;
+  return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
+}
+function actionBias(q, opts = {}) {
+  if (!q || q.price == null) {
+    return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
+  }
+  let score = 0;
+  const bits = [];
+  if (q.rsi14 != null && q.rsi14 <= 30) {
+    score += 3;
+    bits.push("RSI oversold (+3)");
+  } else if (q.rsi14 != null && q.rsi14 <= 40) {
+    score += 1;
+    bits.push("RSI soft (+1)");
+  } else if (q.rsi14 != null && q.rsi14 >= 70) {
+    score -= 3;
+    bits.push("RSI overbought (\u22123)");
+  } else if (q.rsi14 != null && q.rsi14 >= 65) {
+    score -= 1;
+    bits.push("RSI elevated (\u22121)");
+  }
+  if (q.range52Pct != null && q.range52Pct <= 20) {
+    score += 2;
+    bits.push("near 52w low (+2)");
+  } else if (q.range52Pct != null && q.range52Pct >= 85) {
+    score -= 2;
+    bits.push("near 52w high (\u22122)");
+  }
+  if (q.pctFromAth != null && q.pctFromAth >= -3) {
+    score -= 2;
+    bits.push("near ATH (\u22122)");
+  }
+  if (q.signals?.includes("deep-below-50") || q.vsSma?.[50] != null && q.vsSma[50] < -10) {
+    score += 2;
+    bits.push("deep below SMA50 (+2)");
+  }
+  if (q.signals?.includes("extended-above-50") || q.vsSma?.[50] != null && q.vsSma[50] > 10) {
+    score -= 2;
+    bits.push("extended above SMA50 (\u22122)");
+  }
+  if (q.trend === "bullish") {
+    score += 1;
+    bits.push("bullish trend (+1)");
+  } else if (q.trend === "bearish") {
+    score -= 1;
+    bits.push("bearish trend (\u22121)");
+  }
+  if (isPreMomentum(q)) {
+    score += 2;
+    bits.push("quiet coil / pre-momentum (+2)");
+  } else if (q.volRatio != null && q.volRatio < 0.7 && q.range52Pct != null && q.range52Pct >= 80) {
+    score -= 1;
+    bits.push("quiet near highs (\u22121)");
+  }
+  const delta = opts?.newsCheck?.scoreDelta;
+  if (typeof delta === "number" && delta !== 0) {
+    score += delta;
+    const sign = delta > 0 ? `+${delta}` : String(delta);
+    const tilt = opts?.newsCheck?.tilt || (delta > 0 ? "positive" : "negative");
+    bits.push(`news ${tilt} (${sign})`);
+  }
+  let setup = "mixed";
+  if (isPreMomentum(q)) setup = "pre-momentum";
+  else if (q.rsi14 != null && q.rsi14 <= 35 || q.vsSma?.[50] != null && q.vsSma[50] < -10 || q.range52Pct != null && q.range52Pct <= 20) {
+    setup = "washed-out";
+  } else if (q.rsi14 != null && q.rsi14 >= 65 || q.vsSma?.[50] != null && q.vsSma[50] > 10 || q.range52Pct != null && q.range52Pct >= 85 || q.pctFromAth != null && q.pctFromAth >= -5) {
+    setup = "extended";
+  } else if (q.trend === "bullish" || q.trend === "bearish") {
+    setup = "trending";
+  }
+  const reason = bits.length ? bits.slice(0, 4).join(" \xB7 ") : "Neutral setup";
+  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
+  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  return { label: "Watch", cls: "watch", reason, score, setup };
+}
+
+// src/lib/market-format.ts
 function fmtPrice(v) {
   if (v == null || Number.isNaN(v)) return "\u2014";
   return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
@@ -103,6 +190,63 @@ function athIndicator(q) {
 function hasTechnical(q) {
   return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
 }
+function actionBadge(q, opts) {
+  const a = actionBias(q, opts);
+  return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
+}
+function sma50Plain(q) {
+  const vs = q?.vsSma?.[50];
+  if (vs == null || Number.isNaN(vs)) return "50-day avg n/a";
+  const abs = Math.abs(vs).toFixed(1);
+  if (Math.abs(vs) < 1) return "about even with its 50-day average price";
+  if (vs > 0) return `${abs}% above its 50-day average (running hot vs recent weeks)`;
+  return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
+}
+function pulseExplain(q, opts) {
+  const bias = actionBias(q, opts);
+  const sma = sma50Plain(q);
+  const lean = bias.cls === "buy" ? "Lean buy \u2014 weighted checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on the weighted checklist" : bias.cls === "watch" ? bias.setup === "pre-momentum" ? "Watch \u2014 quiet coil / pre-momentum (no run yet)" : "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
+  const setupLabel = bias.setup === "pre-momentum" ? "pre-momentum" : bias.setup === "washed-out" ? "washed-out" : bias.setup === "extended" ? "extended" : null;
+  const bits = [lean];
+  if (setupLabel && bias.cls !== "idle") bits.push(setupLabel);
+  if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
+  bits.push(sma);
+  return { bias, sma, line: bits.join(" \xB7 ") };
+}
+function matchesTechnicalFilter(filter, q, price) {
+  if (!filter.startsWith("tech-")) return true;
+  if (!q) return false;
+  switch (filter) {
+    case "tech-above-50":
+      return q.sma?.[50] != null && price != null && price > q.sma[50];
+    case "tech-below-50":
+      return q.sma?.[50] != null && price != null && price < q.sma[50];
+    case "tech-above-200":
+      return q.sma?.[200] != null && price != null && price > q.sma[200];
+    case "tech-below-200":
+      return q.sma?.[200] != null && price != null && price < q.sma[200];
+    case "tech-bullish":
+      return q.trend === "bullish";
+    case "tech-bearish":
+      return q.trend === "bearish";
+    case "tech-near-low":
+      return q.range52Pct != null && q.range52Pct <= 20;
+    case "tech-near-high":
+      return q.range52Pct != null && q.range52Pct >= 80;
+    case "tech-near-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -5;
+    case "tech-at-ath":
+      return q.pctFromAth != null && q.pctFromAth >= -0.5;
+    case "tech-oversold":
+      return q.rsi14 != null && q.rsi14 <= 35;
+    case "tech-overbought":
+      return q.rsi14 != null && q.rsi14 >= 65;
+    default:
+      return true;
+  }
+}
+
+// src/lib/market-html.ts
 function fmtMultiple(v) {
   if (v == null || Number.isNaN(v)) return "\u2014";
   return v.toFixed(1);
@@ -210,164 +354,26 @@ function renderTechnicalDetail(q, price) {
       <p class="tech-vol"><strong>Volume:</strong> ${volNote}</p>
     </div>`;
 }
-function actionBias(q, opts) {
-  if (!q || q.price == null) {
-    return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
-  }
-  let score = 0;
-  const bits = [];
-  if (q.rsi14 != null && q.rsi14 <= 30) {
-    score += 3;
-    bits.push("RSI oversold (+3)");
-  } else if (q.rsi14 != null && q.rsi14 <= 40) {
-    score += 1;
-    bits.push("RSI soft (+1)");
-  } else if (q.rsi14 != null && q.rsi14 >= 70) {
-    score -= 3;
-    bits.push("RSI overbought (\u22123)");
-  } else if (q.rsi14 != null && q.rsi14 >= 65) {
-    score -= 1;
-    bits.push("RSI elevated (\u22121)");
-  }
-  if (q.range52Pct != null && q.range52Pct <= 20) {
-    score += 2;
-    bits.push("near 52w low (+2)");
-  } else if (q.range52Pct != null && q.range52Pct >= 85) {
-    score -= 2;
-    bits.push("near 52w high (\u22122)");
-  }
-  if (q.pctFromAth != null && q.pctFromAth >= -3) {
-    score -= 2;
-    bits.push("near ATH (\u22122)");
-  }
-  if (q.signals?.includes("deep-below-50") || q.vsSma?.[50] != null && q.vsSma[50] < -10) {
-    score += 2;
-    bits.push("deep below SMA50 (+2)");
-  }
-  if (q.signals?.includes("extended-above-50") || q.vsSma?.[50] != null && q.vsSma[50] > 10) {
-    score -= 2;
-    bits.push("extended above SMA50 (\u22122)");
-  }
-  if (q.trend === "bullish") {
-    score += 1;
-    bits.push("bullish trend (+1)");
-  } else if (q.trend === "bearish") {
-    score -= 1;
-    bits.push("bearish trend (\u22121)");
-  }
-  if (isPreMomentum(q)) {
-    score += 2;
-    bits.push("quiet coil / pre-momentum (+2)");
-  } else if (q.volRatio != null && q.volRatio < 0.7 && q.range52Pct != null && q.range52Pct >= 80) {
-    score -= 1;
-    bits.push("quiet near highs (\u22121)");
-  }
-  const delta = opts?.newsCheck?.scoreDelta;
-  if (typeof delta === "number" && delta !== 0) {
-    score += delta;
-    const sign = delta > 0 ? `+${delta}` : String(delta);
-    const tilt = opts?.newsCheck?.tilt || (delta > 0 ? "positive" : "negative");
-    bits.push(`news ${tilt} (${sign})`);
-  }
-  let setup = "mixed";
-  if (isPreMomentum(q)) setup = "pre-momentum";
-  else if (q.rsi14 != null && q.rsi14 <= 35 || q.vsSma?.[50] != null && q.vsSma[50] < -10 || q.range52Pct != null && q.range52Pct <= 20) {
-    setup = "washed-out";
-  } else if (q.rsi14 != null && q.rsi14 >= 65 || q.vsSma?.[50] != null && q.vsSma[50] > 10 || q.range52Pct != null && q.range52Pct >= 85 || q.pctFromAth != null && q.pctFromAth >= -5) {
-    setup = "extended";
-  } else if (q.trend === "bullish" || q.trend === "bearish") {
-    setup = "trending";
-  }
-  const reason = bits.length ? bits.slice(0, 4).join(" \xB7 ") : "Neutral setup";
-  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
-  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
-  return { label: "Watch", cls: "watch", reason, score, setup };
-}
-function isPreMomentum(q) {
-  if (!q || q.price == null) return false;
-  const volQuiet = q.volRatio != null && q.volRatio < 0.75;
-  const rsi = q.rsi14;
-  const rsiMid = rsi != null && rsi >= 35 && rsi <= 55;
-  const vs50 = q.vsSma?.[50];
-  const nearOrUnder50 = vs50 != null && vs50 > -12 && vs50 <= 3;
-  const range = q.range52Pct;
-  const notHigh = range == null || range < 70;
-  const notAth = q.pctFromAth == null || q.pctFromAth < -8;
-  return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
-}
-function actionBadge(q, opts) {
-  const a = actionBias(q, opts);
-  return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
-}
-function sma50Plain(q) {
-  const vs = q?.vsSma?.[50];
-  if (vs == null || Number.isNaN(vs)) return "50-day avg n/a";
-  const abs = Math.abs(vs).toFixed(1);
-  if (Math.abs(vs) < 1) return "about even with its 50-day average price";
-  if (vs > 0) return `${abs}% above its 50-day average (running hot vs recent weeks)`;
-  return `${abs}% below its 50-day average (cheaper vs recent weeks)`;
-}
-function pulseExplain(q, opts) {
-  const bias = actionBias(q, opts);
-  const sma = sma50Plain(q);
-  const lean = bias.cls === "buy" ? "Lean buy \u2014 weighted checklist tips constructive (not advice)" : bias.cls === "sell" ? "Lean sell \u2014 stretched or soft on the weighted checklist" : bias.cls === "watch" ? bias.setup === "pre-momentum" ? "Watch \u2014 quiet coil / pre-momentum (no run yet)" : "Watch \u2014 mixed / wait for a clearer setup" : "Waiting on quotes";
-  const setupLabel = bias.setup === "pre-momentum" ? "pre-momentum" : bias.setup === "washed-out" ? "washed-out" : bias.setup === "extended" ? "extended" : null;
-  const bits = [lean];
-  if (setupLabel && bias.cls !== "idle") bits.push(setupLabel);
-  if (bias.reason && bias.reason !== "Waiting on quotes") bits.push(bias.reason);
-  bits.push(sma);
-  return { bias, sma, line: bits.join(" \xB7 ") };
-}
-function matchesTechnicalFilter(filter2, q, price) {
-  if (!filter2.startsWith("tech-")) return true;
-  if (!q) return false;
-  switch (filter2) {
-    case "tech-above-50":
-      return q.sma?.[50] != null && price != null && price > q.sma[50];
-    case "tech-below-50":
-      return q.sma?.[50] != null && price != null && price < q.sma[50];
-    case "tech-above-200":
-      return q.sma?.[200] != null && price != null && price > q.sma[200];
-    case "tech-below-200":
-      return q.sma?.[200] != null && price != null && price < q.sma[200];
-    case "tech-bullish":
-      return q.trend === "bullish";
-    case "tech-bearish":
-      return q.trend === "bearish";
-    case "tech-near-low":
-      return q.range52Pct != null && q.range52Pct <= 20;
-    case "tech-near-high":
-      return q.range52Pct != null && q.range52Pct >= 80;
-    case "tech-near-ath":
-      return q.pctFromAth != null && q.pctFromAth >= -5;
-    case "tech-at-ath":
-      return q.pctFromAth != null && q.pctFromAth >= -0.5;
-    case "tech-oversold":
-      return q.rsi14 != null && q.rsi14 <= 35;
-    case "tech-overbought":
-      return q.rsi14 != null && q.rsi14 >= 65;
-    default:
-      return true;
-  }
-}
 
-// src/scripts/watchlist-board.ts
+// src/client/board/state.ts
 var CUSTOM_STORE = "stocks-radar-custom";
 var CUSTOM_KEY = "entries";
 var PREFS_KEY = "stocks-radar-prefs";
-var baseStocks = [];
-var allStocks = [];
-var quotes = {};
-var outlookBySymbol = {};
-var filter = "all";
-var tagFilter = null;
-var search = "";
-var sortKey = "symbol";
-var sortDir = 1;
-var viewMode = "table";
-var page = 1;
-var pageSize = 50;
-var expandedId = null;
+var state = {
+  baseStocks: [],
+  allStocks: [],
+  quotes: {},
+  outlookBySymbol: {},
+  filter: "all",
+  tagFilter: null,
+  search: "",
+  sortKey: "symbol",
+  sortDir: 1,
+  viewMode: "table",
+  page: 1,
+  pageSize: 50,
+  expandedId: null
+};
 function radarSettings() {
   return typeof window !== "undefined" && window.__RADAR_SETTINGS__ || {};
 }
@@ -381,7 +387,12 @@ function loadPrefs() {
 function savePrefs() {
   localStorage.setItem(
     PREFS_KEY,
-    JSON.stringify({ viewMode, pageSize, sortKey, filter })
+    JSON.stringify({
+      viewMode: state.viewMode,
+      pageSize: state.pageSize,
+      sortKey: state.sortKey,
+      filter: state.filter
+    })
   );
 }
 function openCustomDb() {
@@ -427,8 +438,8 @@ function mergeStocks(base, custom) {
 async function savePriceTarget(symbol, targetPrice, opts) {
   const sym = symbol.toUpperCase().replace(/^\$/, "");
   if (!sym || !targetPrice || targetPrice <= 0) return false;
-  const existing = allStocks.find((s) => s.symbol === sym);
-  const q = quotes[sym];
+  const existing = state.allStocks.find((s) => s.symbol === sym);
+  const q = state.quotes[sym];
   const stock = {
     id: `custom-${sym.toLowerCase()}`,
     symbol: sym,
@@ -452,7 +463,7 @@ async function savePriceTarget(symbol, targetPrice, opts) {
   const custom = await getCustomStocks();
   const merged = mergeStocks(custom, [stock]);
   await setCustomStocks(merged);
-  allStocks = mergeStocks(baseStocks, merged);
+  state.allStocks = mergeStocks(state.baseStocks, merged);
   return true;
 }
 function asFiniteNumber(v) {
@@ -461,13 +472,13 @@ function asFiniteNumber(v) {
   return Number.isFinite(n) ? n : null;
 }
 function getQuote(stock) {
-  return quotes[stock.symbol];
+  return state.quotes[stock.symbol];
 }
 function getPrice(stock) {
-  return asFiniteNumber(quotes[stock.symbol]?.price) ?? asFiniteNumber(stock.lastPrice);
+  return asFiniteNumber(state.quotes[stock.symbol]?.price) ?? asFiniteNumber(stock.lastPrice);
 }
 function getChange(stock) {
-  const q = quotes[stock.symbol];
+  const q = state.quotes[stock.symbol];
   const fromQuote = asFiniteNumber(q?.changePct);
   if (fromQuote != null) return fromQuote;
   const price = getPrice(stock);
@@ -491,8 +502,8 @@ function distanceLabel(pct) {
 }
 function matchesFilter(stock) {
   const dist = getDistance(stock);
-  if (tagFilter && !(stock.tags ?? []).includes(tagFilter)) return false;
-  switch (filter) {
+  if (state.tagFilter && !(stock.tags ?? []).includes(state.tagFilter)) return false;
+  switch (state.filter) {
     case "has-target":
       return stock.targetPrice != null;
     case "at-target":
@@ -504,15 +515,15 @@ function matchesFilter(stock) {
     case "lean-sell":
       return stockBias(stock).cls === "sell";
     default:
-      if (filter.startsWith("tech-")) {
-        return matchesTechnicalFilter(filter, getQuote(stock), getPrice(stock));
+      if (state.filter.startsWith("tech-")) {
+        return matchesTechnicalFilter(state.filter, getQuote(stock), getPrice(stock));
       }
       return true;
   }
 }
 function matchesSearch(stock) {
-  if (!search) return true;
-  const q = search.toLowerCase();
+  if (!state.search) return true;
+  const q = state.search.toLowerCase();
   return stock.symbol.toLowerCase().includes(q) || (stock.name ?? "").toLowerCase().includes(q) || (stock.thesis ?? "").toLowerCase().includes(q) || (stock.targetNote ?? "").toLowerCase().includes(q) || (stock.sector ?? "").toLowerCase().includes(q) || (stock.tags ?? []).some((t) => t.toLowerCase().includes(q));
 }
 function sortStocks(list) {
@@ -520,74 +531,74 @@ function sortStocks(list) {
   sorted.sort((a, b) => {
     let av;
     let bv;
-    switch (sortKey) {
+    switch (state.sortKey) {
       case "symbol":
-        return sortDir * a.symbol.localeCompare(b.symbol);
+        return state.sortDir * a.symbol.localeCompare(b.symbol);
       case "name":
-        return sortDir * (a.name ?? "").localeCompare(b.name ?? "");
+        return state.sortDir * (a.name ?? "").localeCompare(b.name ?? "");
       case "category":
-        return sortDir * a.category.localeCompare(b.category);
+        return state.sortDir * a.category.localeCompare(b.category);
       case "sector":
-        return sortDir * (a.sector ?? "").localeCompare(b.sector ?? "");
+        return state.sortDir * (a.sector ?? "").localeCompare(b.sector ?? "");
       case "price":
         av = getPrice(a) ?? -Infinity;
         bv = getPrice(b) ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "target":
         av = a.targetPrice ?? -Infinity;
         bv = b.targetPrice ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "distance": {
         const da = getDistance(a);
         const db = getDistance(b);
         if (da == null && db == null) return a.symbol.localeCompare(b.symbol);
         if (da == null) return 1;
         if (db == null) return -1;
-        return sortDir * (Math.abs(da) - Math.abs(db));
+        return state.sortDir * (Math.abs(da) - Math.abs(db));
       }
       case "priority": {
         const order = { high: 0, medium: 1, low: 2 };
         av = order[a.priority ?? ""] ?? 3;
         bv = order[b.priority ?? ""] ?? 3;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       }
       case "by":
-        return sortDir * (a.holder ?? a.addedBy ?? "").localeCompare(b.holder ?? b.addedBy ?? "");
+        return state.sortDir * (a.holder ?? a.addedBy ?? "").localeCompare(b.holder ?? b.addedBy ?? "");
       case "vs50":
         av = getQuote(a)?.vsSma?.[50] ?? -Infinity;
         bv = getQuote(b)?.vsSma?.[50] ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "vs20":
         av = getQuote(a)?.vsSma?.[20] ?? -Infinity;
         bv = getQuote(b)?.vsSma?.[20] ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "vs200":
         av = getQuote(a)?.vsSma?.[200] ?? -Infinity;
         bv = getQuote(b)?.vsSma?.[200] ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "range52":
         av = getQuote(a)?.range52Pct ?? -Infinity;
         bv = getQuote(b)?.range52Pct ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "ath":
         av = getQuote(a)?.pctFromAth ?? -Infinity;
         bv = getQuote(b)?.pctFromAth ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "rsi":
         av = getQuote(a)?.rsi14 ?? -Infinity;
         bv = getQuote(b)?.rsi14 ?? -Infinity;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       case "trend": {
         const order = { bullish: 0, mixed: 1, bearish: 2, unknown: 3 };
         av = order[getQuote(a)?.trend ?? "unknown"] ?? 4;
         bv = order[getQuote(b)?.trend ?? "unknown"] ?? 4;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       }
       case "action": {
         const order = { buy: 0, watch: 1, sell: 2, idle: 3 };
         av = order[stockBias(a).cls] ?? 4;
         bv = order[stockBias(b).cls] ?? 4;
-        return sortDir * (av - bv);
+        return state.sortDir * (av - bv);
       }
       default:
         return 0;
@@ -596,7 +607,30 @@ function sortStocks(list) {
   return sorted;
 }
 function filteredStocks() {
-  return sortStocks(allStocks.filter((s) => matchesFilter(s) && matchesSearch(s)));
+  return sortStocks(state.allStocks.filter((s) => matchesFilter(s) && matchesSearch(s)));
+}
+function outlookFor(stock) {
+  const sym = stock.symbol?.toUpperCase();
+  const fetched = sym ? state.outlookBySymbol[sym] : void 0;
+  const human = stock.valuation || {};
+  const fundamentals = {
+    ...fetched?.fundamentals || {},
+    bias: human.bias || fetched?.fundamentals?.bias || null,
+    note: human.note || fetched?.fundamentals?.note || null,
+    catalyst: stock.catalyst || fetched?.fundamentals?.catalyst || null
+  };
+  return {
+    symbol: sym,
+    fundamentals,
+    news: fetched?.news || [],
+    newsCheck: fetched?.newsCheck || null
+  };
+}
+function biasOpts(stock) {
+  return { newsCheck: outlookFor(stock)?.newsCheck };
+}
+function stockBias(stock) {
+  return actionBias(getQuote(stock), biasOpts(stock));
 }
 function dcBridgeEntry(symbol) {
   const map = typeof window !== "undefined" ? window.__DC_BRIDGE__?.byTicker : void 0;
@@ -636,6 +670,8 @@ function renderPriority(stock) {
   const p = sanitizePriority(stock.priority);
   return `<span class="priority priority-${p}">${escapeHtml(p)}</span>`;
 }
+
+// src/client/board/render-table.ts
 function renderRow(stock, compact = false, mode = "default") {
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
@@ -645,7 +681,7 @@ function renderRow(stock, compact = false, mode = "default") {
   const dist = getDistance(stock);
   const { text: distText, cls: distCls } = distanceLabel(dist);
   const chgHtml = chg != null ? `<span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>` : `<span class="chg dim">\u2014</span>`;
-  const expanded = expandedId === stock.id;
+  const expanded = state.expandedId === stock.id;
   const atTarget = dist != null && Math.abs(dist) < 0.5;
   if (mode === "technical") {
     const rsi = rsiLabel(q?.rsi14);
@@ -693,29 +729,6 @@ function renderRow(stock, compact = false, mode = "default") {
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
   `;
 }
-function outlookFor(stock) {
-  const sym = stock.symbol?.toUpperCase();
-  const fetched = sym ? outlookBySymbol[sym] : void 0;
-  const human = stock.valuation || {};
-  const fundamentals = {
-    ...fetched?.fundamentals || {},
-    bias: human.bias || fetched?.fundamentals?.bias || null,
-    note: human.note || fetched?.fundamentals?.note || null,
-    catalyst: stock.catalyst || fetched?.fundamentals?.catalyst || null
-  };
-  return {
-    symbol: sym,
-    fundamentals,
-    news: fetched?.news || [],
-    newsCheck: fetched?.newsCheck || null
-  };
-}
-function biasOpts(stock) {
-  return { newsCheck: outlookFor(stock)?.newsCheck };
-}
-function stockBias(stock) {
-  return actionBias(getQuote(stock), biasOpts(stock));
-}
 function renderDetailRow(stock, price, q, colspan) {
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
   const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
@@ -751,7 +764,7 @@ function renderTableHtml(stocks, mode = "default") {
 function renderOverview() {
   const el = document.getElementById("overview-grid");
   if (!el) return;
-  const withTarget = allStocks.filter((s) => s.targetPrice != null);
+  const withTarget = state.allStocks.filter((s) => s.targetPrice != null);
   let atTarget = 0;
   let within5 = 0;
   let within10 = 0;
@@ -764,9 +777,9 @@ function renderOverview() {
     if (abs <= 10) within10++;
   }
   const tags = /* @__PURE__ */ new Set();
-  allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
+  state.allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
   let techHtml = "";
-  const withTech = allStocks.filter((s) => hasTechnical(getQuote(s)));
+  const withTech = state.allStocks.filter((s) => hasTechnical(getQuote(s)));
   if (withTech.length) {
     let above50 = 0;
     let above200 = 0;
@@ -789,14 +802,151 @@ function renderOverview() {
     <div class="overview-metric tech"><span class="ov-value">${nearLow}</span><span class="ov-label">Near 52w low</span></div>
     <div class="overview-metric tech"><span class="ov-value">${nearAth}</span><span class="ov-label">Near ATH</span></div>`;
   }
-  const leanBuy = allStocks.filter((s) => stockBias(s).cls === "buy").length;
+  const leanBuy = state.allStocks.filter((s) => stockBias(s).cls === "buy").length;
   el.innerHTML = `
-    <div class="overview-metric"><span class="ov-value">${allStocks.length}</span><span class="ov-label">On master list</span></div>
-    <div class="overview-metric highlight"><span class="ov-value">${allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
+    <div class="overview-metric"><span class="ov-value">${state.allStocks.length}</span><span class="ov-label">On master list</span></div>
+    <div class="overview-metric highlight"><span class="ov-value">${state.allStocks.filter((s) => s.priority === "high").length}</span><span class="ov-label">High conviction</span></div>
     <div class="overview-metric highlight"><span class="ov-value">${leanBuy}</span><span class="ov-label">Lean buy now</span></div>
     ${techHtml}
   `;
 }
+function renderTagFilters() {
+  const el = document.getElementById("tag-filters");
+  if (!el) return;
+  const tags = /* @__PURE__ */ new Set();
+  state.allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
+  if (!tags.size) {
+    el.innerHTML = "";
+    return;
+  }
+  el.innerHTML = `<span class="tag-filter-label">Themes:</span>` + [...tags].sort().map(
+    (t) => `<button type="button" class="chip tag-chip ${state.tagFilter === t ? "active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+  ).join("") + (state.tagFilter ? `<button type="button" class="chip tag-clear" data-tag="">Clear</button>` : "");
+}
+function renderPagination(total) {
+  const el = document.getElementById(state.viewMode === "technical" ? "technical-pagination" : "pagination");
+  if (!el) return;
+  const pages = Math.max(1, Math.ceil(total / state.pageSize));
+  if (state.page > pages) state.page = pages;
+  el.innerHTML = `
+    <div class="page-size">
+      <label>Per page
+        <select id="page-size-select">
+          ${[25, 50, 100, 200].map((n) => `<option value="${n}" ${n === state.pageSize ? "selected" : ""}>${n}</option>`).join("")}
+        </select>
+      </label>
+    </div>
+    <div class="page-nav">
+      <button type="button" class="btn btn-ghost" id="page-prev" ${state.page <= 1 ? "disabled" : ""}>Prev</button>
+      <span>Page ${state.page} of ${pages}</span>
+      <button type="button" class="btn btn-ghost" id="page-next" ${state.page >= pages ? "disabled" : ""}>Next</button>
+    </div>
+  `;
+}
+function renderTechnicalView(list) {
+  const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
+  const tbody = document.getElementById("technical-tbody");
+  const countEl = document.getElementById("result-count");
+  if (!tbody || !techWrap) return;
+  if (tableWrap) tableWrap.hidden = true;
+  techWrap.hidden = false;
+  const total = list.length;
+  const start = (state.page - 1) * state.pageSize;
+  const pageItems = list.slice(start, start + state.pageSize);
+  if (countEl) {
+    countEl.textContent = total === state.allStocks.length ? `Technical view \xB7 ${start + 1}\u2013${Math.min(start + state.pageSize, total)} of ${total}` : `Technical view \xB7 ${start + 1}\u2013${Math.min(start + state.pageSize, total)} of ${total} (filtered from ${state.allStocks.length})`;
+  }
+  tbody.innerHTML = renderTableHtml(pageItems, "technical");
+  renderPagination(total);
+  document.querySelectorAll("#technical-view th.sortable").forEach((th) => {
+    th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === state.sortKey && state.sortDir === 1);
+    th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === state.sortKey && state.sortDir === -1);
+  });
+}
+function renderTableView(list) {
+  const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
+  const tbody = document.getElementById("watchlist-tbody");
+  const countEl = document.getElementById("result-count");
+  if (!tbody || !tableWrap) return;
+  if (techWrap) techWrap.hidden = true;
+  tableWrap.hidden = false;
+  const total = list.length;
+  const start = (state.page - 1) * state.pageSize;
+  const pageItems = list.slice(start, start + state.pageSize);
+  if (countEl) {
+    countEl.textContent = total === state.allStocks.length ? `Showing ${start + 1}\u2013${Math.min(start + state.pageSize, total)} of ${total}` : `Showing ${start + 1}\u2013${Math.min(start + state.pageSize, total)} of ${total} (filtered from ${state.allStocks.length})`;
+  }
+  tbody.innerHTML = renderTableHtml(pageItems);
+  renderPagination(total);
+  document.querySelectorAll("th.sortable").forEach((th) => {
+    th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === state.sortKey && state.sortDir === 1);
+    th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === state.sortKey && state.sortDir === -1);
+  });
+}
+
+// src/client/board/render-mobile.ts
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 640px)").matches;
+}
+function syncLayoutClass() {
+  document.body.classList.toggle("layout-mobile", isMobileLayout());
+}
+function renderMobileCard(stock) {
+  const price = getPrice(stock);
+  const chg = getChange(stock);
+  const q = getQuote(stock);
+  const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
+  const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
+  const high = sanitizePriority(stock.priority) === "high";
+  const action = stockBias(stock);
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
+    <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
+      <div class="scm-top">
+        <div class="scm-identity">
+          <span class="scm-sym">${sym}</span>
+          ${high ? '<span class="scm-conviction">High</span>' : ""}
+          ${actionBadge(q, biasOpts(stock))}
+          ${renderDcLayerBadge(stock)}
+        </div>
+        <div class="scm-quote">
+          <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
+          <span class="scm-chg chg ${chgCls}">${chgTxt}</span>
+        </div>
+      </div>
+      <div class="scm-mid">
+        <span class="scm-name">${escapeHtml(stock.name)}</span>
+        <span class="scm-ath">${athIndicator(q)}</span>
+      </div>
+      ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
+      <p class="scm-signal-reason">${escapeHtml(action.reason)}</p>
+    </a>
+  </article>`;
+}
+function renderMobileView(list) {
+  const mobileEl = document.getElementById("mobile-stock-list");
+  const tableWrap = document.getElementById("table-view");
+  const techWrap = document.getElementById("technical-view");
+  const countEl = document.getElementById("result-count");
+  if (!mobileEl) return false;
+  if (!isMobileLayout()) {
+    mobileEl.hidden = true;
+    return false;
+  }
+  if (tableWrap) tableWrap.hidden = true;
+  if (techWrap) techWrap.hidden = true;
+  mobileEl.hidden = false;
+  const sorted = sortStocks(list);
+  mobileEl.innerHTML = sorted.length > 0 ? `<div class="mobile-bucket-cards">${sorted.map(renderMobileCard).join("")}</div>` : `<p class="mobile-empty">No tickers match. Try clearing search.</p>`;
+  if (countEl) {
+    countEl.textContent = `${list.length} tracking`;
+  }
+  return true;
+}
+
+// src/client/board/render-checkin.ts
 function renderCheckIn() {
   const gainersEl = document.getElementById("checkin-gainers");
   const losersEl = document.getElementById("checkin-losers");
@@ -806,7 +956,7 @@ function renderCheckIn() {
   const tallyEl = document.getElementById("checkin-tally");
   const moversEl = document.getElementById("checkin-movers");
   if (!gainersEl && !losersEl && !setupsEl && !watchEl && !cautionEl && !moversEl) return;
-  const priced = allStocks.map((s) => {
+  const priced = state.allStocks.map((s) => {
     const q = getQuote(s);
     const price = getPrice(s);
     const chg = getChange(s);
@@ -897,139 +1047,8 @@ function renderCheckIn() {
     cautionEl.innerHTML = caution.length ? caution.map(signalRow).join("") : `<li class="checkin-rank__empty">None right now.</li>`;
   }
 }
-function renderTagFilters() {
-  const el = document.getElementById("tag-filters");
-  if (!el) return;
-  const tags = /* @__PURE__ */ new Set();
-  allStocks.forEach((s) => (s.tags ?? []).forEach((t) => tags.add(t)));
-  if (!tags.size) {
-    el.innerHTML = "";
-    return;
-  }
-  el.innerHTML = `<span class="tag-filter-label">Themes:</span>` + [...tags].sort().map(
-    (t) => `<button type="button" class="chip tag-chip ${tagFilter === t ? "active" : ""}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`
-  ).join("") + (tagFilter ? `<button type="button" class="chip tag-clear" data-tag="">Clear</button>` : "");
-}
-function renderPagination(total) {
-  const el = document.getElementById(viewMode === "technical" ? "technical-pagination" : "pagination");
-  if (!el) return;
-  const pages = Math.max(1, Math.ceil(total / pageSize));
-  if (page > pages) page = pages;
-  el.innerHTML = `
-    <div class="page-size">
-      <label>Per page
-        <select id="page-size-select">
-          ${[25, 50, 100, 200].map((n) => `<option value="${n}" ${n === pageSize ? "selected" : ""}>${n}</option>`).join("")}
-        </select>
-      </label>
-    </div>
-    <div class="page-nav">
-      <button type="button" class="btn btn-ghost" id="page-prev" ${page <= 1 ? "disabled" : ""}>Prev</button>
-      <span>Page ${page} of ${pages}</span>
-      <button type="button" class="btn btn-ghost" id="page-next" ${page >= pages ? "disabled" : ""}>Next</button>
-    </div>
-  `;
-}
-function renderTechnicalView(list) {
-  const tableWrap = document.getElementById("table-view");
-  const techWrap = document.getElementById("technical-view");
-  const tbody = document.getElementById("technical-tbody");
-  const countEl = document.getElementById("result-count");
-  if (!tbody || !techWrap) return;
-  if (tableWrap) tableWrap.hidden = true;
-  techWrap.hidden = false;
-  const total = list.length;
-  const start = (page - 1) * pageSize;
-  const pageItems = list.slice(start, start + pageSize);
-  if (countEl) {
-    countEl.textContent = total === allStocks.length ? `Technical view \xB7 ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total}` : `Technical view \xB7 ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total} (filtered from ${allStocks.length})`;
-  }
-  tbody.innerHTML = renderTableHtml(pageItems, "technical");
-  renderPagination(total);
-  document.querySelectorAll("#technical-view th.sortable").forEach((th) => {
-    th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === sortKey && sortDir === 1);
-    th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
-  });
-}
-function renderTableView(list) {
-  const tableWrap = document.getElementById("table-view");
-  const techWrap = document.getElementById("technical-view");
-  const tbody = document.getElementById("watchlist-tbody");
-  const countEl = document.getElementById("result-count");
-  if (!tbody || !tableWrap) return;
-  if (techWrap) techWrap.hidden = true;
-  tableWrap.hidden = false;
-  const total = list.length;
-  const start = (page - 1) * pageSize;
-  const pageItems = list.slice(start, start + pageSize);
-  if (countEl) {
-    countEl.textContent = total === allStocks.length ? `Showing ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total}` : `Showing ${start + 1}\u2013${Math.min(start + pageSize, total)} of ${total} (filtered from ${allStocks.length})`;
-  }
-  tbody.innerHTML = renderTableHtml(pageItems);
-  renderPagination(total);
-  document.querySelectorAll("th.sortable").forEach((th) => {
-    th.classList.toggle("sorted-asc", th.getAttribute("data-sort") === sortKey && sortDir === 1);
-    th.classList.toggle("sorted-desc", th.getAttribute("data-sort") === sortKey && sortDir === -1);
-  });
-}
-function isMobileLayout() {
-  return window.matchMedia("(max-width: 640px)").matches;
-}
-function syncLayoutClass() {
-  document.body.classList.toggle("layout-mobile", isMobileLayout());
-}
-function renderMobileCard(stock) {
-  const price = getPrice(stock);
-  const chg = getChange(stock);
-  const q = getQuote(stock);
-  const chgCls = chg != null ? chg >= 0 ? "up" : "down" : "dim";
-  const chgTxt = chg != null ? `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%` : "\u2014";
-  const high = sanitizePriority(stock.priority) === "high";
-  const action = stockBias(stock);
-  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
-  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
-    <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
-      <div class="scm-top">
-        <div class="scm-identity">
-          <span class="scm-sym">${sym}</span>
-          ${high ? '<span class="scm-conviction">High</span>' : ""}
-          ${actionBadge(q, biasOpts(stock))}
-          ${renderDcLayerBadge(stock)}
-        </div>
-        <div class="scm-quote">
-          <span class="scm-price mono" data-price-for="${sym}">${fmtPrice(price)}</span>
-          <span class="scm-chg chg ${chgCls}">${chgTxt}</span>
-        </div>
-      </div>
-      <div class="scm-mid">
-        <span class="scm-name">${escapeHtml(stock.name)}</span>
-        <span class="scm-ath">${athIndicator(q)}</span>
-      </div>
-      ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
-      <p class="scm-signal-reason">${escapeHtml(action.reason)}</p>
-    </a>
-  </article>`;
-}
-function renderMobileView(list) {
-  const mobileEl = document.getElementById("mobile-stock-list");
-  const tableWrap = document.getElementById("table-view");
-  const techWrap = document.getElementById("technical-view");
-  const countEl = document.getElementById("result-count");
-  if (!mobileEl) return false;
-  if (!isMobileLayout()) {
-    mobileEl.hidden = true;
-    return false;
-  }
-  if (tableWrap) tableWrap.hidden = true;
-  if (techWrap) techWrap.hidden = true;
-  mobileEl.hidden = false;
-  const sorted = sortStocks(list);
-  mobileEl.innerHTML = sorted.length > 0 ? `<div class="mobile-bucket-cards">${sorted.map(renderMobileCard).join("")}</div>` : `<p class="mobile-empty">No tickers match. Try clearing search.</p>`;
-  if (countEl) {
-    countEl.textContent = `${list.length} tracking`;
-  }
-  return true;
-}
+
+// src/client/board/render.ts
 function renderAll() {
   syncLayoutClass();
   const list = filteredStocks();
@@ -1042,7 +1061,7 @@ function renderAll() {
   renderTagFilters();
   const mobileEl = document.getElementById("mobile-stock-list");
   if (mobileEl) mobileEl.hidden = true;
-  if (viewMode === "technical") {
+  if (state.viewMode === "technical") {
     renderTechnicalView(list);
   } else {
     renderTableView(list);
@@ -1069,20 +1088,22 @@ function setViewToggle(activeId) {
     document.getElementById(id)?.classList.toggle("active", id === activeId);
   });
 }
+
+// src/client/board/events.ts
 function bindEvents() {
   document.getElementById("search-input")?.addEventListener("input", (e) => {
-    search = e.target.value.trim();
-    page = 1;
+    state.search = e.target.value.trim();
+    state.page = 1;
     renderAll();
   });
   document.querySelectorAll(".filter-chips").forEach((container) => {
     container.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-filter]");
       if (!btn) return;
-      filter = btn.getAttribute("data-filter") ?? "all";
+      state.filter = btn.getAttribute("data-filter") ?? "all";
       document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
       btn.classList.add("active");
-      page = 1;
+      state.page = 1;
       savePrefs();
       renderAll();
     });
@@ -1091,17 +1112,17 @@ function bindEvents() {
     const btn = e.target.closest("[data-tag]");
     if (!btn) return;
     const t = btn.getAttribute("data-tag");
-    tagFilter = t || null;
-    page = 1;
+    state.tagFilter = t || null;
+    state.page = 1;
     renderAll();
   });
   document.querySelectorAll("th.sortable").forEach((th) => {
     th.addEventListener("click", () => {
       const key = th.getAttribute("data-sort");
-      if (sortKey === key) sortDir *= -1;
+      if (state.sortKey === key) state.sortDir *= -1;
       else {
-        sortKey = key;
-        sortDir = 1;
+        state.sortKey = key;
+        state.sortDir = 1;
       }
       savePrefs();
       renderAll();
@@ -1111,37 +1132,37 @@ function bindEvents() {
     const th = e.target.closest("th.sortable");
     if (!th) return;
     const key = th.getAttribute("data-sort");
-    if (sortKey === key) sortDir *= -1;
+    if (state.sortKey === key) state.sortDir *= -1;
     else {
-      sortKey = key;
-      sortDir = 1;
+      state.sortKey = key;
+      state.sortDir = 1;
     }
     savePrefs();
     renderAll();
   });
   document.getElementById("view-table")?.addEventListener("click", () => {
-    viewMode = "table";
+    state.viewMode = "table";
     setViewToggle("view-table");
     savePrefs();
     renderAll();
   });
   document.getElementById("view-technical")?.addEventListener("click", () => {
-    viewMode = "technical";
+    state.viewMode = "technical";
     setViewToggle("view-technical");
     savePrefs();
     renderAll();
   });
   function jumpToSymbol(sym) {
-    search = sym;
+    state.search = sym;
     const input = document.getElementById("search-input");
     if (input) input.value = sym;
-    filter = "all";
-    tagFilter = null;
+    state.filter = "all";
+    state.tagFilter = null;
     document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
       c.classList.toggle("active", c.getAttribute("data-filter") === "all");
     });
-    viewMode = "table";
-    page = 1;
+    state.viewMode = "table";
+    state.page = 1;
     renderAll();
     document.getElementById("watchlist-board")?.scrollIntoView({ behavior: "smooth", block: "start" });
     requestAnimationFrame(() => {
@@ -1160,8 +1181,8 @@ function bindEvents() {
   });
   document.getElementById("watchlist-board")?.addEventListener("change", (e) => {
     if (e.target.id === "page-size-select") {
-      pageSize = Number(e.target.value);
-      page = 1;
+      state.pageSize = Number(e.target.value);
+      state.page = 1;
       savePrefs();
       renderAll();
     }
@@ -1186,14 +1207,14 @@ function bindEvents() {
     const expand = e.target.closest("[data-expand]");
     if (expand) {
       const id = expand.getAttribute("data-expand");
-      expandedId = expandedId === id ? null : id;
+      state.expandedId = state.expandedId === id ? null : id;
       renderAll();
       return;
     }
     const pag = e.target.closest("#page-prev, #page-next, #page-size-select");
     if (pag) {
-      if (pag.id === "page-prev" && page > 1) page--;
-      else if (pag.id === "page-next") page++;
+      if (pag.id === "page-prev" && state.page > 1) state.page--;
+      else if (pag.id === "page-next") state.page++;
       else return;
       renderAll();
       return;
@@ -1203,14 +1224,14 @@ function bindEvents() {
     const expand = e.target.closest("[data-expand]");
     if (expand) {
       const id = expand.getAttribute("data-expand");
-      expandedId = expandedId === id ? null : id;
+      state.expandedId = state.expandedId === id ? null : id;
       renderAll();
       return;
     }
     const pag = e.target.closest("#page-prev, #page-next, #page-size-select");
     if (pag) {
-      if (pag.id === "page-prev" && page > 1) page--;
-      else if (pag.id === "page-next") page++;
+      if (pag.id === "page-prev" && state.page > 1) state.page--;
+      else if (pag.id === "page-next") state.page++;
       renderAll();
     }
   });
@@ -1224,12 +1245,12 @@ function bindEvents() {
     const incoming = e.detail;
     const changed = /* @__PURE__ */ new Map();
     for (const [sym, q] of Object.entries(incoming || {})) {
-      const prev = quotes[sym]?.price;
+      const prev = state.quotes[sym]?.price;
       if (prev != null && q?.price != null && prev !== q.price) {
         changed.set(sym, q.price > prev ? "up" : "down");
       }
     }
-    quotes = { ...quotes, ...incoming };
+    state.quotes = { ...state.quotes, ...incoming };
     scheduleRenderAll();
     requestAnimationFrame(() => {
       for (const [sym, dir] of changed) {
@@ -1245,58 +1266,24 @@ function bindEvents() {
     const detail = e.detail;
     const incoming = detail?.stocks;
     if (!incoming?.length) return;
-    const baseSymbols = new Set(baseStocks.map((s) => s.symbol));
+    const baseSymbols = new Set(state.baseStocks.map((s) => s.symbol));
     const novel = incoming.filter((s) => !baseSymbols.has(s.symbol));
     if (!novel.length) return;
     const existing = await getCustomStocks();
     const merged = mergeStocks(existing, novel);
     await setCustomStocks(merged);
-    allStocks = mergeStocks(baseStocks, merged);
+    state.allStocks = mergeStocks(state.baseStocks, merged);
     renderAll();
   }));
 }
-async function initWatchlistBoard(stocksJson) {
-  const site = radarSettings();
-  if (site.board?.defaultPageSize) pageSize = site.board.defaultPageSize;
-  if (site.board?.defaultSort) sortKey = site.board.defaultSort;
-  const prefs = loadPrefs();
-  if (prefs.pageSize) pageSize = prefs.pageSize;
-  if (prefs.sortKey) sortKey = prefs.sortKey;
-  if (prefs.filter) filter = prefs.filter;
-  baseStocks = JSON.parse(stocksJson);
-  const custom = await getCustomStocks();
-  allStocks = mergeStocks(baseStocks, custom);
-  const defaultView = site.board?.defaultView === "technical" ? "technical" : "table";
-  if (prefs.viewMode === "technical" || !prefs.viewMode && defaultView === "technical") {
-    viewMode = "technical";
-    setViewToggle("view-technical");
-  } else {
-    viewMode = "table";
-    setViewToggle("view-table");
-  }
-  if (prefs.filter === "owned" || prefs.filter === "watching" || prefs.filter === "targets") {
-    filter = "all";
-  }
-  if (prefs.filter) {
-    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
-      c.classList.toggle("active", c.getAttribute("data-filter") === filter);
-    });
-  }
-  bindEvents();
-  syncLayoutClass();
-  window.addEventListener("resize", scheduleResizeRender);
-  renderAll();
-  startQuoteLoader();
-  loadOutlook().then((ok) => {
-    if (ok) scheduleRenderAll();
-  });
-}
+
+// src/client/board/quotes.ts
 async function loadOutlook() {
   const base = document.querySelector("[data-radar-base]")?.dataset.radarBase ?? "/";
   function apply(data) {
     const stocks = data?.stocks;
     if (!stocks || typeof stocks !== "object") return false;
-    outlookBySymbol = stocks;
+    state.outlookBySymbol = stocks;
     return true;
   }
   const cached = window.__OUTLOOK__;
@@ -1404,12 +1391,12 @@ function startQuoteLoader() {
     if (!force && !isUsMarketOpen()) return;
     browserFallbackInFlight = true;
     try {
-      await fetchQuotesBatched([...new Set(allStocks.map((s) => s.symbol))]);
+      await fetchQuotesBatched([...new Set(state.allStocks.map((s) => s.symbol))]);
     } finally {
       browserFallbackInFlight = false;
     }
   }
-  const symbols = [...new Set(allStocks.map((s) => s.symbol))];
+  const symbols = [...new Set(state.allStocks.map((s) => s.symbol))];
   loadFromJson().then((ok) => {
     if (!ok) maybeBrowserFallback(true);
   });
@@ -1427,7 +1414,43 @@ function startQuoteLoader() {
   });
   void symbols;
 }
-function initBucketSections() {
+
+// src/client/board/init.ts
+async function initWatchlistBoard(stocksJson) {
+  const site = radarSettings();
+  if (site.board?.defaultPageSize) state.pageSize = site.board.defaultPageSize;
+  if (site.board?.defaultSort) state.sortKey = site.board.defaultSort;
+  const prefs = loadPrefs();
+  if (prefs.pageSize) state.pageSize = prefs.pageSize;
+  if (prefs.sortKey) state.sortKey = prefs.sortKey;
+  if (prefs.filter) state.filter = prefs.filter;
+  state.baseStocks = JSON.parse(stocksJson);
+  const custom = await getCustomStocks();
+  state.allStocks = mergeStocks(state.baseStocks, custom);
+  const defaultView = site.board?.defaultView === "technical" ? "technical" : "table";
+  if (prefs.viewMode === "technical" || !prefs.viewMode && defaultView === "technical") {
+    state.viewMode = "technical";
+    setViewToggle("view-technical");
+  } else {
+    state.viewMode = "table";
+    setViewToggle("view-table");
+  }
+  if (prefs.filter === "owned" || prefs.filter === "watching" || prefs.filter === "targets") {
+    state.filter = "all";
+  }
+  if (prefs.filter) {
+    document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+      c.classList.toggle("active", c.getAttribute("data-filter") === state.filter);
+    });
+  }
+  bindEvents();
+  syncLayoutClass();
+  window.addEventListener("resize", scheduleResizeRender);
+  renderAll();
+  startQuoteLoader();
+  loadOutlook().then((ok) => {
+    if (ok) scheduleRenderAll();
+  });
 }
 function autoInit() {
   const dataEl = document.getElementById("watchlist-data");
@@ -1439,7 +1462,3 @@ if (document.readyState === "loading") {
 } else {
   autoInit();
 }
-export {
-  initBucketSections,
-  initWatchlistBoard
-};

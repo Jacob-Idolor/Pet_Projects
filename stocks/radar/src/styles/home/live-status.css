@@ -1,0 +1,77 @@
+/* Live status bar */
+.live-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.35rem 1rem;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.live-status code {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--dim);
+}
+
+.live-status__dot,
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.live-dot.live,
+.live-status__dot.live {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.live-dot.paused,
+.live-status__dot.paused {
+  background: var(--amber);
+  box-shadow: none;
+  animation: none;
+}
+
+.live-status__dot.partial {
+  background: var(--amber);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--amber) 50%, transparent);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.live-status__dot.stale {
+  background: var(--amber);
+  box-shadow: none;
+  animation: none;
+}
+
+.live-status__dot.error {
+  background: var(--red);
+  box-shadow: none;
+  animation: none;
+}
+
+.live-status[data-health="stale"],
+.live-status[data-health="error"] {
+  color: color-mix(in srgb, var(--muted) 70%, var(--amber));
+}
+
+.live-status[data-health="error"] {
+  color: color-mix(in srgb, var(--muted) 55%, var(--red));
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+

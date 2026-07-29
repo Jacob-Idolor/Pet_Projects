@@ -1,0 +1,99 @@
+/* Daily mood banner */
+.day-mood-banner {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.5s ease, border-color 0.5s ease;
+}
+
+.day-mood-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 1.25rem;
+  padding: 0.5rem 1.15rem;
+}
+
+.day-mood-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.day-mood-icon {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1;
+  width: 1.1rem;
+  text-align: center;
+}
+
+.day-mood-title {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.day-mood-desc {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.day-mood-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--dim);
+  max-width: 24rem;
+  text-align: right;
+}
+
+.day-mood-banner.mood-bullish {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.18) 0%, rgba(34, 197, 94, 0.06) 55%, transparent 100%);
+  border-bottom-color: rgba(34, 197, 94, 0.35);
+}
+
+.day-mood-banner.mood-bullish .day-mood-icon,
+.day-mood-banner.mood-bullish .day-mood-title {
+  color: #86efac;
+}
+
+.day-mood-banner.mood-bearish {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.06) 55%, transparent 100%);
+  border-bottom-color: rgba(239, 68, 68, 0.35);
+}
+
+.day-mood-banner.mood-bearish .day-mood-icon,
+.day-mood-banner.mood-bearish .day-mood-title {
+  color: #fca5a5;
+}
+
+.day-mood-banner.mood-mixed {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.14) 0%, rgba(59, 130, 246, 0.06) 55%, transparent 100%);
+  border-bottom-color: rgba(245, 158, 11, 0.28);
+}
+
+.day-mood-banner.mood-mixed .day-mood-icon,
+.day-mood-banner.mood-mixed .day-mood-title {
+  color: #fcd34d;
+}
+
+.day-mood-banner.mood-unknown {
+  background: var(--bg-elevated);
+}
+
+body[data-day-mood="bullish"] .site-header {
+  border-bottom-color: rgba(34, 197, 94, 0.25);
+}
+
+body[data-day-mood="bearish"] .site-header {
+  border-bottom-color: rgba(239, 68, 68, 0.25);
+}
+
+body[data-day-mood="mixed"] .site-header {
+  border-bottom-color: rgba(245, 158, 11, 0.22);
+}
+

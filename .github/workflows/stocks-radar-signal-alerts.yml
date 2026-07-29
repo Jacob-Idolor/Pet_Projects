@@ -104,7 +104,7 @@ jobs:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
         run: |
-          node scripts/signal-alerts.mjs
+          node scripts/alerts/signal-alerts.mjs
           echo "## Stocks Radar personal alerts" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           cat "${{ runner.temp }}/alerts.txt" >> "$GITHUB_STEP_SUMMARY"

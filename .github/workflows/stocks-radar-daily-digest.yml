@@ -92,7 +92,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           DIGEST_OUTPUT_PATH: ${{ runner.temp }}/digest.txt
         run: |
-          node scripts/daily-digest.mjs
+          node scripts/alerts/daily-digest.mjs
           echo "## Stocks Radar digest" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           cat "${{ runner.temp }}/digest.txt" >> "$GITHUB_STEP_SUMMARY"

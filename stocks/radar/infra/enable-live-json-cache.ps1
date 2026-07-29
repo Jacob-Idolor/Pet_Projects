@@ -69,12 +69,14 @@ foreach ($path in ($Ops | Sort-Object)) {
 
 $cfg.CacheBehaviors = @{ Quantity = $newItems.Count; Items = @($newItems) }
 
-$tmp = [System.IO.Path]::GetTempFileName() + ".json"
-# Depth enough for nested CF config; ConvertTo-Json -Depth 20
-$cfg | ConvertTo-Json -Depth 40 | Set-Content -Path $tmp -Encoding utf8
+$tmp = Join-Path $env:TEMP ("cf-dist-" + [guid]::NewGuid().ToString() + ".json")
+# UTF-8 no BOM — AWS CLI rejects PowerShell's default BOM on file:// JSON
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($tmp, ($cfg | ConvertTo-Json -Depth 40 -Compress), $utf8NoBom)
 
 Write-Host "==> Updating distribution $DistId (live JSON → CachingOptimized)"
 aws cloudfront update-distribution --id $DistId --if-match $etag --distribution-config "file://$tmp" --profile $ProfileName | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "update-distribution failed" }
 Remove-Item $tmp -Force
 
 Write-Host "==> Waiting for Deployed…"

@@ -179,7 +179,7 @@ jobs:
           SCREENER_MAX_AGE_HOURS: "24"
           SCREENER_MIN_OK_RATIO: "0.85"
         run: |
-          node scripts/check-live-freshness.mjs --url "${{ steps.url.outputs.site }}"
+          node scripts/ops/check-live-freshness.mjs --url "${{ steps.url.outputs.site }}"
           echo "## Freshness OK" >> "$GITHUB_STEP_SUMMARY"
           echo "Quotes ≤12h · screener ≤24h · coverage ≥85% · news present" >> "$GITHUB_STEP_SUMMARY"
 

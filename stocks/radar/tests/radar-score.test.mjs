@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { actionBias, isPreMomentum } from "../scripts/radar-score.mjs";
+import { actionBias, isPreMomentum } from "../scripts/alerts/radar-score.mjs";
 
 describe("actionBias", () => {
   it("returns idle without price", () => {

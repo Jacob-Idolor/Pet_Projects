@@ -91,7 +91,7 @@ jobs:
           else
             echo "Mid-session: skipped screener/news (runs near-close + workflow_dispatch)"
           fi
-          node scripts/write-health.mjs
+          node scripts/ops/write-health.mjs
 
       - name: Sync live JSON to S3
         env:
@@ -172,7 +172,7 @@ jobs:
           SCREENER_MIN_OK_RATIO: "0.85"
         run: |
           sleep 8
-          node scripts/check-live-freshness.mjs --url "${{ steps.url.outputs.site }}"
+          node scripts/ops/check-live-freshness.mjs --url "${{ steps.url.outputs.site }}"
 
       - name: Summary
         env:
