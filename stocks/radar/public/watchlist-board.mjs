@@ -1048,6 +1048,22 @@ function renderAll() {
     renderTableView(list);
   }
 }
+var renderRaf = 0;
+function scheduleRenderAll() {
+  if (renderRaf) return;
+  renderRaf = requestAnimationFrame(() => {
+    renderRaf = 0;
+    renderAll();
+  });
+}
+var resizeTimer = 0;
+function scheduleResizeRender() {
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => {
+    syncLayoutClass();
+    scheduleRenderAll();
+  }, 120);
+}
 function setViewToggle(activeId) {
   ["view-table", "view-technical"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("active", id === activeId);
@@ -1214,7 +1230,7 @@ function bindEvents() {
       }
     }
     quotes = { ...quotes, ...incoming };
-    renderAll();
+    scheduleRenderAll();
     requestAnimationFrame(() => {
       for (const [sym, dir] of changed) {
         document.querySelectorAll(`[data-price-for="${sym}"]`).forEach((el) => {
@@ -1268,14 +1284,11 @@ async function initWatchlistBoard(stocksJson) {
   }
   bindEvents();
   syncLayoutClass();
-  window.addEventListener("resize", () => {
-    syncLayoutClass();
-    renderAll();
-  });
+  window.addEventListener("resize", scheduleResizeRender);
   renderAll();
   startQuoteLoader();
   loadOutlook().then((ok) => {
-    if (ok) renderAll();
+    if (ok) scheduleRenderAll();
   });
 }
 async function loadOutlook() {
@@ -1303,7 +1316,7 @@ async function loadOutlook() {
   });
   if (apply(shared)) return true;
   try {
-    const res = await fetch(`${base}outlook.json?t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetch(`${base}outlook.json`);
     if (!res.ok) return false;
     const data = await res.json();
     window.__OUTLOOK__ = data;
@@ -1371,7 +1384,7 @@ function startQuoteLoader() {
   let browserFallbackInFlight = false;
   async function loadFromJson() {
     try {
-      const res = await fetch(`${base}quotes.json?t=${Date.now()}`, { cache: "no-store" });
+      const res = await fetch(`${base}quotes.json`);
       if (!res.ok) throw new Error("no quotes file");
       const data = await res.json();
       if (data.quotes && Object.keys(data.quotes).length) {
@@ -1407,7 +1420,7 @@ function startQuoteLoader() {
       loadFromJson().then((ok) => {
         if (!ok && lastJsonOk === false) maybeBrowserFallback();
       });
-    }, radarSettings().quotes?.pollIntervalMs ?? 18e4);
+    }, radarSettings().quotes?.pollIntervalMs ?? 3e5);
   }
   document.addEventListener("radar:stale-quotes", () => {
     maybeBrowserFallback(true);

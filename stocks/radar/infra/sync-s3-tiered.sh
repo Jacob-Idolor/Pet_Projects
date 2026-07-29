@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Tiered S3 sync for Stocks Radar — AWS cost + cache-hit best practice.
-# Hashed assets: long cache. HTML/SEO: short. Live JSON: no-cache.
+# Hashed assets: long cache. HTML/SEO: short. Live market JSON: max-age=60. Ops JSON: no-store.
 # Preserves _private/* (personal alert cooldowns) across --delete — not public via CloudFront.
 set -euo pipefail
 
@@ -61,11 +61,18 @@ aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.webp" --exclude "*.svg" --exclude "*.ico" \
   --cache-control "public,max-age=60,must-revalidate"
 
-echo "→ Live data (never cache at edge via object headers)…"
+echo "→ Live market JSON (short edge TTL — CloudFront live_json policy ~60s)…"
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   "${EXCLUDE_STATE[@]}" \
   --exclude "*" \
   --include "quotes.json" --include "outlook.json" --include "screener.json" --include "dc-movers.json" --include "datacenter/news.json" \
+  --cache-control "public,max-age=60,must-revalidate" \
+  --content-type "application/json"
+
+echo "→ Ops JSON (never cache — health/settings/build-meta)…"
+aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
+  "${EXCLUDE_STATE[@]}" \
+  --exclude "*" \
   --include "build-meta.json" --include "health.json" --include "settings.json" \
   --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
   --content-type "application/json"

@@ -76,7 +76,7 @@ export function loadRuntimeConfig(opts = {}) {
         process.env.QUOTES_STALE_AFTER_HOURS,
         settings.quotes?.staleAfterHours ?? 6
       ),
-      pollIntervalMs: settings.quotes?.pollIntervalMs ?? 60_000,
+      pollIntervalMs: settings.quotes?.pollIntervalMs ?? 300_000,
       browserFallback: settings.quotes?.browserFallback !== false,
       yahooChunkSize: settings.quotes?.yahooChunkSize ?? 8,
       yahooMaxRetries: settings.quotes?.yahooMaxRetries ?? 3,

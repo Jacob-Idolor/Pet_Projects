@@ -33,16 +33,18 @@ AWS is already in the $0.50–3 band. Recurring waste is mostly **GitHub Actions
 | No weekday **scheduled full deploy** | Refresh workflow owns freshness; push deploy ships HTML |
 | Mid-session refresh = **quotes only**; near-close = quotes + screener | Cuts ~80 Yahoo calls mid-day |
 | Signal alerts via **`workflow_run` only** (no duplicate cron) | One `npm ci` per refresh, not two |
-| Invalidate **cacheable** JSON only on refresh (not CachingDisabled quotes/health) | Stay under CF invalidation free tier |
+| Invalidate live JSON on refresh (`/quotes.json` + outlook/screener) | Freshness before 60s TTL; stay under free tier |
 | Don’t invalidate `/datacenter/*` on deploy | Hashed JS/CSS stay immutable at the edge |
-| Single browser quotes poller (LiveStatus) · **3 min** interval · skip when tab hidden | Halves origin GETs vs dual 60s polls |
+| Single browser quotes poller (LiveStatus) · **5 min** interval · skip when tab hidden | Cuts poll volume vs 60s dual-fetch |
+| No `?t=` cache bust on live JSON | Lets CloudFront + browser share one edge object |
 | Compact `quotes.json` / `outlook.json` in CI | ~25–30% smaller transfer per poll |
 | Home page loads `dc-movers.json` (~1–2 KB) not full `screener.json` | Cuts ~100 KB/home view |
 | MacroStrip shares `outlook.json` with the board (`radar:outlook`) | One fetch per page load |
+| Coalesced `renderAll` (rAF + resize debounce) | Less main-thread work when many tabs poll |
 | OTel SDKs are `optionalDependencies`; refresh/alerts use `npm ci --omit=optional` | Smaller installs on non-build jobs (deploy/validate keep full `npm ci` for Rolldown) |
 | Reference JPGs kept under `docs/` (not `public/`) | Avoid shipping ~2.6 MB unused images |
 
-**Do not “save” money by:** opening `PriceClass_All`, adding WAF/Lambda, caching live quotes for hours, or shrinking Yahoo `range=2y` (breaks SMA/RSI).
+**Do not “save” money by:** opening `PriceClass_All`, adding WAF/Lambda, caching live quotes for **hours**, or shrinking Yahoo `range=2y` (breaks SMA/RSI). **~60s** edge TTL is intentional for 100× traffic.
 
 ## Budget alerts — do they make sense?
 
@@ -114,10 +116,29 @@ If this AWS account is **only** Stocks Radar, you may set `budget_scope_to_proje
 |------|-------|-----|
 | `/_astro/*` | Long (immutable + CF behavior) | Hashed bundles |
 | HTML / SEO files | ~60s + must-revalidate | Fresh chrome after deploy |
-| `/quotes.json`, `/health.json`, `/settings.json` | CachingDisabled | Live board + ops |
+| `/quotes.json`, `/outlook.json`, `/screener.json`, `/dc-movers.json`, `/datacenter/news.json` | **live_json ~60s** (ignore query string) | Coalesce polls at 100×; CI invalidates on refresh |
+| `/health.json`, `/settings.json`, `/build-meta.json` | CachingDisabled | Ops / deploy probes |
 | Invalidation paths | HTML + live JSON — **not** `/*` | Keeps hashed assets warm |
 
 Deploy uses [`../sync-s3-tiered.sh`](../sync-s3-tiered.sh).
+
+## 100× traffic — bottleneck review
+
+Static S3 + CloudFront has **no app server, no DB, no cold start**. At 100× page views the failure mode is **uncacheable polls + client re-render**, not CPU on origin.
+
+| Rank | Bottleneck | Impact at 100× | Status |
+|------|------------|----------------|--------|
+| 1 | Uncached `/quotes.json` (+ `?t=` bust) | Origin GETs ≈ concurrent tabs × polls | **Fixed:** 60s edge TTL, no bust |
+| 2 | Outlook / screener / movers same pattern | Same as #1 for other live JSON | **Fixed** |
+| 3 | Dual pollers + aggressive poll | Network + S3 request waste | **Fixed:** single poller, 5 min |
+| 4 | Full `renderAll` on every quote/resize | Main-thread CPU / layout thrash | **Fixed:** rAF coalesce + resize debounce |
+| 5 | Large `screener.json` on home | Transfer | Already mitigated via `dc-movers.json` |
+| 6 | Unhashed `watchlist-board.mjs` | Cache miss on every HTML deploy | Defer until deploy invalidations hurt |
+| 7 | Browser Yahoo fallback (`browserFallback`) | N× Yahoo from clients | Keep **off** in prod settings |
+| 8 | Bundle / Astro startup | One-time per visit | Already hashed `/_astro/*`; fine |
+| 9 | Database / server CPU / cold starts | N/A | No backend |
+
+**Measure after apply:** CloudFront **cache hit rate** on `/quotes.json`, origin request count, and browser Performance (long tasks on home) before/after a weekday open.
 
 ## What would cost more (avoid until revenue justifies)
 

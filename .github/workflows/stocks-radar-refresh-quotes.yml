@@ -98,14 +98,15 @@ jobs:
           REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
           BUCKET: ${{ secrets.STOCKS_RADAR_S3_BUCKET }}
         run: |
+          LIVE_CC="public,max-age=60,must-revalidate"
           aws s3 cp stocks/radar/public/quotes.json \
             "s3://${BUCKET}/quotes.json" \
-            --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+            --cache-control "$LIVE_CC" \
             --content-type "application/json"
           if [ -f stocks/radar/public/outlook.json ]; then
             aws s3 cp stocks/radar/public/outlook.json \
               "s3://${BUCKET}/outlook.json" \
-              --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+              --cache-control "$LIVE_CC" \
               --content-type "application/json"
           fi
           if [ -f stocks/radar/public/health.json ]; then
@@ -118,29 +119,29 @@ jobs:
           if [ "$REFRESH_SCREENER" = "true" ]; then
             aws s3 cp stocks/radar/public/screener.json \
               "s3://${BUCKET}/screener.json" \
-              --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+              --cache-control "$LIVE_CC" \
               --content-type "application/json"
             if [ -f stocks/radar/public/dc-movers.json ]; then
               aws s3 cp stocks/radar/public/dc-movers.json \
                 "s3://${BUCKET}/dc-movers.json" \
-                --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+                --cache-control "$LIVE_CC" \
                 --content-type "application/json"
             fi
             if [ -f stocks/radar/public/datacenter/news.json ]; then
               aws s3 cp stocks/radar/public/datacenter/news.json \
                 "s3://${BUCKET}/datacenter/news.json" \
-                --cache-control "public,max-age=0,no-cache,no-store,must-revalidate" \
+                --cache-control "$LIVE_CC" \
                 --content-type "application/json"
             fi
           fi
 
-      - name: Invalidate CloudFront (cacheable live JSON only)
+      - name: Invalidate CloudFront (live JSON edge cache)
         env:
           REFRESH_SCREENER: ${{ steps.scope.outputs.screener }}
           DIST_ID: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          # quotes/health use CachingDisabled — invalidation is unnecessary spend
-          paths=("/outlook.json")
+          # live_json policy ~60s — invalidate so refresh is visible before TTL
+          paths=("/quotes.json" "/outlook.json")
           if [ "$REFRESH_SCREENER" = "true" ]; then
             paths+=("/screener.json" "/dc-movers.json" "/datacenter/news.json")
           fi

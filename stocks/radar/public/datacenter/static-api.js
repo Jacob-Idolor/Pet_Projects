@@ -27,7 +27,7 @@
     if (screenCache && screenCache._cachedAt && Date.now() - screenCache._cachedAt < TTL_MS) {
       return screenCache;
     }
-    const res = await origFetch(screenerUrl, { cache: "no-store" });
+    const res = await origFetch(screenerUrl);
     if (!res.ok) throw new Error("Failed to load screener.json (" + res.status + ")");
     screenCache = await res.json();
     screenCache.cached = true;
@@ -38,7 +38,7 @@
   async function loadNewsMap() {
     if (newsCache) return newsCache;
     try {
-      const res = await origFetch(newsUrl, { cache: "no-store" });
+      const res = await origFetch(newsUrl);
       if (!res.ok) {
         newsCache = { news: {} };
         return newsCache;
@@ -53,7 +53,7 @@
   async function loadReports() {
     if (reportsCache) return reportsCache;
     try {
-      const res = await origFetch(reportsUrl, { cache: "no-store" });
+      const res = await origFetch(reportsUrl);
       if (!res.ok) {
         reportsCache = { reports: [], has_key: false };
         return reportsCache;

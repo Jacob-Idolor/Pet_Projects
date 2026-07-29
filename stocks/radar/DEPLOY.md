@@ -29,7 +29,7 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init && terraform plan && terraform apply
 ```
 
-Leave `enable_custom_domain = false` until you buy a name ([DOMAIN.md](DOMAIN.md)). Security headers and `/quotes.json` + `/build-meta.json` no-cache behaviors are on by default.
+Security headers and short-TTL live JSON (`/quotes.json` etc.) plus no-cache ops JSON (`/build-meta.json`, `/health.json`) are on by default.
 
 Save outputs:
 

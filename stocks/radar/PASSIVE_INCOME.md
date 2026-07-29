@@ -38,7 +38,7 @@ At low/medium traffic, think:
 
 `monthly ≈ CloudFront_requests_fees + egress_GB × ~$0.085 (PriceClass_100 US/EU) + pennies of S3`
 
-Tiered caching (immutable `_astro`, short HTML, no-cache `quotes.json`) is what keeps **origin** and **egress** from growing linearly with page views.
+Tiered caching (immutable `_astro`, short HTML, **~60s** live JSON) is what keeps **origin** and **egress** from growing linearly with page views.
 
 ## AdSense revenue model (order-of-magnitude)
 

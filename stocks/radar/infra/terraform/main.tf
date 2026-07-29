@@ -106,6 +106,30 @@ locals {
   caching_optimized_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
 }
 
+# Short shared edge TTL for pollable live JSON (100x traffic: coalesce origin GETs).
+# Query strings ignored so accidental ?t= busts don't fragment the cache.
+resource "aws_cloudfront_cache_policy" "live_json" {
+  name        = "${var.project_name}-live-json-60s"
+  comment     = "Quotes/outlook/screener — ~60s edge TTL, no query string in key"
+  default_ttl = 60
+  max_ttl     = 120
+  min_ttl     = 0
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip   = true
+  }
+}
+
 resource "aws_cloudfront_distribution" "site" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -136,8 +160,8 @@ resource "aws_cloudfront_distribution" "site" {
     response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
   }
 
-  # Quotes must bypass long cache so price/signal polls see fresh deploys.
-  # Cost: negligible — more origin GETs only when visitors poll quotes.json.
+  # Live market JSON — short shared edge TTL (CI refresh is minutes–hours apart).
+  # Coalesces concurrent polls at 100x traffic; object Cache-Control max-age=60 on sync.
   ordered_cache_behavior {
     path_pattern               = "/quotes.json"
     allowed_methods            = ["GET", "HEAD", "OPTIONS"]
@@ -145,7 +169,51 @@ resource "aws_cloudfront_distribution" "site" {
     target_origin_id           = "s3-${aws_s3_bucket.site.id}"
     viewer_protocol_policy     = "redirect-to-https"
     compress                   = true
-    cache_policy_id            = local.caching_disabled_policy_id
+    cache_policy_id            = aws_cloudfront_cache_policy.live_json.id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/outlook.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = aws_cloudfront_cache_policy.live_json.id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/screener.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = aws_cloudfront_cache_policy.live_json.id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/dc-movers.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = aws_cloudfront_cache_policy.live_json.id
+    response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/datacenter/news.json"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "s3-${aws_s3_bucket.site.id}"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    cache_policy_id            = aws_cloudfront_cache_policy.live_json.id
     response_headers_policy_id = var.enable_security_headers ? local.security_headers_policy_id : null
   }
 

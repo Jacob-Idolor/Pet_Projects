@@ -52,8 +52,11 @@ function metricSum(metricName) {
     "AWS/CloudFront",
     "--metric-name",
     metricName,
+    // AWS CLI wants multiple dimensions as separate Name=,Value= args (space-separated),
+    // not a single comma-joined string.
     "--dimensions",
-    `Name=DistributionId,Value=${distId},Name=Region,Value=Global`,
+    `Name=DistributionId,Value=${distId}`,
+    "Name=Region,Value=Global",
     "--start-time",
     start.toISOString(),
     "--end-time",
