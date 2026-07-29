@@ -40,6 +40,7 @@ jobs:
           STOCKS_RADAR_SITE: https://example.cloudfront.net
           STOCKS_RADAR_ENV: development
           SCREENER_SKIP: "1"
+          QUOTES_SKIP: "1"
       - run: npm run adsense:checklist
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium

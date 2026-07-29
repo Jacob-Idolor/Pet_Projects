@@ -23,11 +23,15 @@
   }
 
   async function loadScreen() {
-    if (screenCache) return screenCache;
+    const TTL_MS = Number(root.dataset.screenerCacheTtlMs || 10 * 60 * 1000);
+    if (screenCache && screenCache._cachedAt && Date.now() - screenCache._cachedAt < TTL_MS) {
+      return screenCache;
+    }
     const res = await origFetch(screenerUrl, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to load screener.json (" + res.status + ")");
     screenCache = await res.json();
     screenCache.cached = true;
+    screenCache._cachedAt = Date.now();
     return screenCache;
   }
 
@@ -48,9 +52,18 @@
 
   async function loadReports() {
     if (reportsCache) return reportsCache;
-    const res = await origFetch(reportsUrl);
-    reportsCache = await res.json();
-    return reportsCache;
+    try {
+      const res = await origFetch(reportsUrl, { cache: "no-store" });
+      if (!res.ok) {
+        reportsCache = { reports: [], has_key: false };
+        return reportsCache;
+      }
+      reportsCache = await res.json();
+      return reportsCache;
+    } catch {
+      reportsCache = { reports: [], has_key: false };
+      return reportsCache;
+    }
   }
 
   function loadHistory() {

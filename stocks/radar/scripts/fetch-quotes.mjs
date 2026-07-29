@@ -36,6 +36,7 @@ const HEADERS = {
 
 const MAX_RETRIES = runtime.quotes.yahooMaxRetries;
 const RETRY_BASE_MS = 500;
+const FETCH_TIMEOUT_MS = Number(process.env.YAHOO_FETCH_TIMEOUT_MS || 15000);
 /** Quotes older than this (hours) are treated as stale in the UI. */
 const STALE_AFTER_HOURS = runtime.quotes.staleAfterHours;
 const CHUNK_SIZE = runtime.quotes.yahooChunkSize;
@@ -55,7 +56,10 @@ function loadPreviousQuotes() {
 
 async function fetchSymbolOnce(symbol) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=max`;
-  const res = await fetch(url, { headers: HEADERS });
+  const res = await fetch(url, {
+    headers: HEADERS,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
   if (res.status === 429) {
     const err = new Error(`rate-limited ${symbol}`);
     err.retryable = true;
@@ -167,6 +171,15 @@ async function fetchAll(symbols, otel) {
 }
 
 await withOtel("stocks-radar-quotes", async (otel) => {
+  if (process.env.QUOTES_SKIP === "1") {
+    if (!existsSync(OUT)) {
+      console.error("QUOTES_SKIP=1 but public/quotes.json is missing");
+      process.exit(1);
+    }
+    console.log("QUOTES_SKIP=1 — leaving existing quotes.json");
+    return;
+  }
+
   await otel.withSpan("fetch-quotes.run", async (root) => {
     const watchlist = JSON.parse(readFileSync(WATCHLIST, "utf8"));
     const symbols = [...new Set(watchlist.stocks.map((s) => s.symbol))];
@@ -262,6 +275,18 @@ await withOtel("stocks-radar-quotes", async (otel) => {
         console.warn("⚠ Wrote previous quotes with fetchFailed=true");
         process.exitCode = 1;
       } else {
+        process.exitCode = 1;
+      }
+    } else {
+      const minRatio = Number(process.env.QUOTES_MIN_OK_RATIO || 0.85);
+      const production =
+        process.env.STOCKS_RADAR_ENV === "production" ||
+        process.env.DEPLOY_PROVIDER === "github-actions" ||
+        Boolean(process.env.GITHUB_ACTIONS);
+      if (production && coverage < minRatio) {
+        console.error(
+          `✗ Quote coverage ${(coverage * 100).toFixed(0)}% < ${minRatio * 100}% in production — failing refresh`
+        );
         process.exitCode = 1;
       }
     }

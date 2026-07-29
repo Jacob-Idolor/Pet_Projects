@@ -153,6 +153,17 @@ data "aws_iam_policy_document" "github_actions_deploy" {
   }
 
   statement {
+    sid    = "CloudWatchReadForDigest"
+    effect = "Allow"
+    actions = [
+      "cloudwatch:GetMetricStatistics",
+      "cloudwatch:GetMetricData",
+      "cloudwatch:ListMetrics",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
     sid       = "WhoAmI"
     effect    = "Allow"
     actions   = ["sts:GetCallerIdentity"]

@@ -571,8 +571,12 @@ function renderAlerts() {
   const alerts = deriveAlerts();
   if (!alerts.length) { el.classList.add("hidden"); el.innerHTML = ""; return; }
   el.classList.remove("hidden");
-  el.innerHTML = `<span class="al-h">⚑ ${alerts.length} alert${alerts.length > 1 ? "s" : ""}</span>` +
-    alerts.map((a) => `<button class="al-item ${a.kind}" data-tk="${a.tk}"><b>${a.tk}</b> ${escapeHtml(a.msg)}</button>`).join("");
+  el.innerHTML = `<span class="al-h">${alerts.length} alert${alerts.length > 1 ? "s" : ""}</span>` +
+    alerts.map((a) => {
+      const tk = escapeHtml(String(a.tk || ""));
+      const kind = ["warn", "info", "buy", "sell"].includes(a.kind) ? a.kind : "info";
+      return `<button class="al-item ${kind}" data-tk="${tk}"><b>${tk}</b> ${escapeHtml(a.msg)}</button>`;
+    }).join("");
   el.querySelectorAll(".al-item").forEach((b) =>
     b.addEventListener("click", () => { window.searchScreener(b.dataset.tk); }));
 }

@@ -1,18 +1,35 @@
 {
   "ok": true,
   "status": "ok",
+  "buildOk": true,
   "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "production",
-  "builtAt": "2026-07-29T00:28:32.821Z",
+  "builtAt": "2026-07-29T00:37:47.316Z",
   "gitSha": "local",
   "siteUrl": null,
   "checks": {
     "settings": true,
-    "quotesExpected": true
+    "quotes": {
+      "ok": true,
+      "ageHours": 0.15730944444444445,
+      "count": 14,
+      "total": 14,
+      "coverage": 1,
+      "partial": false,
+      "fetchFailed": false
+    },
+    "screener": {
+      "ok": true,
+      "ageHours": 2.257909722222222,
+      "ok_count": 80,
+      "ticker_count": 80,
+      "coverage": 1
+    }
   },
   "paths": {
     "quotes": "/quotes.json",
+    "outlook": "/outlook.json",
     "screener": "/screener.json",
     "datacenter": "/datacenter.html",
     "settings": "/settings.json",

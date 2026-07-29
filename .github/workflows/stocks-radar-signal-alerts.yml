@@ -68,6 +68,11 @@ jobs:
           access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      - name: Install deps
+        if: steps.gate.outputs.ok == '1'
+        working-directory: stocks/radar
+        run: npm ci
+
       - name: Resolve public site URL
         id: url
         if: steps.gate.outputs.ok == '1'

@@ -25,6 +25,15 @@ const base = import.meta.env.BASE_URL;
     var root = base || "/";
     if (root.slice(-1) !== "/") root += "/";
 
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
     function fmtPx(v, unit) {
       if (v == null || isNaN(v)) return "—";
       if (unit === "yield") return Number(v).toFixed(3) + "%";
@@ -52,26 +61,28 @@ const base = import.meta.env.BASE_URL;
         }
         grid.innerHTML = keys
           .map(function (id) {
-            var m = macro[id];
+            var m = macro[id] || {};
             var chg = m.changePct;
             var cls = chg == null ? "" : chg >= 0 ? "up" : "down";
+            var label = escapeHtml(m.label || id);
+            var blurb = escapeHtml(m.blurb || "");
             return (
               '<article class="macro-card" title="' +
-              (m.blurb || "").replace(/"/g, "&quot;") +
+              blurb +
               '">' +
               '<span class="macro-card__label">' +
-              (m.label || id) +
+              label +
               "</span>" +
               '<span class="macro-card__px mono">' +
-              fmtPx(m.price, m.unit) +
+              escapeHtml(fmtPx(m.price, m.unit)) +
               "</span>" +
               '<span class="macro-card__chg mono ' +
               cls +
               '">' +
-              fmtChg(chg) +
+              escapeHtml(fmtChg(chg)) +
               "</span>" +
               '<span class="macro-card__blurb">' +
-              (m.blurb || "") +
+              blurb +
               "</span>" +
               "</article>"
             );

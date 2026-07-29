@@ -16,7 +16,7 @@ on:
 
 concurrency:
   group: stocks-radar-deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -128,7 +128,7 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/" "/index.html" "/404.html" "/quotes.json" "/screener.json" \
+            --paths "/" "/index.html" "/404.html" "/quotes.json" "/outlook.json" "/screener.json" \
                    "/datacenter.html" "/datacenter/*" "/build-meta.json" \
                    "/health.json" "/settings.json" \
                    "/ads.txt" "/robots.txt" "/sitemap.xml" "/watchlist-board.mjs"
@@ -144,7 +144,7 @@ jobs:
           url="${url%/}"
           # CloudFront may lag briefly after invalidation
           sleep 12
-          for path in /health.json /settings.json /quotes.json /screener.json /datacenter.html /; do
+          for path in /health.json /settings.json /quotes.json /outlook.json /screener.json /datacenter.html /; do
             code=$(curl -sS -o /tmp/body -w "%{http_code}" --retry 5 --retry-delay 4 --retry-all-errors "$url$path" || echo "000")
             echo "$path → HTTP $code"
             if [ "$code" != "200" ]; then
@@ -157,10 +157,17 @@ jobs:
             const h = JSON.parse(require("fs").readFileSync("/tmp/health.json","utf8"));
             const good = h.ok === true || h.status === "ok";
             if (!good) { console.error("health not ok", h); process.exit(1); }
-            console.log("health ok:", h.status, h.generatedAt || h.builtAt || "");
+            console.log("health ok:", h.status, h.builtAt || h.generatedAt || "");
           '
+          # _private must not be world-readable (CF may map deny → 403 or 404)
+          priv=$(curl -sS -o /tmp/private-body -w "%{http_code}" "$url/_private/alert-state.json" || echo "000")
+          echo "/_private/alert-state.json → HTTP $priv"
+          if [ "$priv" = "200" ]; then
+            echo "::error::_private/alert-state.json is publicly readable"
+            exit 1
+          fi
           echo "## Health OK" >> "$GITHUB_STEP_SUMMARY"
-          echo "\`$url/health.json\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$url/health.json\` · private path blocked ($priv)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Post-deploy freshness assert
         working-directory: stocks/radar

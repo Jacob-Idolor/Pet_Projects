@@ -18,7 +18,7 @@
   "quotes": {
     "staleAfterHours": 6,
     "pollIntervalMs": 60000,
-    "browserFallback": true,
+    "browserFallback": false,
     "yahooChunkSize": 8,
     "yahooMaxRetries": 3
   },

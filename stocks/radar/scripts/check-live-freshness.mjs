@@ -34,6 +34,7 @@ const quotesMaxH = num(
 );
 const screenerMaxH = num(process.env.SCREENER_MAX_AGE_HOURS, 24);
 const minOkRatio = num(process.env.SCREENER_MIN_OK_RATIO, 0.85);
+const quotesMinRatio = num(process.env.QUOTES_MIN_OK_RATIO, 0.85);
 
 function num(v, fallback) {
   const n = Number(v);
@@ -78,7 +79,9 @@ async function main() {
     : resolve(ROOT, "public/datacenter/news.json");
 
   console.log(`Freshness check ${baseUrl || "(local public/)"}`);
-  console.log(`  quotes max age: ${quotesMaxH}h · screener max age: ${screenerMaxH}h · min ok ratio: ${minOkRatio}`);
+  console.log(
+    `  quotes max age: ${quotesMaxH}h · min coverage: ${quotesMinRatio} · screener max age: ${screenerMaxH}h · min ok ratio: ${minOkRatio}`
+  );
 
   let passed = true;
   const report = { checkedAt: new Date().toISOString(), baseUrl: baseUrl || null, checks: {} };
@@ -92,15 +95,31 @@ async function main() {
       quotes.quotes && typeof quotes.quotes === "object"
         ? Object.keys(quotes.quotes).length
         : quotes.count ?? 0;
-    report.checks.quotes = { fetchedAt: fetched, ageHours: age, count };
+    const total = Number(quotes.total) || count;
+    const ratio = coverageRatio(count, total) ?? (total > 0 ? 0 : null);
+    report.checks.quotes = {
+      fetchedAt: fetched,
+      ageHours: age,
+      count,
+      total,
+      okRatio: ratio,
+      partial: Boolean(quotes.partial),
+      fetchFailed: Boolean(quotes.fetchFailed),
+    };
 
     if (age == null) passed = fail("quotes.json missing fetchedAt") && passed;
     else if (age > quotesMaxH) {
       passed = fail(`quotes.json stale (${fmtAge(age)} > ${quotesMaxH}h)`) && passed;
     } else {
-      ok(`quotes.json age ${fmtAge(age)} · ${count} symbols`);
+      ok(`quotes.json age ${fmtAge(age)} · ${count}/${total || count} symbols`);
     }
     if (count < 1) passed = fail("quotes.json has no symbols") && passed;
+    if (quotes.fetchFailed) passed = fail("quotes.json marked fetchFailed") && passed;
+    if (ratio != null && ratio < quotesMinRatio) {
+      passed =
+        fail(`quotes coverage ${(ratio * 100).toFixed(0)}% < ${quotesMinRatio * 100}%`) &&
+        passed;
+    }
   } catch (e) {
     passed = fail(`quotes.json: ${e.message || e}`) && passed;
   }
