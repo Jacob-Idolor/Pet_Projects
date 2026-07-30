@@ -17,7 +17,7 @@ export function distanceToTarget(price, targetPrice) {
  * Rank watchlist symbols by radar score using quotes map + optional targets from watchlist.
  * @param {object[]} watchlistStocks
  * @param {Record<string, object>} quotes
- * @param {Record<string, { newsCheck?: object }>|undefined} [outlookBySymbol]
+ * @param {Record<string, { newsCheck?: object, fundamentals?: { bias?: string } }>|undefined} [outlookBySymbol]
  */
 export function scoreWatchlist(watchlistStocks, quotes, outlookBySymbol) {
   const buy = [];
@@ -35,8 +35,10 @@ export function scoreWatchlist(watchlistStocks, quotes, outlookBySymbol) {
       missing.push(stock.symbol);
       continue;
     }
-    const newsCheck = outlookBySymbol?.[stock.symbol]?.newsCheck ?? null;
-    const bias = actionBias(q, { newsCheck });
+    const outlook = outlookBySymbol?.[stock.symbol];
+    const newsCheck = outlook?.newsCheck ?? null;
+    const valuationBias = stock.valuation?.bias || outlook?.fundamentals?.bias || null;
+    const bias = actionBias(q, { newsCheck, valuationBias });
     const row = {
       symbol: stock.symbol,
       name: stock.name || q.name || stock.symbol,
@@ -49,6 +51,7 @@ export function scoreWatchlist(watchlistStocks, quotes, outlookBySymbol) {
       targetPrice: stock.targetPrice ?? null,
       distPct: distanceToTarget(q.price, stock.targetPrice),
       newsTilt: newsCheck?.tilt ?? null,
+      valuationBias: valuationBias ?? null,
     };
     if (bias.cls === "buy") buy.push(row);
     if (bias.cls === "sell") sell.push(row);

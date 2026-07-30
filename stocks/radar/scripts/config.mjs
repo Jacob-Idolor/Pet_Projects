@@ -90,7 +90,7 @@ export function loadRuntimeConfig(opts = {}) {
     alerts: {
       defaultCooldownHours: settings.alerts?.defaultCooldownHours ?? 24,
       nearTargetPct: num(process.env.ALERT_NEAR_TARGET_PCT, settings.alerts?.nearTargetPct ?? 5),
-      minBuyScore: num(process.env.ALERT_MIN_BUY_SCORE, settings.alerts?.minBuyScore ?? 3),
+      minBuyScore: num(process.env.ALERT_MIN_BUY_SCORE, settings.alerts?.minBuyScore ?? 4),
       onlyOnSignal: truthy(process.env.ALERTS_ONLY_ON_SIGNAL, settings.alerts?.onlyOnSignal !== false),
     },
     adsense: {

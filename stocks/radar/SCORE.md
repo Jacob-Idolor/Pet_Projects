@@ -30,27 +30,34 @@ Data: `public/outlook.json` from `node scripts/fetch/fetch-outlook.mjs` (also ru
 
 ---
 
-## Technical lean labels (secondary)
+## Technical lean labels (secondary, rigid)
 
-| Score | Label |
-|------:|--------|
-| **≥ +3** | Lean buy |
-| **−2 … +2** | Watch |
-| **≤ −3** | Lean sell |
+Leans are intentionally hard to earn:
+
+| Rule | Detail |
+|------|--------|
+| **Score ≥ +4** | Candidate lean buy |
+| **Score ≤ −4** | Candidate lean sell |
+| **≥ 2 factor hits** | Lone RSI extreme is not enough |
+| **Valuation gate** | `rich` blocks lean buy; `cheap` blocks lean sell |
+
+Otherwise → **Watch** (score still shown in digests / alerts).
 
 ## Weights (not everything equal)
 
 | Factor | Buy | Sell | Why heavier / lighter |
 |--------|----:|-----:|------------------------|
+| **Valuation** `cheap` / `rich` | **+2** | **−2** | Primary — human / group lean from watchlist |
 | RSI ≤30 / ≥70 | **+3** | **−3** | Strongest short-term stretch signal |
 | Near 52-week low / high | **+2** | **−2** | Where price sits in the year matters |
 | Deep below / extended above SMA50 (>10%) | **+2** | **−2** | Cheap vs stretched vs ~2.5 months |
 | Near ATH (within ~3%) | | **−2** | Extra stretch risk |
 | Quiet coil / **pre-momentum** | **+2** | | See below — names that haven’t run yet |
 | **News tilt** (headline lexicon) | **+1…+2** | **−1…−2** | Primary tape check — see above |
-| RSI soft (≤40) / elevated (≥65) | +1 | −1 | Mild version of RSI |
 | Bullish / bearish trend | +1 | −1 | Context only — can fight mean-reversion |
 | Quiet volume near highs | | −1 | Sleepy + expensive is less interesting |
+
+Soft RSI bands (≤40 / ≥65) still inform setup tags (`washed-out` / `extended`) but **do not** add score points — that padding used to tip weak ±3 leans.
 
 ## Pre-momentum (quiet names)
 
@@ -83,3 +90,5 @@ That setup gets **+2** and a `pre-momentum` tag. On the pulse **Watch** list, th
 ```
 
 `bias`: `cheap` | `fair` | `rich` | `unknown`
+
+These lean into the pulse score (`cheap` / `rich`) and can block conflicting lean labels.

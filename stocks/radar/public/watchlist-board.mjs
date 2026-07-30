@@ -37,6 +37,9 @@ function yahooUrl(symbol) {
 }
 
 // scripts/lib/action-bias.mjs
+var LEAN_BUY_MIN = 4;
+var LEAN_SELL_MAX = -4;
+var MIN_FACTOR_HITS = 2;
 function isPreMomentum(q) {
   if (!q || q.price == null) return false;
   const volQuiet = q.volRatio != null && q.volRatio < 0.75;
@@ -49,24 +52,32 @@ function isPreMomentum(q) {
   const notAth = q.pctFromAth == null || q.pctFromAth < -8;
   return Boolean(volQuiet && rsiMid && nearOrUnder50 && notHigh && notAth);
 }
+function normalizeValuationBias(raw) {
+  if (raw == null || raw === "") return null;
+  const v = String(raw).trim().toLowerCase();
+  if (v === "cheap" || v === "fair" || v === "rich" || v === "unknown") return v;
+  return null;
+}
 function actionBias(q, opts = {}) {
   if (!q || q.price == null) {
     return { label: "\u2014", cls: "idle", reason: "Waiting on quotes", score: 0, setup: "idle" };
   }
   let score = 0;
   const bits = [];
+  const valuation = normalizeValuationBias(opts?.valuationBias);
+  if (valuation === "cheap") {
+    score += 2;
+    bits.push("valuation cheap (+2)");
+  } else if (valuation === "rich") {
+    score -= 2;
+    bits.push("valuation rich (\u22122)");
+  }
   if (q.rsi14 != null && q.rsi14 <= 30) {
     score += 3;
     bits.push("RSI oversold (+3)");
-  } else if (q.rsi14 != null && q.rsi14 <= 40) {
-    score += 1;
-    bits.push("RSI soft (+1)");
   } else if (q.rsi14 != null && q.rsi14 >= 70) {
     score -= 3;
     bits.push("RSI overbought (\u22123)");
-  } else if (q.rsi14 != null && q.rsi14 >= 65) {
-    score -= 1;
-    bits.push("RSI elevated (\u22121)");
   }
   if (q.range52Pct != null && q.range52Pct <= 20) {
     score += 2;
@@ -118,8 +129,31 @@ function actionBias(q, opts = {}) {
     setup = "trending";
   }
   const reason = bits.length ? bits.slice(0, 4).join(" \xB7 ") : "Neutral setup";
-  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
-  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  const confirmed = bits.length >= MIN_FACTOR_HITS;
+  if (score >= LEAN_BUY_MIN && confirmed) {
+    if (valuation === "rich") {
+      return {
+        label: "Watch",
+        cls: "watch",
+        reason: `${reason} \xB7 blocked: valuation rich`,
+        score,
+        setup
+      };
+    }
+    return { label: "Lean buy", cls: "buy", reason, score, setup };
+  }
+  if (score <= LEAN_SELL_MAX && confirmed) {
+    if (valuation === "cheap") {
+      return {
+        label: "Watch",
+        cls: "watch",
+        reason: `${reason} \xB7 blocked: valuation cheap`,
+        score,
+        setup
+      };
+    }
+    return { label: "Lean sell", cls: "sell", reason, score, setup };
+  }
   return { label: "Watch", cls: "watch", reason, score, setup };
 }
 
@@ -629,7 +663,11 @@ function outlookFor(stock) {
   };
 }
 function biasOpts(stock) {
-  return { newsCheck: outlookFor(stock)?.newsCheck };
+  const outlook = outlookFor(stock);
+  return {
+    newsCheck: outlook?.newsCheck,
+    valuationBias: stock.valuation?.bias || outlook?.fundamentals?.bias || null
+  };
 }
 function stockBias(stock) {
   return actionBias(getQuote(stock), biasOpts(stock));

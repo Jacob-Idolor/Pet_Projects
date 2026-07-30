@@ -31,12 +31,12 @@
   "alerts": {
     "defaultCooldownHours": 24,
     "nearTargetPct": 5,
-    "minBuyScore": 3
+    "minBuyScore": 4
   },
   "ops": {
     "healthPath": "/health.json",
     "settingsPath": "/settings.json"
   },
   "siteUrl": null,
-  "generatedAt": "2026-07-29T23:34:47.015Z"
+  "generatedAt": "2026-07-30T03:15:25.696Z"
 }
