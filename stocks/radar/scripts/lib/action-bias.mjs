@@ -1,19 +1,27 @@
 /**
  * Weighted radar action bias — single source for Node (alerts/digest) and the home board.
  *
- * Design (friend feedback):
+ * Design (friend feedback + rigidity):
+ * - Valuation + news are primary; technicals are secondary confirmation.
  * - Not every factor is equal: RSI extremes + location in range + SMA50 stretch weigh more.
+ * - Soft RSI bands and lone weak pads no longer tip a lean — threshold is ±4 with ≥2 hits.
+ * - Human valuation.bias can add points and can block conflicting leans.
  * - Trend is lighter context (can fight mean-reversion).
  * - Extra “pre-momentum” points for quiet / coiling names that haven’t run yet.
  *
  * Score → label:
- *   ≥ +3  Lean buy
- *   ≤ −3  Lean sell
+ *   ≥ +4  Lean buy  (and ≥2 factor hits; blocked if valuation is rich)
+ *   ≤ −4  Lean sell (and ≥2 factor hits; blocked if valuation is cheap)
  *   else  Watch
  */
 
 /** @typedef {"buy"|"sell"|"watch"|"idle"} BiasCls */
 /** @typedef {"washed-out"|"pre-momentum"|"trending"|"extended"|"mixed"|"idle"} SetupKind */
+/** @typedef {"cheap"|"fair"|"rich"|"unknown"|string|null|undefined} ValuationBias */
+
+export const LEAN_BUY_MIN = 4;
+export const LEAN_SELL_MAX = -4;
+export const MIN_FACTOR_HITS = 2;
 
 /**
  * Quiet tape + not extended = possible coil before momentum.
@@ -34,8 +42,23 @@ export function isPreMomentum(q) {
 }
 
 /**
+ * Normalize watchlist / outlook valuation lean.
+ * @param {ValuationBias} raw
+ * @returns {"cheap"|"fair"|"rich"|"unknown"|null}
+ */
+export function normalizeValuationBias(raw) {
+  if (raw == null || raw === "") return null;
+  const v = String(raw).trim().toLowerCase();
+  if (v === "cheap" || v === "fair" || v === "rich" || v === "unknown") return v;
+  return null;
+}
+
+/**
  * @param {object|undefined} q quote row from quotes.json
- * @param {{ newsCheck?: { tilt?: string, scoreDelta?: number }|null }} [opts]
+ * @param {{
+ *   newsCheck?: { tilt?: string, scoreDelta?: number }|null,
+ *   valuationBias?: ValuationBias,
+ * }} [opts]
  * @returns {{ label: string, cls: BiasCls, reason: string, score: number, setup: SetupKind }}
  */
 export function actionBias(q, opts = {}) {
@@ -46,19 +69,23 @@ export function actionBias(q, opts = {}) {
   let score = 0;
   const bits = [];
 
-  // --- Heavy: RSI extremes (mean-reversion) ---
+  // --- Primary: human valuation lean (watchlist / outlook) ---
+  const valuation = normalizeValuationBias(opts?.valuationBias);
+  if (valuation === "cheap") {
+    score += 2;
+    bits.push("valuation cheap (+2)");
+  } else if (valuation === "rich") {
+    score -= 2;
+    bits.push("valuation rich (−2)");
+  }
+
+  // --- Heavy: RSI extremes only (soft 40/65 bands no longer score) ---
   if (q.rsi14 != null && q.rsi14 <= 30) {
     score += 3;
     bits.push("RSI oversold (+3)");
-  } else if (q.rsi14 != null && q.rsi14 <= 40) {
-    score += 1;
-    bits.push("RSI soft (+1)");
   } else if (q.rsi14 != null && q.rsi14 >= 70) {
     score -= 3;
     bits.push("RSI overbought (−3)");
-  } else if (q.rsi14 != null && q.rsi14 >= 65) {
-    score -= 1;
-    bits.push("RSI elevated (−1)");
   }
 
   // --- Heavy: where it sits in the year ---
@@ -141,7 +168,32 @@ export function actionBias(q, opts = {}) {
   }
 
   const reason = bits.length ? bits.slice(0, 4).join(" · ") : "Neutral setup";
-  if (score >= 3) return { label: "Lean buy", cls: "buy", reason, score, setup };
-  if (score <= -3) return { label: "Lean sell", cls: "sell", reason, score, setup };
+  const confirmed = bits.length >= MIN_FACTOR_HITS;
+
+  // Valuation gate: don't lean buy rich names / lean sell cheap names
+  if (score >= LEAN_BUY_MIN && confirmed) {
+    if (valuation === "rich") {
+      return {
+        label: "Watch",
+        cls: "watch",
+        reason: `${reason} · blocked: valuation rich`,
+        score,
+        setup,
+      };
+    }
+    return { label: "Lean buy", cls: "buy", reason, score, setup };
+  }
+  if (score <= LEAN_SELL_MAX && confirmed) {
+    if (valuation === "cheap") {
+      return {
+        label: "Watch",
+        cls: "watch",
+        reason: `${reason} · blocked: valuation cheap`,
+        score,
+        setup,
+      };
+    }
+    return { label: "Lean sell", cls: "sell", reason, score, setup };
+  }
   return { label: "Watch", cls: "watch", reason, score, setup };
 }

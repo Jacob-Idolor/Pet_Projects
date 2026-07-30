@@ -31,7 +31,7 @@
   "alerts": {
     "defaultCooldownHours": 24,
     "nearTargetPct": 5,
-    "minBuyScore": 3,
+    "minBuyScore": 4,
     "onlyOnSignal": true
   },
   "seo": {

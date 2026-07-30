@@ -339,7 +339,11 @@ export function outlookFor(stock: StockRow): OutlookStock | undefined {
 }
 
 export function biasOpts(stock: StockRow) {
-  return { newsCheck: outlookFor(stock)?.newsCheck };
+  const outlook = outlookFor(stock);
+  return {
+    newsCheck: outlook?.newsCheck,
+    valuationBias: stock.valuation?.bias || outlook?.fundamentals?.bias || null,
+  };
 }
 
 export function stockBias(stock: StockRow) {

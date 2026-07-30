@@ -123,7 +123,10 @@ export function hasTechnical(q: QuoteData | undefined) {
   return Boolean(q?.sma || q?.range52Pct != null || q?.rsi14 != null);
 }
 
-export function actionBadge(q: QuoteData | undefined, opts?: { newsCheck?: NewsCheck | null }) {
+export function actionBadge(
+  q: QuoteData | undefined,
+  opts?: { newsCheck?: NewsCheck | null; valuationBias?: string | null }
+) {
   const a = actionBias(q, opts);
   return `<span class="action-badge action-${a.cls}" title="${escapeHtml(a.reason)}">${escapeHtml(a.label)}</span>`;
 }
@@ -141,7 +144,7 @@ export function sma50Plain(q: QuoteData | undefined): string {
 /** Short pulse row blurb: lean signal + setup flavor + SMA50. */
 export function pulseExplain(
   q: QuoteData | undefined,
-  opts?: { newsCheck?: NewsCheck | null }
+  opts?: { newsCheck?: NewsCheck | null; valuationBias?: string | null }
 ): {
   bias: ReturnType<typeof actionBias>;
   sma: string;
@@ -178,17 +181,17 @@ export const PULSE_SIGNAL_GUIDE = [
   {
     id: "buy",
     title: "Lean buy",
-    blurb: "Weighted score ≥ +3. RSI washouts and year-lows count more than trend.",
+    blurb: "Weighted score ≥ +4 with ≥2 confirming hits. Valuation + RSI washouts / year-lows count more than soft pads.",
   },
   {
     id: "watch",
     title: "Watch",
-    blurb: "Score between −2 and +2. Includes quiet coils that haven’t caught momentum yet.",
+    blurb: "Below lean thresholds, or blocked by conflicting valuation. Includes quiet coils that haven’t caught momentum yet.",
   },
   {
     id: "sell",
     title: "Lean sell",
-    blurb: "Weighted score ≤ −3. Overbought / year-highs / SMA50 stretch weigh heavier.",
+    blurb: "Weighted score ≤ −4 with ≥2 confirming hits. Overbought / year-highs / SMA50 stretch weigh heavier.",
   },
   {
     id: "sma50",

@@ -6,6 +6,7 @@ import {
   distanceToTarget,
   scoreWatchlist,
 } from "../scripts/alerts/radar-score.mjs";
+import { LEAN_BUY_MIN, LEAN_SELL_MAX } from "../scripts/lib/action-bias.mjs";
 
 describe("actionBias", () => {
   it("returns idle without price", () => {
@@ -14,19 +15,19 @@ describe("actionBias", () => {
     assert.equal(r.score, 0);
   });
 
-  it("leans buy on oversold + near low", () => {
+  it("leans buy on oversold + near low + SMA washout", () => {
     const r = actionBias({
       price: 10,
       rsi14: 25,
       range52Pct: 10,
-      vsSma: { 50: -5 },
+      vsSma: { 50: -11 },
       volRatio: 1.2,
     });
-    assert.ok(r.score >= 3);
+    assert.ok(r.score >= LEAN_BUY_MIN);
     assert.equal(r.cls, "buy");
   });
 
-  it("leans sell on overbought + near high", () => {
+  it("leans sell on overbought + near high + stretch", () => {
     const r = actionBias({
       price: 100,
       rsi14: 75,
@@ -35,7 +36,7 @@ describe("actionBias", () => {
       vsSma: { 50: 20 },
       volRatio: 1.5,
     });
-    assert.ok(r.score <= -3);
+    assert.ok(r.score <= LEAN_SELL_MAX);
     assert.equal(r.cls, "sell");
   });
 
@@ -49,7 +50,32 @@ describe("actionBias", () => {
       trend: "mixed",
     });
     assert.equal(r.cls, "watch");
-    assert.ok(r.score > -3 && r.score < 3);
+    assert.ok(r.score > LEAN_SELL_MAX && r.score < LEAN_BUY_MIN);
+  });
+
+  it("does not lean buy on soft RSI padding alone with one heavy factor", () => {
+    // Old soft path: RSI soft (+1) + deep below SMA50 (+2) = 3 → used to lean buy
+    const r = actionBias({
+      price: 40,
+      rsi14: 38,
+      vsSma: { 50: -12 },
+      range52Pct: 40,
+      volRatio: 1.0,
+    });
+    assert.equal(r.score, 2);
+    assert.equal(r.cls, "watch");
+  });
+
+  it("does not lean from a single RSI extreme without confirmation", () => {
+    const r = actionBias({
+      price: 40,
+      rsi14: 25,
+      range52Pct: 45,
+      vsSma: { 50: 0 },
+      volRatio: 1.0,
+    });
+    assert.equal(r.score, 3);
+    assert.equal(r.cls, "watch");
   });
 
   it("applies news scoreDelta toward buy", () => {
@@ -64,6 +90,54 @@ describe("actionBias", () => {
     const withNews = actionBias(quote, { newsCheck: { tilt: "positive", scoreDelta: 2 } });
     assert.equal(withNews.score, base.score + 2);
     assert.match(withNews.reason, /news positive/);
+  });
+
+  it("applies valuation cheap into the score", () => {
+    const quote = {
+      price: 40,
+      rsi14: 42,
+      range52Pct: 30,
+      vsSma: { 50: -2 },
+      volRatio: 1.0,
+    };
+    const base = actionBias(quote);
+    const cheap = actionBias(quote, { valuationBias: "cheap" });
+    assert.equal(cheap.score, base.score + 2);
+    assert.match(cheap.reason, /valuation cheap/);
+  });
+
+  it("blocks lean buy when valuation is rich", () => {
+    const r = actionBias(
+      {
+        price: 10,
+        rsi14: 25,
+        range52Pct: 10,
+        vsSma: { 50: -11 },
+        volRatio: 1.2,
+      },
+      { valuationBias: "rich" }
+    );
+    // RSI +3, near low +2, deep SMA +2, rich −2 → still ≥ +4 raw, but gated
+    assert.ok(r.score >= LEAN_BUY_MIN);
+    assert.equal(r.cls, "watch");
+    assert.match(r.reason, /blocked: valuation rich/);
+  });
+
+  it("blocks lean sell when valuation is cheap", () => {
+    const r = actionBias(
+      {
+        price: 100,
+        rsi14: 75,
+        range52Pct: 90,
+        pctFromAth: -1,
+        vsSma: { 50: 20 },
+        volRatio: 1.5,
+      },
+      { valuationBias: "cheap" }
+    );
+    assert.ok(r.score <= LEAN_SELL_MAX);
+    assert.equal(r.cls, "watch");
+    assert.match(r.reason, /blocked: valuation cheap/);
   });
 
   it("marks quiet near highs as a drag, not pre-momentum", () => {
@@ -190,8 +264,26 @@ describe("scoreWatchlist", () => {
     const out = scoreWatchlist([{ symbol: "N", name: "News" }], { N: washed }, {
       N: { newsCheck: { tilt: "negative", scoreDelta: -1 } },
     });
-    const row = out.buy.find((r) => r.symbol === "N") || out.sell.find((r) => r.symbol === "N");
-    assert.ok(row, "expected N in buy or sell bucket");
+    const row = out.buy.find((r) => r.symbol === "N") || out.sell.find((r) => r.symbol === "N")
+      || out.preMomentum.find((r) => r.symbol === "N");
+    // With news −1, washed score is still a buy (3+2+2−1=6)
+    assert.ok(row, "expected N in a scored bucket");
     assert.equal(row.newsTilt, "negative");
+  });
+
+  it("threads watchlist valuation.bias into scoring", () => {
+    const quote = {
+      price: 10,
+      rsi14: 25,
+      range52Pct: 10,
+      vsSma: { 50: -12 },
+      volRatio: 1.2,
+    };
+    const out = scoreWatchlist(
+      [{ symbol: "V", name: "Val", valuation: { bias: "rich" } }],
+      { V: quote }
+    );
+    assert.equal(out.buy.length, 0);
+    assert.ok(out.preMomentum.length === 0 || !out.buy.some((r) => r.symbol === "V"));
   });
 });
