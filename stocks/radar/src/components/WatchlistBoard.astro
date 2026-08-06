@@ -22,7 +22,7 @@ const boardScript = `${base}watchlist-board.mjs`.replace(/\/{2,}/g, "/").replace
           Press <kbd>/</kbd> to search. Not advice — chat fuel.
         </p>
         <p class="board-subtitle mobile-only">
-          Expand for PE + headlines · momentum is secondary.
+          Expand a row for PE + headlines · on phones, tap a card to expand.
         </p>
       </div>
       <div class="board-actions desktop-only">
@@ -45,6 +45,7 @@ const boardScript = `${base}watchlist-board.mjs`.replace(/\/{2,}/g, "/").replace
             class="search-input"
             placeholder="Search symbol, name, thesis…"
             autocomplete="off"
+            aria-label="Search symbol, name, or thesis"
           />
           <kbd class="search-hint desktop-only">/</kbd>
         </div>

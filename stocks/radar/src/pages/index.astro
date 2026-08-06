@@ -59,8 +59,8 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
     </section>
 
     <div class="container board-stage">
-      <nav class="mainnav" id="mainnav" aria-label="View">
-        <button type="button" data-mode="screener" class="active">Screener</button>
+      <nav class="mainnav" id="mainnav" aria-label="Screener views">
+        <button type="button" data-mode="screener" class="active" aria-current="page">Screener</button>
         <button type="button" data-mode="map">Global Map</button>
         <button type="button" data-mode="analyst">AI Analyst</button>
         <button type="button" data-mode="backtest">Backtest</button>
@@ -87,6 +87,7 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
                 class="search-input"
                 placeholder="Search ticker, name, or tag…"
                 autocomplete="off"
+                aria-label="Search ticker, name, or tag"
               />
             </div>
             <button type="button" id="refresh" class="btn-refresh" title="Reload the latest Yahoo snapshot">
@@ -95,45 +96,45 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
           </div>
         </div>
 
-        <div class="filterbar" id="filterbar">
-          <div class="seg" id="viewToggle" role="tablist" aria-label="View">
-            <button type="button" data-view="layers" class="active">By layer</button>
-            <button type="button" data-view="flat">All names</button>
+        <div class="filterbar" id="filterbar" role="toolbar" aria-label="Screener filters">
+          <div class="seg" id="viewToggle" role="group" aria-label="Board layout">
+            <button type="button" data-view="layers" class="active" aria-pressed="true">By layer</button>
+            <button type="button" data-view="flat" aria-pressed="false">All names</button>
           </div>
-          <div class="exposure-filter" id="exposureFilter" aria-label="Exposure filter">
+          <div class="exposure-filter" id="exposureFilter" role="group" aria-label="Exposure filter">
             <span class="flabel">Exposure</span>
-            <button type="button" data-exp="pure">Pure</button>
-            <button type="button" data-exp="high">High</button>
-            <button type="button" data-exp="moderate">Moderate</button>
-            <button type="button" data-exp="diversified">Diversified</button>
+            <button type="button" data-exp="pure" aria-pressed="false">Pure</button>
+            <button type="button" data-exp="high" aria-pressed="false">High</button>
+            <button type="button" data-exp="moderate" aria-pressed="false">Moderate</button>
+            <button type="button" data-exp="diversified" aria-pressed="false">Diversified</button>
           </div>
-          <div class="cap-filter" id="capFilter" aria-label="Market-cap filter">
+          <div class="cap-filter" id="capFilter" role="group" aria-label="Market-cap filter">
             <span class="flabel">Cap</span>
-            <button type="button" data-cap="mega" title="≥ $200B">Mega</button>
-            <button type="button" data-cap="large" title="$10B – $200B">Large</button>
-            <button type="button" data-cap="mid" title="$2B – $10B">Mid</button>
-            <button type="button" data-cap="small" title="$300M – $2B">Small</button>
-            <button type="button" data-cap="micro" title="under $300M">Micro</button>
+            <button type="button" data-cap="mega" title="≥ $200B" aria-pressed="false">Mega</button>
+            <button type="button" data-cap="large" title="$10B – $200B" aria-pressed="false">Large</button>
+            <button type="button" data-cap="mid" title="$2B – $10B" aria-pressed="false">Mid</button>
+            <button type="button" data-cap="small" title="$300M – $2B" aria-pressed="false">Small</button>
+            <button type="button" data-cap="micro" title="under $300M" aria-pressed="false">Micro</button>
           </div>
-          <button type="button" id="filtersBtn" class="filters-btn" aria-expanded="false">Filters</button>
+          <button type="button" id="filtersBtn" class="filters-btn" aria-expanded="false" aria-controls="filtersPanel">Filters</button>
           <span class="flabel cols-label">Columns</span>
-          <div class="seg seg-scroll" id="colset" role="tablist" aria-label="Column set">
-            <button type="button" data-cs="valuation" class="active">Valuation</button>
-            <button type="button" data-cs="moat">Moat</button>
-            <button type="button" data-cs="growth">Growth</button>
-            <button type="button" data-cs="technical">Technical</button>
-            <button type="button" data-cs="health">Health</button>
-            <button type="button" data-cs="exposure">Exposure</button>
-            <button type="button" data-cs="consensus">Consensus</button>
-            <button type="button" data-cs="trends">Trends</button>
-            <button type="button" data-cs="scores">Scores</button>
+          <div class="seg seg-scroll" id="colset" role="group" aria-label="Column set">
+            <button type="button" data-cs="valuation" class="active" aria-pressed="true">Valuation</button>
+            <button type="button" data-cs="moat" aria-pressed="false">Moat</button>
+            <button type="button" data-cs="growth" aria-pressed="false">Growth</button>
+            <button type="button" data-cs="technical" aria-pressed="false">Technical</button>
+            <button type="button" data-cs="health" aria-pressed="false">Health</button>
+            <button type="button" data-cs="exposure" aria-pressed="false">Exposure</button>
+            <button type="button" data-cs="consensus" aria-pressed="false">Consensus</button>
+            <button type="button" data-cs="trends" aria-pressed="false">Trends</button>
+            <button type="button" data-cs="scores" aria-pressed="false">Scores</button>
           </div>
           <span class="flabel cols-label" title="Rank score factors against the whole universe, or same-layer peers">
             Score vs
           </span>
-          <div class="seg" id="scoreMode" role="tablist" aria-label="Score basis">
-            <button type="button" data-sm="universe" class="active">Universe</button>
-            <button type="button" data-sm="layer">Layer</button>
+          <div class="seg" id="scoreMode" role="group" aria-label="Score basis">
+            <button type="button" data-sm="universe" class="active" aria-pressed="true">Universe</button>
+            <button type="button" data-sm="layer" aria-pressed="false">Layer</button>
           </div>
           <button type="button" id="scoreInfo" class="score-info" title="How the composite score is calculated">
             How scoring works

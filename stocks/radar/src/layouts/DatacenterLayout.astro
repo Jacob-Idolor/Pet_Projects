@@ -71,6 +71,91 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
       crossorigin=""
     />
     <link rel="stylesheet" href={styleHref} />
+    {/* Shared hero / board chrome so Astro markup matches home design language */}
+    <style is:global>
+      @import "../styles/home/base.css";
+      @import "../styles/home/hero-sections.css";
+      @import "../styles/home/live-status.css";
+      @import "../styles/home/ads.css";
+
+      .dc-page .site-header {
+        --header-h: 3.5rem;
+      }
+      .dc-page .filterbar {
+        top: var(--header-h, 3.5rem);
+        z-index: 30;
+      }
+      .dc-page .board-stage {
+        padding-bottom: 2.5rem;
+      }
+      .dc-page .mode-purpose {
+        margin: 0.35rem 0 0.75rem;
+        padding: 0 0.15rem;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .dc-page .mainnav {
+        overflow-x: auto;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+      }
+      .dc-page .mainnav button:focus-visible,
+      .dc-page .filterbar button:focus-visible,
+      .dc-page .search-input:focus-visible,
+      .dc-page .btn-refresh:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .dc-page .empty-state,
+      .dc-page .error-state {
+        margin: 1.5rem 0;
+        padding: 1.25rem 1.35rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        text-align: left;
+        max-width: 36rem;
+      }
+      .dc-page .empty-state h3,
+      .dc-page .error-state h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1.05rem;
+      }
+      .dc-page .empty-state p,
+      .dc-page .error-state p {
+        margin: 0 0 0.85rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .dc-page .desktop-only {
+        display: block;
+      }
+      @media (max-width: 680px) {
+        .dc-page .desktop-only {
+          display: none !important;
+        }
+        .dc-page .filterbar .cap-filter,
+        .dc-page .filterbar .cols-label,
+        .dc-page .filterbar #colset,
+        .dc-page .filterbar #scoreMode,
+        .dc-page .filterbar #scoreInfo {
+          display: none;
+        }
+        .dc-page .hero {
+          padding-block: 1rem 0.35rem;
+        }
+        .dc-page .board-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .dc-page .live-status__dot,
+        .dc-page .tt-dot {
+          animation: none !important;
+        }
+      }
+    </style>
     {
       allowAds && ads.verifyMeta && (
         <meta name="google-adsense-account" content={ads.verifyMeta} />

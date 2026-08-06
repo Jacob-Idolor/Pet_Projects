@@ -1,11 +1,14 @@
-import { escapeHtml, sanitizePriority, sanitizeSymbol, yahooUrl } from "../../lib/format";
+import { escapeHtml, sanitizeId, sanitizePriority, sanitizeSymbol, yahooUrl } from "../../lib/format";
 import {
   fmtPrice,
   athIndicator,
   actionBadge,
+  renderOutlookDetail,
+  renderTechnicalDetail,
 } from "../../lib/market-display";
 import {
   type StockRow,
+  state,
   getPrice,
   getQuote,
   getChange,
@@ -13,6 +16,8 @@ import {
   stockBias,
   biasOpts,
   renderDcLayerBadge,
+  renderDcDetail,
+  outlookFor,
 } from "./state";
 
 export function isMobileLayout() {
@@ -21,6 +26,19 @@ export function isMobileLayout() {
 
 export function syncLayoutClass() {
   document.body.classList.toggle("layout-mobile", isMobileLayout());
+}
+
+function mobileDetail(stock: StockRow) {
+  const price = getPrice(stock);
+  const q = getQuote(stock);
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  return `<div class="scm-detail">
+    ${renderOutlookDetail(outlookFor(stock))}
+    ${renderDcDetail(stock)}
+    ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
+    ${renderTechnicalDetail(q, price)}
+    <a class="scm-yahoo" href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer">Yahoo Finance →</a>
+  </div>`;
 }
 
 export function renderMobileCard(stock: StockRow) {
@@ -33,8 +51,11 @@ export function renderMobileCard(stock: StockRow) {
   const high = sanitizePriority(stock.priority) === "high";
   const action = stockBias(stock);
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
-  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
-    <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
+  const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
+  const expanded = state.expandedId === stock.id;
+
+  return `<article class="stock-card-m ${high ? "scm-high" : ""} ${expanded ? "is-expanded" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
+    <button type="button" class="scm-main" data-expand="${sid}" aria-expanded="${expanded}" aria-label="${expanded ? "Collapse" : "Expand"} ${sym} details">
       <div class="scm-top">
         <div class="scm-identity">
           <span class="scm-sym">${sym}</span>
@@ -53,7 +74,9 @@ export function renderMobileCard(stock: StockRow) {
       </div>
       ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
       <p class="scm-signal-reason">${escapeHtml(action.reason)}</p>
-    </a>
+      <span class="scm-expand-hint">${expanded ? "Hide details" : "Show PE, headlines & target"}</span>
+    </button>
+    ${expanded ? mobileDetail(stock) : ""}
   </article>`;
 }
 
@@ -61,7 +84,6 @@ export function renderMobileView(list: StockRow[]) {
   const mobileEl = document.getElementById("mobile-stock-list");
   const tableWrap = document.getElementById("table-view");
   const techWrap = document.getElementById("technical-view");
-  const countEl = document.getElementById("result-count");
 
   if (!mobileEl) return false;
 
@@ -78,11 +100,6 @@ export function renderMobileView(list: StockRow[]) {
   mobileEl.innerHTML =
     sorted.length > 0
       ? `<div class="mobile-bucket-cards">${sorted.map(renderMobileCard).join("")}</div>`
-      : `<p class="mobile-empty">No tickers match. Try clearing search.</p>`;
-
-  if (countEl) {
-    countEl.textContent = `${list.length} tracking`;
-  }
-
+      : `<p class="mobile-empty">No tickers match your filters.</p>`;
   return true;
 }

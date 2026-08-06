@@ -2,6 +2,12 @@
 import buildMeta from "../../public/build-meta.json";
 import { getSiteSettings } from "../lib/site-config";
 
+interface Props {
+  /** Softer copy when this bar sits on the archived watchlist */
+  archiveMode?: boolean;
+}
+
+const { archiveMode = false } = Astro.props;
 const settings = getSiteSettings();
 const staleAfterHours = settings.quotes.staleAfterHours;
 const pollIntervalMs = settings.quotes.pollIntervalMs;
@@ -24,6 +30,7 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   class="live-status"
   id="live-status"
   data-live-status
+  data-archive-mode={archiveMode ? "true" : "false"}
   data-quotes-url={quotesUrl}
   data-stale-after-hours={staleAfterHours}
   data-poll-ms={pollIntervalMs}
@@ -33,14 +40,15 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
 >
   <span class="live-status__dot" aria-hidden="true"></span>
   <span id="live-status-text">
-    Deployed {buildLabel} · {deployLabel} · <code>{shortSha}</code>
+    {archiveMode ? "Archive · " : ""}Deployed {buildLabel} · {deployLabel} · <code>{shortSha}</code>
   </span>
 </div>
 
-<script define:vars={{ buildMeta, quotesUrl, staleAfterHours, pollIntervalMs }}>
+<script define:vars={{ buildMeta, quotesUrl, staleAfterHours, pollIntervalMs, archiveMode }}>
   const root = document.getElementById("live-status");
   const statusEl = document.getElementById("live-status-text");
   const dot = root?.querySelector(".live-status__dot");
+  const archivePrefix = archiveMode ? "Archive snapshot · " : "";
 
   function ageMinutes(iso) {
     const t = new Date(iso).getTime();
@@ -102,8 +110,16 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
     const flagTxt = flags.length ? ` · ${flags.join(" · ")}` : "";
 
     if (statusEl) {
+      var healthWord =
+        health === "live"
+          ? "fresh"
+          : health === "partial"
+            ? "partial"
+            : health === "stale"
+              ? "stale"
+              : "unavailable";
       var parts = [
-        "Quotes " + ageLabel(mins) + " (" + coverage + ")" + flagTxt,
+        archivePrefix + "Quotes " + ageLabel(mins) + " · " + healthWord + " (" + coverage + ")" + flagTxt,
         "Deploy " + new Date(buildMeta.builtAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }),
         String(deployLabel || ""),
       ];

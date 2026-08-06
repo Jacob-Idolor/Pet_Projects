@@ -15,7 +15,7 @@
     <nav class="checkin-jump desktop-only" aria-label="Jump to sections">
       <a href="#macro-rates">Rates</a>
       <a href="#checkin" class="is-active">Pulse</a>
-      <a href="#dc-bridge">AI DC</a>
+      <a href={import.meta.env.BASE_URL}>AI screener</a>
       <a href="#watchlist-board">Master list</a>
       <a href="#submissions">Suggest</a>
     </nav>
@@ -101,15 +101,15 @@
   </div>
 </section>
 
-<nav class="mobile-dock" aria-label="Primary">
+<nav class="mobile-dock" aria-label="On this page">
   <a href="#macro-rates" class="mobile-dock__link" data-dock="rates">
     <span class="mobile-dock__label">Rates</span>
   </a>
   <a href="#checkin" class="mobile-dock__link is-active" data-dock="checkin">
     <span class="mobile-dock__label">Pulse</span>
   </a>
-  <a href="#dc-bridge" class="mobile-dock__link" data-dock="aidc">
-    <span class="mobile-dock__label">AI DC</span>
+  <a href={import.meta.env.BASE_URL} class="mobile-dock__link" data-dock="aidc">
+    <span class="mobile-dock__label">Screener</span>
   </a>
   <a href="#watchlist-board" class="mobile-dock__link" data-dock="list">
     <span class="mobile-dock__label">List</span>
@@ -150,7 +150,6 @@
       var sections = [
         { id: "macro-rates", key: "rates" },
         { id: "checkin", key: "checkin" },
-        { id: "dc-bridge", key: "aidc" },
         { id: "watchlist-board", key: "list" },
         { id: "submissions", key: "suggest" },
       ];

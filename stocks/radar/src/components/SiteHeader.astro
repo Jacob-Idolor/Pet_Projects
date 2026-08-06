@@ -29,6 +29,7 @@ const watchlistHref = `${base}watchlist.html`.replace(/\/{2,}/g, "/").replace(":
         aria-current={active === "watchlist" ? "page" : undefined}
       >
         Watchlist
+        <span class="header-link__hint">archive</span>
       </a>
     </nav>
   </div>
@@ -87,5 +88,23 @@ const watchlistHref = `${base}watchlist.html`.replace(/\/{2,}/g, "/").replace(":
   .header-link.is-active {
     color: var(--text, #e8ecf4);
     background: color-mix(in srgb, var(--panel, #12161c) 100%, transparent);
+  }
+  .header-link:focus-visible {
+    outline: 2px solid var(--accent, #22c55e);
+    outline-offset: 2px;
+  }
+  .header-link__hint {
+    display: inline-block;
+    margin-left: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--dim, #51657d);
+    vertical-align: middle;
+  }
+  .logo:focus-visible {
+    outline: 2px solid var(--accent, #22c55e);
+    outline-offset: 3px;
   }
 </style>

@@ -702,7 +702,7 @@ function renderRow(stock, compact = false, mode = "default") {
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "\u2212" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="${expanded ? "Collapse" : "Expand"} ${sym} details" aria-expanded="${expanded}" data-expand="${sid}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
@@ -725,7 +725,7 @@ function renderRow(stock, compact = false, mode = "default") {
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "\u2014")}</td>
       <td>${renderPriority(stock)}</td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "\u2212" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="${expanded ? "Collapse" : "Expand"} ${sym} details" aria-expanded="${expanded}" data-expand="${sid}">${expanded ? "\u2212" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
@@ -895,6 +895,18 @@ function isMobileLayout() {
 function syncLayoutClass() {
   document.body.classList.toggle("layout-mobile", isMobileLayout());
 }
+function mobileDetail(stock) {
+  const price = getPrice(stock);
+  const q = getQuote(stock);
+  const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
+  return `<div class="scm-detail">
+    ${renderOutlookDetail(outlookFor(stock))}
+    ${renderDcDetail(stock)}
+    ${stock.sector ? `<p><strong>Sector:</strong> ${escapeHtml(stock.sector)}</p>` : ""}
+    ${renderTechnicalDetail(q, price)}
+    <a class="scm-yahoo" href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer">Yahoo Finance \u2192</a>
+  </div>`;
+}
 function renderMobileCard(stock) {
   const price = getPrice(stock);
   const chg = getChange(stock);
@@ -904,8 +916,10 @@ function renderMobileCard(stock) {
   const high = sanitizePriority(stock.priority) === "high";
   const action = stockBias(stock);
   const sym = sanitizeSymbol(stock.symbol) || escapeHtml(String(stock.symbol ?? ""));
-  return `<article class="stock-card-m ${high ? "scm-high" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
-    <a href="${yahooUrl(sym)}" target="_blank" rel="noopener noreferrer" class="scm-main">
+  const sid = sanitizeId(stock.id) || escapeHtml(String(stock.id ?? ""));
+  const expanded = state.expandedId === stock.id;
+  return `<article class="stock-card-m ${high ? "scm-high" : ""} ${expanded ? "is-expanded" : ""} action-card-${escapeHtml(action.cls)}" data-symbol="${sym}">
+    <button type="button" class="scm-main" data-expand="${sid}" aria-expanded="${expanded}" aria-label="${expanded ? "Collapse" : "Expand"} ${sym} details">
       <div class="scm-top">
         <div class="scm-identity">
           <span class="scm-sym">${sym}</span>
@@ -924,14 +938,15 @@ function renderMobileCard(stock) {
       </div>
       ${stock.thesis ? `<p class="scm-thesis">${escapeHtml(stock.thesis)}</p>` : ""}
       <p class="scm-signal-reason">${escapeHtml(action.reason)}</p>
-    </a>
+      <span class="scm-expand-hint">${expanded ? "Hide details" : "Show PE, headlines & target"}</span>
+    </button>
+    ${expanded ? mobileDetail(stock) : ""}
   </article>`;
 }
 function renderMobileView(list) {
   const mobileEl = document.getElementById("mobile-stock-list");
   const tableWrap = document.getElementById("table-view");
   const techWrap = document.getElementById("technical-view");
-  const countEl = document.getElementById("result-count");
   if (!mobileEl) return false;
   if (!isMobileLayout()) {
     mobileEl.hidden = true;
@@ -941,10 +956,7 @@ function renderMobileView(list) {
   if (techWrap) techWrap.hidden = true;
   mobileEl.hidden = false;
   const sorted = sortStocks(list);
-  mobileEl.innerHTML = sorted.length > 0 ? `<div class="mobile-bucket-cards">${sorted.map(renderMobileCard).join("")}</div>` : `<p class="mobile-empty">No tickers match. Try clearing search.</p>`;
-  if (countEl) {
-    countEl.textContent = `${list.length} tracking`;
-  }
+  mobileEl.innerHTML = sorted.length > 0 ? `<div class="mobile-bucket-cards">${sorted.map(renderMobileCard).join("")}</div>` : `<p class="mobile-empty">No tickers match your filters.</p>`;
   return true;
 }
 
@@ -1087,7 +1099,11 @@ function scheduleResizeRender() {
 }
 function setViewToggle(activeId) {
   ["view-table", "view-technical"].forEach((id) => {
-    document.getElementById(id)?.classList.toggle("active", id === activeId);
+    const el = document.getElementById(id);
+    if (!el) return;
+    const on = id === activeId;
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-pressed", String(on));
   });
 }
 
@@ -1103,8 +1119,11 @@ function bindEvents() {
       const btn = e.target.closest("[data-filter]");
       if (!btn) return;
       state.filter = btn.getAttribute("data-filter") ?? "all";
-      document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
-      btn.classList.add("active");
+      document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+        const on = c === btn;
+        c.classList.toggle("active", on);
+        c.setAttribute("aria-pressed", String(on));
+      });
       state.page = 1;
       savePrefs();
       renderAll();

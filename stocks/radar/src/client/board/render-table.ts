@@ -63,7 +63,7 @@ export function renderRow(stock: StockRow, compact = false, mode: "default" | "t
       <td class="range-cell">${rangeBar(q?.range52Pct, q?.low52, q?.high52)}</td>
       <td class="num"><span class="rsi-badge rsi-${rsi.cls}">${rsi.text}</span></td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="${expanded ? "Collapse" : "Expand"} ${sym} details" aria-expanded="${expanded}" data-expand="${sid}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, q, 10) : ""}`;
@@ -87,7 +87,7 @@ export function renderRow(stock: StockRow, compact = false, mode: "default" | "t
       <td class="note-cell">${escapeHtml(stock.thesis ?? stock.targetNote ?? "—")}</td>
       <td>${renderPriority(stock)}</td>
       <td class="row-actions">
-        <button type="button" class="btn-icon expand-btn" aria-label="Toggle details" data-expand="${sid}">${expanded ? "−" : "+"}</button>
+        <button type="button" class="btn-icon expand-btn" aria-label="${expanded ? "Collapse" : "Expand"} ${sym} details" aria-expanded="${expanded}" data-expand="${sid}">${expanded ? "−" : "+"}</button>
       </td>
     </tr>
     ${expanded ? renderDetailRow(stock, price, getQuote(stock), 10) : ""}
@@ -134,13 +134,13 @@ export function tableHead(mode: "default" | "technical" = "default") {
       <th>Symbol</th><th>Name</th><th>Bucket</th>
       <th class="num">Price</th><th class="num">Chg</th><th>Trend</th>
       <th class="num">SMA 20</th><th class="num">SMA 50</th><th class="num">SMA 200</th>
-      <th>52W range</th><th data-sort="ath" class="sortable">ATH</th><th class="num">RSI</th><th class="num">Target</th><th></th>
+      <th>52W range</th><th data-sort="ath" class="sortable">ATH</th><th class="num">RSI</th><th class="num">Target</th><th scope="col"><span class="sr-only">Details</span></th>
     </tr>`;
   }
   return `<tr>
     <th>Symbol</th><th>Name</th><th>Bucket</th><th>Tags</th>
     <th class="num">Price</th><th class="num">Chg</th><th class="num">Target</th>
-    <th class="num">Distance</th><th>Thesis</th><th>Priority</th><th></th>
+    <th class="num">Distance</th><th>Thesis</th><th>Priority</th><th scope="col"><span class="sr-only">Details</span></th>
   </tr>`;
 }
 

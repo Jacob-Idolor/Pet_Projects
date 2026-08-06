@@ -53,6 +53,10 @@ export function scheduleResizeRender() {
 
 export function setViewToggle(activeId: string) {
   ["view-table", "view-technical"].forEach((id) => {
-    document.getElementById(id)?.classList.toggle("active", id === activeId);
+    const el = document.getElementById(id);
+    if (!el) return;
+    const on = id === activeId;
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-pressed", String(on));
   });
 }

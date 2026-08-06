@@ -21,8 +21,11 @@ export function bindEvents() {
       const btn = (e.target as HTMLElement).closest("[data-filter]");
       if (!btn) return;
       state.filter = btn.getAttribute("data-filter") ?? "all";
-      document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => c.classList.remove("active"));
-      btn.classList.add("active");
+      document.querySelectorAll(".filter-chips .chip[data-filter]").forEach((c) => {
+        const on = c === btn;
+        c.classList.toggle("active", on);
+        c.setAttribute("aria-pressed", String(on));
+      });
       state.page = 1;
       savePrefs();
       renderAll();

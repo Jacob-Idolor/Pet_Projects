@@ -802,6 +802,10 @@
   border-color: rgba(34, 197, 94, 0.55);
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
 }
+.search-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .filter-chips {
   display: flex;

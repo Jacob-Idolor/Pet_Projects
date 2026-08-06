@@ -440,28 +440,52 @@ const activeColKeys = () => [...BASE_COLS, ...(COLSETS[STATE.colset] || [])];
 async function load(refresh = false) {
   const btn = $("#refresh");
   btn.disabled = true;
-  $("#status").textContent = refresh ? "Forcing a fresh pull from Yahoo…" : "Loading universe…";
+  const statusEl = $("#status");
+  const statusDot = $("#statusDot");
+  statusEl.textContent = refresh ? "Refreshing snapshot…" : "Loading universe…";
+  if (statusDot) statusDot.dataset.health = "loading";
   try {
     const res = await fetch(refresh ? "/api/refresh" : "/api/screen");
+    if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
+    if (!data || !Array.isArray(data.layers)) throw new Error("Invalid screener payload");
     STATE.layers = data.layers;
     STATE.marketState = data.market_state;
     attachScores();
     const when = new Date(data.fetched_at * 1000).toLocaleTimeString();
-    $("#status").innerHTML =
-      `<b>${uniqueHoldings().length}</b> names · ${data.layers.length} layers · ` +
-      `${data.ok_count}/${data.ticker_count} with live data ${marketPill()}`;
+    const names = uniqueHoldings().length;
+    statusEl.innerHTML =
+      `<b>${names}</b> names · ${data.layers.length} layers · ` +
+      `${data.ok_count}/${data.ticker_count} with data ${marketPill()}`;
     $("#meta").textContent = `${data.cached ? "cached" : "fresh"} · updated ${when}`;
+    const kpiOk = $("#kpiOk");
+    if (kpiOk) kpiOk.textContent = `${data.ok_count}/${data.ticker_count}`;
+    const kpiNames = $("#kpiNames");
+    if (kpiNames) kpiNames.textContent = String(names);
+    if (statusDot) {
+      const ratio = data.ticker_count ? data.ok_count / data.ticker_count : 0;
+      statusDot.dataset.health = ratio >= 0.85 ? "live" : ratio > 0 ? "stale" : "error";
+    }
     buildFiltersPanel();
     buildThemeBar();
     renderTicker();
     render();
-    syncHistory();            // record today's snapshot, then pull deltas (async)
+    syncHistory();
     if (STATE.mode === "map" && window.GlobalMap) window.GlobalMap.render();
     if (STATE.mode === "analyst") initAnalyst();
   } catch (e) {
-    $("#status").textContent = "Failed to load data — is the server running?";
     console.error(e);
+    statusEl.textContent = "Couldn’t load the market snapshot.";
+    if (statusDot) statusDot.dataset.health = "error";
+    const root = $("#layers");
+    if (root) {
+      root.innerHTML = `<div class="error-state" role="alert">
+        <h3>Snapshot unavailable</h3>
+        <p>The screener couldn’t load data. Check your connection, then try again.</p>
+        <button type="button" class="btn-refresh" id="retryLoad">Retry</button>
+      </div>`;
+      root.querySelector("#retryLoad")?.addEventListener("click", () => load(true));
+    }
   } finally {
     btn.disabled = false;
   }
@@ -737,10 +761,10 @@ function renderTicker() {
     const c = h.market.change_pct;
     const cls = c > 0 ? "pos" : c < 0 ? "neg" : "flat";
     const arrow = c > 0 ? "▲" : c < 0 ? "▼" : "◆";
-    return `<span class="tt-item" data-tk="${h.ticker}" title="${escapeHtml(h.name)}">` +
-      `<span class="tt-sym">${h.ticker}</span>` +
+    return `<button type="button" class="tt-item" data-tk="${escapeHtml(h.ticker)}" aria-label="${escapeHtml(h.ticker)} ${escapeHtml(h.name || "")}">` +
+      `<span class="tt-sym">${escapeHtml(h.ticker)}</span>` +
       `<span class="tt-px">${fmtPrice(h.market.price)}</span>` +
-      `<span class="tt-chg ${cls}">${arrow}${fmtPct(c)}</span></span>`;
+      `<span class="tt-chg ${cls}">${arrow}${fmtPct(c)}</span></button>`;
   };
   const seq = names.map(item).join("");
   // duplicate the sequence so the -50% loop is seamless; speed scales with length
@@ -1062,9 +1086,20 @@ function buildTable(holdings, showLayers) {
   for (const h of sortHoldings(holdings)) {
     const tr = document.createElement("tr");
     tr.className = "stock-row";
-    tr.title = "Click for recent news";
+    tr.tabIndex = 0;
+    tr.setAttribute("role", "button");
+    tr.setAttribute("aria-expanded", String(STATE.openNews.has(h.ticker)));
+    tr.setAttribute("aria-label", `${h.ticker} ${h.name || ""} — expand details`);
+    tr.title = "Enter or click for score breakdown and headlines";
     tr.innerHTML = keys.map((k) => COLUMNS[k].cell(h, showLayers)).join("");
-    tr.addEventListener("click", () => toggleNews(h.ticker));
+    const openDetail = () => toggleNews(h.ticker);
+    tr.addEventListener("click", openDetail);
+    tr.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openDetail();
+      }
+    });
     tbody.appendChild(tr);
     if (STATE.openNews.has(h.ticker)) {
       const ntr = document.createElement("tr");
@@ -1100,7 +1135,11 @@ function render() {
 
   if (STATE.view === "flat") {
     const holdings = uniqueHoldings().filter(passesFilters);
-    if (!holdings.length) { root.innerHTML = emptyMsg(); return; }
+    if (!holdings.length) {
+      root.innerHTML = emptyMsg();
+      root.querySelector("#clearFiltersBtn")?.addEventListener("click", clearAllFilters);
+      return;
+    }
     const sec = document.createElement("section");
     sec.className = "layer";
     sec.innerHTML = `<div class="layer-head static"><h2>All names</h2><span class="count">${holdings.length} unique</span></div>`;
@@ -1118,9 +1157,11 @@ function render() {
     const collapsed = !STATE.focusLayer && STATE.collapsed.has(layer.id);
     const el = document.createElement("section");
     el.className = "layer" + (collapsed ? " collapsed" : "");
-    const head = document.createElement("div");
+    const head = document.createElement("button");
+    head.type = "button";
     head.className = "layer-head";
-    head.innerHTML = `<h2>${layer.name}</h2><span class="count">${visible.length} names</span><span class="caret">▾</span>`;
+    head.setAttribute("aria-expanded", String(!collapsed));
+    head.innerHTML = `<h2>${escapeHtml(layer.name)}</h2><span class="count">${visible.length} names</span><span class="caret" aria-hidden="true">▾</span>`;
     head.addEventListener("click", () => {
       if (STATE.collapsed.has(layer.id)) STATE.collapsed.delete(layer.id);
       else STATE.collapsed.add(layer.id);
@@ -1134,29 +1175,74 @@ function render() {
     el.appendChild(buildTable(visible, false));
     root.appendChild(el);
   }
-  if (!anyShown) root.innerHTML = emptyMsg();
+  if (!anyShown) {
+    root.innerHTML = emptyMsg();
+    root.querySelector("#clearFiltersBtn")?.addEventListener("click", clearAllFilters);
+  }
 }
 function emptyMsg() {
   const bits = [];
-  if (STATE.query) bits.push(`“${STATE.query}”`);
-  if (STATE.exposure.size) bits.push(`exposure: ${[...STATE.exposure].join(", ")}`);
-  if (STATE.tags.size) bits.push(`themes: ${[...STATE.tags].join(", ")}`);
+  if (STATE.query) bits.push(`search “${escapeHtml(STATE.query)}”`);
+  if (STATE.exposure.size) bits.push(`exposure: ${[...STATE.exposure].map(escapeHtml).join(", ")}`);
+  if (STATE.tags.size) bits.push(`themes: ${[...STATE.tags].map(escapeHtml).join(", ")}`);
   if (activeFilterCount()) bits.push(`${activeFilterCount()} metric filter(s)`);
-  return `<div class="loading">No names match ${bits.join(" · ") || "the current filters"}.</div>`;
+  const detail = bits.length
+    ? `<p>No names match <strong>${bits.join(" · ")}</strong>.</p>`
+    : `<p>No holdings to show.</p>`;
+  return `<div class="empty-state" role="status">
+    <h3>No matching names</h3>
+    ${detail}
+    <button type="button" class="btn-refresh" id="clearFiltersBtn">Clear filters &amp; search</button>
+  </div>`;
+}
+
+function clearAllFilters() {
+  STATE.query = "";
+  STATE.exposure.clear();
+  STATE.tags.clear();
+  STATE.valuation = {};
+  STATE.focusLayer = null;
+  const s = $("#search");
+  if (s) s.value = "";
+  savePrefs();
+  buildFiltersPanel();
+  buildThemeBar();
+  render();
 }
 
 // ---- toolbar sync + wiring ---------------------------------------------
 function syncToolbar() {
-  document.querySelectorAll("#viewToggle button").forEach((b) => b.classList.toggle("active", b.dataset.view === STATE.view));
-  document.querySelectorAll("#exposureFilter button").forEach((b) => b.classList.toggle("active", STATE.exposure.has(b.dataset.exp)));
+  document.querySelectorAll("#viewToggle button").forEach((b) => {
+    const on = b.dataset.view === STATE.view;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+  document.querySelectorAll("#exposureFilter button").forEach((b) => {
+    const on = STATE.exposure.has(b.dataset.exp);
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
   const cb = activeCapBand();
-  document.querySelectorAll("#capFilter button").forEach((b) => b.classList.toggle("active", b.dataset.cap === cb));
-  document.querySelectorAll("#colset button").forEach((b) => b.classList.toggle("active", b.dataset.cs === STATE.colset));
-  document.querySelectorAll("#scoreMode button").forEach((b) => b.classList.toggle("active", b.dataset.sm === STATE.scoreMode));
+  document.querySelectorAll("#capFilter button").forEach((b) => {
+    const on = b.dataset.cap === cb;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+  document.querySelectorAll("#colset button").forEach((b) => {
+    const on = b.dataset.cs === STATE.colset;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+  document.querySelectorAll("#scoreMode button").forEach((b) => {
+    const on = b.dataset.sm === STATE.scoreMode;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
   const fb = $("#filtersBtn"), n = activeFilterCount();
-  fb.textContent = n ? `⚙ Filters (${n})` : "⚙ Filters";
+  fb.textContent = n ? `Filters (${n})` : "Filters";
   fb.classList.toggle("active", STATE.panelOpen || n > 0);
   fb.setAttribute("aria-expanded", String(STATE.panelOpen));
+  fb.setAttribute("aria-controls", "filtersPanel");
 }
 
 document.querySelectorAll("#viewToggle button").forEach((b) =>
@@ -1187,19 +1273,32 @@ $("#filtersBtn").addEventListener("click", () => {
 // ---- mode (screener vs data-center map) --------------------------------
 function applyMode() {
   const m = STATE.mode, screener = m === "screener";
-  document.querySelectorAll("#mainnav button").forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
+  document.querySelectorAll("#mainnav button").forEach((b) => {
+    const on = b.dataset.mode === m;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-current", on ? "page" : "false");
+  });
+  const purpose = {
+    screener: "Screener — rank holdings by valuation, moat, growth, and composite score",
+    map: "Global Map — AI data-center campuses sized by capacity",
+    analyst: "AI Analyst — copy a research prompt built from this snapshot",
+    backtest: "Backtest — test whether higher scores preceded higher returns (local/CI)",
+    lookup: "Lookup — find a ticker and pin it on this device",
+  };
+  const mp = $("#modePurpose");
+  if (mp) mp.textContent = purpose[m] || purpose.screener;
   // screener chrome shows only in screener mode
-  $(".filterbar").classList.toggle("hidden", !screener);
-  $("#themeBar").classList.toggle("hidden", !screener);
-  $("#filtersPanel").classList.toggle("hidden", !screener || !STATE.panelOpen);
-  $(".statusbar").classList.toggle("hidden", !screener);
-  $("#layers").classList.toggle("hidden", !screener);
-  $("#search").classList.toggle("hidden", !screener);
-  renderAlerts();   // hides the alerts strip outside screener mode
-  $("#map").classList.toggle("hidden", m !== "map");
-  $("#backtest").classList.toggle("hidden", m !== "backtest");
-  $("#analyst").classList.toggle("hidden", m !== "analyst");
-  $("#lookup").classList.toggle("hidden", m !== "lookup");
+  $(".filterbar")?.classList.toggle("hidden", !screener);
+  $("#themeBar")?.classList.toggle("hidden", !screener);
+  $("#filtersPanel")?.classList.toggle("hidden", !screener || !STATE.panelOpen);
+  $(".statusbar")?.classList.toggle("hidden", !screener);
+  $("#layers")?.classList.toggle("hidden", !screener);
+  $("#search")?.classList.toggle("hidden", !screener);
+  renderAlerts();
+  $("#map")?.classList.toggle("hidden", m !== "map");
+  $("#backtest")?.classList.toggle("hidden", m !== "backtest");
+  $("#analyst")?.classList.toggle("hidden", m !== "analyst");
+  $("#lookup")?.classList.toggle("hidden", m !== "lookup");
   updateFocusBanner();
   if (m === "map" && window.GlobalMap) window.GlobalMap.render();
   if (m === "backtest" && window.Backtest) window.Backtest.render();
