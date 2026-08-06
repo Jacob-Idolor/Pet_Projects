@@ -3,8 +3,8 @@
  * Local/CI checks before requesting AdSense review or enabling live ads.
  * Does not talk to Google — verifies our static build policy gates.
  *
- *   node scripts/adsense-review-checklist.mjs
- *   node scripts/adsense-review-checklist.mjs --dist dist
+ *   node scripts/ops/adsense-review-checklist.mjs
+ *   node scripts/ops/adsense-review-checklist.mjs --dist dist
  */
 import { existsSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -39,17 +39,14 @@ console.log(`  dist: ${dist}\n`);
 
 const index = read("index.html");
 const notFound = read("404.html");
-const dc = read("datacenter.html");
+const watchlist = read("watchlist.html");
+const dcRedirect = read("datacenter.html");
 
 if (!index) fail("dist/index.html missing — run npm run build");
 else {
-  if (/About this page|publisher-content|What StocksWatch publishes/i.test(index)) {
-    pass("Home has publisher About content");
-  } else fail("Home missing PublisherContent / About section");
-
-  if (/watchlist-board|Master list/i.test(index)) {
-    pass("Home includes watchlist board markup");
-  } else fail("Home missing watchlist board");
+  if (/AI Data Center|mainnav|id="layers"/i.test(index)) {
+    pass("Home is AI Data Center screener");
+  } else fail("Home missing AI Data Center screener markup");
 
   const adScript = /pagead2\.googlesyndication\.com|adsbygoogle/i.test(index);
   if (adScript) {
@@ -58,16 +55,22 @@ else {
     pass("Home has no AdSense script in this build (CLIENT unset or gates blocked — OK for pre-approval)");
   }
 
-  // Ads must not appear before the board section id when present as slots
-  const boardIdx = index.indexOf('id="watchlist-board"');
+  const layersIdx = index.indexOf('id="layers"');
   const adSlotIdx = index.search(/data-ad-placement|class="[^"]*ad-slot/);
-  if (adSlotIdx >= 0 && boardIdx >= 0 && adSlotIdx < boardIdx) {
-    fail("Ad slot markup appears before #watchlist-board (policy risk)");
+  if (adSlotIdx >= 0 && layersIdx >= 0 && adSlotIdx < layersIdx) {
+    fail("Ad slot markup appears before #layers (policy risk)");
   } else if (adSlotIdx >= 0) {
-    pass("Any ad slots are after the watchlist board");
+    pass("Any ad slots are after the screener main content");
   } else {
     pass("No live/preview ad slots in this build (expected until slots enabled)");
   }
+}
+
+if (!watchlist) fail("dist/watchlist.html missing (archived watchlist)");
+else {
+  if (/watchlist-board|Archived watchlist/i.test(watchlist)) {
+    pass("Archived watchlist page present");
+  } else fail("watchlist.html missing board / archive banner");
 }
 
 if (!notFound) fail("dist/404.html missing");
@@ -79,17 +82,20 @@ else {
   else warn("404 missing noindex (recommended)");
 }
 
-if (!dc) fail("dist/datacenter.html missing");
+if (!dcRedirect) fail("dist/datacenter.html missing (should redirect to /)");
 else {
-  if (/pagead2\.googlesyndication\.com|adsbygoogle/i.test(dc)) {
-    fail("Datacenter loads AdSense — must not (tool UI)");
-  } else pass("Datacenter has no AdSense script");
+  if (/refresh|location\.replace|Continue/i.test(dcRedirect)) {
+    pass("Legacy datacenter.html redirects to home");
+  } else warn("datacenter.html may not redirect — check for bookmarks");
+  if (/pagead2\.googlesyndication\.com|adsbygoogle/i.test(dcRedirect)) {
+    fail("Redirect page loads AdSense — must not");
+  } else pass("Legacy datacenter redirect has no AdSense script");
 }
 
 console.log(`
 Operator steps (cannot be automated here):
   1. AdSense → Ads → Auto ads → OFF for stockswatch.cc
-  2. Use only manual Display units (board + footer)
+  2. Use only manual Display units (board + footer on /)
   3. Deploy latest main to production
   4. Spot-check live / and a 404 URL in DevTools (no unexpected pagead requests on 404)
   5. Confirm https://stockswatch.cc/ads.txt

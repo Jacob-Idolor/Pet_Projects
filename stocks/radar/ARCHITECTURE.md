@@ -1,13 +1,15 @@
 # StocksWatch architecture
 
-Static Astro site (`stockswatch.cc`): home watchlist + AI datacenter screener. No app server — CI writes JSON to S3; CloudFront serves it.
+Static Astro site (`stockswatch.cc`): **AI Data Center screener on `/`**, archived group watchlist on `/watchlist.html`. No app server — CI writes JSON to S3; CloudFront serves it.
 
 ## Surfaces
 
 | Surface | Where to edit | Runtime |
 |---------|---------------|---------|
-| Home watchlist | `src/pages/index.astro`, `src/components/*`, `src/client/board/*` | Astro HTML + `public/watchlist-board.mjs` |
-| Datacenter screener | `public/datacenter/*` (plain JS/CSS) | Loaded from `datacenter.astro` |
+| Home (AI Data Center) | `src/pages/index.astro`, `public/datacenter/*` | Astro + hashed JS/CSS + `static-api.js` |
+| Archived watchlist | `src/pages/watchlist.astro`, `src/client/board/*` | Astro HTML + `public/watchlist-board.mjs` |
+| Legacy `/datacenter.html` | `src/pages/datacenter.astro` | Client redirect → `/` |
+| Local Flask (dev only) | `archive/ai-datacenter-screener/` | Not deployed to AWS |
 | Shared tokens | `src/styles/tokens.css` → synced to `public/tokens.css` | Both surfaces |
 | Site settings | `src/data/site-settings.json` | Astro + Node via `scripts/config.mjs` |
 
@@ -15,9 +17,10 @@ Static Astro site (`stockswatch.cc`): home watchlist + AI datacenter screener. N
 
 ```text
 GitHub Actions (fetch / refresh)
-  → public/quotes.json, outlook.json, screener.json, …
+  → public/quotes.json, outlook.json, screener.json, datacenter/campuses.json, …
   → S3 + CloudFront (~60s edge TTL for live JSON)
-  → Browser polls (LiveStatus) → radar:quotes → board re-render
+  → Browser: homepage screener via static-api.js
+  → Archived watchlist: LiveStatus → radar:quotes → board re-render
 ```
 
 ## Client code (`src/client/`)

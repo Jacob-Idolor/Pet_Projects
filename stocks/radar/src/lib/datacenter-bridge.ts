@@ -1,6 +1,6 @@
 /**
- * Bridge between StocksWatch home and the AI Data Center universe.
- * Build-time index only — no screener scoring (that stays on /datacenter.html).
+ * Bridge between archived StocksWatch watchlist and the AI Data Center universe.
+ * Build-time index only — screener scoring lives on `/` (homepage).
  */
 import universe from "../data/datacenter-universe.json";
 
@@ -99,14 +99,15 @@ export function dcEntryForSymbol(
   return bridge.byTicker[String(symbol).trim().toUpperCase()];
 }
 
-/** Deep-link into the Data Center screener for a ticker or layer. */
+/** Deep-link into the Data Center screener (homepage) for a ticker or layer. */
 export function datacenterHref(
   base: string,
   opts: { ticker?: string; layer?: string } = {},
 ): string {
   const root = base.endsWith("/") ? base : `${base}/`;
-  const url = new URL("datacenter.html", `https://stockswatch.local${root}`);
-  if (opts.ticker) url.searchParams.set("q", opts.ticker.toUpperCase());
-  if (opts.layer) url.searchParams.set("layer", opts.layer);
-  return `${root}datacenter.html${url.search}`;
+  const params = new URLSearchParams();
+  if (opts.ticker) params.set("q", opts.ticker.toUpperCase());
+  if (opts.layer) params.set("layer", opts.layer);
+  const qs = params.toString();
+  return qs ? `${root}?${qs}` : root;
 }

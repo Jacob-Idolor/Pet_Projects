@@ -16,6 +16,7 @@ import {
 } from "../../scripts/lib/adsense-policy.mjs";
 import { getSiteSettings } from "./site-config";
 import { stocks } from "../data/watchlist";
+import universe from "../data/datacenter-universe.json";
 
 export type AdPlacement = "hero" | "board" | "footer";
 
@@ -51,9 +52,19 @@ function siteUrl(): string {
   ).replace(/\/$/, "");
 }
 
-/** Enough publisher content to justify ad inventory on the home board. */
+function datacenterHoldingCount(): number {
+  return (universe.layers || []).reduce(
+    (n, L) => n + ((L as { holdings?: unknown[] }).holdings?.length || 0),
+    0
+  );
+}
+
+/** Enough publisher content: watchlist theses OR datacenter universe holdings. */
 export function hasPublisherContent(minTickers = 5): boolean {
-  return hasPublisherContentCount(stocks.length, minTickers);
+  return (
+    hasPublisherContentCount(stocks.length, minTickers) ||
+    hasPublisherContentCount(datacenterHoldingCount(), minTickers)
+  );
 }
 
 export function getAdSenseConfig(): AdSenseConfig {
@@ -68,7 +79,7 @@ export function getAdSenseConfig(): AdSenseConfig {
   // Never ship preview placeholders from a production build (ignore force flag).
   const preview = isDev || (forcePreviewRequested && !isProdBuild);
 
-  // Hero/top ads sit above the watchlist — high risk for “no publisher content”.
+  // Hero/top ads sit above the board — high risk for “no publisher content”.
   // Opt in only with PUBLIC_ADSENSE_ALLOW_HERO=true after the page is content-rich.
   const allowHero = env("PUBLIC_ADSENSE_ALLOW_HERO") === "true";
 
@@ -79,13 +90,14 @@ export function getAdSenseConfig(): AdSenseConfig {
   };
 
   const requireDomain = settings.seo?.requireCustomDomainForAds !== false;
+  const tickerCount = Math.max(stocks.length, datacenterHoldingCount());
   const { enabled, blockReason } = evaluateLiveAdsGate({
     client,
     enabledFlag,
     preview,
     siteUrl: siteUrl(),
     requireCustomDomain: requireDomain,
-    tickerCount: stocks.length,
+    tickerCount,
     minTickers: 5,
   });
 

@@ -15,7 +15,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const DC = resolve(ROOT, "public/datacenter");
 const MANIFEST = resolve(ROOT, "src/data/datacenter-asset-manifest.json");
 
-const SOURCES = ["static-api.js", "app.js", "datacenter.js", "rackexplorer.js", "style.css"];
+const SOURCES = ["static-api.js", "app.js", "map.js", "backtest.js", "style.css"];
 
 function shortHash(buf) {
   return createHash("sha256").update(buf).digest("hex").slice(0, 10);

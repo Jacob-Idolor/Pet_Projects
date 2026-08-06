@@ -10,10 +10,12 @@
   const reportsUrl = root.dataset.reportsUrl || base + "reports.json";
   const HISTORY_KEY = "sw-dc-history-v1";
   const USER_KEY = "sw-dc-user-stocks-v1";
+  const USER_DC_KEY = "sw-dc-user-campuses-v1";
 
   let screenCache = null;
   let newsCache = null;
   let reportsCache = null;
+  let campusesCache = null;
 
   function jsonResponse(data, status = 200) {
     return new Response(JSON.stringify(data), {
@@ -64,6 +66,35 @@
       reportsCache = { reports: [], has_key: false };
       return reportsCache;
     }
+  }
+
+  async function loadCampuses() {
+    if (campusesCache) return campusesCache;
+    const url = root.dataset.campusesUrl || base + "campuses.json";
+    try {
+      const res = await origFetch(url);
+      if (!res.ok) {
+        campusesCache = { sites: [], disclaimer: "", power_sources: [] };
+        return campusesCache;
+      }
+      campusesCache = await res.json();
+    } catch {
+      campusesCache = { sites: [], disclaimer: "", power_sources: [] };
+    }
+    return campusesCache;
+  }
+
+  function loadUserCampuses() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(USER_DC_KEY) || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveUserCampuses(items) {
+    localStorage.setItem(USER_DC_KEY, JSON.stringify(items.slice(0, 200)));
   }
 
   function loadHistory() {
@@ -584,28 +615,132 @@
       return jsonResponse({ items, stocks: items });
     }
 
+    if (path === "/api/datacenters") {
+      const curated = await loadCampuses();
+      const params = new URLSearchParams(path.includes("?") ? "" : "");
+      // path is pathname only — parse min_mw from full URL when available via lastUrl
+      let minMw = 0;
+      try {
+        minMw = Number(lastApiSearchParams.get("min_mw") || 0) || 0;
+      } catch {
+        minMw = 0;
+      }
+      const merged = [...(curated.sites || []), ...loadUserCampuses()].filter(
+        (s) => (s.mw || 0) >= minMw
+      );
+      merged.sort((a, b) => (b.mw || 0) - (a.mw || 0));
+      return jsonResponse({
+        sites: merged,
+        count: merged.length,
+        disclaimer: curated.disclaimer || "",
+        power_sources: curated.power_sources || ["Grid", "Gas", "Nuclear", "Renewables", "Hydro", "Mixed"],
+      });
+    }
+
+    if (path === "/api/add-datacenter" && method === "POST") {
+      const name = String(body.name || "").trim().slice(0, 120);
+      const lat = Number(body.lat);
+      const lng = Number(body.lng);
+      const mw = Number(body.mw);
+      if (!name || !Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(mw)) {
+        return jsonResponse(
+          { ok: false, error: "Need at least a name, latitude, longitude and MW." },
+          400
+        );
+      }
+      const statuses = new Set(["operational", "construction", "planned"]);
+      const powers = new Set(["Grid", "Gas", "Nuclear", "Renewables", "Hydro", "Mixed"]);
+      const item = {
+        name,
+        operator: String(body.operator || "").slice(0, 120),
+        lat,
+        lng,
+        mw,
+        status: statuses.has(body.status) ? body.status : "planned",
+        power: powers.has(body.power) ? body.power : "Grid",
+        country: String(body.country || "").slice(0, 80),
+        region: String(body.region || "").slice(0, 80),
+        note: String(body.note || "").slice(0, 280),
+        tickers: Array.isArray(body.tickers)
+          ? body.tickers.map((t) => String(t).toUpperCase().slice(0, 15)).slice(0, 12)
+          : String(body.tickers || "")
+              .split(",")
+              .map((t) => t.trim().toUpperCase())
+              .filter(Boolean)
+              .slice(0, 12),
+        user_added: true,
+      };
+      const items = loadUserCampuses().filter((x) => x.name !== item.name);
+      items.push(item);
+      saveUserCampuses(items);
+      return jsonResponse({ ok: true, item });
+    }
+
+    if (path === "/api/remove-datacenter" && method === "POST") {
+      const name = String(body.name || "");
+      saveUserCampuses(loadUserCampuses().filter((x) => x.name !== name));
+      return jsonResponse({ ok: true });
+    }
+
+    if (path.startsWith("/api/signals/")) {
+      return jsonResponse({ insider: null, buzz: null, items: [] });
+    }
+
+    if (path === "/api/backfill") {
+      return jsonResponse({
+        ok: false,
+        error:
+          "Historical backfill runs only in the local Flask app (archive/ai-datacenter-screener).",
+      });
+    }
+
+    if (path === "/api/backtest") {
+      return jsonResponse({
+        ok: false,
+        error:
+          "Full score backtest needs local Yahoo history. Run the Flask app in archive/ai-datacenter-screener, or wait for a future CI snapshot.",
+        note: "static_site",
+      });
+    }
+
+    if (path === "/api/health") {
+      return jsonResponse({ ok: true, mode: "static" });
+    }
+
     return jsonResponse({ ok: false, error: "Unknown API route: " + path }, 404);
   }
 
+  let lastApiSearchParams = new URLSearchParams();
+
   const origFetch = window.fetch.bind(window);
-  window.fetch = function (input, init) {
-    const url = typeof input === "string" ? input : input && input.url;
-    if (typeof url === "string") {
-      // Only intercept same-origin relative /api/ — never foreign hosts
-      let path = null;
-      if (url.startsWith("/api/")) {
-        path = url.split("?")[0];
-      } else if (url.startsWith("http")) {
-        try {
+  window.fetch = async function (input, init) {
+    try {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (url.startsWith("/api/") || (url.includes("/api/") && url.startsWith(location.origin))) {
+        let path = url;
+        if (url.startsWith("http")) {
           const u = new URL(url);
           if (u.origin === location.origin && u.pathname.startsWith("/api/")) {
             path = u.pathname;
+            lastApiSearchParams = u.searchParams;
           }
-        } catch {
-          /* ignore */
+        } else if (url.startsWith("/api/")) {
+          const q = url.indexOf("?");
+          if (q >= 0) {
+            path = url.slice(0, q);
+            lastApiSearchParams = new URLSearchParams(url.slice(q + 1));
+          } else {
+            path = url;
+            lastApiSearchParams = new URLSearchParams();
+          }
+        }
+        if (path.startsWith("/api/")) {
+          return handleApi(path, init);
         }
       }
-      if (path) return handleApi(path, init);
+    } catch {
+      /* fall through */
     }
     return origFetch(input, init);
   };

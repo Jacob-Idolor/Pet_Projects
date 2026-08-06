@@ -22,14 +22,14 @@ const moversUrl = `${base}dc-movers.json`.replace(/\/{2,}/g, "/").replace(":/", 
       <p class="dc-bridge__lede">
         Same StocksWatch board language — six layers, 
         <strong class="mono">{bridge.tickerCount}</strong> thematic names.
-        Overlaps on the master list get a layer chip. Jump into the full screener for map,
-        rack, and research tools.
+        Overlaps on the master list get a layer chip. Jump into the homepage screener for map
+        and research tools.
       </p>
     </div>
     <nav class="checkin-jump dc-bridge__jump" aria-label="AI Data Center links">
       <a href={dcHome}>Open screener</a>
-      <a href={`${base}datacenter.html?mode=datacenter`}>Map</a>
-      <a href={`${base}datacenter.html?mode=analyst`}>Analyst</a>
+      <a href={`${base}?mode=map`}>Map</a>
+      <a href={`${base}?mode=analyst`}>Analyst</a>
     </nav>
   </div>
 
@@ -86,7 +86,7 @@ const moversUrl = `${base}dc-movers.json`.replace(/\/{2,}/g, "/").replace(":/", 
     }
 
     function dcLink(ticker) {
-      return base + "datacenter.html?q=" + encodeURIComponent(ticker);
+      return base + "?q=" + encodeURIComponent(ticker);
     }
 
     function chip(row) {
@@ -140,7 +140,7 @@ const moversUrl = `${base}dc-movers.json`.replace(/\/{2,}/g, "/").replace(":/", 
         moversEl.innerHTML =
           '<p class="dc-bridge__movers-loading">Couldn’t load movers — <a href="' +
           base +
-          'datacenter.html">open AI Data Center</a>.</p>';
+          '">open AI Data Center</a>.</p>';
       });
   })();
 </script>

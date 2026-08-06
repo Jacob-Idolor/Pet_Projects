@@ -651,20 +651,20 @@ function renderDcLayerBadge(stock) {
   const primary = entry.primary;
   const more = entry.layers.length > 1 ? ` +${entry.layers.length - 1}` : "";
   const exp = primary.exposure ? ` \xB7 ${primary.exposure}` : "";
-  const href = `${radarBaseHref()}datacenter.html?q=${encodeURIComponent(entry.ticker)}&layer=${encodeURIComponent(primary.id)}`;
+  const href = `${radarBaseHref()}?q=${encodeURIComponent(entry.ticker)}&layer=${encodeURIComponent(primary.id)}`;
   return `<a class="dc-badge dc-badge--${escapeHtml(primary.id)}" href="${href}" title="${escapeHtml(primary.name)}${escapeHtml(exp)}">DC \xB7 ${escapeHtml(primary.label)}${more}</a>`;
 }
 function renderDcDetail(stock) {
   const entry = dcBridgeEntry(stock.symbol);
   if (!entry) return "";
   const layers = entry.layers.map((l) => {
-    const href = `${radarBaseHref()}datacenter.html?layer=${encodeURIComponent(l.id)}&q=${encodeURIComponent(entry.ticker)}`;
+    const href = `${radarBaseHref()}?layer=${encodeURIComponent(l.id)}&q=${encodeURIComponent(entry.ticker)}`;
     const exp = l.exposure ? ` (${escapeHtml(l.exposure)})` : "";
     return `<a class="dc-badge dc-badge--${escapeHtml(l.id)}" href="${href}">${escapeHtml(l.label)}${exp}</a>`;
   }).join(" ");
   return `<div class="dc-detail">
       <strong>AI Data Center:</strong> ${layers}
-      <a class="dc-detail__link" href="${radarBaseHref()}datacenter.html?q=${encodeURIComponent(entry.ticker)}">Open in screener \u2192</a>
+      <a class="dc-detail__link" href="${radarBaseHref()}?q=${encodeURIComponent(entry.ticker)}">Open in screener \u2192</a>
     </div>`;
 }
 function renderPriority(stock) {

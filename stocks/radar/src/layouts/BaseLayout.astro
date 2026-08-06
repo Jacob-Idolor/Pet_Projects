@@ -7,13 +7,15 @@ interface Props {
   description?: string;
   /**
    * Load the AdSense script + allow units on this document.
-   * Only set true on pages with substantial publisher content (home board).
+   * Only set true on pages with substantial publisher content.
    * Never true on 404 / alerts / under-construction screens.
    */
   allowAds?: boolean;
   /** Search engines: use noindex on error / empty utility pages */
   noindex?: boolean;
   activeNav?: "watchlist" | "datacenter";
+  /** Override canonical path (default `/`) */
+  canonicalPath?: string;
 }
 
 const {
@@ -22,11 +24,13 @@ const {
   allowAds = false,
   noindex = false,
   activeNav = "watchlist",
+  canonicalPath = "/",
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
 const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
-const canonical = site ? `${site}/` : undefined;
+const path = canonicalPath.startsWith("/") ? canonicalPath : `/${canonicalPath}`;
+const canonical = site ? `${site}${path === "/" ? "/" : path}` : undefined;
 const pageTitle = `${title} | StocksWatch`;
 const ads = getAdSenseConfig();
 /** Script only when this page opts in AND live ads (or verify meta) are configured. */
@@ -79,6 +83,10 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
       <div class="container">
         <p>
           Built for friends who talk stocks — not financial advice.
+          <a href={base}>AI Data Center</a>
+          ·
+          <a href={`${base}watchlist.html`.replace(/\/{2,}/g, "/")}>Archived watchlist</a>
+          ·
           <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
         <p class="disclaimer">

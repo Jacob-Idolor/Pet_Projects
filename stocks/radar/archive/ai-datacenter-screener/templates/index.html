@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Data Center Screener</title>
+  <!-- Leaflet (interactive map). Loaded from CDN; the app already needs internet for live quotes. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- marker clustering for dense regions (US / Europe) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <!-- retro NYSE-style scrolling ticker tape of the day's movers (built by app.js) -->
+  <div class="tickertape" id="tickertape" aria-label="Live movers ticker">
+    <div class="tt-cap" id="ttCap"><span class="tt-dot"></span>MARKETS</div>
+    <div class="tt-viewport"><div class="tt-track" id="ttTrack"></div></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <!-- AI = Artificial Intelligence & Allen Iverson ("The Answer"). Drop a clip
+           at static/assets/iverson.gif and it replaces the animated ball emblem. -->
+      <div class="brand-emblem" title="AI — Artificial Intelligence &amp; Allen Iverson, 'The Answer'">
+        <svg class="brand-fallback" viewBox="0 0 64 64" aria-hidden="true">
+          <g class="bball">
+            <circle cx="32" cy="32" r="22" fill="#e87b2e" stroke="#c9621f" stroke-width="1.5"/>
+            <path d="M10 32 H54 M32 10 V54 M16.5 14.5 Q31 32 16.5 49.5 M47.5 14.5 Q33 32 47.5 49.5"
+                  fill="none" stroke="#23160c" stroke-width="2" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <img class="brand-gif" id="brandGif" alt="Allen Iverson highlight"
+             src="{{ url_for('static', filename='assets/iverson.gif') }}"
+             onload="this.closest('.brand-emblem').classList.add('has-gif')" />
+      </div>
+      <div class="title-wrap">
+        <h1><span class="ai">AI</span> Data Center <span class="screener">Screener</span></h1>
+        <p class="subtitle">The AI infrastructure buildout, layer by layer — land → power → cooling → compute → networking → software</p>
+      </div>
+    </div>
+    <div class="controls">
+      <input id="search" type="search" placeholder="Press  /  to filter by ticker, name, or tag…" autocomplete="off" />
+      <button id="refresh" title="Force a fresh pull from Yahoo">↻ Refresh</button>
+    </div>
+  </header>
+
+  <!-- primary navigation: screener vs the interactive data-center map -->
+  <nav class="mainnav" id="mainnav" aria-label="View">
+    <button data-mode="screener" class="active">📊 Screener</button>
+    <button data-mode="map">🌐 Global Map</button>
+    <button data-mode="analyst">🧠 AI Analyst</button>
+    <button data-mode="backtest">📈 Backtest</button>
+    <button data-mode="lookup">🔎 Stock Lookup</button>
+  </nav>
+
+  <!-- sticky toolbar: view + exposure filters -->
+  <div class="filterbar">
+    <div class="seg" id="viewToggle" role="tablist" aria-label="View">
+      <button data-view="layers" class="active">By layer</button>
+      <button data-view="flat">All names</button>
+    </div>
+    <div class="exposure-filter" id="exposureFilter" aria-label="Exposure filter">
+      <span class="flabel">Exposure:</span>
+      <button data-exp="pure">Pure</button>
+      <button data-exp="high">High</button>
+      <button data-exp="moderate">Moderate</button>
+      <button data-exp="diversified">Diversified</button>
+    </div>
+    <div class="cap-filter" id="capFilter" aria-label="Market-cap filter">
+      <span class="flabel">Cap:</span>
+      <button data-cap="mega" title="≥ $200B">Mega</button>
+      <button data-cap="large" title="$10B – $200B">Large</button>
+      <button data-cap="mid" title="$2B – $10B">Mid</button>
+      <button data-cap="small" title="$300M – $2B">Small</button>
+      <button data-cap="micro" title="under $300M">Micro</button>
+    </div>
+    <button id="filtersBtn" class="filters-btn" aria-expanded="false">⚙ Filters</button>
+    <span class="flabel cols-label">Columns:</span>
+    <div class="seg seg-scroll" id="colset" role="tablist" aria-label="Column set">
+      <button data-cs="valuation" class="active" title="Valuation factor: P/E, P/S, EV/EBITDA, P/B, PEG">Valuation</button>
+      <button data-cs="moat" title="Moat & quality factor: gross/operating/net margin, ROE, ROA">Moat</button>
+      <button data-cs="growth" title="Growth factor: revenue & earnings growth">Growth</button>
+      <button data-cs="technical" title="Technical factor: % off 52w high, vs 50/200-day MA">Technical</button>
+      <button data-cs="health" title="Financial health factor: debt/equity, current ratio">Health</button>
+      <button data-cs="exposure" title="Thematic exposure factor: layer breadth, beta, revenue growth">Exposure</button>
+      <button data-cs="consensus" title="Wall-Street consensus: target, upside, rating, yield, earnings date">Consensus</button>
+      <button data-cs="trends" title="Day-over-day score & price changes from stored history">Trends</button>
+      <button data-cs="scores" title="The composite score broken into its 6 factor sub-scores">Scores</button>
+    </div>
+    <span class="flabel cols-label" title="Rank score factors against the whole universe, or only against same-layer peers">Score vs:</span>
+    <div class="seg" id="scoreMode" role="tablist" aria-label="Score basis">
+      <button data-sm="universe" class="active">Universe</button>
+      <button data-sm="layer">Layer</button>
+    </div>
+    <button id="scoreInfo" class="score-info" title="How the composite score is calculated">ⓘ How scoring works</button>
+  </div>
+
+  <!-- horizontally-scrollable theme/tag quick-filter chips (built by app.js) -->
+  <div class="theme-bar" id="themeBar"></div>
+
+  <!-- collapsible valuation filter panel (built by app.js) -->
+  <div class="filters-panel hidden" id="filtersPanel"></div>
+
+  <section class="statusbar">
+    <span id="status">Loading universe…</span>
+    <span id="meta" class="muted"></span>
+  </section>
+
+  <!-- focus banner: shown when you drill into one layer from the map -->
+  <div class="focus-banner hidden" id="focusBanner"></div>
+
+  <!-- alerts strip: notable score/price moves vs stored history (built by app.js) -->
+  <div class="alerts hidden" id="alerts"></div>
+
+  <main id="layers"><div class="loading">Fetching live market data…</div></main>
+
+  <!-- Global Map: zoomable world map of large AI data-center campuses (map.js + Leaflet) -->
+  <section class="gmap hidden" id="map">
+    <div class="gmap-head">
+      <div class="gmap-intro">
+        <h2>🌐 Global AI Data-Center Map</h2>
+        <p class="muted">The largest existing &amp; planned campuses powering the buildout. Markers are sized by
+          capacity and coloured by status. Click one for details and its related stocks.
+          <span class="gmap-disc" id="gmapDisc"></span></p>
+      </div>
+      <div class="gmap-controls">
+        <span class="flabel">Min cap:</span>
+        <div class="seg" id="mapThreshold" role="tablist" aria-label="Capacity threshold">
+          <button data-mw="2000">2 GW+</button>
+          <button data-mw="1000">1 GW+</button>
+          <button data-mw="500">500 MW+</button>
+          <button data-mw="250" class="active">250 MW+</button>
+          <button data-mw="100">100 MW+</button>
+          <button data-mw="50">50 MW+</button>
+        </div>
+        <span class="flabel">Colour:</span>
+        <div class="seg" id="mapColorBy" role="tablist" aria-label="Colour markers by">
+          <button data-by="status" class="active">Status</button>
+          <button data-by="power">Power</button>
+        </div>
+        <button id="mapRefresh" class="gmap-btn" title="Re-pull the latest sites">↻ Refresh</button>
+        <button id="mapAddToggle" class="gmap-btn" title="Log a newly-announced campus">＋ Add site</button>
+      </div>
+    </div>
+    <div class="gmap-addform hidden" id="mapAddForm"></div>
+    <div class="gmap-stage">
+      <div class="gmap-canvas" id="mapCanvas"></div>
+      <aside class="gmap-panel" id="mapPanel"></aside>
+    </div>
+    <div class="gmap-legend" id="mapLegend"></div>
+  </section>
+
+
+  <!-- Stock Lookup: search any ticker, recommend a layer, add it -->
+  <section class="lookup hidden" id="lookup">
+    <div class="lk-head">
+      <h2>Stock Lookup — add any company to a layer</h2>
+      <p class="muted">Search any ticker. The app pulls its profile, recommends which layer it best fits,
+        and lets you add it — added stocks then appear in the Screener, Map, and AI Analyst.</p>
+    </div>
+    <div class="lk-bar">
+      <input id="lkTicker" type="search" placeholder="Any ticker — e.g. CSCO, DUK, PLD, ASML, 6758.T…" autocomplete="off" />
+      <button id="lkGo">Look up</button>
+    </div>
+    <div class="lk-result" id="lkResult"></div>
+    <div class="lk-added" id="lkAdded"></div>
+  </section>
+
+  <!-- AI Analyst (Claude-generated research reports) -->
+  <section class="analyst hidden" id="analyst">
+    <div class="an-head">
+      <h2>AI Analyst — 10 research workflows</h2>
+      <p class="muted">Pick a company, then a report. Each is generated by Claude using this app's live
+        data (financials, the 6-factor score, peers, recent news). <span id="anKeyNote"></span></p>
+    </div>
+    <div class="an-bar">
+      <label class="an-pick">Company
+        <select id="anTicker"></select>
+      </label>
+      <div class="an-reports" id="anReports"></div>
+    </div>
+    <div class="an-output" id="anOutput"><div class="muted">Choose a report above to begin.</div></div>
+  </section>
+
+  <!-- Score backtest: reconstruct daily historical scores & test forward returns -->
+  <section class="backtest hidden" id="backtest">
+    <div class="bt-head">
+      <h2>📈 Score Backtest — is the score predictive?</h2>
+      <p class="muted">Reconstructs daily close-of-day scores over the lookback, then checks whether higher
+        scores preceded higher forward returns.
+        <span class="bt-disc">Price-driven metrics (multiples, technicals, upside) are recomputed each day from real
+        historical closes; slow fundamentals (margins, growth, debt…) are held at today's values — there's no free
+        point-in-time fundamental data — so this is a relative signal test, not a trading simulation.</span></p>
+    </div>
+    <div class="bt-controls">
+      <span class="flabel">Forward horizon:</span>
+      <div class="seg" id="btHorizon" role="tablist">
+        <button data-h="5">1 week</button>
+        <button data-h="21" class="active">1 month</button>
+        <button data-h="63">3 months</button>
+      </div>
+      <span class="flabel">Lookback:</span>
+      <div class="seg" id="btMonths" role="tablist">
+        <button data-m="3">3 mo</button>
+        <button data-m="6" class="active">6 mo</button>
+      </div>
+      <button id="btRun" class="gmap-btn">↻ Run backtest</button>
+    </div>
+    <div class="bt-results" id="btResults"></div>
+  </section>
+
+  <footer class="foot muted">
+    Data: Yahoo Finance via yfinance · For research/education only, not investment advice ·
+    Edit <code>universe.py</code> to change the holdings.<br/>
+    Backdrop photos: Wikimedia Commons under CC BY / CC BY-SA — credits in <code>static/assets/ATTRIBUTIONS.md</code>.
+  </footer>
+
+  <!-- scoring methodology modal (built by app.js) -->
+  <div class="modal-overlay hidden" id="scoreModal"></div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='map.js') }}"></script>
+  <script src="{{ url_for('static', filename='backtest.js') }}"></script>
+</body>
+</html>

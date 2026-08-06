@@ -1,103 +1,298 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import LiveStatus from "../components/LiveStatus.astro";
-import DayMoodBanner from "../components/DayMoodBanner.astro";
-import CheckInPulse from "../components/CheckInPulse.astro";
-import MacroStrip from "../components/MacroStrip.astro";
-import DatacenterBridge from "../components/DatacenterBridge.astro";
-import WatchlistBoard from "../components/WatchlistBoard.astro";
-import GroupSubmissions from "../components/GroupSubmissions.astro";
-import PublisherContent from "../components/PublisherContent.astro";
+import DatacenterLayout from "../layouts/DatacenterLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
-import { meta, stocks } from "../data/watchlist";
+import { datacenterAsset } from "../lib/datacenter-assets";
 import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
-import { featureEnabled, getSiteSettings } from "../lib/site-config";
+import { featureEnabled } from "../lib/site-config";
+import universe from "../data/datacenter-universe.json";
 
-const description =
-  meta.tagline ||
-  "Group check-in: valuations, news, rates, and a weighted technical lean for discussion.";
+const base = import.meta.env.BASE_URL;
+const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://");
+const scripts = ["static-api.js", "app.js", "map.js", "backtest.js"].map(
+  (name) => `${dcBase}${datacenterAsset(name)}`
+);
 
-const settings = getSiteSettings();
+const holdings = (universe.layers || []).reduce((n, L) => n + (L.holdings?.length || 0), 0);
 const ads = getAdSenseConfig();
-const showPulse = featureEnabled("checkInPulse");
-const showSubmissions = featureEnabled("groupSubmissions");
-const showDcBridge = featureEnabled("datacenterBridge");
 const adsFeature = featureEnabled("adsense");
-const showMood = featureEnabled("dayMood");
-
-/** Policy: only serve units when this page has real publisher content. */
-const contentOk = hasPublisherContent(5);
+const contentOk = hasPublisherContent(5) || holdings >= 5;
 const allowAds = adsFeature && contentOk;
 const showBoardAd = allowAds && canShowAdSlot(ads, "board");
 const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
-// Hero/top ads disabled by default (PUBLIC_ADSENSE_ALLOW_HERO) — keeps inventory
-// below the watchlist so we never paint ads on a chrome-only first screen.
-const showHeroAd = allowAds && canShowAdSlot(ads, "hero");
 ---
 
-<BaseLayout title={meta.groupName} description={description} allowAds={allowAds}>
-  <div class="app-shell">
-    <LiveStatus />
-    {showMood && <DayMoodBanner />}
+<DatacenterLayout
+  title="AI Data Center"
+  description="Six-layer AI data-center buildout screener — land, power, cooling, compute, networking, software. Market snapshots, global campus map, and research prompts."
+  allowAds={allowAds}
+  canonicalPath="/"
+>
+  <div class="dc-shell">
+    <div class="tickertape" id="tickertape" aria-label="Market movers ticker">
+      <div class="tt-cap" id="ttCap"><span class="tt-dot"></span>MARKETS</div>
+      <div class="tt-viewport"><div class="tt-track" id="ttTrack"></div></div>
+    </div>
+
     <section class="hero container">
       <div class="hero-copy">
         <p class="hero-brand">StocksWatch</p>
-        <h1>{meta.groupName}</h1>
-        <p class="tagline">{meta.tagline}</p>
-        <p class="hero-mobile-hint mobile-only">
-          Rates → pulse → list. Expand any ticker for valuation and headlines.
+        <h1>AI Data Center</h1>
+        <p class="tagline">
+          Six layers of the buildout — land → power → cooling → compute → networking → software.
+          Snapshot prices from Yahoo; research only, not live trading advice.
         </p>
       </div>
-      <dl class="hero-kpis" aria-label="Watchlist summary">
+      <dl class="hero-kpis" aria-label="Screener summary" id="heroKpis">
         <div class="hero-kpi">
-          <dt>Master list</dt>
-          <dd class="mono">{stocks.length}</dd>
+          <dt>Universe</dt>
+          <dd class="mono" id="kpiNames">{holdings || "—"}</dd>
         </div>
         <div class="hero-kpi">
-          <dt>Purpose</dt>
-          <dd>Research</dd>
+          <dt>Layers</dt>
+          <dd class="mono">6</dd>
         </div>
         <div class="hero-kpi desktop-only">
-          <dt>Version</dt>
-          <dd class="mono">{settings.app.version}</dd>
+          <dt>Coverage</dt>
+          <dd class="mono" id="kpiOk">—</dd>
         </div>
       </dl>
     </section>
 
     <div class="container board-stage">
-      <MacroStrip />
-      {showPulse && <CheckInPulse />}
-      {showDcBridge && <DatacenterBridge />}
+      <nav class="mainnav" id="mainnav" aria-label="View">
+        <button type="button" data-mode="screener" class="active">Screener</button>
+        <button type="button" data-mode="map">Global Map</button>
+        <button type="button" data-mode="analyst">AI Analyst</button>
+        <button type="button" data-mode="backtest">Backtest</button>
+        <button type="button" data-mode="lookup">Lookup</button>
+      </nav>
+      <p class="mode-purpose" id="modePurpose">
+        Screener — rank holdings by valuation, moat, growth, and composite score
+      </p>
 
-      {/* Publisher content first — ads only after the board */}
-      <WatchlistBoard />
+      <div class="board-chrome">
+        <div class="board-header">
+          <div class="board-heading">
+            <p class="board-eyebrow">Thematic board</p>
+            <h2>What we’re screening</h2>
+            <p class="board-subtitle">
+              Expand a row for score breakdown + headlines. Filters and columns stay sticky.
+            </p>
+          </div>
+          <div class="board-actions">
+            <div class="search-wrap">
+              <input
+                id="search"
+                type="search"
+                class="search-input"
+                placeholder="Search ticker, name, or tag…"
+                autocomplete="off"
+              />
+            </div>
+            <button type="button" id="refresh" class="btn-refresh" title="Reload the latest Yahoo snapshot">
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="filterbar" id="filterbar">
+          <div class="seg" id="viewToggle" role="tablist" aria-label="View">
+            <button type="button" data-view="layers" class="active">By layer</button>
+            <button type="button" data-view="flat">All names</button>
+          </div>
+          <div class="exposure-filter" id="exposureFilter" aria-label="Exposure filter">
+            <span class="flabel">Exposure</span>
+            <button type="button" data-exp="pure">Pure</button>
+            <button type="button" data-exp="high">High</button>
+            <button type="button" data-exp="moderate">Moderate</button>
+            <button type="button" data-exp="diversified">Diversified</button>
+          </div>
+          <div class="cap-filter" id="capFilter" aria-label="Market-cap filter">
+            <span class="flabel">Cap</span>
+            <button type="button" data-cap="mega" title="≥ $200B">Mega</button>
+            <button type="button" data-cap="large" title="$10B – $200B">Large</button>
+            <button type="button" data-cap="mid" title="$2B – $10B">Mid</button>
+            <button type="button" data-cap="small" title="$300M – $2B">Small</button>
+            <button type="button" data-cap="micro" title="under $300M">Micro</button>
+          </div>
+          <button type="button" id="filtersBtn" class="filters-btn" aria-expanded="false">Filters</button>
+          <span class="flabel cols-label">Columns</span>
+          <div class="seg seg-scroll" id="colset" role="tablist" aria-label="Column set">
+            <button type="button" data-cs="valuation" class="active">Valuation</button>
+            <button type="button" data-cs="moat">Moat</button>
+            <button type="button" data-cs="growth">Growth</button>
+            <button type="button" data-cs="technical">Technical</button>
+            <button type="button" data-cs="health">Health</button>
+            <button type="button" data-cs="exposure">Exposure</button>
+            <button type="button" data-cs="consensus">Consensus</button>
+            <button type="button" data-cs="trends">Trends</button>
+            <button type="button" data-cs="scores">Scores</button>
+          </div>
+          <span class="flabel cols-label" title="Rank score factors against the whole universe, or same-layer peers">
+            Score vs
+          </span>
+          <div class="seg" id="scoreMode" role="tablist" aria-label="Score basis">
+            <button type="button" data-sm="universe" class="active">Universe</button>
+            <button type="button" data-sm="layer">Layer</button>
+          </div>
+          <button type="button" id="scoreInfo" class="score-info" title="How the composite score is calculated">
+            How scoring works
+          </button>
+        </div>
+
+        <div class="theme-bar" id="themeBar"></div>
+        <div class="filters-panel hidden" id="filtersPanel"></div>
+
+        <div class="live-status statusbar" id="statusbar" role="status">
+          <span class="live-status__dot" id="statusDot" aria-hidden="true"></span>
+          <span id="status">Loading universe…</span>
+          <span id="meta" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="focus-banner hidden" id="focusBanner"></div>
+      <div class="alerts hidden" id="alerts"></div>
+
+      <main id="layers"><div class="loading">Loading the latest market snapshot…</div></main>
 
       {
         showBoardAd && (
-          <AdSlot
-            placement="board"
-            label="Sponsored"
-            class="ad-slot--after-board"
-          />
+          <AdSlot placement="board" label="Sponsored" class="ad-slot--after-board" />
         )
       }
 
-      <PublisherContent />
+      <section class="gmap hidden" id="map">
+        <div class="gmap-head">
+          <div class="gmap-intro">
+            <p class="board-eyebrow">Interactive map</p>
+            <h2>Global AI data-center campuses</h2>
+            <p class="muted">
+              Largest existing and planned campuses. Markers sized by capacity; click for details.
+              <span class="gmap-disc" id="gmapDisc"></span>
+            </p>
+          </div>
+          <div class="gmap-controls">
+            <span class="flabel">Min cap</span>
+            <div class="seg" id="mapThreshold" role="tablist" aria-label="Capacity threshold">
+              <button type="button" data-mw="2000">2 GW+</button>
+              <button type="button" data-mw="1000">1 GW+</button>
+              <button type="button" data-mw="500">500 MW+</button>
+              <button type="button" data-mw="250" class="active">250 MW+</button>
+              <button type="button" data-mw="100">100 MW+</button>
+              <button type="button" data-mw="50">50 MW+</button>
+            </div>
+            <span class="flabel">Colour</span>
+            <div class="seg" id="mapColorBy" role="tablist" aria-label="Colour markers by">
+              <button type="button" data-by="status" class="active">Status</button>
+              <button type="button" data-by="power">Power</button>
+            </div>
+            <button type="button" id="mapRefresh" class="gmap-btn" title="Reload sites">Refresh</button>
+            <button type="button" id="mapAddToggle" class="gmap-btn" title="Log a campus on this device">
+              Add site
+            </button>
+          </div>
+        </div>
+        <div class="gmap-addform hidden" id="mapAddForm"></div>
+        <div class="gmap-stage">
+          <div class="gmap-canvas" id="mapCanvas"></div>
+          <aside class="gmap-panel" id="mapPanel"></aside>
+        </div>
+        <div class="gmap-legend" id="mapLegend"></div>
+      </section>
 
-      {showSubmissions && <GroupSubmissions />}
+      <section class="lookup hidden" id="lookup">
+        <div class="lk-head">
+          <p class="board-eyebrow">Lookup</p>
+          <h2>Find a ticker in the universe</h2>
+          <p class="muted">
+            Search curated names. Personal additions stay on this device only (not shared to all visitors).
+            To change the shared universe, edit <code>src/data/datacenter-universe.json</code> and redeploy.
+          </p>
+        </div>
+        <div class="lk-bar">
+          <input
+            id="lkTicker"
+            type="search"
+            class="search-input"
+            placeholder="e.g. VRT, ETN, CRDO…"
+            autocomplete="off"
+          />
+          <button type="button" id="lkGo" class="btn-refresh">Look up</button>
+        </div>
+        <div class="lk-result" id="lkResult"></div>
+        <div class="lk-added" id="lkAdded"></div>
+      </section>
+
+      <section class="analyst hidden" id="analyst">
+        <div class="an-head">
+          <p class="board-eyebrow">Research</p>
+          <h2>AI Analyst</h2>
+          <p class="muted">
+            Builds a ready-to-paste prompt from this page’s snapshot (financials, score, peers,
+            headlines). <span id="anKeyNote"></span>
+          </p>
+        </div>
+        <div class="an-bar">
+          <label class="an-pick">
+            Company
+            <select id="anTicker"></select>
+          </label>
+          <div class="an-reports" id="anReports"></div>
+        </div>
+        <div class="an-output" id="anOutput"><div class="muted">Choose a report above to begin.</div></div>
+      </section>
+
+      <section class="backtest hidden" id="backtest">
+        <div class="bt-head">
+          <p class="board-eyebrow">Research</p>
+          <h2>Score backtest</h2>
+          <p class="muted">
+            On the live site this runs from precomputed snapshots when available. Full Yahoo
+            reconstruction stays on the local Flask app under <code>archive/ai-datacenter-screener</code>.
+          </p>
+        </div>
+        <div class="bt-controls">
+          <span class="flabel">Forward horizon</span>
+          <div class="seg" id="btHorizon" role="tablist">
+            <button type="button" data-h="5">1 week</button>
+            <button type="button" data-h="21" class="active">1 month</button>
+            <button type="button" data-h="63">3 months</button>
+          </div>
+          <span class="flabel">Lookback</span>
+          <div class="seg" id="btMonths" role="tablist">
+            <button type="button" data-m="3">3 mo</button>
+            <button type="button" data-m="6" class="active">6 mo</button>
+          </div>
+          <button type="button" id="btRun" class="gmap-btn">Run backtest</button>
+        </div>
+        <div class="bt-results" id="btResults"></div>
+      </section>
 
       {
         showFooterAd && (
           <AdSlot placement="footer" label="Sponsored" class="ad-slot--footer" />
         )
       }
-
-      {
-        /* Optional: only if PUBLIC_ADSENSE_ALLOW_HERO=true — still placed after content */
-        showHeroAd && (
-          <AdSlot placement="hero" label="Sponsored" class="ad-slot--late-hero" />
-        )
-      }
     </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          StocksWatch · Yahoo Finance snapshots · research only, not advice.
+          Archived group watchlist: <a href={`${base}watchlist.html`}>/watchlist.html</a>.
+        </p>
+        <p class="disclaimer">
+          Campus map figures are approximate from public announcements. Optional reference stills:
+          <code>docs/datacenter-reference-photos/</code>.
+        </p>
+      </div>
+    </footer>
   </div>
-</BaseLayout>
+
+  <div class="modal-overlay hidden" id="scoreModal"></div>
+
+  <script is:inline src={scripts[0]}></script>
+  <script is:inline src={scripts[1]}></script>
+  <script is:inline src={scripts[2]}></script>
+  <script is:inline src={scripts[3]}></script>
+</DatacenterLayout>

@@ -49,13 +49,15 @@ aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   --exclude "datacenter/*.*.css" \
   --exclude "datacenter/app.js" \
   --exclude "datacenter/static-api.js" \
+  --exclude "datacenter/map.js" \
+  --exclude "datacenter/backtest.js" \
   --exclude "datacenter/datacenter.js" \
   --exclude "datacenter/rackexplorer.js" \
   --exclude "datacenter/style.css" \
   --cache-control "public,max-age=300,must-revalidate"
 
 # Drop stale unhashed datacenter sources if previously uploaded (page only loads hashed names).
-for f in app.js static-api.js datacenter.js rackexplorer.js style.css; do
+for f in app.js static-api.js map.js backtest.js datacenter.js rackexplorer.js style.css; do
   aws s3 rm "s3://$BUCKET/datacenter/$f" "${PROFILE_ARGS[@]}" 2>/dev/null || true
 done
 
@@ -75,7 +77,7 @@ echo "→ Live market JSON (short edge TTL — CloudFront live_json policy ~60s)
 aws s3 sync "$DIST" "s3://$BUCKET" "${PROFILE_ARGS[@]}" \
   "${EXCLUDE_STATE[@]}" \
   --exclude "*" \
-  --include "quotes.json" --include "outlook.json" --include "screener.json" --include "dc-movers.json" --include "datacenter/news.json" \
+  --include "quotes.json" --include "outlook.json" --include "screener.json" --include "dc-movers.json" --include "datacenter/news.json" --include "datacenter/campuses.json" --include "datacenter/reports.json" \
   --cache-control "public,max-age=60,must-revalidate" \
   --content-type "application/json"
 

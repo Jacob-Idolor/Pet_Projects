@@ -10,6 +10,8 @@ const LS_KEY = "ai-dc-screener.v1";
 // ----- filter metrics, grouped. `scale` converts the user's typed value into
 // the units the data uses (market cap in $B; margins/growth typed as % of a
 // fraction). `kind` drives range-hint formatting. -------------------------
+// Filter groups mirror the composite score's factors one-to-one, so filtering by
+// a group uses the same indicators that factor's sub-score measures.
 const FILTER_GROUPS = [
   { id: "valuation", label: "Valuation", metrics: [
     { key: "market_cap",     label: "Market cap", unit: "$B", scale: 1e9,  kind: "money" },
@@ -17,26 +19,66 @@ const FILTER_GROUPS = [
     { key: "forward_pe",     label: "P/E fwd",    unit: "",   scale: 1,    kind: "num" },
     { key: "price_to_sales", label: "P/S",        unit: "",   scale: 1,    kind: "num" },
     { key: "ev_ebitda",      label: "EV/EBITDA",  unit: "",   scale: 1,    kind: "num" },
+    { key: "price_to_book",  label: "P/B",        unit: "",   scale: 1,    kind: "num" },
+    { key: "peg",            label: "PEG",        unit: "",   scale: 1,    kind: "num" },
   ]},
-  { id: "momentum", label: "Momentum / Trend", metrics: [
+  { id: "moat", label: "Moat & quality", metrics: [
+    { key: "gross_margin",     label: "Gross margin", unit: "%", scale: 0.01, kind: "pctfrac" },
+    { key: "operating_margin", label: "Op margin",    unit: "%", scale: 0.01, kind: "pctfrac" },
+    { key: "profit_margin",    label: "Net margin",   unit: "%", scale: 0.01, kind: "pctfrac" },
+    { key: "roe",              label: "ROE",          unit: "%", scale: 0.01, kind: "pctfrac" },
+    { key: "roa",              label: "ROA",          unit: "%", scale: 0.01, kind: "pctfrac" },
+  ]},
+  { id: "growth", label: "Growth", metrics: [
+    { key: "revenue_growth",  label: "Rev growth", unit: "%", scale: 0.01, kind: "pctfrac" },
+    { key: "earnings_growth", label: "EPS growth", unit: "%", scale: 0.01, kind: "pctfrac" },
+  ]},
+  { id: "technical", label: "Technical trend", metrics: [
     { key: "change_pct",   label: "Today",        unit: "%", scale: 1, kind: "pct" },
     { key: "pct_off_high", label: "% off 52w hi", unit: "%", scale: 1, kind: "pct" },
     { key: "pct_vs_ma50",  label: "% vs 50d MA",  unit: "%", scale: 1, kind: "pct" },
     { key: "pct_vs_ma200", label: "% vs 200d MA", unit: "%", scale: 1, kind: "pct" },
   ]},
-  { id: "quality", label: "Quality / Growth", metrics: [
-    { key: "revenue_growth", label: "Rev growth",   unit: "%", scale: 0.01, kind: "pctfrac" },
-    { key: "gross_margin",   label: "Gross margin",  unit: "%", scale: 0.01, kind: "pctfrac" },
-    { key: "profit_margin",  label: "Net margin",    unit: "%", scale: 0.01, kind: "pctfrac" },
-    { key: "roe",            label: "ROE",           unit: "%", scale: 0.01, kind: "pctfrac" },
+  { id: "health", label: "Financial health", metrics: [
+    { key: "debt_to_equity", label: "Debt / Equity", unit: "", scale: 1, kind: "num" },
+    { key: "current_ratio",  label: "Current ratio", unit: "", scale: 1, kind: "num" },
   ]},
 ];
 const ALL_METRICS = FILTER_GROUPS.flatMap((g) => g.metrics);
+
+// ---- market-cap preset bands (values in $B, the market_cap filter's display unit)
+const CAP_BANDS = {
+  mega:  { min: 200,  max: null, label: "Mega (≥$200B)" },
+  large: { min: 10,   max: 200,  label: "Large ($10–200B)" },
+  mid:   { min: 2,    max: 10,   label: "Mid ($2–10B)" },
+  small: { min: 0.3,  max: 2,    label: "Small ($300M–2B)" },
+  micro: { min: null, max: 0.3,  label: "Micro (<$300M)" },
+};
+const _eq = (a, b) => (a == null ? null : a) === (b == null ? null : b);
+function activeCapBand() {
+  const v = STATE.valuation.market_cap;
+  if (!v) return null;
+  for (const [id, b] of Object.entries(CAP_BANDS)) {
+    if (_eq(v.min, b.min) && _eq(v.max, b.max)) return id;
+  }
+  return null;       // a custom market-cap range that doesn't match a preset
+}
+function setCapBand(id) {
+  if (activeCapBand() === id) {
+    delete STATE.valuation.market_cap;          // toggle the active band off
+  } else {
+    const b = CAP_BANDS[id];
+    STATE.valuation.market_cap = { min: b.min, max: b.max };
+  }
+  savePrefs(); buildFiltersPanel(); render();
+}
 
 // lazy-loaded per-ticker headlines: ticker -> "loading" | "error" | [items]
 const NEWS_CACHE = {};
 // lazy-loaded per-ticker price/score history: ticker -> "loading" | "error" | [pts]
 const HIST_CACHE = {};
+// lazy-loaded per-ticker insider/buzz signals: ticker -> "loading" | "error" | data
+const SIGNAL_CACHE = {};
 
 // ---- persisted UI state -------------------------------------------------
 function loadPrefs() {
@@ -45,6 +87,7 @@ function loadPrefs() {
 function savePrefs() {
   localStorage.setItem(LS_KEY, JSON.stringify({
     sort: STATE.sort, view: STATE.view, exposure: [...STATE.exposure],
+    tags: [...STATE.tags],
     collapsed: [...STATE.collapsed], valuation: STATE.valuation,
     panelOpen: STATE.panelOpen, mode: STATE.mode, colset: STATE.colset,
     scoreMode: STATE.scoreMode,
@@ -52,29 +95,23 @@ function savePrefs() {
 }
 
 const _p = loadPrefs();
-const _params = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
-const _qParam = (_params.get("q") || _params.get("ticker") || "").trim();
-const _layerParamRaw = (_params.get("layer") || "").trim();
-const _layerParam = /^[a-zA-Z0-9_-]{1,64}$/.test(_layerParamRaw) ? _layerParamRaw : "";
-const _modeParam = (_params.get("mode") || "").trim();
-const _allowedModes = new Set(["screener", "datacenter", "rack", "analyst", "lookup"]);
-
 let STATE = {
   layers: [], marketState: null,
   sort: _p.sort || { col: "market_cap", asc: false },
   view: _p.view || "layers",
-  query: _qParam || "",
+  query: "",
   exposure: new Set(_p.exposure || []),
+  tags: new Set(_p.tags || []),         // selected theme/sub-layer tags (OR filter)
   collapsed: new Set(_p.collapsed || []),
   valuation: _p.valuation || {},        // metric key -> { min, max } (display units)
   panelOpen: _p.panelOpen || false,
-  mode: _allowedModes.has(_modeParam)
-    ? _modeParam
-    : (_layerParam || _qParam ? "screener" : (_p.mode || "screener")),
-  focusLayer: _layerParam || null,
+  // the building cutaway, unified explorer, and rack tab were replaced by the Global Map
+  mode: (["datacenter", "explore", "factory", "rack"].includes(_p.mode) ? "map" : (_p.mode || "screener")),
+  focusLayer: null,
   colset: _p.colset || "valuation",     // which numeric column group to show
   scoreMode: _p.scoreMode || "universe", // score basis: percentile vs whole universe or vs same-layer peers
-  openNews: new Set(),                  // tickers whose news row is expanded (transient)
+  openNews: new Set(),                  // tickers whose detail row is expanded (transient)
+  openTab: new Map(),                   // ticker -> "score"|"trend"|"news" active detail tab (transient)
   deltas: {},                           // ticker -> {price_1d, price_7d, score_1d, score_7d, days} (transient)
 };
 window.STATE = STATE;
@@ -98,7 +135,6 @@ const pctClass = (n) => (n == null ? "dim" : n > 0 ? "pos" : n < 0 ? "neg" : "")
 const fmtYield = (n) => (n == null ? "—" : n.toFixed(2) + "%");   // value already in percent units
 // analyst recommendationMean: 1 = strong buy … 5 = sell
 const RATING_LABEL = { strong_buy: "Strong Buy", buy: "Buy", hold: "Hold", underperform: "Underperform", sell: "Sell" };
-const EXPOSURES = ["pure", "high", "moderate", "diversified"];
 const ratingClass = (m) => (m == null ? "dim" : m <= 2.0 ? "pos" : m <= 3.0 ? "warn" : "neg");
 function fmtEarnings(ts) {
   if (ts == null) return "—";
@@ -110,27 +146,7 @@ function fmtEarnings(ts) {
   if (days === 0) return `${date} · today`;
   return `${date} · ${days}d`;
 }
-const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const safeHttpUrl = (raw, fallback = "#") => {
-  const s = String(raw || "").trim();
-  if (!s) return fallback;
-  try {
-    const u = new URL(s);
-    if (u.protocol !== "http:" && u.protocol !== "https:") return fallback;
-    if (u.username || u.password) return fallback;
-    return u.href;
-  } catch { /* ignore */ }
-  return fallback;
-};
-const allowExposure = (raw) => (EXPOSURES.includes(String(raw || "")) ? String(raw) : "moderate");
-const allowLayerId = (raw) => {
-  const s = String(raw || "").trim();
-  return /^[a-zA-Z0-9_-]{1,64}$/.test(s) ? s : "";
-};
-const allowRecKey = (raw) => {
-  const s = String(raw || "").trim().toLowerCase().replace(/\s+/g, "_");
-  return Object.prototype.hasOwnProperty.call(RATING_LABEL, s) ? s : "";
-};
+const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function timeAgo(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -155,88 +171,184 @@ async function fetchNews(ticker) {
 }
 function toggleNews(ticker) {
   if (STATE.openNews.has(ticker)) STATE.openNews.delete(ticker);
-  else { STATE.openNews.add(ticker); if (NEWS_CACHE[ticker] === undefined) fetchNews(ticker); }
+  else STATE.openNews.add(ticker);   // panels (score/trend/news) lazy-load themselves
   render();
 }
 function newsHtml(ticker) {
   const c = NEWS_CACHE[ticker];
-  if (c === undefined || c === "loading") return `<div class="news-status">Loading news…</div>`;
+  if (c === undefined) { fetchNews(ticker); return `<div class="news-status">Loading news…</div>`; }
+  if (c === "loading") return `<div class="news-status">Loading news…</div>`;
   if (c === "error") return `<div class="news-status">Couldn't load news right now.</div>`;
-  if (!c.length) {
-    return `<div class="news-status">No headlines in the latest snapshot for ${ticker}. Re-run <code>npm run update-screener</code> to refresh news.json.</div>`;
-  }
+  if (!c.length) return `<div class="news-status">No recent news found for ${ticker}.</div>`;
   return `<div class="news-list">` + c.map((it) =>
-    `<a class="news-item" href="${escapeHtml(safeHttpUrl(it.url))}" target="_blank" rel="noopener noreferrer">` +
+    `<a class="news-item" href="${encodeURI(it.url)}" target="_blank" rel="noopener noreferrer">` +
     `<span class="news-title">${escapeHtml(it.title)}</span>` +
     `<span class="news-meta">${escapeHtml(it.publisher)}${it.published ? " · " + timeAgo(it.published) : ""}</span></a>`
   ).join("") + `</div><div class="news-src">Headlines via Yahoo Finance</div>`;
 }
 
 // ---- column registry ----------------------------------------------------
+// The base "Score" column is contextual: in a factor-aligned column set it shows
+// that factor's sub-score (e.g. Valuation → the Val sub-score) instead of the
+// blended composite, so the headline number matches the lens you're looking at.
+const COLSET_FACTOR = { valuation: "valuation", moat: "moat", growth: "growth", technical: "technical", health: "health", consensus: "consensus", exposure: "exposure" };
+const FACTOR_SHORT = { valuation: "Val", moat: "Moat", growth: "Grow", technical: "Tech", health: "Health", consensus: "Cons", exposure: "Expo" };
+const FACTOR_FULL = { valuation: "Valuation", moat: "Moat & quality", growth: "Growth", technical: "Technical trend", health: "Financial health", consensus: "Analyst consensus", exposure: "Thematic exposure" };
+// How many of the 6 buildout layers a holding spans — flat view carries the full
+// list in h.layers; the grouped view carries the others in h.also_in.
+function layerCount(h) {
+  if (h.layers) return h.layers.length;
+  return 1 + (h.also_in ? h.also_in.length : 0);
+}
+function contextualScoreBadge(h) {
+  const f = COLSET_FACTOR[STATE.colset];
+  if (!f) return scoreBadge(h);                       // no factor analog → overall composite
+  const v = h.scoreParts ? h.scoreParts[f] : null;
+  if (v == null) return `<span class="score na">—</span>`;
+  const tip = `${FACTOR_FULL[f]} sub-score ${v}/100 — the factor this column set focuses on (overall composite ${h.score ?? "–"}). Pick the “Scores” columns to see all six.`;
+  return `<span class="score" style="--sc:${scoreColor(v)}" title="${tip}">${v}</span>`;
+}
+
 const td = (inner, cls) => `<td class="${cls || ""}">${inner}</td>`;
 function nameInner(h, showLayers) {
   const cur = h.market && h.market.currency;
-  const curSafe = escapeHtml(String(cur || ""));
-  const curChip = (cur && cur !== "USD")
-    ? `<span class="chip cur" title="prices converted from ${curSafe} to USD at live FX">${curSafe}→USD</span>`
-    : "";
-  const tagList = Array.isArray(h.tags) ? h.tags : String(h.tags || "").split(",").map((t) => t.trim()).filter(Boolean);
+  const curChip = (cur && cur !== "USD") ? `<span class="chip cur" title="prices converted from ${cur} to USD at live FX">${cur}→USD</span>` : "";
+  const mc = h.market && h.market.market_cap;
+  const microChip = (mc != null && mc < 300e6) ? `<span class="chip micro" title="Micro-cap (under $300M) — quotes/fundamentals may be thin or illiquid">μcap</span>` : "";
   const chips = showLayers
-    ? (h.layers || []).map((l) => `<span class="chip">${escapeHtml(String(l))}</span>`).join("")
-    : tagList.filter((t) => t !== "foreign").map((t) => `<span class="chip">${escapeHtml(String(t))}</span>`).join("") +
-      (h.also_in || []).map((l) => `<span class="chip also">also: ${escapeHtml(String(l))}</span>`).join("");
-  return `<div class="name">${escapeHtml(h.name || "")}</div><div class="thesis">${escapeHtml(h.thesis || "")}</div><div class="tags">${chips}${curChip}</div>`;
+    ? (h.layers || []).map((l) => `<span class="chip">${l}</span>`).join("")
+    : (h.tags || []).filter((t) => t !== "foreign").map((t) => `<span class="chip">${t}</span>`).join("") +
+      (h.also_in || []).map((l) => `<span class="chip also">also: ${l}</span>`).join("");
+  return `<div class="name">${h.name}</div><div class="thesis">${h.thesis || ""}</div><div class="tags">${chips}${curChip}${microChip}</div>`;
 }
 const scoreColor = (s) => (s >= 66 ? "var(--green)" : s >= 40 ? "var(--amber)" : "var(--red)");
 function scoreBadge(h) {
   if (h.score == null) return `<span class="score na">—</span>`;
   const p = h.scoreParts || {};
-  const tip = escapeHtml(
-    SCORE_FACTORS.map((f) => `${f.label} ${p[f.key] ?? "–"}`).join(" · ") + " — click row for breakdown"
-  );
-  return `<span class="score" style="--sc:${scoreColor(h.score)}" title="${tip}">${escapeHtml(String(h.score))}</span>`;
+  const tip = SCORE_FACTORS.map((f) => `${f.label} ${p[f.key] ?? "–"}`).join(" · ") + " — click row for breakdown";
+  return `<span class="score" style="--sc:${scoreColor(h.score)}" title="${tip}">${h.score}</span>`;
+}
+function actionSignal(setup, trigger) {
+  if (setup >= 60 && trigger >= 60) return { label: "Buy zone",  cls: "pos",  note: "strong fundamentals + confirmed uptrend" };
+  if (setup >= 60 && trigger <  40) return { label: "Watch",     cls: "warn", note: "solid setup, waiting for trend confirmation" };
+  if (setup <  40 && trigger >= 60) return { label: "Momentum",  cls: "warn", note: "price moving but fundamentals are weak" };
+  if (setup <  40 && trigger <  40) return { label: "Avoid",     cls: "neg",  note: "weak fundamentals and no trend" };
+  return { label: "Neutral", cls: "dim", note: "mixed or moderate signals" };
 }
 // full derivation, shown in the expandable row detail
 function scoreBreakdown(h) {
   if (h.score == null || !h.scoreParts) return `<div class="news-status">No score available.</div>`;
-  const cov = h.scoreCov || {};
+  const p = h.scoreParts, cov = h.scoreCov || {};
   const rows = SCORE_FACTORS.map((f) => {
-    const v = Number(h.scoreParts[f.key] ?? 0);
-    const width = Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0;
+    const raw = Number(p[f.key] ?? 0);
+    const v = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
     const c = cov[f.key];
     // flag thin factors: fewer than half the metrics had data (exposure has none to count)
     const thin = c && (() => { const [a, b] = c.split("/").map(Number); return b > 0 && a < Math.ceil(b / 2); })();
     const covChip = c ? `<span class="sb-cov${thin ? " thin" : ""}" title="${escapeHtml(String(c))} of this factor's metrics had data">${escapeHtml(String(c))}</span>` : `<span class="sb-cov"></span>`;
     return `<div class="sb-row">
       <span class="sb-label">${escapeHtml(f.label)}</span>
-      <span class="sb-bar"><span class="sb-fill" style="width:${width}%;background:${scoreColor(width)}"></span></span>
-      <span class="sb-val">${escapeHtml(String(width))}</span>
+      <span class="sb-bar"><span class="sb-fill" style="width:${v}%;background:${scoreColor(v)}"></span></span>
+      <span class="sb-val">${escapeHtml(String(v))}</span>
       ${covChip}
       <span class="sb-wt">×${Math.round(f.weight * 100)}%</span></div>`;
   }).join("");
   const basis = STATE.scoreMode === "layer"
     ? "each factor = percentile rank vs same-layer peers, then weighted"
     : "each factor = percentile rank vs the whole universe, then weighted";
+  const setupRaw = Number(p.setup), triggerRaw = Number(p.trigger);
+  const setup = Number.isFinite(setupRaw) ? setupRaw : null;
+  const trigger = Number.isFinite(triggerRaw) ? triggerRaw : null;
+  let signalHtml = "";
+  if (setup != null && trigger != null) {
+    const sig = actionSignal(setup, trigger);
+    signalHtml = `<div class="sb-signal">
+      <span class="sb-st">Setup <b style="color:${scoreColor(setup)}">${escapeHtml(String(setup))}</b></span>
+      <span class="sb-st-sep">·</span>
+      <span class="sb-st">Trigger <b style="color:${scoreColor(trigger)}">${escapeHtml(String(trigger))}</b></span>
+      <span class="sb-action ${sig.cls}">${escapeHtml(sig.label)}</span>
+      <span class="sb-action-note">${escapeHtml(sig.note)}</span></div>`;
+  }
   return `<div class="sb">
-    <div class="sb-head">Score <b style="color:${scoreColor(Number(h.score))}">${escapeHtml(String(h.score))}</b>/100
-      <span class="sb-note">${basis} · the small chip is data coverage (metrics with data)</span></div>
-    ${rows}</div>`;
+    <div class="sb-head">Score <b style="color:${scoreColor(h.score)}">${h.score}</b>/100
+      <span class="sb-note">${basis} · the small chip is data coverage</span>
+      <button class="sb-method" type="button">ⓘ how it's derived</button></div>
+    ${signalHtml}${rows}</div>`;
 }
+// ---- insider activity + news-buzz (surfaced indicators, not in the score) ----
+const fmtShares = (n) => {
+  if (n == null) return "—";
+  const a = Math.abs(n);
+  if (a >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  if (a >= 1e3) return Math.round(n / 1e3) + "K";
+  return "" + Math.round(n);
+};
+async function fetchSignals(ticker) {
+  SIGNAL_CACHE[ticker] = "loading";
+  try {
+    const res = await fetch("/api/signals/" + encodeURIComponent(ticker));
+    SIGNAL_CACHE[ticker] = await res.json();
+  } catch { SIGNAL_CACHE[ticker] = "error"; }
+  render();
+}
+function signalsHtml(ticker) {
+  const c = SIGNAL_CACHE[ticker];
+  if (c === undefined) { fetchSignals(ticker); return `<div class="news-status">Loading signals…</div>`; }
+  if (c === "loading") return `<div class="news-status">Loading signals…</div>`;
+  if (c === "error") return `<div class="news-status">Couldn't load signals.</div>`;
+  const ins = c.insider, buzz = c.buzz || {};
+  let insHtml;
+  if (!ins) {
+    insHtml = `<div class="sig-row"><span class="sig-k">Insider (6 mo)</span><span class="sig-v dim">no data</span></div>`;
+  } else {
+    const cls = ins.sentiment === "buying" ? "pos" : ins.sentiment === "selling" ? "neg" : "dim";
+    const arrow = ins.sentiment === "buying" ? "▲ Net buying" : ins.sentiment === "selling" ? "▼ Net selling" : "— Flat";
+    const pctTxt = ins.net_pct != null ? ` · ${(ins.net_pct * 100).toFixed(1)}% of held` : "";
+    insHtml = `<div class="sig-row"><span class="sig-k">Insider (6 mo)</span>
+        <span class="sig-v ${cls}">${arrow} ${ins.net_shares != null ? fmtShares(ins.net_shares) + " sh" : ""}${pctTxt}</span></div>
+      <div class="sig-sub">Buys ${fmtShares(ins.buy_shares)} (${ins.buy_trans || 0} txns) · Sells ${fmtShares(ins.sell_shares)} (${ins.sell_trans || 0} txns)</div>`;
+  }
+  return `<div class="sig">
+    ${insHtml}
+    <div class="sig-row"><span class="sig-k">News buzz</span><span class="sig-v">${buzz.count_7d ?? 0} this week · ${buzz.count_30d ?? 0} this month</span></div>
+    <div class="sig-note">Indicators only — <b>not</b> part of the composite score. Insider = Yahoo's 6-mo Form-4 summary (can be lagged/incomplete); buzz = recent-headline volume as an attention proxy.</div>
+  </div>`;
+}
+
+const DETAIL_TABS = [
+  { id: "score",   label: "Score breakdown" },
+  { id: "trend",   label: "Price & score trend" },
+  { id: "signals", label: "Insider & buzz" },
+  { id: "news",    label: "Recent news" },
+];
 function detailHtml(h) {
+  const tab = STATE.openTab.get(h.ticker) || "score";
+  const panel = tab === "trend" ? histHtml(h.ticker)
+    : tab === "news" ? newsHtml(h.ticker)
+    : tab === "signals" ? signalsHtml(h.ticker)
+    : scoreBreakdown(h);
+  const tabs = DETAIL_TABS.map((t) =>
+    `<button class="dtab${t.id === tab ? " active" : ""}" data-tk="${h.ticker}" data-tab="${t.id}">${t.label}</button>`).join("");
   return `<div class="detail">
-    <div class="detail-col"><div class="detail-h">Score breakdown</div>${scoreBreakdown(h)}</div>
-    <div class="detail-col"><div class="detail-h">Price &amp; score trend</div>${histHtml(h.ticker)}</div>
-    <div class="detail-col"><div class="detail-h">Recent news</div>${newsHtml(h.ticker)}</div>
+    <div class="detail-tabs">${tabs}</div>
+    <div class="detail-panel">${panel}</div>
   </div>`;
 }
 const COLUMNS = {
-  ticker:         { label: "Ticker",  align: "left",   get: (h) => h.ticker, cell: (h) => td(`<span class="news-toggle">${STATE.openNews.has(h.ticker) ? "▾" : "▸"}</span><span class="tkr">${escapeHtml(h.ticker || "")}</span>`, "left") },
+  ticker:         { label: "Ticker",  align: "left",   get: (h) => h.ticker, cell: (h) => td(`<span class="news-toggle">${STATE.openNews.has(h.ticker) ? "▾" : "▸"}</span><span class="tkr">${h.ticker}</span>`, "left") },
   name:           { label: "Company", align: "left",   get: (h) => h.name,   cell: (h, sl) => td(nameInner(h, sl), "left") },
-  exposure:       { label: "Exposure", align: "center", get: (h) => EXPOSURE_RANK[h.exposure] ?? 9, cell: (h) => {
-    const exp = Object.prototype.hasOwnProperty.call(EXPOSURE_RANK, h.exposure) ? h.exposure : "diversified";
-    return td(`<span class="exp ${exp}">${escapeHtml(exp)}</span>`, "center");
-  } },
-  score:          { label: "Score",   align: "center", get: (h) => h.score, cell: (h) => td(scoreBadge(h), "center") },
+  exposure:       { label: "Exposure", align: "center", get: (h) => EXPOSURE_RANK[h.exposure] ?? 9, cell: (h) => td(`<span class="exp ${h.exposure}">${h.exposure}</span>`, "center") },
+  score: {
+    align: "center",
+    get label() { const f = COLSET_FACTOR[STATE.colset]; return f ? FACTOR_SHORT[f] : "Score"; },
+    get title() {
+      const f = COLSET_FACTOR[STATE.colset];
+      return f ? `${FACTOR_FULL[f]} factor sub-score (0–100) — this column set's dimension of the composite. Switch to “Scores” for all six.`
+               : "Overall composite score (0–100). Pick a Valuation / Momentum / Quality column set to see its matching factor sub-score here.";
+    },
+    get: (h) => { const f = COLSET_FACTOR[STATE.colset]; return f ? (h.scoreParts ? h.scoreParts[f] : null) : h.score; },
+    cell: (h) => td(contextualScoreBadge(h), "center"),
+  },
   price:          { label: "Price",    get: (h) => h.market.price,          cell: (h) => td(fmtPrice(h.market.price)) },
   change_pct:     { label: "Chg %",    get: (h) => h.market.change_pct,     cell: (h) => td(fmtPct(h.market.change_pct), pctClass(h.market.change_pct)) },
   market_cap:     { label: "Mkt Cap",  get: (h) => h.market.market_cap,     cell: (h) => td(fmtMoney(h.market.market_cap)) },
@@ -251,6 +363,17 @@ const COLUMNS = {
   gross_margin:   { label: "Gross mgn", get: (h) => h.market.gross_margin,  cell: (h) => td(fmtFrac(h.market.gross_margin)) },
   profit_margin:  { label: "Net mgn",  get: (h) => h.market.profit_margin,  cell: (h) => td(fmtFrac(h.market.profit_margin), pctClass(h.market.profit_margin)) },
   roe:            { label: "ROE",      get: (h) => h.market.roe,            cell: (h) => td(fmtFrac(h.market.roe), pctClass(h.market.roe)) },
+  // metrics the composite score uses, exposed as columns so each factor's column
+  // set mirrors exactly what the score breakdown measures
+  price_to_book:    { label: "P/B",      get: (h) => h.market.price_to_book,    cell: (h) => td(fmtNum(h.market.price_to_book, 2)) },
+  peg:              { label: "PEG",      get: (h) => h.market.peg,              cell: (h) => td(fmtNum(h.market.peg, 2)) },
+  operating_margin: { label: "Op mgn",   get: (h) => h.market.operating_margin, cell: (h) => td(fmtFrac(h.market.operating_margin), pctClass(h.market.operating_margin)) },
+  roa:              { label: "ROA",      get: (h) => h.market.roa,              cell: (h) => td(fmtFrac(h.market.roa), pctClass(h.market.roa)) },
+  earnings_growth:  { label: "EPS grow", get: (h) => h.market.earnings_growth,  cell: (h) => td(fmtFrac(h.market.earnings_growth), pctClass(h.market.earnings_growth)) },
+  debt_to_equity:   { label: "D/E",      get: (h) => h.market.debt_to_equity,   cell: (h) => td(fmtNum(h.market.debt_to_equity, 1)) },
+  current_ratio:    { label: "Curr",     get: (h) => h.market.current_ratio,    cell: (h) => td(fmtNum(h.market.current_ratio, 2)) },
+  layers_count:     { label: "Layers",   align: "center", get: (h) => layerCount(h), cell: (h) => td(layerCount(h), "center"), title: "How many of the 6 buildout layers this name spans (breadth of thematic exposure)" },
+  beta:             { label: "Beta",     get: (h) => h.market.beta,             cell: (h) => td(fmtNum(h.market.beta, 2)), title: "Market beta — pure thematic plays tend to swing more than the market" },
   target_price:   { label: "Target",  get: (h) => h.market.target_mean_price, cell: (h) => td(fmtPrice(h.market.target_mean_price)) },
   implied_upside: { label: "Upside",  get: (h) => h.market.implied_upside,  cell: (h) => td(fmtPct(h.market.implied_upside), pctClass(h.market.implied_upside)) },
   recommendation: { label: "Rating",  align: "center", get: (h) => h.market.recommendation_mean, cell: (h) => td(ratingCell(h), "center") },
@@ -261,98 +384,83 @@ const COLUMNS = {
   price_d7:       { label: "Price 7d",  get: (h) => (dl(h.ticker) || {}).price_7d, cell: (h) => { const v = (dl(h.ticker) || {}).price_7d; return td(v == null ? "—" : fmtPct(v), pctClass(v)); } },
 };
 function ratingCell(h) {
-  const k = allowRecKey(h.market.recommendation_key);
-  const mean = h.market.recommendation_mean;
-  const n = h.market.num_analysts;
+  const k = h.market.recommendation_key, mean = h.market.recommendation_mean, n = h.market.num_analysts;
   if (!k && mean == null) return `<span class="dim">—</span>`;
-  const lbl = escapeHtml(RATING_LABEL[k] || "—");
-  const tip = escapeHtml(
-    `consensus ${mean != null && Number.isFinite(Number(mean)) ? Number(mean).toFixed(2) + "/5" : "n/a"}${n != null ? " · " + n + " analysts" : ""} (1=strong buy, 5=sell)`
-  );
+  const lbl = RATING_LABEL[k] || (k ? k.replace(/_/g, " ") : "—");
+  const tip = `consensus ${mean != null ? mean.toFixed(2) + "/5" : "n/a"}${n != null ? " · " + n + " analysts" : ""} (1=strong buy, 5=sell)`;
   return `<span class="rt ${ratingClass(mean)}" title="${tip}">${lbl}</span>` +
-    (n != null ? `<span class="rt-n">${escapeHtml(String(n))}</span>` : "");
+    (n != null ? `<span class="rt-n">${n}</span>` : "");
 }
+// per-factor sub-score columns (the composite score, broken out). Each reads the
+// holding's scoreParts under the active basis (Universe/Layer), so they stay in sync.
+const SCORE_COLS = [
+  { key: "valuation", label: "Val",     full: "Valuation",                                        w: 0.18 },
+  { key: "moat",      label: "Moat",    full: "Moat & quality",                                   w: 0.20 },
+  { key: "growth",    label: "Grow",    full: "Growth",                                           w: 0.14 },
+  { key: "technical", label: "Tech",    full: "Technical trend",                                  w: 0.15 },
+  { key: "health",    label: "Health",  full: "Financial health",                                 w: 0.10 },
+  { key: "consensus", label: "Cons",    full: "Analyst consensus",                                w: 0.08 },
+  { key: "exposure",  label: "Expo",    full: "Thematic exposure",                                w: 0.15 },
+  { key: "setup",     label: "Setup",   full: "Fundamental setup (val + moat + growth + health)", w: null },
+  { key: "trigger",   label: "Trigger", full: "Trend confirmation (technical + consensus)",        w: null },
+];
+function factorBadge(v) {
+  if (v == null) return `<span class="fscore na">—</span>`;
+  return `<span class="fscore" style="--sc:${scoreColor(v)}">${v}</span>`;
+}
+for (const f of SCORE_COLS) {
+  COLUMNS["sf_" + f.key] = {
+    label: f.label, align: "center",
+    title: f.w != null
+      ? `${f.full} sub-score (0–100), weight ${Math.round(f.w * 100)}% of the composite`
+      : `${f.full} — derived aggregate, not a direct weighted factor`,
+    get: (h) => (h.scoreParts ? h.scoreParts[f.key] : null),
+    cell: (h) => td(factorBadge(h.scoreParts ? h.scoreParts[f.key] : null), "center"),
+  };
+}
+
 const BASE_COLS = ["ticker", "name", "exposure", "score", "price", "change_pct", "market_cap"];
+// The five metric-based score factors, as column sets — each shows exactly the
+// indicators its score-breakdown factor measures (+ Consensus / Trends / Scores).
 const COLSETS = {
-  valuation: ["trailing_pe", "forward_pe", "price_to_sales", "ev_ebitda", "pct_off_high"],
-  momentum:  ["pct_off_high", "pct_vs_ma50", "pct_vs_ma200"],
-  quality:   ["revenue_growth", "gross_margin", "profit_margin", "roe"],
+  valuation: ["trailing_pe", "forward_pe", "price_to_sales", "ev_ebitda", "price_to_book", "peg"],
+  moat:      ["gross_margin", "operating_margin", "profit_margin", "roe", "roa"],
+  growth:    ["revenue_growth", "earnings_growth"],
+  technical: ["pct_off_high", "pct_vs_ma50", "pct_vs_ma200"],
+  health:    ["debt_to_equity", "current_ratio"],
+  exposure:  ["layers_count", "beta", "revenue_growth"],
   consensus: ["target_price", "implied_upside", "recommendation", "dividend_yield", "earnings"],
   trends:    ["score_d1", "score_d7", "price_d7"],
+  scores:    SCORE_COLS.map((f) => "sf_" + f.key),
 };
+if (!COLSETS[STATE.colset]) STATE.colset = "valuation";   // reset stale saved value (e.g. old "momentum")
 const activeColKeys = () => [...BASE_COLS, ...(COLSETS[STATE.colset] || [])];
-
-function formatSnapshotAge(fetchedAtSec) {
-  if (fetchedAtSec == null || !Number.isFinite(Number(fetchedAtSec))) return null;
-  const ms = Date.now() - Number(fetchedAtSec) * 1000;
-  if (ms < 0) return "just now";
-  const mins = Math.round(ms / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return mins + "m ago";
-  const hrs = Math.round(mins / 60);
-  if (hrs < 48) return hrs + "h ago";
-  return Math.round(hrs / 24) + "d ago";
-}
-
-/** Soft stale threshold for UI (hours). Matches weekday refresh cadence. */
-const SNAPSHOT_STALE_HOURS = 24;
 
 // ---- data load ----------------------------------------------------------
 async function load(refresh = false) {
   const btn = $("#refresh");
   btn.disabled = true;
-  $("#status").textContent = refresh ? "Reloading Yahoo snapshot…" : "Loading universe…";
+  $("#status").textContent = refresh ? "Forcing a fresh pull from Yahoo…" : "Loading universe…";
   try {
     const res = await fetch(refresh ? "/api/refresh" : "/api/screen");
     const data = await res.json();
     STATE.layers = data.layers;
     STATE.marketState = data.market_state;
     attachScores();
-    const fetchedSec = Number(data.fetched_at);
-    const whenLocal = Number.isFinite(fetchedSec)
-      ? new Date(fetchedSec * 1000).toLocaleString(undefined, {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : "—";
-    const ageLabel = formatSnapshotAge(fetchedSec);
-    const ageHours = Number.isFinite(fetchedSec)
-      ? (Date.now() - fetchedSec * 1000) / 3_600_000
-      : null;
-    const stale = ageHours != null && ageHours > SNAPSHOT_STALE_HOURS;
-    const uniq = uniqueHoldings().length;
+    const when = new Date(data.fetched_at * 1000).toLocaleTimeString();
     $("#status").innerHTML =
-      `<b>${uniq}</b> names · ${data.layers.length} layers · ` +
-      `${data.ok_count}/${data.ticker_count} with data ${marketPill()}`;
-    $("#meta").textContent = ageLabel
-      ? `snapshot ${ageLabel}${stale ? " · stale" : ""} · ${whenLocal}`
-      : `${data.cached ? "cached" : "fresh"} · ${whenLocal}`;
-    const kpiNames = $("#kpiNames");
-    const kpiOk = $("#kpiOk");
-    if (kpiNames) kpiNames.textContent = String(uniq);
-    if (kpiOk) kpiOk.textContent = `${data.ok_count}/${data.ticker_count}`;
-    const dot = $("#statusDot");
-    if (dot) {
-      const ratio = data.ticker_count ? data.ok_count / data.ticker_count : 0;
-      let color = "var(--green)";
-      if (stale || ratio < 0.5) color = "var(--red)";
-      else if (ratio < 0.9 || (ageHours != null && ageHours > 12)) color = "var(--amber)";
-      dot.style.background = color;
-      dot.style.boxShadow = `0 0 6px ${color}`;
-      dot.title = ageLabel ? `Snapshot ${ageLabel}` : "Snapshot age unknown";
-    }
+      `<b>${uniqueHoldings().length}</b> names · ${data.layers.length} layers · ` +
+      `${data.ok_count}/${data.ticker_count} with live data ${marketPill()}`;
+    $("#meta").textContent = `${data.cached ? "cached" : "fresh"} · updated ${when}`;
     buildFiltersPanel();
-    renderMovers();
+    buildThemeBar();
+    renderTicker();
     render();
     syncHistory();            // record today's snapshot, then pull deltas (async)
-    if (STATE.mode === "datacenter" && window.DataCenter) window.DataCenter.render();
-    if (STATE.mode === "rack" && window.RackExplorer) window.RackExplorer.render();
+    if (STATE.mode === "map" && window.GlobalMap) window.GlobalMap.render();
     if (STATE.mode === "analyst") initAnalyst();
   } catch (e) {
-    $("#status").textContent =
-      "Couldn’t load the screener snapshot. Try Refresh, or rebuild with npm run update-screener.";
+    $("#status").textContent = "Failed to load data — is the server running?";
     console.error(e);
   } finally {
     btn.disabled = false;
@@ -386,21 +494,26 @@ function uniqueHoldings() {
 // `dir:-1` = lower better; `pos` = ignore non-positive values (a negative
 // multiple isn't cheap, it's unprofitable). Missing data → neutral (50).
 const SCORE_FACTORS = [
-  { key: "valuation", label: "Valuation", weight: 0.20, metrics: [
+  { key: "valuation", label: "Valuation", weight: 0.18, metrics: [
     { k: "forward_pe", dir: -1, pos: true }, { k: "trailing_pe", dir: -1, pos: true },
     { k: "price_to_sales", dir: -1, pos: true }, { k: "ev_ebitda", dir: -1, pos: true },
     { k: "price_to_book", dir: -1, pos: true }, { k: "peg", dir: -1, pos: true },
     { k: "fcf_yield", dir: 1 } ] },
-  { key: "moat", label: "Moat & quality", weight: 0.22, metrics: [
+  { key: "moat", label: "Moat & quality", weight: 0.20, metrics: [
     { k: "gross_margin", dir: 1 }, { k: "operating_margin", dir: 1 }, { k: "profit_margin", dir: 1 },
     { k: "roe", dir: 1 }, { k: "roa", dir: 1 } ] },
-  { key: "growth", label: "Growth", weight: 0.15, metrics: [
-    { k: "revenue_growth", dir: 1 }, { k: "earnings_growth", dir: 1 } ] },
-  { key: "technical", label: "Technical trend", weight: 0.18, metrics: [
+  { key: "growth", label: "Growth", weight: 0.14, metrics: [
+    { k: "revenue_growth", dir: 1 }, { k: "earnings_growth", dir: 1 },
+    { k: "rule_of_40", dir: 1 } ] },
+  { key: "technical", label: "Technical trend", weight: 0.15, metrics: [
     { k: "pct_vs_ma50", dir: 1 }, { k: "pct_vs_ma200", dir: 1 },
-    { k: "range_pos", dir: 1 }, { k: "pct_off_high", dir: 1 } ] },
+    { k: "range_pos", dir: 1 }, { k: "pct_off_high", dir: 1 },
+    { k: "week52_change", dir: 1 } ] },
   { key: "health", label: "Financial health", weight: 0.10, metrics: [
-    { k: "debt_to_equity", dir: -1 }, { k: "current_ratio", dir: 1 } ] },
+    { k: "debt_to_equity", dir: -1, pos: true }, { k: "current_ratio", dir: 1 },
+    { k: "beta", dir: -1, pos: true } ] },
+  { key: "consensus", label: "Analyst consensus", weight: 0.08, metrics: [
+    { k: "implied_upside", dir: 1 }, { k: "recommendation_mean", dir: -1, pos: true } ] },
   { key: "exposure", label: "Thematic exposure", weight: 0.15, special: "exposure" },
 ];
 
@@ -414,13 +527,28 @@ function pctile(pool, v, higherBetter) {
 // Score one pool of holdings: each factor = average percentile rank of its
 // metrics *within this pool*, then weighted. Returns ticker -> {score, parts, cov}
 // where cov[factor] = "have/total" metrics that had data (so a thin score shows).
+// Pools are winsorized at 2nd/98th pct so one extreme outlier (e.g. a 4000× P/E)
+// doesn't collapse everyone else's rank.
 function computeScores(list) {
   const ok = list.filter((h) => h.market && h.market.ok);
-  const pools = {};
+  const pools = {}, wlo = {}, whi = {};
   for (const f of SCORE_FACTORS) for (const mt of (f.metrics || [])) {
     if (pools[mt.k]) continue;
-    pools[mt.k] = ok.map((h) => h.market[mt.k]).filter((v) => v != null && (!mt.pos || v > 0));
+    const raw = ok.map((h) => h.market[mt.k]).filter((v) => v != null && (!mt.pos || v > 0));
+    if (raw.length >= 10) {
+      const s = [...raw].sort((a, b) => a - b);
+      const lo = s[Math.floor(0.02 * s.length)], hi = s[Math.floor(0.98 * s.length)];
+      pools[mt.k] = raw.map((x) => Math.max(lo, Math.min(hi, x)));
+      wlo[mt.k] = lo; whi[mt.k] = hi;
+    } else {
+      pools[mt.k] = raw; wlo[mt.k] = -Infinity; whi[mt.k] = Infinity;
+    }
   }
+  // Precompute factor lists for Setup (fundamentals) and Trigger (trend) aggregates.
+  const setupFs = SCORE_FACTORS.filter((f) => ["valuation", "moat", "growth", "health"].includes(f.key));
+  const trigFs  = SCORE_FACTORS.filter((f) => ["technical", "consensus"].includes(f.key));
+  const setupW  = setupFs.reduce((s, f) => s + f.weight, 0);
+  const trigW   = trigFs.reduce((s, f)  => s + f.weight, 0);
   const out = {};
   for (const h of ok) {
     const parts = {}, cov = {};
@@ -428,8 +556,9 @@ function computeScores(list) {
       if (f.special === "exposure") { parts[f.key] = Math.round((EXPOSURE_SCORE[h.exposure] ?? 0.4) * 100); cov[f.key] = null; continue; }
       const vals = [];
       for (const mt of f.metrics) {
-        const v = h.market[mt.k];
-        if (v == null || (mt.pos && v <= 0)) continue;
+        const raw = h.market[mt.k];
+        if (raw == null || (mt.pos && raw <= 0)) continue;
+        const v = Math.max(wlo[mt.k], Math.min(whi[mt.k], raw));   // clamp to winsorized range
         const p = pctile(pools[mt.k], v, mt.dir === 1);
         if (p != null) vals.push(p);
       }
@@ -437,6 +566,9 @@ function computeScores(list) {
       cov[f.key] = `${vals.length}/${f.metrics.length}`;
     }
     const composite = SCORE_FACTORS.reduce((s, f) => s + f.weight * (parts[f.key] / 100), 0);
+    // Setup = fundamental quality; Trigger = trend confirmation (both re-normalized to 0–100).
+    parts.setup   = Math.round(setupFs.reduce((s, f) => s + f.weight * (parts[f.key] / 100), 0) / setupW * 100);
+    parts.trigger = Math.round(trigFs.reduce((s, f)  => s + f.weight * (parts[f.key] / 100), 0) / trigW  * 100);
     out[h.ticker] = { score: Math.round(composite * 100), parts, cov };
   }
   return out;
@@ -451,6 +583,8 @@ function attachScores() {
     m.fcf_yield = (m.free_cashflow != null && m.market_cap) ? m.free_cashflow / m.market_cap : null;
     m.range_pos = (m.price != null && m.high_52w != null && m.low_52w != null && m.high_52w > m.low_52w)
       ? (m.price - m.low_52w) / (m.high_52w - m.low_52w) : null;
+    m.rule_of_40 = (m.revenue_growth != null && m.operating_margin != null)
+      ? m.revenue_growth * 100 + m.operating_margin * 100 : null;
   }
   // always compute the universe basis (the flat view + the fallback); compute the
   // per-layer basis lazily only when that mode is active.
@@ -475,10 +609,70 @@ function attachScores() {
   }
 }
 
+// ---- scoring methodology modal (built from SCORE_FACTORS so it always matches
+// the real computation) --------------------------------------------------
+const METRIC_LABEL = {
+  forward_pe: "Forward P/E", trailing_pe: "Trailing P/E", price_to_sales: "P/S",
+  ev_ebitda: "EV/EBITDA", price_to_book: "P/B", peg: "PEG", fcf_yield: "FCF yield",
+  gross_margin: "Gross margin", operating_margin: "Operating margin", profit_margin: "Net margin",
+  roe: "ROE", roa: "ROA", revenue_growth: "Revenue growth", earnings_growth: "Earnings growth",
+  pct_vs_ma50: "% vs 50-day MA", pct_vs_ma200: "% vs 200-day MA",
+  range_pos: "52-week range position", pct_off_high: "% off 52-week high",
+  debt_to_equity: "Debt / equity", current_ratio: "Current ratio", beta: "Beta",
+  implied_upside: "Implied upside vs target", recommendation_mean: "Analyst rating",
+  week52_change: "52-week return (momentum)", rule_of_40: "Rule of 40 (rev growth % + op margin %)",
+};
+function scoreMethodologyHtml() {
+  const rows = SCORE_FACTORS.map((f) => {
+    const w = Math.round(f.weight * 100);
+    let metrics;
+    if (f.special === "exposure") {
+      metrics = "From the thematic-exposure rating — pure 100 · high 70 · moderate 40 · diversified 15.";
+    } else {
+      metrics = f.metrics.map((mt) =>
+        `${METRIC_LABEL[mt.k] || mt.k} <span class="mm-${mt.dir === 1 ? "up" : "down"}">${mt.dir === 1 ? "↑" : "↓"}</span>`).join(" · ");
+    }
+    return `<tr><td class="mm-f">${f.label}</td><td class="mm-w">${w}%</td><td class="mm-m">${metrics}</td></tr>`;
+  }).join("");
+  return `
+    <p>The <b>Score</b> is a 0–100 composite of seven factors. For each factor we take its metrics,
+    <b>winsorize</b> the universe distribution at the 2nd/98th percentile (so one extreme outlier
+    doesn't collapse everyone else's rank), convert each to a <b>percentile rank</b> within the peer
+    pool (0 = worst, 100 = best), average those percentiles, then weight and sum the factors.</p>
+    <p>The breakdown also shows two derived aggregates — <b>Setup</b> (val + moat + growth + health:
+    "is this a good business at a fair price?") and <b>Trigger</b> (technical + consensus: "is the
+    market confirming it now?") — to separate fundamental quality from trend confirmation and avoid
+    the value-trap failure mode where a high fundamental score sits while the stock bleeds.</p>
+    <table class="mm-table">
+      <thead><tr><th>Factor</th><th>Weight</th><th>Metrics &nbsp;(<span class="mm-up">↑</span> higher better · <span class="mm-down">↓</span> lower better)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <ul class="mm-notes">
+      <li><b>Peer pool</b> = the whole universe, or same-layer peers — set by the <b>Score vs: Universe / Layer</b> toggle.</li>
+      <li><b>Negative or zero valuation multiples are ignored</b> (a negative P/E isn't "cheap").</li>
+      <li><b>Missing data</b> for a metric is skipped; a factor with no usable data defaults to a neutral <b>50</b>. A row's <i>Score breakdown</i> shows a coverage chip (e.g. <code>2/7</code>) for how much data backed each factor.</li>
+      <li><b>Setup ≥ 60 + Trigger ≥ 60</b> → Buy zone · <b>Setup ≥ 60 + Trigger &lt; 40</b> → Watch · <b>Setup &lt; 40 + Trigger ≥ 60</b> → Momentum · <b>both &lt; 40</b> → Avoid.</li>
+      <li>Weights live in <code>SCORE_FACTORS</code> (<code>static/app.js</code>) — tweak them freely.</li>
+      <li class="mm-warn">Inputs come from Yahoo Finance and can be delayed, incomplete, or wrong. Treat the score as a <b>relative screen, not a verdict</b>.</li>
+    </ul>`;
+}
+function openScoreModal() {
+  const el = $("#scoreModal");
+  if (!el) return;
+  el.innerHTML = `<div class="modal-box">
+    <div class="modal-head"><h3>How the composite score is derived</h3><button class="modal-x" id="scoreModalX" aria-label="Close">✕</button></div>
+    <div class="modal-body">${scoreMethodologyHtml()}</div></div>`;
+  el.classList.remove("hidden");
+  el.querySelector("#scoreModalX").addEventListener("click", closeScoreModal);
+  el.addEventListener("click", (e) => { if (e.target === el) closeScoreModal(); });
+}
+function closeScoreModal() { const el = $("#scoreModal"); if (el) { el.classList.add("hidden"); el.innerHTML = ""; } }
+
 // ---- filtering / sorting ------------------------------------------------
 function anyFilterActive() {
   if (STATE.query.trim()) return true;
   if (STATE.exposure.size) return true;
+  if (STATE.tags.size) return true;
   return ALL_METRICS.some((m) => {
     const v = STATE.valuation[m.key];
     return v && (v.min != null || v.max != null);
@@ -492,6 +686,10 @@ function activeFilterCount() {
 }
 function passesFilters(h) {
   if (STATE.exposure.size && !STATE.exposure.has(h.exposure)) return false;
+  if (STATE.tags.size) {
+    const ht = h.tags || [];
+    if (![...STATE.tags].some((t) => ht.includes(t))) return false;   // OR across selected themes
+  }
   for (const m of ALL_METRICS) {
     const v = STATE.valuation[m.key];
     if (!v) continue;
@@ -525,14 +723,41 @@ function marketPill() {
   if (s === "POST" || s === "POSTPOST") return `<span class="mkt extend">● After hours</span>`;
   return `<span class="mkt closed">● Market closed</span>`;
 }
-function renderMovers() {
-  const named = uniqueHoldings().filter((h) => h.market && h.market.change_pct != null);
-  if (!named.length) { $("#movers").innerHTML = ""; return; }
-  const s = [...named].sort((a, b) => b.market.change_pct - a.market.change_pct);
-  const top = s[0], bot = s[s.length - 1];
-  $("#movers").innerHTML =
-    `<span class="mv">▲ <b>${escapeHtml(top.ticker)}</b> <span class="pos">${fmtPct(top.market.change_pct)}</span></span>` +
-    `<span class="mv">▼ <b>${escapeHtml(bot.ticker)}</b> <span class="neg">${fmtPct(bot.market.change_pct)}</span></span>`;
+// ---- retro ticker tape (NYSE-style scrolling movers) -------------------
+function renderTicker() {
+  const track = $("#ttTrack");
+  if (!track) return;
+  // all names with a quote, ordered biggest move first → top movers lead the tape
+  const names = uniqueHoldings()
+    .filter((h) => h.market && h.market.change_pct != null)
+    .sort((a, b) => Math.abs(b.market.change_pct) - Math.abs(a.market.change_pct));
+  if (!names.length) { track.innerHTML = ""; return; }
+
+  const item = (h) => {
+    const c = h.market.change_pct;
+    const cls = c > 0 ? "pos" : c < 0 ? "neg" : "flat";
+    const arrow = c > 0 ? "▲" : c < 0 ? "▼" : "◆";
+    return `<span class="tt-item" data-tk="${h.ticker}" title="${escapeHtml(h.name)}">` +
+      `<span class="tt-sym">${h.ticker}</span>` +
+      `<span class="tt-px">${fmtPrice(h.market.price)}</span>` +
+      `<span class="tt-chg ${cls}">${arrow}${fmtPct(c)}</span></span>`;
+  };
+  const seq = names.map(item).join("");
+  // duplicate the sequence so the -50% loop is seamless; speed scales with length
+  track.innerHTML = seq + seq;
+  track.style.animationDuration = Math.max(28, names.length * 2.2) + "s";
+
+  // market-state cap (left, non-scrolling)
+  const cap = $("#ttCap");
+  if (cap) {
+    const s = (STATE.marketState || "").toUpperCase();
+    const label = s === "REGULAR" ? "LIVE" : s === "PRE" ? "PRE-MKT" : (s === "POST" || s === "POSTPOST") ? "AFT-HRS" : s ? "CLOSED" : "MARKETS";
+    cap.dataset.state = s === "REGULAR" ? "open" : (s === "PRE" || s === "POST" || s === "POSTPOST") ? "extend" : "closed";
+    cap.innerHTML = `<span class="tt-dot"></span>${label}`;
+  }
+
+  track.querySelectorAll(".tt-item").forEach((el) =>
+    el.addEventListener("click", () => window.searchScreener(el.dataset.tk)));
 }
 
 // ---- history / trends / alerts -----------------------------------------
@@ -591,12 +816,8 @@ function renderAlerts() {
   const alerts = deriveAlerts();
   if (!alerts.length) { el.classList.add("hidden"); el.innerHTML = ""; return; }
   el.classList.remove("hidden");
-  el.innerHTML = `<span class="al-h">${alerts.length} alert${alerts.length > 1 ? "s" : ""}</span>` +
-    alerts.map((a) => {
-      const tk = escapeHtml(String(a.tk || ""));
-      const kind = ["warn", "info", "buy", "sell", "up", "down"].includes(a.kind) ? a.kind : "info";
-      return `<button class="al-item ${kind}" data-tk="${tk}"><b>${tk}</b> ${escapeHtml(a.msg)}</button>`;
-    }).join("");
+  el.innerHTML = `<span class="al-h">⚑ ${alerts.length} alert${alerts.length > 1 ? "s" : ""}</span>` +
+    alerts.map((a) => `<button class="al-item ${a.kind}" data-tk="${a.tk}"><b>${a.tk}</b> ${escapeHtml(a.msg)}</button>`).join("");
   el.querySelectorAll(".al-item").forEach((b) =>
     b.addEventListener("click", () => { window.searchScreener(b.dataset.tk); }));
 }
@@ -621,19 +842,133 @@ async function fetchHistory(ticker) {
   } catch { HIST_CACHE[ticker] = "error"; }
   render();
 }
+// ---- interactive price+score trend chart -------------------------------
+const TC = { W: 660, H: 230, padL: 48, padR: 50, padT: 16, padB: 24 };
+function tcScales(series) {
+  const prices = series.map((s) => s.price), scores = series.map((s) => s.score);
+  const minP = Math.min(...prices), maxP = Math.max(...prices);
+  const minS = Math.min(...scores), maxS = Math.max(...scores);
+  const plotW = TC.W - TC.padL - TC.padR, plotH = TC.H - TC.padT - TC.padB, n = series.length;
+  return {
+    n, minP, maxP, minS, maxS, plotW, plotH,
+    x: (i) => TC.padL + (n <= 1 ? 0 : i / (n - 1)) * plotW,
+    yP: (p) => TC.padT + (1 - (p - minP) / ((maxP - minP) || 1)) * plotH,
+    yS: (s) => TC.padT + (1 - (s - minS) / ((maxS - minS) || 1)) * plotH,
+  };
+}
+function trendChart(series) {
+  const sc = tcScales(series), { padL, padR, padT, W, H } = TC, bottom = padT + sc.plotH;
+  const ptsP = series.map((s, i) => `${sc.x(i).toFixed(1)},${sc.yP(s.price).toFixed(1)}`).join(" ");
+  const ptsS = series.map((s, i) => `${sc.x(i).toFixed(1)},${sc.yS(s.score).toFixed(1)}`).join(" ");
+  const grid = [0, 0.5, 1].map((t) => { const y = (padT + t * sc.plotH).toFixed(1); return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" class="tc-grid"/>`; }).join("");
+  const last = series[series.length - 1];
+  // price (left) + score (right) axis min/max labels
+  const axes =
+    `<text x="${padL - 6}" y="${padT + 4}" text-anchor="end" class="tc-axp">${fmtPrice(sc.maxP)}</text>` +
+    `<text x="${padL - 6}" y="${bottom}" text-anchor="end" class="tc-axp">${fmtPrice(sc.minP)}</text>` +
+    `<text x="${W - padR + 6}" y="${padT + 4}" class="tc-axs">${sc.maxS}</text>` +
+    `<text x="${W - padR + 6}" y="${bottom}" class="tc-axs">${sc.minS}</text>`;
+  const dates = [0, Math.floor((sc.n - 1) / 2), sc.n - 1].map((i, k) =>
+    `<text x="${sc.x(i).toFixed(1)}" y="${H - 6}" text-anchor="${k === 0 ? "start" : k === 2 ? "end" : "middle"}" class="tc-axd">${series[i].date.slice(5)}</text>`).join("");
+  return `<div class="tc-wrap">
+    <div class="tc-legend"><span class="tc-leg tc-leg-p">● Price</span><span class="tc-leg tc-leg-s">● Score</span>
+      <span class="tc-readout" id="tcReadout">latest · ${last.date} · $${fmtPrice(last.price)} · score ${last.score}</span></div>
+    <svg class="tchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      ${grid}${axes}${dates}
+      <polyline class="tc-price" points="${ptsP}"/>
+      <polyline class="tc-score" points="${ptsS}"/>
+      <g class="tc-cross" style="display:none">
+        <line class="tc-vline" y1="${padT}" y2="${bottom.toFixed(1)}"/>
+        <circle class="tc-dotP" r="4"/><circle class="tc-dotS" r="4"/>
+      </g>
+      <rect class="tc-overlay" x="${padL}" y="${padT}" width="${sc.plotW}" height="${sc.plotH}" fill="transparent"/>
+    </svg></div>`;
+}
+function wireTrendChart(root, series) {
+  const svg = root.querySelector(".tchart");
+  if (!svg || series.length < 2) return;
+  const overlay = svg.querySelector(".tc-overlay"), cross = svg.querySelector(".tc-cross");
+  const vline = svg.querySelector(".tc-vline"), dotP = svg.querySelector(".tc-dotP"), dotS = svg.querySelector(".tc-dotS");
+  const readout = root.querySelector("#tcReadout");
+  const sc = tcScales(series), last = series[series.length - 1];
+  const dflt = `latest · ${last.date} · $${fmtPrice(last.price)} · score ${last.score}`;
+  const move = (e) => {
+    const r = overlay.getBoundingClientRect();
+    const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const i = Math.max(0, Math.min(sc.n - 1, Math.round(f * (sc.n - 1))));
+    const s = series[i], x = sc.x(i);
+    vline.setAttribute("x1", x); vline.setAttribute("x2", x);
+    dotP.setAttribute("cx", x); dotP.setAttribute("cy", sc.yP(s.price));
+    dotS.setAttribute("cx", x); dotS.setAttribute("cy", sc.yS(s.score));
+    cross.style.display = "";
+    readout.innerHTML = `<b>${s.date}</b> · <span class="tc-leg-p">$${fmtPrice(s.price)}</span> · <span class="tc-leg-s">score ${s.score}</span>`;
+  };
+  overlay.addEventListener("mousemove", move);
+  overlay.addEventListener("mouseleave", () => { cross.style.display = "none"; readout.textContent = dflt; });
+}
+
+function backfillControls(thin) {
+  return `<div class="hist-bf">
+    <span class="muted">${thin ? "Load close-of-day price &amp; score history:" : "Extend history:"}</span>
+    <button class="hbf" data-m="1">1 mo</button>
+    <button class="hbf" data-m="3">3 mo</button>
+    <button class="hbf" data-m="6">6 mo</button></div>`;
+}
 function histHtml(ticker) {
   const c = HIST_CACHE[ticker];
   if (c === undefined) { fetchHistory(ticker); return `<div class="news-status">Loading trend…</div>`; }
   if (c === "loading") return `<div class="news-status">Loading trend…</div>`;
   if (c === "error") return `<div class="news-status">Couldn't load history.</div>`;
-  if (!c.length) return `<div class="news-status">No history yet — snapshots accrue daily.</div>`;
-  const prices = c.map((p) => p.price), scores = c.map((p) => p.score);
+  if (c.length < 2) {
+    return `<div class="news-status">No stored history yet — backfill it from past closes, then it accrues daily.</div>${backfillControls(true)}`;
+  }
   const days = c.length;
-  if (days < 2) return `<div class="news-status">First snapshot saved. Trends appear from the 2nd day — ${days} day so far.</div>`;
   return `<div class="hist">
-    <div class="hist-row"><span class="hist-lbl">Price</span>${sparkline(prices)}<span class="hist-end">${fmtPrice(prices[prices.length - 1])}</span></div>
-    <div class="hist-row"><span class="hist-lbl">Score</span>${sparkline(scores, "var(--accent)")}<span class="hist-end">${scores[scores.length - 1] ?? "—"}</span></div>
-    <div class="hist-note">${days} daily snapshot${days > 1 ? "s" : ""}</div></div>`;
+    ${trendChart(c)}
+    <div class="hist-note">${days} daily points · ${c[0].date} → ${c[c.length - 1].date}</div>
+    ${backfillControls(false)}</div>`;
+}
+let BACKFILL_BUSY = false;
+async function backfillHistory(months) {
+  if (BACKFILL_BUSY) return;
+  BACKFILL_BUSY = true;
+  document.querySelectorAll(".hist-bf").forEach((el) =>
+    el.innerHTML = `<span class="muted">Reconstructing ${months} month${months > 1 ? "s" : ""} of price &amp; score across the universe… (~20–40s)</span>`);
+  try {
+    const r = await fetch("/api/backfill?months=" + months);
+    await r.json();
+  } catch { /* ignore */ }
+  for (const k in HIST_CACHE) delete HIST_CACHE[k];   // force every trend to re-fetch
+  BACKFILL_BUSY = false;
+  render();
+}
+
+// ---- theme / sub-layer tag chips ---------------------------------------
+function topTags(n = 30) {
+  const freq = {};
+  for (const h of uniqueHoldings()) for (const t of (h.tags || [])) {
+    if (t === "foreign") continue;
+    freq[t] = (freq[t] || 0) + 1;
+  }
+  return Object.entries(freq).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, n);
+}
+function buildThemeBar() {
+  const bar = $("#themeBar");
+  if (!bar) return;
+  const tags = topTags(30);
+  if (!tags.length) { bar.innerHTML = ""; return; }
+  bar.innerHTML = `<span class="flabel">Themes:</span>` +
+    tags.map(([t, c]) =>
+      `<button class="theme-chip${STATE.tags.has(t) ? " active" : ""}" data-tag="${t}" title="${c} names tagged “${t}”">${t}<span class="tc-n">${c}</span></button>`).join("") +
+    (STATE.tags.size ? `<button class="theme-clear" id="themeClear">✕ clear themes</button>` : "");
+  bar.querySelectorAll(".theme-chip").forEach((b) =>
+    b.addEventListener("click", () => {
+      const t = b.dataset.tag;
+      if (STATE.tags.has(t)) STATE.tags.delete(t); else STATE.tags.add(t);
+      savePrefs(); buildThemeBar(); render();
+    }));
+  const tc = $("#themeClear");
+  if (tc) tc.addEventListener("click", () => { STATE.tags.clear(); savePrefs(); buildThemeBar(); render(); });
 }
 
 // ---- filter panel -------------------------------------------------------
@@ -702,6 +1037,7 @@ function headerRow() {
     const c = COLUMNS[key];
     const th = document.createElement("th");
     th.textContent = c.label;
+    if (c.title) th.title = c.title;
     if (c.align === "left") th.classList.add("left");
     if (c.align === "center") th.classList.add("center");
     if (STATE.sort.col === key) { th.classList.add("sorted"); if (STATE.sort.asc) th.classList.add("asc"); }
@@ -734,6 +1070,17 @@ function buildTable(holdings, showLayers) {
       const ntr = document.createElement("tr");
       ntr.className = "news-row";
       ntr.innerHTML = `<td colspan="${keys.length}">${detailHtml(h)}</td>`;
+      ntr.querySelectorAll(".dtab").forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          STATE.openTab.set(b.dataset.tk, b.dataset.tab);
+          render();
+        }));
+      ntr.querySelectorAll(".sb-method").forEach((b) =>
+        b.addEventListener("click", (e) => { e.stopPropagation(); openScoreModal(); }));
+      ntr.querySelectorAll(".hbf").forEach((b) =>
+        b.addEventListener("click", (e) => { e.stopPropagation(); backfillHistory(+b.dataset.m); }));
+      if (ntr.querySelector(".tchart") && Array.isArray(HIST_CACHE[h.ticker])) wireTrendChart(ntr, HIST_CACHE[h.ticker]);
       tbody.appendChild(ntr);
     }
   }
@@ -773,7 +1120,7 @@ function render() {
     el.className = "layer" + (collapsed ? " collapsed" : "");
     const head = document.createElement("div");
     head.className = "layer-head";
-    head.innerHTML = `<h2>${escapeHtml(layer.name)}</h2><span class="count">${visible.length} names</span><span class="caret">▾</span>`;
+    head.innerHTML = `<h2>${layer.name}</h2><span class="count">${visible.length} names</span><span class="caret">▾</span>`;
     head.addEventListener("click", () => {
       if (STATE.collapsed.has(layer.id)) STATE.collapsed.delete(layer.id);
       else STATE.collapsed.add(layer.id);
@@ -791,8 +1138,9 @@ function render() {
 }
 function emptyMsg() {
   const bits = [];
-  if (STATE.query) bits.push(`“${escapeHtml(STATE.query)}”`);
-  if (STATE.exposure.size) bits.push(`exposure: ${escapeHtml([...STATE.exposure].join(", "))}`);
+  if (STATE.query) bits.push(`“${STATE.query}”`);
+  if (STATE.exposure.size) bits.push(`exposure: ${[...STATE.exposure].join(", ")}`);
+  if (STATE.tags.size) bits.push(`themes: ${[...STATE.tags].join(", ")}`);
   if (activeFilterCount()) bits.push(`${activeFilterCount()} metric filter(s)`);
   return `<div class="loading">No names match ${bits.join(" · ") || "the current filters"}.</div>`;
 }
@@ -801,11 +1149,12 @@ function emptyMsg() {
 function syncToolbar() {
   document.querySelectorAll("#viewToggle button").forEach((b) => b.classList.toggle("active", b.dataset.view === STATE.view));
   document.querySelectorAll("#exposureFilter button").forEach((b) => b.classList.toggle("active", STATE.exposure.has(b.dataset.exp)));
+  const cb = activeCapBand();
+  document.querySelectorAll("#capFilter button").forEach((b) => b.classList.toggle("active", b.dataset.cap === cb));
   document.querySelectorAll("#colset button").forEach((b) => b.classList.toggle("active", b.dataset.cs === STATE.colset));
   document.querySelectorAll("#scoreMode button").forEach((b) => b.classList.toggle("active", b.dataset.sm === STATE.scoreMode));
   const fb = $("#filtersBtn"), n = activeFilterCount();
-  fb.textContent = n ? `Filters (${n})` : "Filters";
-  fb.setAttribute("aria-expanded", STATE.panelOpen ? "true" : "false");
+  fb.textContent = n ? `⚙ Filters (${n})` : "⚙ Filters";
   fb.classList.toggle("active", STATE.panelOpen || n > 0);
   fb.setAttribute("aria-expanded", String(STATE.panelOpen));
 }
@@ -818,6 +1167,8 @@ document.querySelectorAll("#exposureFilter button").forEach((b) =>
     if (STATE.exposure.has(e)) STATE.exposure.delete(e); else STATE.exposure.add(e);
     savePrefs(); render();
   }));
+document.querySelectorAll("#capFilter button").forEach((b) =>
+  b.addEventListener("click", () => setCapBand(b.dataset.cap)));
 document.querySelectorAll("#colset button").forEach((b) =>
   b.addEventListener("click", () => { STATE.colset = b.dataset.cs; savePrefs(); render(); }));
 document.querySelectorAll("#scoreMode button").forEach((b) =>
@@ -834,47 +1185,24 @@ $("#filtersBtn").addEventListener("click", () => {
 });
 
 // ---- mode (screener vs data-center map) --------------------------------
-const MODE_PURPOSE = {
-  screener: "Screener — rank holdings by valuation, momentum, quality, and composite score",
-  datacenter: "Data Center Map — explore the six-layer buildout, then drill into a layer’s stocks",
-  rack: "Rack Explorer — zoom from hall to rack to GPU die and see who builds each piece",
-  analyst: "AI Analyst — copy a grounded research prompt for Claude, Gemini, or ChatGPT",
-  lookup: "Stock Lookup — pin a universe ticker locally in this browser",
-};
-
 function applyMode() {
   const m = STATE.mode, screener = m === "screener";
   document.querySelectorAll("#mainnav button").forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
-  const purpose = $("#modePurpose");
-  if (purpose) {
-    purpose.style.opacity = "0";
-    purpose.textContent = MODE_PURPOSE[m] || "";
-    requestAnimationFrame(() => { purpose.style.opacity = "1"; });
-  }
   // screener chrome shows only in screener mode
-  const boardChrome = $(".board-chrome");
-  if (boardChrome) boardChrome.classList.toggle("hidden", !screener);
+  $(".filterbar").classList.toggle("hidden", !screener);
+  $("#themeBar").classList.toggle("hidden", !screener);
   $("#filtersPanel").classList.toggle("hidden", !screener || !STATE.panelOpen);
-  // statusbar is inside board-chrome; no separate hide needed when chrome hides
-  const layersEl = $("#layers");
-  layersEl.classList.toggle("hidden", !screener);
-  layersEl.classList.toggle("view-pane", screener);
+  $(".statusbar").classList.toggle("hidden", !screener);
+  $("#layers").classList.toggle("hidden", !screener);
+  $("#search").classList.toggle("hidden", !screener);
   renderAlerts();   // hides the alerts strip outside screener mode
-  const panes = [
-    ["#datacenter", "datacenter"],
-    ["#rackexplorer", "rack"],
-    ["#analyst", "analyst"],
-    ["#lookup", "lookup"],
-  ];
-  for (const [sel, mode] of panes) {
-    const el = $(sel);
-    const on = m === mode;
-    el.classList.toggle("hidden", !on);
-    el.classList.toggle("view-pane", on);
-  }
+  $("#map").classList.toggle("hidden", m !== "map");
+  $("#backtest").classList.toggle("hidden", m !== "backtest");
+  $("#analyst").classList.toggle("hidden", m !== "analyst");
+  $("#lookup").classList.toggle("hidden", m !== "lookup");
   updateFocusBanner();
-  if (m === "datacenter" && window.DataCenter) window.DataCenter.render();
-  if (m === "rack" && window.RackExplorer) window.RackExplorer.render();
+  if (m === "map" && window.GlobalMap) window.GlobalMap.render();
+  if (m === "backtest" && window.Backtest) window.Backtest.render();
   if (m === "analyst") initAnalyst();
   if (m === "lookup") initLookup();
 }
@@ -890,7 +1218,7 @@ function updateFocusBanner() {
   if (STATE.mode === "screener" && STATE.view === "layers" && STATE.focusLayer) {
     const layer = STATE.layers.find((l) => l.id === STATE.focusLayer);
     b.classList.remove("hidden");
-    b.innerHTML = `<span>Showing only <b>${escapeHtml(layer ? layer.name : STATE.focusLayer)}</b> — drilled in from the Data Center Map.</span>` +
+    b.innerHTML = `<span>Showing only <b>${layer ? layer.name : STATE.focusLayer}</b> — drilled in from the Data Center Map.</span>` +
       `<button id="clearFocus">Show all layers</button>`;
     b.querySelector("#clearFocus").addEventListener("click", () => { STATE.focusLayer = null; render(); });
   } else { b.classList.add("hidden"); b.innerHTML = ""; }
@@ -909,27 +1237,12 @@ const ANALYST = { reports: null, hasKey: false, wired: false, ticker: null };
 // compact GitHub-flavored-markdown -> HTML (headings, bold/italic/code, links,
 // lists, blockquotes, hr, and pipe tables). Input is escaped first.
 function mdToHtml(md) {
-  const esc = (s) =>
-    String(s ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  const inline = (s) =>
-    esc(s)
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, hrefRaw) => {
-        const decoded = String(hrefRaw || "")
-          .replace(/&amp;/g, "&")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'");
-        const safe = safeHttpUrl(decoded, "");
-        if (!safe || safe === "#") return text;
-        return `<a href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-      });
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inline = (s) => esc(s)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
   const lines = md.replace(/\r/g, "").split("\n");
   let html = "", i = 0;
   const isTableSep = (s) => /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(s) && s.includes("-");
@@ -989,7 +1302,7 @@ async function initAnalyst() {
   const sel = $("#anTicker");
   const uniq = uniqueHoldings().sort((a, b) => a.name.localeCompare(b.name));
   if (uniq.length && sel.options.length !== uniq.length) {
-    sel.innerHTML = uniq.map((h) => `<option value="${escapeHtml(h.ticker)}">${escapeHtml(h.name)} (${escapeHtml(h.ticker)})</option>`).join("");
+    sel.innerHTML = uniq.map((h) => `<option value="${h.ticker}">${h.name} (${h.ticker})</option>`).join("");
     if (uniq.some((h) => h.ticker === "NVDA")) sel.value = "NVDA";
     ANALYST.ticker = sel.value;
   }
@@ -1001,12 +1314,12 @@ async function initAnalyst() {
     ANALYST.hasKey = data.has_key;
     ANALYST.provider = data.provider;
     $("#anReports").innerHTML = data.reports.map((r) =>
-      `<button class="an-report" data-type="${escapeHtml(r.id)}">${escapeHtml(r.icon || "")} ${escapeHtml(r.label)}</button>`).join("");
+      `<button class="an-report" data-type="${r.id}">${r.icon} ${r.label}</button>`).join("");
     $("#anReports").querySelectorAll(".an-report").forEach((b) =>
       b.addEventListener("click", () => runAnalysis(b.dataset.type)));
     $("#anKeyNote").innerHTML = data.has_key
       ? `<b style="color:var(--green)">Connected to ${data.provider}</b> — reports generate automatically.`
-      : `Copy-prompt mode — each report builds a ready-to-paste prompt with this page’s snapshot data. Paste into Claude or Gemini yourself.`;
+      : `No LLM key set, so reports give you a ready-to-paste prompt. Set <code>GEMINI_API_KEY</code> (free at <b>aistudio.google.com</b>) or <code>ANTHROPIC_API_KEY</code> and restart to auto-generate.`;
   } catch (e) {
     $("#anReports").innerHTML = `<span class="muted">Couldn't load report types.</span>`;
   }
@@ -1022,7 +1335,7 @@ async function runAnalysis(type, force) {
   const label = report ? report.label : type;
   const out = $("#anOutput");
   document.querySelectorAll(".an-report").forEach((b) => b.classList.toggle("active", b.dataset.type === type));
-  out.innerHTML = `<div class="an-loading">⏳ Preparing <b>${escapeHtml(label)}</b> for <b>${escapeHtml(ticker)}</b>${ANALYST.hasKey ? " — generating with Claude (this can take 20–60s)…" : "…"}</div>`;
+  out.innerHTML = `<div class="an-loading">⏳ Preparing <b>${label}</b> for <b>${ticker}</b>${ANALYST.hasKey ? " — generating with Claude (this can take 20–60s)…" : "…"}</div>`;
 
   // attach our computed score for context
   const h = (STATE.layers.flatMap((l) => l.holdings)).find((x) => x.ticker === ticker);
@@ -1045,7 +1358,7 @@ async function runAnalysis(type, force) {
         (data.prompt ? `<div class="an-note">You can still run it manually:</div>` + promptBox(data.prompt) : "");
     }
   } catch (e) {
-    out.innerHTML = `<div class="an-note err">Request failed — could not build the prompt. Try Refresh, then run again.</div>`;
+    out.innerHTML = `<div class="an-note err">Request failed — is the server running?</div>`;
   }
 }
 
@@ -1062,6 +1375,7 @@ function promptBox(text) {
 
 // ---- Stock Lookup -------------------------------------------------------
 let LK_DATA = null;
+const EXPOSURES = ["pure", "high", "moderate", "diversified"];
 
 function initLookup() {
   renderAddedList();
@@ -1081,23 +1395,20 @@ async function lookupStock() {
     LK_DATA = await res.json();
     renderLookupResult(LK_DATA);
   } catch (e) {
-    out.innerHTML = `<div class="lk-note err">Lookup failed — reload the page and try a ticker already in the universe.</div>`;
+    out.innerHTML = `<div class="lk-note err">Lookup failed — is the server running?</div>`;
   }
 }
 
 function layerOptions(selectedId) {
-  return STATE.layers.map((l) => {
-    const id = allowLayerId(l.id);
-    if (!id) return "";
-    return `<option value="${escapeHtml(id)}"${id === selectedId ? " selected" : ""}>${escapeHtml(l.name || id)}</option>`;
-  }).join("");
+  return STATE.layers.map((l) =>
+    `<option value="${l.id}"${l.id === selectedId ? " selected" : ""}>${l.name}</option>`).join("");
 }
 
 function renderLookupResult(d) {
   const out = $("#lkResult");
   if (!d.ok) { out.innerHTML = `<div class="lk-note err">${escapeHtml(d.error || "No data for that ticker.")}</div>`; return; }
   const rec = d.recommend;
-  const curTag = d.currency && d.currency !== "USD" ? ` <span class="chip cur">${escapeHtml(String(d.currency))}→USD</span>` : "";
+  const curTag = d.currency && d.currency !== "USD" ? ` <span class="chip cur">${d.currency}→USD</span>` : "";
   const existing = (d.existing_layers || []);
   const metricBits = [
     `P/E ${fmtNum(d.trailing_pe)}`, `fwd ${fmtNum(d.forward_pe)}`,
@@ -1108,11 +1419,8 @@ function renderLookupResult(d) {
     ? `<div class="lk-rec"><div class="lk-rec-h">📍 Suggested layer</div>
          <div class="lk-rec-main"><b>${escapeHtml(rec.name)}</b> <span class="lk-conf">${rec.confidence}% fit</span></div>
          <div class="lk-rec-why">matched: ${rec.matched.length ? rec.matched.map((m) => `<code>${escapeHtml(m)}</code>`).join(" ") : "—"}</div>
-         <div class="lk-ranked">${(d.ranked || []).filter((r) => r.score > 0).map((r) => {
-            const lid = allowLayerId(r.layer);
-            if (!lid) return "";
-            return `<button class="lk-rankchip" data-layer="${lid}">${escapeHtml(r.name.replace(/^Layer \d+ — /, ""))} · ${escapeHtml(String(r.confidence))}%</button>`;
-          }).join("")}</div></div>`
+         <div class="lk-ranked">${(d.ranked || []).filter((r) => r.score > 0).map((r) =>
+            `<button class="lk-rankchip" data-layer="${r.layer}">${escapeHtml(r.name.replace(/^Layer \d+ — /, ""))} · ${r.confidence}%</button>`).join("")}</div></div>`
     : `<div class="lk-rec"><div class="lk-rec-h">📍 Suggested layer</div><div class="lk-rec-why">Couldn't auto-classify from its profile — pick a layer below.</div></div>`;
   out.innerHTML = `
     <div class="lk-card">
@@ -1121,7 +1429,7 @@ function renderLookupResult(d) {
         <div class="lk-prices">${fmtMoney(d.market_cap)} · ${fmtPrice(d.price)}</div>
       </div>
       <div class="lk-sub">${escapeHtml(d.sector || "—")}${d.industry ? " · " + escapeHtml(d.industry) : ""} · ${metricBits}</div>
-      ${existing.length ? `<div class="lk-exists">Already in the universe: <b>${existing.map((x) => escapeHtml(String(x))).join(", ")}</b> — you can still add it to another layer.</div>` : ""}
+      ${existing.length ? `<div class="lk-exists">Already in the universe: <b>${existing.join(", ")}</b> — you can still add it to another layer.</div>` : ""}
       ${d.summary ? `<p class="lk-summary">${escapeHtml(d.summary)}</p>` : ""}
       ${recBox}
       <div class="lk-form">
@@ -1143,27 +1451,15 @@ async function addStock(d) {
     ticker: d.ticker, name: d.name,
     layer: $("#lkLayer").value, exposure: $("#lkExposure").value,
     tags: $("#lkTags").value, thesis: $("#lkThesis").value,
-    market: {
-      ticker: d.ticker,
-      ok: d.ok !== false && d.price != null,
-      price: d.price ?? null,
-      market_cap: d.market_cap ?? null,
-      currency: d.currency || "USD",
-      trailing_pe: d.trailing_pe ?? null,
-      forward_pe: d.forward_pe ?? null,
-      price_to_sales: d.price_to_sales ?? null,
-      ev_ebitda: d.ev_ebitda ?? null,
-      revenue_growth: d.revenue_growth ?? null,
-    },
   };
   const msg = $("#lkAddMsg");
-  msg.innerHTML = `<span class="muted">Adding ${escapeHtml(d.ticker)}…</span>`;
+  msg.innerHTML = `<span class="muted">Adding ${d.ticker}…</span>`;
   try {
     const res = await fetch("/api/add-stock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const r = await res.json();
     if (!r.ok) { msg.innerHTML = `<span class="lk-note err">${escapeHtml(r.error || "Add failed.")}</span>`; return; }
-    msg.innerHTML = `<span class="lk-ok">✓ Added ${escapeHtml(d.ticker)} to ${escapeHtml(body.layer)}. Reloading snapshot…</span>`;
-    await load(true);
+    msg.innerHTML = `<span class="lk-ok">✓ Added ${d.ticker} to ${body.layer}. Refreshing live data…</span>`;
+    await load(true);             // refetch so the new ticker gets market data everywhere
     renderAddedList();
   } catch (e) {
     msg.innerHTML = `<span class="lk-note err">Add request failed.</span>`;
@@ -1177,14 +1473,10 @@ async function renderAddedList() {
     const items = (await res.json()).items || [];
     if (!items.length) { el.innerHTML = ""; return; }
     el.innerHTML = `<div class="lk-added-h">Your added stocks (${items.length})</div>` +
-      items.map((it) => {
-        const exp = allowExposure(it.exposure);
-        const layer = allowLayerId(it.layer) || escapeHtml(String(it.layer || ""));
-        return `<div class="lk-added-row"><span class="lk-tkr">${escapeHtml(it.ticker)}</span> ` +
-          `<span class="lk-added-name">${escapeHtml(it.name || "")}</span> <span class="chip">${escapeHtml(layer)}</span> ` +
-          `<span class="exp ${escapeHtml(exp)}">${escapeHtml(exp)}</span>` +
-          `<button class="lk-remove" data-t="${escapeHtml(it.ticker)}" data-l="${escapeHtml(layer)}">Remove</button></div>`;
-      }).join("");
+      items.map((it) => `<div class="lk-added-row"><span class="lk-tkr">${escapeHtml(it.ticker)}</span> ` +
+        `<span class="lk-added-name">${escapeHtml(it.name || "")}</span> <span class="chip">${escapeHtml(it.layer)}</span> ` +
+        `<span class="exp ${it.exposure}">${escapeHtml(it.exposure || "")}</span>` +
+        `<button class="lk-remove" data-t="${escapeHtml(it.ticker)}" data-l="${escapeHtml(it.layer)}">Remove</button></div>`).join("");
     el.querySelectorAll(".lk-remove").forEach((b) =>
       b.addEventListener("click", () => removeStock(b.dataset.t, b.dataset.l)));
   } catch (e) { el.innerHTML = ""; }
@@ -1201,9 +1493,44 @@ async function removeStock(ticker, layer) {
 $("#refresh").addEventListener("click", () => load(true));
 $("#search").addEventListener("input", (e) => { STATE.query = e.target.value; render(); });
 
-// Deep-links from StocksWatch home (?q=TICKER&layer=compute)
-if (STATE.query && $("#search")) $("#search").value = STATE.query;
-if (STATE.focusLayer) STATE.view = "layers";
+$("#scoreInfo").addEventListener("click", openScoreModal);
+
+// Deep-links from archived watchlist / shared URLs (?mode=&q=&layer=)
+(function applyUrlParams() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const mode = p.get("mode");
+    if (mode && ["screener", "map", "analyst", "backtest", "lookup"].includes(mode)) {
+      STATE.mode = mode;
+    }
+    const q = p.get("q");
+    if (q) {
+      STATE.query = q;
+      const s = $("#search");
+      if (s) s.value = q;
+    }
+    const layer = p.get("layer");
+    if (layer) {
+      STATE.focusLayer = layer;
+      STATE.view = "layers";
+      STATE.mode = STATE.mode || "screener";
+    }
+  } catch {
+    /* ignore */
+  }
+})();
+
+// keyboard QoL: "/" focuses the screener search; Esc clears + blurs it.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("#scoreModal").classList.contains("hidden")) { closeScoreModal(); return; }
+  const search = $("#search");
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if (e.key === "/" && !typing && search && !search.classList.contains("hidden")) {
+    e.preventDefault(); search.focus(); search.select();
+  } else if (e.key === "Escape" && document.activeElement === search) {
+    search.value = ""; STATE.query = ""; render(); search.blur();
+  }
+});
 
 applyMode();
 load();

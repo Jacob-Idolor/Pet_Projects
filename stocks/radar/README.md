@@ -4,9 +4,11 @@ Group watchlist + AI data-center screener. Static Astro on **S3 + CloudFront** �
 
 > Not financial advice.
 
-**Live:** [stockswatch.cc](https://stockswatch.cc) · **Surfaces:** `/` (watchlist) · `/datacenter.html` (six-layer screener)
+**Live:** [stockswatch.cc](https://stockswatch.cc) · **Surfaces:** `/` (AI Data Center screener) · `/watchlist.html` (archived group watchlist)
 
 Code map: [ARCHITECTURE.md](ARCHITECTURE.md)
+
+Local Flask + full backtest: [archive/ai-datacenter-screener/](archive/ai-datacenter-screener/)
 
 ---
 
@@ -32,8 +34,8 @@ flowchart LR
   end
 
   subgraph browser [Browser]
-    Home["/ watchlist"]
-    DC["/datacenter.html"]
+    Home["/ AI datacenter"]
+    WL["/watchlist.html archive"]
   end
 
   W --> Q

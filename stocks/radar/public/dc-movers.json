@@ -1,44 +1,44 @@
 {
-  "updatedAt": "2026-07-29T23:34:46.193Z",
-  "sourceFetchedAt": "2026-07-29T23:34:43.930908+00:00",
+  "updatedAt": "2026-08-06T03:23:37.917Z",
+  "sourceFetchedAt": "2026-08-06T03:23:35.857834+00:00",
   "gainers": [
     {
-      "ticker": "AMT",
-      "name": "American Tower",
-      "chg": 4.52478,
-      "layerId": "land"
-    },
-    {
-      "ticker": "APH",
-      "name": "Amphenol",
-      "chg": 4.49078,
+      "ticker": "ANET",
+      "name": "Arista Networks",
+      "chg": 3.56937,
       "layerId": "networking"
     },
     {
-      "ticker": "GOOGL",
-      "name": "Alphabet",
-      "chg": 0.8989842,
-      "layerId": "software"
+      "ticker": "NVDA",
+      "name": "NVIDIA",
+      "chg": 3.43493,
+      "layerId": "compute"
+    },
+    {
+      "ticker": "NRG",
+      "name": "NRG Energy",
+      "chg": 3.15277,
+      "layerId": "power"
     }
   ],
   "losers": [
     {
-      "ticker": "VRT",
-      "name": "Vertiv Holdings",
-      "chg": -17.2578,
-      "layerId": "power"
+      "ticker": "ALAB",
+      "name": "Astera Labs",
+      "chg": -11.9557,
+      "layerId": "networking"
     },
     {
-      "ticker": "MOD",
-      "name": "Modine Manufacturing",
-      "chg": -14.4285,
-      "layerId": "cooling"
+      "ticker": "000660.KS",
+      "name": "SK Hynix",
+      "chg": -8.158368,
+      "layerId": "compute"
     },
     {
-      "ticker": "NBIS",
-      "name": "Nebius Group",
-      "chg": -12.652485,
-      "layerId": "software"
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices",
+      "chg": -7.04424,
+      "layerId": "compute"
     }
   ]
 }

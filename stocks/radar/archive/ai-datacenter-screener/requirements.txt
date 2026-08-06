@@ -1,0 +1,4 @@
+flask>=3.0
+yfinance>=0.2.40
+requests>=2.31
+anthropic>=0.69   # only needed if you use the Anthropic/Claude backend

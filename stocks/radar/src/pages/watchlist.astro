@@ -1,0 +1,111 @@
+---
+/**
+ * Archived StocksWatch group watchlist.
+ * Primary product is now `/` (AI Data Center screener).
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LiveStatus from "../components/LiveStatus.astro";
+import DayMoodBanner from "../components/DayMoodBanner.astro";
+import CheckInPulse from "../components/CheckInPulse.astro";
+import MacroStrip from "../components/MacroStrip.astro";
+import WatchlistBoard from "../components/WatchlistBoard.astro";
+import GroupSubmissions from "../components/GroupSubmissions.astro";
+import PublisherContent from "../components/PublisherContent.astro";
+import AdSlot from "../components/AdSlot.astro";
+import { meta, stocks } from "../data/watchlist";
+import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
+import { featureEnabled, getSiteSettings } from "../lib/site-config";
+
+const description =
+  "Archived group watchlist — valuations, news, and technical lean for discussion. The main product is the AI Data Center screener.";
+
+const settings = getSiteSettings();
+const ads = getAdSenseConfig();
+const showPulse = featureEnabled("checkInPulse");
+const showSubmissions = featureEnabled("groupSubmissions");
+const adsFeature = featureEnabled("adsense");
+const showMood = featureEnabled("dayMood");
+
+const contentOk = hasPublisherContent(5);
+const allowAds = adsFeature && contentOk;
+const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
+
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout
+  title={`${meta.groupName} (archive)`}
+  description={description}
+  allowAds={allowAds}
+  activeNav="watchlist"
+  canonicalPath="/watchlist.html"
+>
+  <div class="app-shell">
+    <LiveStatus />
+    <div class="container archive-banner" role="status">
+      <p>
+        <strong>Archived watchlist.</strong>
+        The main StocksWatch product is now the
+        <a href={base}>AI Data Center screener</a>.
+        This page stays available for the group check-in board.
+      </p>
+    </div>
+    {showMood && <DayMoodBanner />}
+    <section class="hero container hero--compact">
+      <div class="hero-copy">
+        <p class="hero-brand">StocksWatch</p>
+        <h1>{meta.groupName}</h1>
+        <p class="tagline">{meta.tagline}</p>
+      </div>
+      <dl class="hero-kpis" aria-label="Watchlist summary">
+        <div class="hero-kpi">
+          <dt>Names</dt>
+          <dd class="mono">{stocks.length}</dd>
+        </div>
+        <div class="hero-kpi">
+          <dt>Status</dt>
+          <dd>Archive</dd>
+        </div>
+        <div class="hero-kpi desktop-only">
+          <dt>Version</dt>
+          <dd class="mono">{settings.app.version}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="container board-stage">
+      <MacroStrip />
+      {showPulse && <CheckInPulse />}
+      <WatchlistBoard />
+      <PublisherContent />
+      {showSubmissions && <GroupSubmissions />}
+      {
+        showFooterAd && (
+          <AdSlot placement="footer" label="Sponsored" class="ad-slot--footer" />
+        )
+      }
+    </div>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .archive-banner {
+    margin: 0.75rem auto 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--accent, #c4a574);
+    background: color-mix(in srgb, var(--panel, #12161c) 92%, transparent);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .archive-banner a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .hero--compact {
+    padding-block: 1.25rem 0.5rem;
+  }
+  .hero--compact .hero-mobile-hint {
+    display: none;
+  }
+</style>

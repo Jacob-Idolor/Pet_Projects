@@ -1,0 +1,12 @@
+.env
+user_stocks.json
+user_datacenters.json
+.venv/
+__pycache__/
+*.pyc
+dist/
+build/
+*.spec.bak
+server.log
+history.db
+static/assets/iverson.gif
