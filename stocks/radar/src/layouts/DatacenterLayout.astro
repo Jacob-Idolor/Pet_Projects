@@ -85,8 +85,96 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
         top: var(--header-h, 3.5rem);
         z-index: 30;
       }
-      .dc-page .board-stage {
-        padding-bottom: 2.5rem;
+      .dc-page .board-header h2 {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.45rem 0.65rem;
+        text-transform: none;
+        letter-spacing: -0.02em;
+        font-family: var(--font);
+        font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+        font-weight: 650;
+      }
+      .dc-page .board-count {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: var(--muted);
+      }
+      .dc-page .board-count #matchCount {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .dc-page .board-actions {
+        flex: 1 1 16rem;
+        justify-content: flex-end;
+        max-width: 28rem;
+      }
+      .dc-page .search-wrap--dc {
+        flex: 1 1 12rem;
+        min-width: 0;
+      }
+      .dc-page .search-wrap--dc .search-input {
+        padding-right: 4.5rem;
+        font-size: 0.88rem;
+        min-height: 2.5rem;
+      }
+      .dc-page .search-clear {
+        position: absolute;
+        right: 2.15rem;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-family: var(--mono);
+        cursor: pointer;
+        padding: 0.2rem 0.35rem;
+      }
+      .dc-page .search-clear:hover {
+        color: var(--text);
+      }
+      .dc-page .btn-refresh {
+        flex: 0 0 auto;
+        min-height: 2.5rem;
+        padding: 0 0.95rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+      }
+      .dc-page .btn-refresh:hover:not(:disabled) {
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+        background: var(--surface-hover);
+      }
+      .dc-page .btn-refresh:disabled,
+      .dc-page .btn-refresh.is-busy {
+        opacity: 0.65;
+        cursor: wait;
+      }
+      .dc-page .btn-refresh:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      @media (max-width: 680px) {
+        .dc-page .board-actions {
+          max-width: none;
+          width: 100%;
+        }
+        .dc-page .search-wrap--dc {
+          flex: 1 1 auto;
+        }
       }
       .dc-page .mode-purpose {
         margin: 0.35rem 0 0.75rem;

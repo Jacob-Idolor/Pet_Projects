@@ -73,25 +73,48 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
       <div class="board-chrome">
         <div class="board-header">
           <div class="board-heading">
-            <p class="board-eyebrow">Thematic board</p>
-            <h2>What we’re screening</h2>
+            <p class="board-eyebrow">Screener</p>
+            <h2>
+              Holdings
+              <span class="board-count" id="boardCount" aria-live="polite">
+                <span id="matchCount">—</span>
+                <span class="board-count__of">shown</span>
+              </span>
+            </h2>
             <p class="board-subtitle">
-              Expand a row for score breakdown + headlines. Filters and columns stay sticky.
+              Search the universe · open a row for score &amp; headlines
             </p>
           </div>
-          <div class="board-actions">
-            <div class="search-wrap">
+          <div class="board-actions" role="search">
+            <div class="search-wrap search-wrap--dc">
+              <span class="search-icon" aria-hidden="true">⌕</span>
               <input
                 id="search"
                 type="search"
                 class="search-input"
-                placeholder="Search ticker, name, or tag…"
+                placeholder="Ticker, name, or tag"
                 autocomplete="off"
+                enterkeyhint="search"
                 aria-label="Search ticker, name, or tag"
               />
+              <kbd class="search-hint desktop-only" title="Press / to focus search">/</kbd>
+              <button
+                type="button"
+                id="searchClear"
+                class="search-clear hidden"
+                aria-label="Clear search"
+              >
+                Clear
+              </button>
             </div>
-            <button type="button" id="refresh" class="btn-refresh" title="Reload the latest Yahoo snapshot">
-              Refresh
+            <button
+              type="button"
+              id="refresh"
+              class="btn-refresh"
+              title="Reload the latest Yahoo snapshot from this site"
+              aria-label="Refresh market snapshot"
+            >
+              <span class="btn-refresh__label">Refresh</span>
             </button>
           </div>
         </div>

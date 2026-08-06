@@ -440,6 +440,10 @@ const activeColKeys = () => [...BASE_COLS, ...(COLSETS[STATE.colset] || [])];
 async function load(refresh = false) {
   const btn = $("#refresh");
   btn.disabled = true;
+  btn.classList.add("is-busy");
+  btn.setAttribute("aria-busy", "true");
+  const label = btn.querySelector(".btn-refresh__label");
+  if (label) label.textContent = refresh ? "Refreshing…" : "Loading…";
   const statusEl = $("#status");
   const statusDot = $("#statusDot");
   statusEl.textContent = refresh ? "Refreshing snapshot…" : "Loading universe…";
@@ -488,6 +492,9 @@ async function load(refresh = false) {
     }
   } finally {
     btn.disabled = false;
+    btn.classList.remove("is-busy");
+    btn.removeAttribute("aria-busy");
+    if (label) label.textContent = "Refresh";
   }
 }
 
@@ -1050,8 +1057,14 @@ function buildFiltersPanel() {
   updateMatchCount();
 }
 function updateMatchCount() {
+  const shown = uniqueHoldings().filter(passesFilters).length;
+  const total = uniqueHoldings().length;
   const el = $("#matchCount");
-  if (el) el.textContent = uniqueHoldings().filter(passesFilters).length;
+  if (el) el.textContent = String(shown);
+  const of = document.querySelector(".board-count__of");
+  if (of) {
+    of.textContent = total && shown !== total ? `of ${total}` : total ? "names" : "shown";
+  }
 }
 
 // ---- table rendering ----------------------------------------------------
@@ -1590,7 +1603,21 @@ async function removeStock(ticker, layer) {
 }
 
 $("#refresh").addEventListener("click", () => load(true));
-$("#search").addEventListener("input", (e) => { STATE.query = e.target.value; render(); });
+$("#search").addEventListener("input", (e) => {
+  STATE.query = e.target.value;
+  const clear = $("#searchClear");
+  if (clear) clear.classList.toggle("hidden", !STATE.query);
+  render();
+});
+$("#searchClear")?.addEventListener("click", () => {
+  STATE.query = "";
+  const s = $("#search");
+  if (s) s.value = "";
+  $("#searchClear")?.classList.add("hidden");
+  savePrefs();
+  render();
+  $("#search")?.focus();
+});
 
 $("#scoreInfo").addEventListener("click", openScoreModal);
 
@@ -1607,6 +1634,7 @@ $("#scoreInfo").addEventListener("click", openScoreModal);
       STATE.query = q;
       const s = $("#search");
       if (s) s.value = q;
+      $("#searchClear")?.classList.toggle("hidden", !q);
     }
     const layer = p.get("layer");
     if (layer) {
