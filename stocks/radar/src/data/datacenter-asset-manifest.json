@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-06T04:02:24.971Z",
+  "generatedAt": "2026-08-06T04:07:34.880Z",
   "files": {
     "static-api.js": "static-api.d4556a0e49.js",
-    "app.js": "app.afb31216f9.js",
+    "app.js": "app.e267df6828.js",
     "map.js": "map.77d19f57ea.js",
     "backtest.js": "backtest.e8f9bf4769.js",
-    "style.css": "style.c8a62b6f76.css"
+    "style.css": "style.97e8036715.css"
   }
 }

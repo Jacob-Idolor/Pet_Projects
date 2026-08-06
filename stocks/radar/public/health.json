@@ -5,14 +5,14 @@
   "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "production",
-  "builtAt": "2026-08-06T03:23:38.690Z",
+  "builtAt": "2026-08-06T04:08:02.163Z",
   "gitSha": "local",
   "siteUrl": null,
   "checks": {
     "settings": true,
     "quotes": {
       "ok": true,
-      "ageHours": 0.005885555555555555,
+      "ageHours": 0.007066944444444444,
       "count": 15,
       "freshCount": 15,
       "total": 15,
@@ -22,7 +22,7 @@
     },
     "screener": {
       "ok": true,
-      "ageHours": 0.0007866666666666666,
+      "ageHours": 0.0008,
       "ok_count": 80,
       "ticker_count": 80,
       "coverage": 1

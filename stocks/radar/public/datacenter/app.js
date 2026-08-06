@@ -687,17 +687,58 @@ function scoreMethodologyHtml() {
       <li class="mm-warn">Inputs come from Yahoo Finance and can be delayed, incomplete, or wrong. Treat the score as a <b>relative screen, not a verdict</b>.</li>
     </ul>`;
 }
+let SCORE_MODAL_RETURN = null;
+function scoreModalFocusables(root) {
+  return [...root.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+    .filter((n) => !n.hasAttribute("disabled") && n.getAttribute("aria-hidden") !== "true");
+}
+function onScoreModalKeydown(e) {
+  const el = $("#scoreModal");
+  if (!el || el.classList.contains("hidden")) return;
+  if (e.key === "Escape") { e.preventDefault(); closeScoreModal(); return; }
+  if (e.key !== "Tab") return;
+  const nodes = scoreModalFocusables(el);
+  if (!nodes.length) return;
+  const first = nodes[0], last = nodes[nodes.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
 function openScoreModal() {
   const el = $("#scoreModal");
   if (!el) return;
+  SCORE_MODAL_RETURN = document.activeElement;
   el.innerHTML = `<div class="modal-box">
-    <div class="modal-head"><h3>How the composite score is derived</h3><button class="modal-x" id="scoreModalX" aria-label="Close">✕</button></div>
+    <div class="modal-head"><h3 id="scoreModalTitle">How the composite score is derived</h3><button type="button" class="modal-x" id="scoreModalX" aria-label="Close scoring help">✕</button></div>
     <div class="modal-body">${scoreMethodologyHtml()}</div></div>`;
   el.classList.remove("hidden");
+  el.removeAttribute("hidden");
   el.querySelector("#scoreModalX").addEventListener("click", closeScoreModal);
-  el.addEventListener("click", (e) => { if (e.target === el) closeScoreModal(); });
+  el.onclick = (e) => { if (e.target === el) closeScoreModal(); };
+  document.addEventListener("keydown", onScoreModalKeydown);
+  requestAnimationFrame(() => el.querySelector("#scoreModalX")?.focus());
 }
-function closeScoreModal() { const el = $("#scoreModal"); if (el) { el.classList.add("hidden"); el.innerHTML = ""; } }
+function closeScoreModal() {
+  const el = $("#scoreModal");
+  if (!el) return;
+  el.classList.add("hidden");
+  el.setAttribute("hidden", "");
+  el.innerHTML = "";
+  el.onclick = null;
+  document.removeEventListener("keydown", onScoreModalKeydown);
+  const ret = SCORE_MODAL_RETURN;
+  SCORE_MODAL_RETURN = null;
+  if (ret && typeof ret.focus === "function") ret.focus();
+}
+function setFiltersDrawer(open) {
+  STATE.panelOpen = open;
+  const drawer = $("#filtersDrawer");
+  if (drawer) {
+    drawer.classList.toggle("hidden", !open);
+    if (open) drawer.removeAttribute("hidden");
+    else drawer.setAttribute("hidden", "");
+  }
+  $("#filtersPanel")?.classList.toggle("hidden", !open);
+}
 
 // ---- filtering / sorting ------------------------------------------------
 function anyFilterActive() {
@@ -1018,18 +1059,19 @@ function rangeHint(m) {
 }
 function buildFiltersPanel() {
   const panel = $("#filtersPanel");
-  panel.classList.toggle("hidden", !STATE.panelOpen);
+  if (!panel) return;
   const groups = FILTER_GROUPS.map((g) => {
     const rows = g.metrics.map((m) => {
       const v = STATE.valuation[m.key] || {};
       const val = (b) => (v[b] != null ? `value="${v[b]}"` : "");
+      const idMin = `f-${m.key}-min`, idMax = `f-${m.key}-max`;
       return `
         <div class="vrow">
-          <label>${m.label}${m.unit ? ` <span class="u">${m.unit}</span>` : ""}</label>
+          <label for="${idMin}">${m.label}${m.unit ? ` <span class="u">${m.unit}</span>` : ""}</label>
           <div class="inputs">
-            <input type="number" step="any" placeholder="min" data-k="${m.key}" data-b="min" ${val("min")} />
+            <input id="${idMin}" type="number" step="any" placeholder="min" data-k="${m.key}" data-b="min" ${val("min")} aria-label="${m.label} minimum" />
             <span class="dash">–</span>
-            <input type="number" step="any" placeholder="max" data-k="${m.key}" data-b="max" ${val("max")} />
+            <input id="${idMax}" type="number" step="any" placeholder="max" data-k="${m.key}" data-b="max" ${val("max")} aria-label="${m.label} maximum" />
           </div>
           <span class="range-hint">${rangeHint(m)}</span>
         </div>`;
@@ -1037,10 +1079,11 @@ function buildFiltersPanel() {
     return `<div class="vgroup"><h4>${g.label}</h4><div class="vgrid">${rows}</div></div>`;
   }).join("");
   panel.innerHTML = `
+    <p class="filters-panel__lead">Metric bounds (optional)</p>
     ${groups}
     <div class="vfoot">
-      <span class="match"><b id="matchCount">—</b> of ${uniqueHoldings().length} names match</span>
-      <button id="clearFilters">Clear all</button>
+      <span class="match"><b id="filterMatchCount">—</b> of ${uniqueHoldings().length} names match</span>
+      <button type="button" id="clearFilters">Clear metric filters</button>
       <span class="hint">A name missing a metric is excluded when that metric is bounded (e.g. P/E filters drop unprofitable names).</span>
     </div>`;
   panel.querySelectorAll('input[type="number"]').forEach((inp) => {
@@ -1059,8 +1102,11 @@ function buildFiltersPanel() {
 function updateMatchCount() {
   const shown = uniqueHoldings().filter(passesFilters).length;
   const total = uniqueHoldings().length;
+  const text = String(shown);
   const el = $("#matchCount");
-  if (el) el.textContent = String(shown);
+  if (el) el.textContent = text;
+  const fm = $("#filterMatchCount");
+  if (fm) fm.textContent = text;
   const of = document.querySelector(".board-count__of");
   if (of) {
     of.textContent = total && shown !== total ? `of ${total}` : total ? "names" : "shown";
@@ -1073,16 +1119,31 @@ function headerRow() {
   for (const key of activeColKeys()) {
     const c = COLUMNS[key];
     const th = document.createElement("th");
-    th.textContent = c.label;
+    th.scope = "col";
     if (c.title) th.title = c.title;
     if (c.align === "left") th.classList.add("left");
     if (c.align === "center") th.classList.add("center");
-    if (STATE.sort.col === key) { th.classList.add("sorted"); if (STATE.sort.asc) th.classList.add("asc"); }
-    th.addEventListener("click", () => {
+    const sorted = STATE.sort.col === key;
+    if (sorted) {
+      th.classList.add("sorted");
+      if (STATE.sort.asc) th.classList.add("asc");
+      th.setAttribute("aria-sort", STATE.sort.asc ? "ascending" : "descending");
+    } else {
+      th.setAttribute("aria-sort", "none");
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "th-sort";
+    btn.textContent = c.label;
+    btn.setAttribute("aria-label", sorted
+      ? `Sort by ${c.label}, currently ${STATE.sort.asc ? "ascending" : "descending"}`
+      : `Sort by ${c.label}`);
+    btn.addEventListener("click", () => {
       if (STATE.sort.col === key) STATE.sort.asc = !STATE.sort.asc;
       else STATE.sort = { col: key, asc: c.align === "left" };
       savePrefs(); render();
     });
+    th.appendChild(btn);
     tr.appendChild(th);
   }
   return tr;
@@ -1252,10 +1313,19 @@ function syncToolbar() {
     b.setAttribute("aria-pressed", String(on));
   });
   const fb = $("#filtersBtn"), n = activeFilterCount();
-  fb.textContent = n ? `Filters (${n})` : "Filters";
-  fb.classList.toggle("active", STATE.panelOpen || n > 0);
-  fb.setAttribute("aria-expanded", String(STATE.panelOpen));
-  fb.setAttribute("aria-controls", "filtersPanel");
+  const badge = n + (STATE.tags.size ? STATE.tags.size : 0);
+  if (fb) {
+    fb.textContent = badge ? `More filters (${badge})` : "More filters";
+    fb.classList.toggle("active", STATE.panelOpen || badge > 0);
+    fb.setAttribute("aria-expanded", String(STATE.panelOpen));
+    fb.setAttribute("aria-controls", "filtersDrawer");
+  }
+  const drawer = $("#filtersDrawer");
+  if (drawer) {
+    drawer.classList.toggle("hidden", !STATE.panelOpen);
+    if (STATE.panelOpen) drawer.removeAttribute("hidden");
+    else drawer.setAttribute("hidden", "");
+  }
 }
 
 document.querySelectorAll("#viewToggle button").forEach((b) =>
@@ -1277,9 +1347,8 @@ document.querySelectorAll("#scoreMode button").forEach((b) =>
     attachScores();   // re-rank under the new basis, then redraw
     render();
   }));
-$("#filtersBtn").addEventListener("click", () => {
-  STATE.panelOpen = !STATE.panelOpen;
-  $("#filtersPanel").classList.toggle("hidden", !STATE.panelOpen);
+$("#filtersBtn")?.addEventListener("click", () => {
+  setFiltersDrawer(!STATE.panelOpen);
   savePrefs(); syncToolbar();
 });
 
@@ -1302,8 +1371,13 @@ function applyMode() {
   if (mp) mp.textContent = purpose[m] || purpose.screener;
   // screener chrome shows only in screener mode
   $(".filterbar")?.classList.toggle("hidden", !screener);
-  $("#themeBar")?.classList.toggle("hidden", !screener);
-  $("#filtersPanel")?.classList.toggle("hidden", !screener || !STATE.panelOpen);
+  const drawer = $("#filtersDrawer");
+  if (drawer) {
+    const show = screener && STATE.panelOpen;
+    drawer.classList.toggle("hidden", !show);
+    if (show) drawer.removeAttribute("hidden");
+    else drawer.setAttribute("hidden", "");
+  }
   $(".statusbar")?.classList.toggle("hidden", !screener);
   $("#layers")?.classList.toggle("hidden", !screener);
   $("#search")?.classList.toggle("hidden", !screener);
@@ -1649,13 +1723,16 @@ $("#scoreInfo").addEventListener("click", openScoreModal);
 
 // keyboard QoL: "/" focuses the screener search; Esc clears + blurs it.
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !$("#scoreModal").classList.contains("hidden")) { closeScoreModal(); return; }
+  const modal = $("#scoreModal");
+  if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) return; // handled by focus trap
   const search = $("#search");
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if (e.key === "/" && !typing && search && !search.classList.contains("hidden")) {
     e.preventDefault(); search.focus(); search.select();
   } else if (e.key === "Escape" && document.activeElement === search) {
     search.value = ""; STATE.query = ""; render(); search.blur();
+  } else if (e.key === "Escape" && STATE.panelOpen && !typing) {
+    setFiltersDrawer(false); savePrefs(); syncToolbar();
   }
 });
 

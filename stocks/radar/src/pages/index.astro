@@ -131,41 +131,51 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
             <button type="button" data-exp="moderate" aria-pressed="false">Moderate</button>
             <button type="button" data-exp="diversified" aria-pressed="false">Diversified</button>
           </div>
-          <div class="cap-filter" id="capFilter" role="group" aria-label="Market-cap filter">
-            <span class="flabel">Cap</span>
-            <button type="button" data-cap="mega" title="≥ $200B" aria-pressed="false">Mega</button>
-            <button type="button" data-cap="large" title="$10B – $200B" aria-pressed="false">Large</button>
-            <button type="button" data-cap="mid" title="$2B – $10B" aria-pressed="false">Mid</button>
-            <button type="button" data-cap="small" title="$300M – $2B" aria-pressed="false">Small</button>
-            <button type="button" data-cap="micro" title="under $300M" aria-pressed="false">Micro</button>
-          </div>
-          <button type="button" id="filtersBtn" class="filters-btn" aria-expanded="false" aria-controls="filtersPanel">Filters</button>
-          <span class="flabel cols-label">Columns</span>
-          <div class="seg seg-scroll" id="colset" role="group" aria-label="Column set">
-            <button type="button" data-cs="valuation" class="active" aria-pressed="true">Valuation</button>
-            <button type="button" data-cs="moat" aria-pressed="false">Moat</button>
-            <button type="button" data-cs="growth" aria-pressed="false">Growth</button>
-            <button type="button" data-cs="technical" aria-pressed="false">Technical</button>
-            <button type="button" data-cs="health" aria-pressed="false">Health</button>
-            <button type="button" data-cs="exposure" aria-pressed="false">Exposure</button>
-            <button type="button" data-cs="consensus" aria-pressed="false">Consensus</button>
-            <button type="button" data-cs="trends" aria-pressed="false">Trends</button>
-            <button type="button" data-cs="scores" aria-pressed="false">Scores</button>
-          </div>
-          <span class="flabel cols-label" title="Rank score factors against the whole universe, or same-layer peers">
-            Score vs
-          </span>
-          <div class="seg" id="scoreMode" role="group" aria-label="Score basis">
-            <button type="button" data-sm="universe" class="active" aria-pressed="true">Universe</button>
-            <button type="button" data-sm="layer" aria-pressed="false">Layer</button>
-          </div>
-          <button type="button" id="scoreInfo" class="score-info" title="How the composite score is calculated">
-            How scoring works
+          <button type="button" id="filtersBtn" class="filters-btn" aria-expanded="false" aria-controls="filtersDrawer">
+            More filters
+          </button>
+          <button type="button" id="scoreInfo" class="score-info" title="How the composite score is calculated" aria-haspopup="dialog">
+            Scoring
           </button>
         </div>
 
-        <div class="theme-bar" id="themeBar"></div>
-        <div class="filters-panel hidden" id="filtersPanel"></div>
+        <div class="filters-drawer hidden" id="filtersDrawer" hidden>
+          <div class="filters-drawer__advanced" aria-label="Columns and caps">
+            <div class="cap-filter" id="capFilter" role="group" aria-label="Market-cap filter">
+              <span class="flabel">Cap</span>
+              <button type="button" data-cap="mega" title="≥ $200B" aria-pressed="false">Mega</button>
+              <button type="button" data-cap="large" title="$10B – $200B" aria-pressed="false">Large</button>
+              <button type="button" data-cap="mid" title="$2B – $10B" aria-pressed="false">Mid</button>
+              <button type="button" data-cap="small" title="$300M – $2B" aria-pressed="false">Small</button>
+              <button type="button" data-cap="micro" title="under $300M" aria-pressed="false">Micro</button>
+            </div>
+            <div class="filters-drawer__row">
+              <span class="flabel cols-label">Columns</span>
+              <div class="seg seg-scroll" id="colset" role="group" aria-label="Column set">
+                <button type="button" data-cs="valuation" class="active" aria-pressed="true">Valuation</button>
+                <button type="button" data-cs="moat" aria-pressed="false">Moat</button>
+                <button type="button" data-cs="growth" aria-pressed="false">Growth</button>
+                <button type="button" data-cs="technical" aria-pressed="false">Technical</button>
+                <button type="button" data-cs="health" aria-pressed="false">Health</button>
+                <button type="button" data-cs="exposure" aria-pressed="false">Exposure</button>
+                <button type="button" data-cs="consensus" aria-pressed="false">Consensus</button>
+                <button type="button" data-cs="trends" aria-pressed="false">Trends</button>
+                <button type="button" data-cs="scores" aria-pressed="false">Scores</button>
+              </div>
+            </div>
+            <div class="filters-drawer__row">
+              <span class="flabel cols-label" title="Rank score factors against the whole universe, or same-layer peers">
+                Score vs
+              </span>
+              <div class="seg" id="scoreMode" role="group" aria-label="Score basis">
+                <button type="button" data-sm="universe" class="active" aria-pressed="true">Universe</button>
+                <button type="button" data-sm="layer" aria-pressed="false">Layer</button>
+              </div>
+            </div>
+          </div>
+          <div class="theme-bar" id="themeBar" aria-label="Theme tags"></div>
+          <div class="filters-panel" id="filtersPanel"></div>
+        </div>
 
         <div class="live-status statusbar" id="statusbar" role="status">
           <span class="live-status__dot" id="statusDot" aria-hidden="true"></span>
@@ -177,7 +187,16 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
       <div class="focus-banner hidden" id="focusBanner"></div>
       <div class="alerts hidden" id="alerts"></div>
 
-      <main id="layers"><div class="loading">Loading the latest market snapshot…</div></main>
+      <main id="layers" tabindex="-1">
+        <div class="skeleton-board" aria-busy="true" aria-live="polite">
+          <p class="skeleton-board__label">Loading the latest market snapshot…</p>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row skeleton-row--short"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row skeleton-row--short"></div>
+        </div>
+      </main>
 
       {
         showBoardAd && (
@@ -313,7 +332,14 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
     </footer>
   </div>
 
-  <div class="modal-overlay hidden" id="scoreModal"></div>
+  <div
+    class="modal-overlay hidden"
+    id="scoreModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="scoreModalTitle"
+    hidden
+  ></div>
 
   <script is:inline src={scripts[0]}></script>
   <script is:inline src={scripts[1]}></script>

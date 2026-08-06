@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-06T03:23:30.321Z",
-  "fetchedAt": "2026-08-06T03:23:30.321Z",
+  "updatedAt": "2026-08-06T04:07:49.158Z",
+  "fetchedAt": "2026-08-06T04:07:49.158Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -178,7 +178,7 @@
       "symbol": "COHR",
       "fundamentals": {
         "trailingPE": 154.09389,
-        "forwardPE": 39.208378,
+        "forwardPE": 39.591087,
         "pegRatio": 0.92,
         "priceToBook": 6.0112453,
         "evToEbitda": 49.898,
@@ -543,41 +543,46 @@
       },
       "news": [
         {
-          "title": "Myanmar ex-junta chief on first Thailand trip as civilian leader",
-          "publisher": "AFP",
-          "link": "https://finance.yahoo.com/m/1c0e5903-f8c6-32ad-9761-54ee30e7390b/myanmar-ex-junta-chief-on.html",
-          "publishedAt": "2026-08-06T03:17:19.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
+          "title": "AMAT at $534: Huge Upside With a Huge Hurdle Approaching",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/b74d2241-af18-33f7-bee1-4b7118389d90/amat-at-%24534%3A-huge-upside.html",
+          "publishedAt": "2026-08-06T03:50:37.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "upside"
+          ]
         },
         {
-          "title": "Louisiana-Pacific (LPX) Q2 2026 Earnings Call Transcript",
-          "publisher": "Motley Fool",
-          "link": "https://finance.yahoo.com/m/2a73872e-bc20-33f8-8c5c-102981bb760c/louisiana-pacific-%28lpx%29-q2.html",
-          "publishedAt": "2026-08-06T03:12:22.000Z",
+          "title": "Applied Materials Fell 11% Last Month: A Prominent Wall Street Pro Predicts 70% Gains Moving Forward",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/bda1f95f-b6b9-3e7a-a75d-eef876914a55/applied-materials-fell-11%25.html",
+          "publishedAt": "2026-08-06T03:47:20.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
-          "sentimentHits": []
+          "sentimentHits": [
+            "gains",
+            "fell"
+          ]
         },
         {
-          "title": "Dow Jones Futures: Nvidia Lifts Dow, But Google, SpaceX Skid; Sandisk, Western Digital Lead Earnings Losers Late",
-          "publisher": "Investor's Business Daily",
-          "link": "https://finance.yahoo.com/m/23f39a0c-7e02-33c1-8c52-010f887f1807/dow-jones-futures%3A-nvidia.html",
-          "publishedAt": "2026-08-06T03:09:13.000Z",
+          "title": "VNQ Returned 62.61% in 10 Years. SPY Returned 253.49%. Here’s the Hidden Cost Nobody Talks About",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/1d0a9e91-f86f-3452-9b8a-c6e7e4dd11de/vnq-returned-62.61%25-in-10.html",
+          "publishedAt": "2026-08-06T03:45:46.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "neutral",
-        "positive": 0,
+        "tilt": "positive",
+        "positive": 1,
         "negative": 0,
-        "neutral": 3,
-        "net": 0,
-        "scoreDelta": 0,
-        "label": "News check: quiet / neutral (3 headlines)",
+        "neutral": 2,
+        "net": 1,
+        "scoreDelta": 1,
+        "label": "News check: positive (+1) · 1+ / 0−",
         "method": "headline-lexicon-v1"
       }
     },

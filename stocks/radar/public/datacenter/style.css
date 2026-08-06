@@ -327,6 +327,26 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
 .filters-btn:hover { color: var(--text); }
 .filters-btn.active { background: rgba(77,163,255,.16); color: var(--accent); border-color: var(--accent); }
 
+/* progressive-disclosure drawer (cap / columns / themes / metric bounds) */
+.filters-drawer {
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.filters-drawer.hidden { display: none; }
+.filters-drawer__advanced {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
+  padding: 14px 28px 6px;
+}
+.filters-drawer__row {
+  display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; min-width: 0;
+}
+.filters-drawer .theme-bar {
+  border-bottom: none; background: transparent; padding: 6px 28px 4px;
+}
+.filters-drawer .filters-panel {
+  border-bottom: none; background: transparent;
+}
+
 /* collapsible valuation panel */
 .filters-panel {
   padding: 16px 28px;
@@ -334,6 +354,10 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
   border-bottom: 1px solid var(--border);
 }
 .filters-panel.hidden { display: none; }
+.filters-panel__lead {
+  margin: 0 0 12px; font-size: 11px; font-weight: 700; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--muted);
+}
 .cols-label { margin-left: 4px; }
 .vgroup { margin-bottom: 18px; }
 .vgroup > h4 {
@@ -391,6 +415,28 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
 main { padding: 22px 28px 60px; }
 .loading { color: var(--muted); padding: 40px 0; text-align: center; }
 
+.skeleton-board {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 0 24px; max-width: 52rem;
+}
+.skeleton-board__label {
+  margin: 0 0 6px; color: var(--muted); font-size: 13px;
+}
+.skeleton-row {
+  height: 2.35rem; border-radius: 8px;
+  background: linear-gradient(90deg, var(--panel) 0%, var(--panel-2) 45%, var(--panel) 90%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.25s ease-in-out infinite;
+}
+.skeleton-row--short { width: 72%; }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-row { animation: none; background: var(--panel-2); }
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
 .layer {
   margin-bottom: 26px; border: 1px solid var(--border); border-radius: var(--radius);
   overflow: hidden; background: var(--panel); box-shadow: var(--shadow);
@@ -421,20 +467,43 @@ table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13
    layer already has its label + column header right above its table. The
    filter bar stays sticky so search/filters remain reachable. */
 thead th {
-  text-align: right; padding: 9px 12px; color: var(--muted);
+  text-align: right; padding: 0; color: var(--muted);
   font-weight: 600; border-bottom: 1px solid var(--border);
-  white-space: nowrap; cursor: pointer; background: var(--panel);
+  white-space: nowrap; background: var(--panel);
 }
 thead th.left, tbody td.left { text-align: left; }
 thead th.center, tbody td.center { text-align: center; }
+.th-sort {
+  display: inline-flex; align-items: center; gap: 2px;
+  width: 100%; margin: 0; padding: 9px 12px;
+  background: transparent; border: none; color: inherit;
+  font: inherit; font-weight: 600; cursor: pointer;
+  text-align: inherit; justify-content: inherit;
+}
+thead th.left .th-sort { justify-content: flex-start; }
+thead th.center .th-sort { justify-content: center; }
+thead th:not(.left):not(.center) .th-sort { justify-content: flex-end; }
+.th-sort:hover { color: var(--text); }
+.th-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .layer-head.static { cursor: default; }
 .layer-head.static:hover { background: var(--panel-2); }
-thead th:hover { color: var(--text); }
-thead th.sorted::after { content: " ▾"; color: var(--accent); }
-thead th.sorted.asc::after { content: " ▴"; }
+thead th.sorted .th-sort { color: var(--text); }
+thead th.sorted .th-sort::after { content: " ▾"; color: var(--accent); }
+thead th.sorted.asc .th-sort::after { content: " ▴"; }
 
 tbody td { padding: 9px 12px; text-align: right; border-bottom: 1px solid #1a2434; white-space: nowrap; }
 tbody tr:hover { background: #16202f; }
+
+@media (max-width: 680px) {
+  main { padding: 14px 12px 48px; }
+  .layer { margin-bottom: 16px; border-radius: 10px; }
+  .layer-head { padding: 12px 12px; }
+  .layer .blurb { padding: 0 12px 10px; font-size: 12px; }
+  tbody td, .th-sort { padding: 8px 9px; font-size: 12.5px; }
+  .filterbar { padding: 8px 12px; gap: 10px; }
+  .exposure-filter button { padding: 4px 9px; }
+  .statusbar { padding: 8px 12px; flex-wrap: wrap; }
+}
 
 .stock-row { cursor: pointer; }
 .news-toggle { color: var(--muted); margin-right: 6px; font-size: 10px; }
@@ -515,11 +584,13 @@ tbody tr:hover { background: #16202f; }
 /* methodology modal */
 .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(5,8,13,.72); display: flex; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(3px); }
 .modal-overlay.hidden { display: none; }
+.modal-overlay[hidden] { display: none !important; }
 .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 60px rgba(0,0,0,.6); width: min(720px, 100%); max-height: 86vh; display: flex; flex-direction: column; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .modal-head h3 { margin: 0; font-size: 16px; }
-.modal-x { background: transparent; color: var(--muted); border: none; font-size: 16px; cursor: pointer; }
+.modal-x { background: transparent; color: var(--muted); border: none; font-size: 16px; cursor: pointer; border-radius: 6px; padding: 4px 8px; }
 .modal-x:hover { color: var(--text); }
+.modal-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .modal-body { padding: 18px 20px; overflow-y: auto; font-size: 13px; line-height: 1.5; }
 .modal-body p { margin: 0 0 14px; color: var(--text); }
 .mm-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12.5px; table-layout: fixed; }

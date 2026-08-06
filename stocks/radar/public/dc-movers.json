@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-06T03:23:37.917Z",
-  "sourceFetchedAt": "2026-08-06T03:23:35.857834+00:00",
+  "updatedAt": "2026-08-06T04:08:01.383Z",
+  "sourceFetchedAt": "2026-08-06T04:07:59.283380+00:00",
   "gainers": [
     {
       "ticker": "ANET",
@@ -31,7 +31,7 @@
     {
       "ticker": "000660.KS",
       "name": "SK Hynix",
-      "chg": -8.158368,
+      "chg": -8.9928055,
       "layerId": "compute"
     },
     {
