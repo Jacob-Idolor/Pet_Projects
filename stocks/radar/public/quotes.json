@@ -1,16 +1,49 @@
 {
-  "updatedAt": "2026-08-06T04:07:36.722Z",
+  "updatedAt": "2026-08-14T19:30:39.463Z",
   "fetchedAt": "2026-08-06T04:07:36.722Z",
   "marketTime": "US/Eastern",
   "schemaVersion": 4,
   "count": 15,
   "total": 15,
-  "freshCount": 15,
-  "failedSymbols": [],
-  "carriedForward": [],
+  "freshCount": 0,
+  "failedSymbols": [
+    "SMH",
+    "NBIS",
+    "COHR",
+    "TSEM",
+    "AAOI",
+    "SIVEF",
+    "META",
+    "DRAM",
+    "000660.KS",
+    "OUST",
+    "VPG",
+    "AMBA",
+    "SYNA",
+    "INOD",
+    "BE"
+  ],
+  "carriedForward": [
+    "SMH",
+    "NBIS",
+    "COHR",
+    "TSEM",
+    "AAOI",
+    "SIVEF",
+    "META",
+    "DRAM",
+    "000660.KS",
+    "OUST",
+    "VPG",
+    "AMBA",
+    "SYNA",
+    "INOD",
+    "BE"
+  ],
   "missingSymbols": [],
-  "partial": false,
-  "complete": true,
+  "partial": true,
+  "complete": false,
+  "fetchFailed": true,
   "staleAfterHours": 6,
   "quotes": {
     "SMH": {
@@ -520,5 +553,6 @@
         "below-sma50"
       ]
     }
-  }
+  },
+  "note": "Yahoo fetch returned zero fresh symbols; kept previous quotes.json body"
 }
