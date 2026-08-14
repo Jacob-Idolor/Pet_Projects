@@ -78,13 +78,13 @@ output "alert_setup_hint" {
 output "estimated_monthly_cost_usd" {
   description = "Rough cost bands for this Terraform stack (PriceClass_100; Cloudflare DNS avoids Route53)"
   value = {
-    friends_trial_aws   = "0.50–3.00 USD/mo"
-    growing_hobby_aws   = "2–10 USD/mo"
-    domain_amortized    = "~1 USD/mo (10–12 USD/yr)"
-    after_destroy       = "~0 USD/mo"
-    budget_default_usd     = var.monthly_budget_usd
-    high_spend_budget_usd  = var.high_spend_budget_usd
-    budget_scope           = var.budget_scope_to_project_tag ? "Project tag = ${var.project_name}" : "ENTIRE ACCOUNT"
+    friends_trial_aws     = "0.50–3.00 USD/mo"
+    growing_hobby_aws     = "2–10 USD/mo"
+    domain_amortized      = "~1 USD/mo (10–12 USD/yr)"
+    after_destroy         = "~0 USD/mo"
+    budget_default_usd    = var.monthly_budget_usd
+    high_spend_budget_usd = var.high_spend_budget_usd
+    budget_scope          = var.budget_scope_to_project_tag ? "Project tag = ${var.project_name}" : "ENTIRE ACCOUNT"
   }
 }
 

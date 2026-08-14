@@ -103,8 +103,8 @@ variable "monthly_budget_usd" {
     Early-warning monthly budget for THIS stack only (filtered by Project tag).
     Friend-scale hosting is typically $0.50–3; default $3 emails before spend gets weird.
   EOT
-  type    = number
-  default = 3
+  type        = number
+  default     = 3
 }
 
 variable "high_spend_budget_usd" {
@@ -112,8 +112,8 @@ variable "high_spend_budget_usd" {
     Second monthly budget — hard tripwire for abnormal / large spend on this stack.
     Default $15: well above friend hosting, still far below a runaway bill.
   EOT
-  type    = number
-  default = 15
+  type        = number
+  default     = 15
 }
 
 variable "enable_high_spend_budget" {
@@ -146,8 +146,8 @@ variable "budget_scope_to_project_tag" {
     If true (recommended), budget tracks only spend tagged Project=<project_name>.
     If false, budget is account-wide — only use on a dedicated empty account.
   EOT
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "cloudfront_price_class" {

@@ -1,7 +1,8 @@
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
+# Provider selections are reproducibility metadata and should be committed.
+!.terraform.lock.hcl
 terraform.tfvars
 *.tfvars
 !terraform.tfvars.example
