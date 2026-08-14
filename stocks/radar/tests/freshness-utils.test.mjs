@@ -5,6 +5,7 @@ import {
   ageOk,
   coverageOk,
   coverageRatio,
+  freshUntil,
   quotesFreshCount,
   quotesFreshRatio,
 } from "../scripts/lib/freshness-utils.mjs";
@@ -65,5 +66,19 @@ describe("ageOk", () => {
     assert.equal(ageOk(11, 12), true);
     assert.equal(ageOk(13, 12), false);
     assert.equal(ageOk(null, 12), false);
+  });
+});
+
+describe("freshUntil", () => {
+  it("returns an explicit freshness deadline", () => {
+    assert.equal(
+      freshUntil("2026-08-14T12:00:00.000Z", 6),
+      "2026-08-14T18:00:00.000Z"
+    );
+  });
+
+  it("rejects invalid timestamps and thresholds", () => {
+    assert.equal(freshUntil("not-a-date", 6), null);
+    assert.equal(freshUntil("2026-08-14T12:00:00.000Z", -1), null);
   });
 });

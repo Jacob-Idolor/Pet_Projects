@@ -31,6 +31,18 @@ export function ageOk(ageH, maxHours) {
   return ageH <= maxHours;
 }
 
+/** Return the ISO deadline after which a timestamp is no longer fresh. */
+export function freshUntil(isoOrSec, maxHours) {
+  if (isoOrSec == null || isoOrSec === "") return null;
+  const hours = Number(maxHours);
+  if (!Number.isFinite(hours) || hours < 0) return null;
+  const raw = typeof isoOrSec === "number"
+    ? (isoOrSec < 1e12 ? isoOrSec * 1000 : isoOrSec)
+    : Date.parse(String(isoOrSec));
+  if (!Number.isFinite(raw)) return null;
+  return new Date(raw + hours * 3_600_000).toISOString();
+}
+
 /**
  * Prefer freshCount over merged row count so carried-forward quotes
  * do not inflate coverage after a Yahoo outage.

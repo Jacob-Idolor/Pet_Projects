@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeConfig, publicSettingsPayload } from "../config.mjs";
-import { ageHours, coverageOk, coverageRatio, quotesFreshCount, quotesFreshRatio } from "../lib/freshness-utils.mjs";
+import { ageHours, coverageOk, coverageRatio, freshUntil, quotesFreshCount, quotesFreshRatio } from "../lib/freshness-utils.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const config = loadRuntimeConfig();
@@ -94,6 +94,14 @@ if (screenerFile.data) {
 
 const dataOk = checks.quotes.ok && checks.screener.ok;
 const status = dataOk ? "ok" : checks.quotes.ok || checks.screener.ok ? "degraded" : "unhealthy";
+const evaluatedAt = new Date().toISOString();
+const freshnessDeadlines = [
+  quotesFile.data ? freshUntil(quotesFile.data.fetchedAt || quotesFile.data.updatedAt, quotesMaxH) : null,
+  screenerFile.data ? freshUntil(screenerFile.data.fetched_at_iso || screenerFile.data.fetched_at, screenerMaxH) : null,
+].filter(Boolean);
+const validUntil = freshnessDeadlines.length
+  ? new Date(Math.min(...freshnessDeadlines.map((value) => Date.parse(value)))).toISOString()
+  : null;
 
 const health = {
   ok: dataOk,
@@ -105,6 +113,11 @@ const health = {
   builtAt: process.env.DEPLOY_TIME ?? new Date().toISOString(),
   gitSha: process.env.GITHUB_SHA ?? "local",
   siteUrl: config.site.url || null,
+  freshnessSnapshot: {
+    evaluatedAt,
+    validUntil,
+    note: "Build-time snapshot. Recalculate freshness from the timestamps in quotes.json and screener.json.",
+  },
   checks,
   paths: {
     quotes: "/quotes.json",
