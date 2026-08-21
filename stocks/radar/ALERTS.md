@@ -2,7 +2,7 @@
 
 Stocks Radar can email **each person only when a rule they care about fires** — not a firehose of every lean-buy on the board.
 
-Stack stays cheap: **GitHub Actions + SNS email + S3 cooldown file**. No Lambda.
+Stack stays cheap when hosted: **CI + email + private cooldown file**. No Lambda. There is **no live SNS/S3** until you host again; `npm run alerts` still evaluates rules locally.
 
 ```mermaid
 flowchart LR
@@ -29,22 +29,9 @@ Scope a rule with **`symbols`** and/or **`tags`** (from `watchlist.json`). Omit 
 
 ## 1. Add people (emails stay out of git)
 
-In `infra/terraform/terraform.tfvars` (gitignored):
+Personal email delivery needs an SNS topic (or similar) per subscriber. That AWS wiring was removed with Terraform. Keep subscriber ids in `alert-rules.json`; do not commit emails.
 
-```hcl
-alert_subscribers = [
-  { id = "jacob",   email = "you@example.com" },
-  { id = "friend1", email = "friend@example.com" },
-]
-```
-
-```bash
-cd stocks/radar/infra/terraform
-terraform apply
-terraform output -json personal_alert_topic_arns
-```
-
-Confirm each **Subscription Confirmation** email from AWS SNS.
+When you host again, create per-person topics and set `STOCKS_RADAR_ALERT_TOPICS` as a JSON map of `subscriberId` → topic ARN.
 
 ## 2. Wire GitHub
 
@@ -56,11 +43,11 @@ Confirm each **Subscription Confirmation** email from AWS SNS.
 
 Optional shared broadcast topic: `STOCKS_RADAR_ALERTS_SNS_TOPIC_ARN` (board-wide digests).
 
-Re-enable **Stocks Radar — signal alerts** (and quote refresh) per [DEPLOY.md](DEPLOY.md).
+Re-enable a signal-alerts job only after hosting and secrets exist — [DEPLOY.md](DEPLOY.md).
 
 ## 3. Write rules (safe to commit — no emails)
 
-Edit [`src/data/alert-rules.json`](src/data/alert-rules.json). `subscriberId` must match a Terraform `alert_subscribers.id`.
+Edit [`src/data/alert-rules.json`](src/data/alert-rules.json). `subscriberId` must match a key in your topic map when email is wired.
 
 ```json
 {
@@ -82,7 +69,7 @@ Edit [`src/data/alert-rules.json`](src/data/alert-rules.json). `subscriberId` mu
 
 More examples: [`src/data/alert-rules.example.json`](src/data/alert-rules.example.json).
 
-**Cooldown:** the same rule+symbol will not re-email until `cooldownHours` passes (default 24). Cooldown is recorded **only after a successful SNS publish** (skipped topics / failed publishes do not burn the window). State lives at `s3://$bucket/_private/alert-state.json` (CloudFront cannot read `_private/*`).
+**Cooldown:** the same rule+symbol will not re-email until `cooldownHours` passes (default 24). Cooldown is recorded **only after a successful publish**. When hosted on S3, state lived at `_private/alert-state.json` (not on the public origin).
 
 **Privacy:** personal hits only publish to `STOCKS_RADAR_ALERT_TOPICS[subscriberId]`. Missing map entries are **skipped** (no shared-topic fallback unless `ALERTS_ALLOW_BROADCAST_FALLBACK=true`).
 
@@ -102,14 +89,13 @@ You should see which rules matched and who would be emailed — no SNS publish.
 
 ## Friend onboarding
 
-1. Add them to `alert_subscribers` + `terraform apply`
-2. They confirm the SNS email
-3. They (or you) add rules with their `subscriberId` in `alert-rules.json`
-4. Push — next quote refresh / alerts workflow evaluates
+1. Add their `subscriberId` to rules in `alert-rules.json`
+2. When email hosting exists, give them a topic and confirm the subscription
+3. Run `ALERTS_DRY_RUN=true npm run alerts` locally to see matches
 
 ## Privacy
 
-- Emails: **only** in `terraform.tfvars` / SNS (not in the repo rules file)
+- Emails: keep out of git (env / provider console only)
 - Site UI shows rule summaries (signal, symbols, tags) without addresses
 - Cooldown state has rule keys + timestamps only
 

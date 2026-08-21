@@ -2,11 +2,12 @@
 
 ## Repository scope
 
-- The active application is `radar/`, a static Astro site deployed to AWS S3 and CloudFront.
+- The active application is `radar/`, a static Astro site.
 - Run application commands from `radar/` unless a task explicitly concerns the repository root.
-- The production homepage is the AI Data Center screener at `/`.
+- The intended production homepage is the AI Data Center screener at `/`.
 - The archived group watchlist is served at `/watchlist.html`.
-- `radar/archive/ai-datacenter-screener/` is retained for local and historical reference; it is not the production application.
+- `radar/archive/ai-datacenter-screener/` is retained for local and historical reference; it is not deployed.
+- There is **no live AWS/Terraform stack**. `stockswatch.cc` is a Cloudflare domain with no origin until hosting is chosen again.
 
 ## Setup and validation
 

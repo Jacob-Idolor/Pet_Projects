@@ -29,7 +29,6 @@
     "health": "node scripts/ops/write-health.mjs",
     "digest": "node scripts/alerts/daily-digest.mjs",
     "alerts": "node scripts/alerts/signal-alerts.mjs",
-    "go-live:preflight": "node scripts/ops/go-live-preflight.mjs",
     "prebuild": "npm run config:validate && npm run sync:tokens && npm run hash:datacenter && npm run bundle:watchlist && node scripts/fetch/fetch-quotes.mjs && node scripts/fetch/fetch-screener-soft.mjs && npm run screener:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs",
     "update-quotes:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/fetch/fetch-quotes.mjs",
     "alerts:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/alerts/signal-alerts.mjs"

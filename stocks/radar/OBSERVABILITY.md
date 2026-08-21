@@ -1,10 +1,9 @@
 # Observability — OpenTelemetry for Stocks Radar
 
-Deeper visibility **without** putting a Collector in the AWS static-site stack.
+Deeper visibility for local and CI scripts. There is no AWS static-site stack right now.
 
 | Signal source | What you learn | Cost |
 |---------------|----------------|------|
-| CloudFront metrics (digest) | Traffic / bytes | ~$0 (already) |
 | **OTel on CI scripts** (this doc) | Yahoo latency, coverage, alert fires | $0 when off; free SaaS / local stack when on |
 | Browser RUM | Not wired yet | Defer until traffic justifies it |
 
@@ -64,11 +63,11 @@ Add a repository variable or secret when you have an OTLP endpoint (Grafana Clou
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `https://otlp-gateway-prod-…/otlp` |
 | `OTEL_EXPORTER_OTLP_HEADERS` | `Authorization=Basic …` (if required by vendor) |
 
-Wire into **refresh quotes** / **signal alerts** workflows after deploy is re-enabled. Until then, leave unset — Actions behave as today.
+Wire into quote-refresh / alert jobs if you add them again. Until then, leave unset.
 
 ## Design rules (cost + scale)
 
-- **No** OTel Collector / Jaeger / Prometheus in Radar Terraform
+- **No** OTel Collector in hosting unless you explicitly want it
 - Scripts stay useful with OTel completely off
 - Prefer attributes on spans (`radar.*`, `yahoo.*`, `stock.symbol`) over a separate metrics pipeline for now
 - Browser RUM later, heavily sampled, only after AdSense traffic exists
@@ -76,4 +75,4 @@ Wire into **refresh quotes** / **signal alerts** workflows after deploy is re-en
 ## Related
 
 - Local stack: [`../../opentelemetry/`](../../opentelemetry/)
-- Cost model: [PASSIVE_INCOME.md](PASSIVE_INCOME.md) · [infra/terraform/COST.md](infra/terraform/COST.md)
+- Cost model: [PASSIVE_INCOME.md](PASSIVE_INCOME.md)

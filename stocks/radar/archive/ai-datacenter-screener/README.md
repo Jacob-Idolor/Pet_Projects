@@ -1,6 +1,6 @@
 # Local AI Data Center Screener (Flask)
 
-**Production** StocksWatch serves the screener as a **static** page at `/` (S3 + CloudFront). This folder is the **desktop / local** Flask app for live Yahoo pulls, SQLite history, and full score backtests.
+**Production** StocksWatch is a **static** Astro site (`/` screener). This folder is the **desktop / local** Flask app for live Yahoo pulls, SQLite history, and full score backtests.
 
 ## Run locally
 

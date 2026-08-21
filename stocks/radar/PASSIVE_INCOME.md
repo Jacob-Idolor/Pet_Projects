@@ -1,6 +1,6 @@
 # Passive income — costs, AdSense, and break-even
 
-Honest unit economics for Stocks Radar as a **static** site: AWS hosting cost stays tiny; Google **AdSense** (ads *on* your pages) is the revenue path. This is not financial advice and AdSense payouts vary a lot by niche, geography, and season.
+Honest unit economics for Stocks Radar as a **static** site. The previous AWS stack is gone; `stockswatch.cc` still costs ~$10–12/yr. These numbers are what a cheap CDN origin looked like and what to aim for when you host again.
 
 > **AdSense ≠ Google Ads.** AdSense pays *you* when visitors see ads on the radar. Google Ads is what advertisers buy. You do not need a Google Ads campaign to earn — you need an approved AdSense site + traffic.
 
@@ -90,7 +90,6 @@ Below that, treat the site as a **group tool** that happens to have ads. Above t
 
 ## Related docs
 
-- [COST.md](infra/terraform/COST.md) — infra line items  
 - [ADSENSE.md](ADSENSE.md) — publisher setup  
-- [DOMAIN.md](DOMAIN.md) — cheap domain path  
-- [DEPLOY.md](DEPLOY.md) — re-enable CI after secrets  
+- [DOMAIN.md](DOMAIN.md) — domain  
+- [DEPLOY.md](DEPLOY.md) — hosting status  

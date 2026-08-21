@@ -5,13 +5,11 @@ on:
     paths:
       - "stocks/radar/**"
       - ".github/workflows/stocks-radar-*.yml"
-      - ".github/actions/stocks-radar-aws/**"
   push:
     branches: [main]
     paths:
       - "stocks/radar/**"
       - ".github/workflows/stocks-radar-*.yml"
-      - ".github/actions/stocks-radar-aws/**"
 
 jobs:
   build:
@@ -38,8 +36,7 @@ jobs:
       - run: npm run build
         env:
           STOCKS_RADAR_BASE: /
-          # Validate build uses a dummy host; live deploy uses STOCKS_RADAR_SITE (stockswatch.cc)
-          STOCKS_RADAR_SITE: https://example.cloudfront.net
+          STOCKS_RADAR_SITE: https://stockswatch.cc
           STOCKS_RADAR_ENV: development
           SCREENER_SKIP: "1"
           QUOTES_SKIP: "1"
@@ -49,23 +46,3 @@ jobs:
       - run: npm run test:e2e
         env:
           CI: "true"
-
-  terraform-validate:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: stocks/radar/infra/terraform
-    steps:
-      - uses: actions/checkout@v5
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9.0"
-          terraform_wrapper: false
-      - name: Check Terraform formatting
-        run: terraform fmt -check -recursive
-      - name: Initialize Terraform without remote state
-        run: terraform init -backend=false -input=false
-      - name: Validate Terraform configuration
-        run: terraform validate

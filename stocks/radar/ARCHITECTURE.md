@@ -1,6 +1,6 @@
 # StocksWatch architecture
 
-Static Astro site (`stockswatch.cc`): **AI Data Center screener on `/`**, archived group watchlist on `/watchlist.html`. No app server — CI writes JSON to S3; CloudFront serves it.
+Static Astro site for **stockswatch.cc**: **AI Data Center screener on `/`**, archived group watchlist on `/watchlist.html`. Local/dev has no app server. Production hosting is currently unconfigured (previous AWS S3 + CloudFront stack was removed).
 
 ## Surfaces
 
@@ -16,9 +16,9 @@ Static Astro site (`stockswatch.cc`): **AI Data Center screener on `/`**, archiv
 ## Data flow
 
 ```text
-GitHub Actions (fetch / refresh)
+Local / CI (fetch)
   → public/quotes.json, outlook.json, screener.json, datacenter/campuses.json, …
-  → S3 + CloudFront (~60s edge TTL for live JSON)
+  → npm run dev or astro build
   → Browser: homepage screener via static-api.js
   → Archived watchlist: LiveStatus → radar:quotes → board re-render
 ```
@@ -42,7 +42,7 @@ Rebuild the board bundle: `npm run bundle:watchlist` → `public/watchlist-board
 | Folder | Role |
 |--------|------|
 | `scripts/fetch/` | Yahoo quotes, outlook, screener, movers |
-| `scripts/ops/` | Health, SEO, validate, hash assets, bundle, go-live |
+| `scripts/ops/` | Health, SEO, validate, hash assets, bundle |
 | `scripts/alerts/` | Digest, signal alerts, radar score |
 | `scripts/lib/` | Shared pure helpers (`action-bias`, `sanitize`, `aws-cli`, `alert-quote-guard`, freshness) |
 | `scripts/config.mjs` | Settings + env overlays (stays at scripts root) |
@@ -60,4 +60,4 @@ Action bias math lives in **`scripts/lib/action-bias.mjs`** (Node alerts + home 
 - `public/datacenter/*.<hash>.*` (from `npm run hash:datacenter`)
 - `public/settings.json`, `public/health.json`, quote/screener JSON from CI
 
-See also [README.md](README.md), [DEPLOY.md](DEPLOY.md), [infra/terraform/COST.md](infra/terraform/COST.md).
+See also [README.md](README.md), [DEPLOY.md](DEPLOY.md), [DOMAIN.md](DOMAIN.md).

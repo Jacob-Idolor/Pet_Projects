@@ -23,17 +23,8 @@ Codex is the coding agent for StocksWatch. Cursor may remain the editor, but Cur
 
 ## Deployment flow
 
-- GitHub Actions is the production deployment authority.
-- A successful Stocks Radar validation run on a push to `main` may start the deployment workflow when `STOCKS_RADAR_DEPLOY_ENABLED=true`.
-- Codex must not manually trigger a deployment, upload to S3, invalidate CloudFront, change live cache behavior, send alerts, or publish emails unless the user explicitly requests that action.
-- After an authorized deployment, verify the workflow result, public health endpoint, and data freshness.
-
-## Terraform flow
-
-- Codex may edit Terraform and run `terraform fmt`, `terraform init -backend=false`, and `terraform validate` as part of normal verification.
-- A Terraform plan may be prepared only after confirming the intended workspace, backend/state source, variables, AWS account, and region.
-- Never run `terraform apply`, `terraform destroy`, import/move state, migrate a backend, or modify AWS resources without explicit user approval for that exact operation.
-- Treat `terraform.tfvars`, state files, plan files, and provider caches as local sensitive artifacts. Never commit them.
+- There is **no production deploy** until a host is chosen ([radar/DEPLOY.md](radar/DEPLOY.md)).
+- Codex must not create AWS/Terraform resources, upload to a public origin, send alerts, or publish emails unless the user explicitly requests that action.
 
 ## Recovery
 

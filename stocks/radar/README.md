@@ -1,10 +1,10 @@
 # StocksWatch
 
-Group watchlist + AI data-center screener. Static Astro on **S3 + CloudFront** — no app server, no Yahoo API keys.
+Group watchlist + AI data-center screener. Static Astro — no Yahoo API keys. Hosting is currently **unconfigured**; `stockswatch.cc` is a Cloudflare domain you can point at anything.
 
 > Not financial advice.
 
-**Live:** [stockswatch.cc](https://stockswatch.cc) · **Surfaces:** `/` (AI Data Center screener) · `/watchlist.html` (archived group watchlist)
+**Domain:** [stockswatch.cc](https://stockswatch.cc) (no origin attached) · **Surfaces:** `/` (AI Data Center screener) · `/watchlist.html` (archived group watchlist)
 
 Code map: [ARCHITECTURE.md](ARCHITECTURE.md)
 
@@ -21,16 +21,10 @@ flowchart LR
     U[datacenter-universe.json]
   end
 
-  subgraph ci [GitHub Actions]
+  subgraph local [Local / CI]
     Q[fetch-quotes.mjs]
     S[fetch-screener.py]
     B[astro build]
-    F[freshness check]
-  end
-
-  subgraph host [AWS]
-    S3[(S3)]
-    CF[CloudFront]
   end
 
   subgraph browser [Browser]
@@ -42,16 +36,13 @@ flowchart LR
   U --> S
   Q --> B
   S --> B
-  B --> S3
-  S3 --> CF
-  CF --> Home
-  CF --> DC
+  B --> Home
+  B --> WL
   Q -.->|quotes.json| Home
-  S -.->|screener.json + news| DC
-  F -.->|post-deploy| CF
+  S -.->|screener.json + news| Home
 ```
 
-**Weekday refresh** (no full rebuild) updates `quotes.json` + `screener.json` + `news.json` on S3, then re-checks freshness.
+**Local refresh:** `npm run update-quotes` / `npm run update-screener` writes JSON under `public/`.
 
 ```mermaid
 flowchart TB
@@ -129,18 +120,13 @@ CSV → watchlist: `npm run import-csv -- my-tickers.csv`
 
 ## Ship
 
-```bash
-# Local parity
-npm run rebuild
+There is no production host yet. Local parity:
 
-# Or push to main (deploy gated by STOCKS_RADAR_DEPLOY_ENABLED)
-# Manual:
-pip install -r scripts/datacenter/requirements.txt
-npm ci && npm run build
-./infra/deploy.sh
+```bash
+npm run rebuild
 ```
 
-Infra ~$0.50–3/mo — [DEPLOY.md](DEPLOY.md) · [GO_LIVE.md](GO_LIVE.md) · [PRODUCTION.md](PRODUCTION.md)
+Domain + future hosting: [DEPLOY.md](DEPLOY.md) · [DOMAIN.md](DOMAIN.md)
 
 ---
 
@@ -161,7 +147,6 @@ stocks/radar/
   scripts/ops/                   # health, SEO, validate, bundle
   scripts/alerts/                # digest + signal alerts
   scripts/lib/                   # shared helpers (action-bias, sanitize)
-  infra/                         # Terraform + deploy
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
@@ -174,10 +159,9 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Code map + data flow |
 | [PRODUCTION.md](PRODUCTION.md) | Live ops + hardening |
 | [SCORE.md](SCORE.md) | Radar lean buy / sell |
-| [DEPLOY.md](DEPLOY.md) | AWS + Actions |
-| [DOMAIN.md](DOMAIN.md) | Custom domain |
+| [DEPLOY.md](DEPLOY.md) | Hosting status (none yet) |
+| [DOMAIN.md](DOMAIN.md) | stockswatch.cc / Cloudflare |
 | [ADSENSE.md](ADSENSE.md) | Ads |
-| [GO_LIVE.md](GO_LIVE.md) | First-time checklist |
 | [SECURITY.md](SECURITY.md) | Hardening |
 | [ALERTS.md](ALERTS.md) | Signal emails |
 
