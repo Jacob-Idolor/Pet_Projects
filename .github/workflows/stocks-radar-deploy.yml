@@ -4,11 +4,10 @@ name: Stocks Radar — deploy
 # after terraform apply + secrets (see stocks/radar/GO_LIVE.md).
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "stocks/radar/**"
-      - ".github/workflows/stocks-radar-deploy.yml"
+  # Deploy only after the full Stocks Radar validation workflow succeeds on main.
+  workflow_run:
+    workflows: ["Stocks Radar — validate"]
+    types: [completed]
   workflow_dispatch:
   # No weekday schedule — quotes/screener freshness is stocks-radar-refresh-quotes.yml.
   # Scheduled full builds duplicated Yahoo + npm ci cost for little HTML benefit.
@@ -19,7 +18,19 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
+    if: >-
+      ${{
+        vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' &&
+        (
+          (
+            github.event_name == 'workflow_run' &&
+            github.event.workflow_run.event == 'push' &&
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.head_branch == 'main'
+          ) ||
+          (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+        )
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,6 +57,10 @@ jobs:
           STOCKS_RADAR_CLOUDFRONT_DOMAIN: ${{ secrets.STOCKS_RADAR_CLOUDFRONT_DOMAIN }}
 
       - uses: actions/checkout@v5
+        with:
+          # workflow_run otherwise checks out the latest default branch commit,
+          # which may differ from the exact commit that passed validation.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v5
         with:
@@ -93,7 +108,7 @@ jobs:
           STOCKS_RADAR_ENV: ${{ vars.STOCKS_RADAR_ENV || 'production' }}
           DEPLOY_PROVIDER: github-actions
           DEPLOY_TIME: ${{ github.event.head_commit.timestamp || github.run_started_at }}
-          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           PUBLIC_ADSENSE_CLIENT: ${{ vars.PUBLIC_ADSENSE_CLIENT }}

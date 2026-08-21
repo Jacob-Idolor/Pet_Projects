@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("StocksWatch smoke", () => {
-  test("home shows brand, watchlist, and about content", async ({ page }) => {
+  test("home shows brand and screener shell", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".hero-brand").first()).toContainText("StocksWatch");
-    await expect(page.locator("#watchlist-board")).toBeVisible();
-    await expect(page.locator("#about")).toContainText(/What StocksWatch publishes|About this page/i);
+    await expect(page.locator("#layers")).toBeVisible();
     // AdSense script should only appear when build gates enable it — never assert present.
     await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
   });

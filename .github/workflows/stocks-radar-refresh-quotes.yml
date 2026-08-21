@@ -1,6 +1,7 @@
 name: Stocks Radar — refresh quotes
 
-# Enable with STOCKS_RADAR_DEPLOY_ENABLED=true (same flag as deploy).
+# Scheduled data refreshes stay enabled independently of full-site deploys.
+# Set STOCKS_RADAR_REFRESH_ENABLED=false to pause them explicitly.
 # Mid-session: quotes + outlook only (cheap).
 # Near-close + manual: also refresh screener + DC news (Yahoo-heavy).
 
@@ -19,7 +20,9 @@ concurrency:
 
 jobs:
   refresh:
-    if: ${{ vars.STOCKS_RADAR_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
+    # Do not couple live-data freshness to the full-site deploy switch. A disabled
+    # deploy used to silently skip this job while the public monitor kept failing.
+    if: ${{ vars.STOCKS_RADAR_REFRESH_ENABLED != 'false' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
