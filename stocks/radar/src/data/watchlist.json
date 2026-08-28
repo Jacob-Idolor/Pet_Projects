@@ -2,7 +2,7 @@
   "meta": {
     "groupName": "StocksWatch",
     "tagline": "Valuation + news first, rates for macro, technical lean for momentum — group check-in, not advice.",
-    "lastUpdated": "2026-07-29"
+    "lastUpdated": "2026-07-31"
   },
   "stocks": [
     {
@@ -192,6 +192,17 @@
       "tags": ["power", "datacenter", "fuel-cell"],
       "priority": "medium",
       "thesis": "On-site fuel-cell power — signing data-center deals (speculative).",
+      "addedBy": "J"
+    },
+    {
+      "id": "axti",
+      "symbol": "AXTI",
+      "name": "AXT Inc.",
+      "category": "tracking",
+      "sector": "Semiconductors",
+      "tags": ["semi", "substrate", "photonics", "compound"],
+      "priority": "medium",
+      "thesis": "Compound semiconductor substrates (GaAs, InP) for photonics, RF, and optical — upstream pick in the optical/semi stack.",
       "addedBy": "J"
     }
   ]
