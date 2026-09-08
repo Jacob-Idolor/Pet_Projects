@@ -33,7 +33,7 @@ if (config.quotes.staleAfterHours < 1 || config.quotes.staleAfterHours > 72) {
 
 if (strict) {
   if (!config.site.url) {
-    errors.push("STOCKS_RADAR_SITE (or CLOUDFRONT_DOMAIN) required in production");
+    errors.push("STOCKS_RADAR_SITE required in production");
   } else if (/localhost|example\.cloudfront\.net/i.test(config.site.url)) {
     errors.push(`Production site URL looks like a placeholder: ${config.site.url}`);
   }
@@ -42,7 +42,12 @@ if (strict) {
     errors.push("PUBLIC_ADSENSE_PREVIEW must not be true in production builds");
   }
 
-  if (config.features.adsense || config.adsense.enabled) {
+  // The feature flag describes supported placements; live ads are an explicit
+  // monetization opt-in. A production build must remain valid while AdSense
+  // review or slot configuration is still pending.
+  const adsRequested =
+    process.env.PUBLIC_ADSENSE_ENABLED === "true" || Boolean(process.env.PUBLIC_ADSENSE_CLIENT);
+  if (adsRequested) {
     if (!config.adsense.client.startsWith("ca-pub-")) {
       errors.push("PUBLIC_ADSENSE_CLIENT must be a ca-pub-… id when ads are enabled");
     }
@@ -60,12 +65,6 @@ if (strict) {
     }
   }
 
-  if (!config.site.s3Bucket) {
-    warnings.push("STOCKS_RADAR_S3_BUCKET unset — deploy sync will fail until secrets exist");
-  }
-  if (!config.site.distributionId) {
-    warnings.push("STOCKS_RADAR_CLOUDFRONT_DISTRIBUTION_ID unset — invalidation will fail");
-  }
 }
 
 console.log(`Config: ${config.app.name} v${config.app.version} (${config.app.environment})`);

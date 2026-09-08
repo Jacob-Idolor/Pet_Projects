@@ -15,6 +15,7 @@ concurrency:
 jobs:
   refresh-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: stocks/radar
@@ -23,6 +24,15 @@ jobs:
       STOCKS_RADAR_SITE: https://stockswatch.cc
       STOCKS_RADAR_BASE: /
       SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
+      # Public build-time configuration; unset values keep monetization off.
+      PUBLIC_WEB3FORMS_ACCESS_KEY: ${{ vars.PUBLIC_WEB3FORMS_ACCESS_KEY }}
+      PUBLIC_ADSENSE_CLIENT: ${{ vars.PUBLIC_ADSENSE_CLIENT }}
+      PUBLIC_ADSENSE_ENABLED: ${{ vars.PUBLIC_ADSENSE_ENABLED }}
+      PUBLIC_ADSENSE_SLOT_BOARD: ${{ vars.PUBLIC_ADSENSE_SLOT_BOARD }}
+      PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.PUBLIC_ADSENSE_SLOT_FOOTER }}
+      PUBLIC_ADSENSE_SLOT_HERO: ${{ vars.PUBLIC_ADSENSE_SLOT_HERO }}
+      PUBLIC_ADSENSE_VERIFY_META: ${{ vars.PUBLIC_ADSENSE_VERIFY_META }}
+      PUBLIC_ADSENSE_ALLOW_HERO: ${{ vars.PUBLIC_ADSENSE_ALLOW_HERO }}
     steps:
       - uses: actions/checkout@v5
 
@@ -55,6 +65,9 @@ jobs:
           SCREENER_SKIP: "1"
           NBIS_SKIP: "1"
           QUOTES_SKIP: "1"
+
+      - name: Scan built bundle for credentials
+        run: npm run security:dist
 
       - name: Deploy to Cloudflare Pages
         run: npx --yes wrangler@4 pages deploy dist --project-name stockswatch-nbis --branch main

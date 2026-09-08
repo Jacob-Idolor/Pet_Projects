@@ -28,6 +28,7 @@
     "dc-movers": "node scripts/fetch/write-dc-movers.mjs",
     "freshness": "node scripts/ops/check-live-freshness.mjs",
     "freshness:live": "node scripts/ops/check-live-freshness.mjs --url",
+    "security:dist": "node scripts/ops/check-dist-security.mjs",
     "seo": "node scripts/ops/write-seo-files.mjs",
     "health": "node scripts/ops/write-health.mjs",
     "digest": "node scripts/alerts/daily-digest.mjs",

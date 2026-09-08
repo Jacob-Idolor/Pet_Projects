@@ -20,7 +20,7 @@ const buildLabel = buildTime.toLocaleString(undefined, {
 const shortSha = buildMeta.gitSha.slice(0, 7);
 const deployLabel =
   buildMeta.deployProvider === "github-actions"
-    ? "GitHub Actions → AWS"
+    ? "GitHub Actions → Cloudflare Pages"
     : buildMeta.deployProvider;
 const base = import.meta.env.BASE_URL;
 const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
@@ -98,7 +98,7 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
     const shortSha = buildMeta.gitSha.slice(0, 7);
     const deployLabel =
       buildMeta.deployProvider === "github-actions"
-        ? "GitHub Actions → AWS"
+        ? "GitHub Actions → Cloudflare Pages"
         : buildMeta.deployProvider;
     const coverage =
       total > 0 ? `${count}/${total}` : String(count);
@@ -159,7 +159,7 @@ const quotesUrl = `${base}quotes.json`.replace(/\/{2,}/g, "/").replace(":/", ":/
   async function refreshStatus() {
     if (typeof document !== "undefined" && document.hidden) return;
     try {
-      // No ?t= bust — CloudFront live_json ~60s TTL coalesces polls at scale.
+      // No ?t= bust — the CDN can coalesce short-lived polling at scale.
       const res = await fetch(quotesUrl);
       if (!res.ok) throw new Error("quotes fetch failed");
       const data = await res.json();

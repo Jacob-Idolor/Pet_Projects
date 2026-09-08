@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Content-hash datacenter JS/CSS so CloudFront can cache them immutably.
+ * Content-hash datacenter JS/CSS so the CDN can cache them immutably.
  * Writes hashed copies + src/data/datacenter-asset-manifest.json for Astro.
  *
  * Source files stay unhashed under public/datacenter/ for local editing;

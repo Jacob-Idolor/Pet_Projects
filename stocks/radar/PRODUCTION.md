@@ -10,6 +10,8 @@ Cloudflare Pages is configured as the intended low-cost host, but the first `ter
 - `/watchlist.html` — archived group watchlist
 - `/datacenter.html` — redirect → `/`
 
+`/health.json` reports NBIS as the primary service status and exposes archived quote/screener freshness separately as `legacyStatus`.
+
 ### Daily NBIS refresh
 
 - `scripts/fetch/fetch-nbis.py` collects Yahoo market/statement data and SEC EDGAR filings.

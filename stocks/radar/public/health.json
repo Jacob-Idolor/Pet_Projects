@@ -1,23 +1,25 @@
 {
   "ok": true,
-  "status": "degraded",
+  "status": "ok",
+  "legacyStatus": "stale",
   "buildOk": true,
   "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "production",
-  "builtAt": "2026-09-08T01:48:15.145Z",
+  "builtAt": "2026-09-08T02:18:05.958Z",
   "gitSha": "local",
   "siteUrl": null,
   "freshnessSnapshot": {
-    "evaluatedAt": "2026-09-08T01:48:15.145Z",
-    "validUntil": "2026-08-06T16:07:36.722Z",
-    "note": "Build-time snapshot. Recalculate freshness from the timestamps in nbis.json, quotes.json, and screener.json."
+    "evaluatedAt": "2026-09-08T02:18:05.958Z",
+    "validUntil": "2026-09-09T07:40:12.274Z",
+    "legacyValidUntil": "2026-08-06T16:07:36.722Z",
+    "note": "Build-time snapshot. validUntil follows the primary NBIS desk; legacyValidUntil covers archived quotes/screener data."
   },
   "checks": {
     "settings": true,
     "quotes": {
       "ok": false,
-      "ageHours": 789.6773397222222,
+      "ageHours": 790.1747877777777,
       "count": 15,
       "freshCount": 0,
       "total": 15,
@@ -27,14 +29,14 @@
     },
     "screener": {
       "ok": false,
-      "ageHours": 789.6710727777778,
+      "ageHours": 790.1685208333333,
       "ok_count": 80,
       "ticker_count": 80,
       "coverage": 1
     },
     "nbis": {
       "ok": true,
-      "ageHours": 0.13413083333333334,
+      "ageHours": 0.6315788888888889,
       "pricePoints": 470,
       "filings": 40,
       "status": "ok"

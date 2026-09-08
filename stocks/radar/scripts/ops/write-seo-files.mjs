@@ -49,7 +49,7 @@ if (client && /^ca-pub-\d+$/i.test(client)) {
   writeFileSync(resolve(PUBLIC, "ads.txt"), adsTxt);
   console.log(`✓ ads.txt (${pub})`);
 } else {
-  // Keep a stub so CloudFront always has /ads.txt once enabled
+  // Keep a stub so the CDN always has /ads.txt once enabled
   const stub =
     "# Set PUBLIC_ADSENSE_CLIENT=ca-pub-... at build time to publish ads.txt\n";
   writeFileSync(resolve(PUBLIC, "ads.txt"), stub);

@@ -113,23 +113,25 @@ if (nbisFile.data) {
 }
 
 // NBIS is the production homepage's source of truth. Legacy quote/screener
-// freshness can make health degraded, but must not hide a healthy NBIS desk.
+// freshness is reported separately because those surfaces are archived.
 const dataOk = checks.nbis.ok;
 const legacyOk = checks.quotes.ok && checks.screener.ok;
-const status = dataOk ? (legacyOk ? "ok" : "degraded") : "unhealthy";
+const status = dataOk ? "ok" : "unhealthy";
+const legacyStatus = legacyOk ? "ok" : "stale";
 const evaluatedAt = new Date().toISOString();
-const freshnessDeadlines = [
+const legacyFreshnessDeadlines = [
   quotesFile.data ? freshUntil(quotesFile.data.fetchedAt || quotesFile.data.updatedAt, quotesMaxH) : null,
   screenerFile.data ? freshUntil(screenerFile.data.fetched_at_iso || screenerFile.data.fetched_at, screenerMaxH) : null,
-  nbisFile.data ? freshUntil(nbisFile.data.fetchedAt, nbisMaxH) : null,
 ].filter(Boolean);
-const validUntil = freshnessDeadlines.length
-  ? new Date(Math.min(...freshnessDeadlines.map((value) => Date.parse(value)))).toISOString()
+const validUntil = nbisFile.data ? freshUntil(nbisFile.data.fetchedAt, nbisMaxH) : null;
+const legacyValidUntil = legacyFreshnessDeadlines.length
+  ? new Date(Math.min(...legacyFreshnessDeadlines.map((value) => Date.parse(value)))).toISOString()
   : null;
 
 const health = {
   ok: dataOk,
   status,
+  legacyStatus,
   buildOk: true,
   service: config.app.name,
   version: config.app.version,
@@ -140,7 +142,8 @@ const health = {
   freshnessSnapshot: {
     evaluatedAt,
     validUntil,
-    note: "Build-time snapshot. Recalculate freshness from the timestamps in nbis.json, quotes.json, and screener.json.",
+    legacyValidUntil,
+    note: "Build-time snapshot. validUntil follows the primary NBIS desk; legacyValidUntil covers archived quotes/screener data.",
   },
   checks,
   paths: {
@@ -163,5 +166,5 @@ console.log(
 if (!dataOk) {
   console.warn("⚠ health status is not ok — NBIS snapshot age, status, or price-history coverage is below threshold");
 } else if (!legacyOk) {
-  console.warn("⚠ health status is degraded — NBIS is current but legacy quotes/screener data is stale");
+  console.warn("⚠ primary health is ok — archived quotes/screener data is stale");
 }

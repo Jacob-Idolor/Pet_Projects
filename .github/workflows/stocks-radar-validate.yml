@@ -29,6 +29,8 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
       - run: npm ci
+      - name: Audit npm dependencies
+        run: npm audit --omit=optional --audit-level=high
       - run: npm run config:validate
       - run: npm test
       - run: npm run screener:schema
@@ -42,6 +44,8 @@ jobs:
           STOCKS_RADAR_ENV: development
           SCREENER_SKIP: "1"
           QUOTES_SKIP: "1"
+      - name: Scan built bundle for credentials
+        run: npm run security:dist
       - run: npm run adsense:checklist
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium

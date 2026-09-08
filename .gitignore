@@ -75,3 +75,8 @@ stocks/radar/test-results/
 stocks/radar/playwright-report/
 stocks/radar/blob-report/
 stocks/radar/playwright/.cache/
+
+# StocksWatch local build/provider caches
+stocks/radar/.cache/
+stocks/radar/.astro/
+stocks/radar/.pip-audit-cache/

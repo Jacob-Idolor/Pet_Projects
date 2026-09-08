@@ -10,6 +10,10 @@ resource "cloudflare_pages_project" "nbis" {
   account_id        = var.cloudflare_account_id
   name              = var.pages_project_name
   production_branch = var.production_branch
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "cloudflare_pages_domain" "nbis" {
