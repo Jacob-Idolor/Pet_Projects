@@ -19,6 +19,8 @@ writeFileSync(settingsOut, JSON.stringify(settings, null, 2) + "\n");
 
 const quotesMaxH = Math.max(config.quotes?.staleAfterHours ?? 6, 12);
 const screenerMaxH = Number(process.env.SCREENER_MAX_AGE_HOURS || 24);
+const nbisMaxH = Number(process.env.NBIS_MAX_AGE_HOURS || 30);
+const nbisMinPricePoints = Number(process.env.NBIS_MIN_PRICE_POINTS || 20);
 const minOkRatio = Number(process.env.SCREENER_MIN_OK_RATIO || 0.85);
 const quotesMinRatio = Number(process.env.QUOTES_MIN_OK_RATIO || 0.85);
 
@@ -34,11 +36,13 @@ function readJson(rel) {
 
 const quotesFile = readJson("public/quotes.json");
 const screenerFile = readJson("public/screener.json");
+const nbisFile = readJson("public/nbis.json");
 
 const checks = {
   settings: true,
   quotes: { ok: false },
   screener: { ok: false },
+  nbis: { ok: false },
 };
 
 if (quotesFile.data) {
@@ -92,12 +96,32 @@ if (screenerFile.data) {
   checks.screener = { ok: false, missing: true, error: screenerFile.error || "missing" };
 }
 
-const dataOk = checks.quotes.ok && checks.screener.ok;
-const status = dataOk ? "ok" : checks.quotes.ok || checks.screener.ok ? "degraded" : "unhealthy";
+if (nbisFile.data) {
+  const n = nbisFile.data;
+  const age = ageHours(n.fetchedAt);
+  const pricePoints = Array.isArray(n.priceHistory) ? n.priceHistory.length : 0;
+  const filings = Array.isArray(n.sec?.filings) ? n.sec.filings.length : 0;
+  checks.nbis = {
+    ok: n.status === "ok" && age != null && age <= nbisMaxH && pricePoints >= nbisMinPricePoints,
+    ageHours: age,
+    pricePoints,
+    filings,
+    status: n.status || "unknown",
+  };
+} else {
+  checks.nbis = { ok: false, missing: true, error: nbisFile.error || "missing" };
+}
+
+// NBIS is the production homepage's source of truth. Legacy quote/screener
+// freshness can make health degraded, but must not hide a healthy NBIS desk.
+const dataOk = checks.nbis.ok;
+const legacyOk = checks.quotes.ok && checks.screener.ok;
+const status = dataOk ? (legacyOk ? "ok" : "degraded") : "unhealthy";
 const evaluatedAt = new Date().toISOString();
 const freshnessDeadlines = [
   quotesFile.data ? freshUntil(quotesFile.data.fetchedAt || quotesFile.data.updatedAt, quotesMaxH) : null,
   screenerFile.data ? freshUntil(screenerFile.data.fetched_at_iso || screenerFile.data.fetched_at, screenerMaxH) : null,
+  nbisFile.data ? freshUntil(nbisFile.data.fetchedAt, nbisMaxH) : null,
 ].filter(Boolean);
 const validUntil = freshnessDeadlines.length
   ? new Date(Math.min(...freshnessDeadlines.map((value) => Date.parse(value)))).toISOString()
@@ -116,14 +140,14 @@ const health = {
   freshnessSnapshot: {
     evaluatedAt,
     validUntil,
-    note: "Build-time snapshot. Recalculate freshness from the timestamps in quotes.json and screener.json.",
+    note: "Build-time snapshot. Recalculate freshness from the timestamps in nbis.json, quotes.json, and screener.json.",
   },
   checks,
   paths: {
     quotes: "/quotes.json",
     outlook: "/outlook.json",
     screener: "/screener.json",
-    datacenter: "/",
+    datacenter: "/datacenter.html",
     watchlist: "/watchlist.html",
     settings: config.ops.settingsPath,
     health: config.ops.healthPath,
@@ -137,5 +161,7 @@ console.log(
   `✓ settings.json + health.json (${config.app.environment}) — status=${status}`
 );
 if (!dataOk) {
-  console.warn("⚠ health status is not ok — quotes/screener age or coverage below threshold");
+  console.warn("⚠ health status is not ok — NBIS snapshot age, status, or price-history coverage is below threshold");
+} else if (!legacyOk) {
+  console.warn("⚠ health status is degraded — NBIS is current but legacy quotes/screener data is stale");
 }

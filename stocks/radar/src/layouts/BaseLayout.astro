@@ -13,7 +13,7 @@ interface Props {
   allowAds?: boolean;
   /** Search engines: use noindex on error / empty utility pages */
   noindex?: boolean;
-  activeNav?: "watchlist" | "datacenter";
+  activeNav?: "watchlist" | "datacenter" | "nbis";
   /** Override canonical path (default `/`) */
   canonicalPath?: string;
 }
@@ -83,7 +83,9 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
       <div class="container">
         <p>
           Built for friends who talk stocks — not financial advice.
-          <a href={base}>AI Data Center</a>
+          <a href={base}>NBIS Deep Dive</a>
+          ·
+          <a href={`${base}datacenter.html`.replace(/\/{2,}/g, "/")}>AI Data Center archive</a>
           ·
           <a href={`${base}watchlist.html`.replace(/\/{2,}/g, "/")}>Archived watchlist</a>
           ·

@@ -1,9 +1,16 @@
 # Deploy
 
-Production hosting is **unconfigured**. The previous AWS S3 + CloudFront stack was destroyed.
+Production hosting is designed around Cloudflare Pages direct uploads. The previous AWS S3 + CloudFront stack was destroyed.
 
-- **Domain:** [`stockswatch.cc`](https://stockswatch.cc) is registered on Cloudflare (Free DNS). No origin is attached yet — you can point it at anything.
+- **Domain:** [`stockswatch.cc`](https://stockswatch.cc) is registered on Cloudflare Free DNS. Terraform attaches the apex to the Pages project.
 - **Local:** `cd stocks/radar && npm run dev`
-- **CI:** Stocks Radar validate only (build, tests, Playwright). There is no deploy workflow.
+- **CI:** `.github/workflows/stocks-radar-nbis-daily.yml` fetches NBIS, validates the snapshot, builds, and deploys `dist/` with Wrangler.
 
-When you pick a host (Cloudflare Pages, Amplify, S3 + CloudFront, etc.), document it here and wire DNS in Cloudflare (grey-cloud CNAMEs or the host’s recommended records).
+## First deployment
+
+1. From `radar/infra/terraform`, export `CLOUDFLARE_API_TOKEN` and fill `terraform.tfvars` from `terraform.tfvars.example`.
+2. Run `terraform init`, `terraform validate`, `terraform plan`, and `terraform apply`.
+3. Add GitHub secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `SEC_CONTACT_EMAIL`.
+4. Run the `StocksWatch — NBIS daily refresh and deploy` workflow manually once, then let the daily schedule take over.
+
+The workflow has no always-on compute or database. If the NBIS fetch fails in production, the strict job stops before deployment instead of publishing stale data as fresh.

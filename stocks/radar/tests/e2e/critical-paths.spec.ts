@@ -1,7 +1,14 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("AI Data Center homepage critical paths", () => {
-  test("screener.json loads and static API hydrates holdings", async ({ page, request }) => {
+test.describe("NBIS research homepage critical paths", () => {
+  test("nbis.json loads and the research shell hydrates", async ({ page, request }) => {
+    const nbis = await request.get("/nbis.json");
+    expect(nbis.ok()).toBeTruthy();
+    const nbisBody = await nbis.json();
+    expect(nbisBody.ticker).toBe("NBIS");
+    expect(nbisBody).toHaveProperty("fetchedAt");
+    expect(Array.isArray(nbisBody.priceHistory)).toBeTruthy();
+
     const res = await request.get("/screener.json");
     expect(res.ok()).toBeTruthy();
     const body = await res.json();
@@ -9,12 +16,11 @@ test.describe("AI Data Center homepage critical paths", () => {
     expect(body.layers.length).toBeGreaterThan(0);
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /AI Data Center/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Nebius Group/i })).toBeVisible();
 
     await expect
       .poll(async () => {
-        const rows = page.locator("table tbody tr, .holding-row, #board tr, .dc-table tr, main#layers tr");
-        return rows.count();
+        return page.locator("#nbis-readouts .nbis-readout").count();
       }, { timeout: 20_000 })
       .toBeGreaterThan(0);
   });

@@ -1,38 +1,50 @@
 {
   "ok": true,
-  "status": "ok",
+  "status": "degraded",
   "buildOk": true,
   "service": "StocksWatch",
   "version": "0.2.0",
   "environment": "production",
-  "builtAt": "2026-08-06T04:08:02.163Z",
+  "builtAt": "2026-09-08T01:48:15.145Z",
   "gitSha": "local",
   "siteUrl": null,
+  "freshnessSnapshot": {
+    "evaluatedAt": "2026-09-08T01:48:15.145Z",
+    "validUntil": "2026-08-06T16:07:36.722Z",
+    "note": "Build-time snapshot. Recalculate freshness from the timestamps in nbis.json, quotes.json, and screener.json."
+  },
   "checks": {
     "settings": true,
     "quotes": {
-      "ok": true,
-      "ageHours": 0.007066944444444444,
+      "ok": false,
+      "ageHours": 789.6773397222222,
       "count": 15,
-      "freshCount": 15,
+      "freshCount": 0,
       "total": 15,
-      "coverage": 1,
-      "partial": false,
-      "fetchFailed": false
+      "coverage": 0,
+      "partial": true,
+      "fetchFailed": true
     },
     "screener": {
-      "ok": true,
-      "ageHours": 0.0008,
+      "ok": false,
+      "ageHours": 789.6710727777778,
       "ok_count": 80,
       "ticker_count": 80,
       "coverage": 1
+    },
+    "nbis": {
+      "ok": true,
+      "ageHours": 0.13413083333333334,
+      "pricePoints": 470,
+      "filings": 40,
+      "status": "ok"
     }
   },
   "paths": {
     "quotes": "/quotes.json",
     "outlook": "/outlook.json",
     "screener": "/screener.json",
-    "datacenter": "/",
+    "datacenter": "/datacenter.html",
     "watchlist": "/watchlist.html",
     "settings": "/settings.json",
     "health": "/health.json"

@@ -1,10 +1,10 @@
 # StocksWatch
 
-Group watchlist + AI data-center screener. Static Astro — no Yahoo API keys. Hosting is currently **unconfigured**; `stockswatch.cc` is a Cloudflare domain you can point at anything.
+NBIS research desk + archived group watchlist. Static Astro — no browser API keys. The production target is Cloudflare Pages, provisioned with Terraform and refreshed once daily by GitHub Actions.
 
 > Not financial advice.
 
-**Domain:** [stockswatch.cc](https://stockswatch.cc) (no origin attached) · **Surfaces:** `/` (AI Data Center screener) · `/watchlist.html` (archived group watchlist)
+**Domain:** [stockswatch.cc](https://stockswatch.cc) (attach the origin with Terraform) · **Surfaces:** `/` (NBIS Deep Dive) · `/watchlist.html` (archived group watchlist) · `/datacenter.html` (legacy redirect)
 
 Code map: [ARCHITECTURE.md](ARCHITECTURE.md)
 
@@ -23,22 +23,25 @@ flowchart LR
 
   subgraph local [Local / CI]
     Q[fetch-quotes.mjs]
+    N[fetch-nbis.py]
     S[fetch-screener.py]
     B[astro build]
   end
 
   subgraph browser [Browser]
-    Home["/ AI datacenter"]
+    Home["/ NBIS Deep Dive"]
     WL["/watchlist.html archive"]
   end
 
   W --> Q
+  N --> B
   U --> S
   Q --> B
   S --> B
   B --> Home
   B --> WL
-  Q -.->|quotes.json| Home
+  N -.->|nbis.json| Home
+  Q -.->|quotes.json| WL
   S -.->|screener.json + news| Home
 ```
 
@@ -47,16 +50,15 @@ flowchart LR
 ```mermaid
 flowchart TB
   subgraph pages [Two pages, one product]
-    H["Home / — group list, mood, radar lean"]
-    D["Datacenter — layers, map, rack, analyst prompts"]
+    H["Home / — NBIS research desk"]
+    D["Watchlist — archived group list"]
   end
 
   T[tokens.css + SiteHeader] --> H
   T --> D
 
-  H --- QJ[quotes.json]
-  D --- SJ[screener.json]
-  D --- NJ[news.json]
+  H --- NJ[nbis.json + SEC filings]
+  D --- QJ[quotes.json]
 ```
 
 ---
@@ -74,6 +76,7 @@ Useful checks (also run in CI validate):
 ```bash
 npm test                 # unit tests (ads gates, freshness math, sanitize, radar-score)
 npm run screener:schema  # offline screener.json shape/coverage
+npm run nbis:schema      # offline NBIS snapshot shape/coverage
 npm run typecheck        # tsc --noEmit
 npm run freshness        # local quotes/screener age
 npm run adsense:checklist  # after build — AdSense policy gates in dist/
@@ -82,15 +85,15 @@ SCREENER_SKIP=1 npm run build && npm run test:e2e   # Playwright smoke
 
 | Page | URL |
 |------|-----|
-| Watchlist | http://localhost:4321 |
-| AI Data Center | http://localhost:4321/datacenter.html |
+| NBIS Deep Dive | http://localhost:4321 |
+| Archived watchlist | http://localhost:4321/watchlist.html |
 
-Screener snapshot (needs Python once):
+NBIS snapshot (needs Python once):
 
 ```bash
 pip install -r scripts/datacenter/requirements.txt
-npm run update-screener    # → public/screener.json + news.json
-npm run freshness         # local age/coverage assert
+npm run update-nbis        # → public/nbis.json
+npm run nbis:schema        # local shape/coverage assert
 ```
 
 ---
@@ -100,33 +103,37 @@ npm run freshness         # local age/coverage assert
 | File | Purpose |
 |------|---------|
 | `src/data/watchlist.json` | Group list |
-| `src/data/datacenter-universe.json` | AI DC layers + holdings |
+| `src/data/nbis-profile.json` | NBIS company map, monitoring checklist, primary sources |
+| `src/data/datacenter-universe.json` | Archived AI DC layers + holdings |
 | `src/data/site-settings.json` | Features, quote staleness |
 | `src/styles/tokens.css` | Shared design tokens (`npm run sync:tokens` → `public/tokens.css` on prebuild) |
 
 CSV → watchlist: `npm run import-csv -- my-tickers.csv`
 
-### Datacenter limits (static hosting)
+### NBIS product limits (static hosting)
 
 | Feature | Behavior |
 |---------|----------|
-| Prices | CI / refresh snapshot — not live Yahoo from the browser |
-| Refresh button | Reloads `screener.json` from the CDN |
-| News | From `news.json` built with the screener |
-| AI Analyst | Copy-paste prompt only |
-| Lookup / trends | Browser `localStorage` |
+| Prices | Daily CI snapshot — not a live quote stream |
+| Filings | SEC EDGAR links and structured facts where available |
+| Scenarios | Transparent assumptions, never price targets |
+| News | Discovery feed; verify material claims against filings |
+| Monetization | Free research first; email brief/sponsor/premium archive later |
 
 ---
 
 ## Ship
 
-There is no production host yet. Local parity:
+Cloudflare Pages is the intended production host. Provision the project and DNS first:
 
-```bash
-npm run rebuild
+```powershell
+cd radar/infra/terraform
+$env:CLOUDFLARE_API_TOKEN = "..."
+terraform init
+terraform apply
 ```
 
-Domain + future hosting: [DEPLOY.md](DEPLOY.md) · [DOMAIN.md](DOMAIN.md)
+Then add the GitHub Actions secrets described in [infra/terraform/README.md](infra/terraform/README.md) and run the daily workflow once manually. Local parity: `npm run rebuild`.
 
 ---
 
@@ -134,8 +141,9 @@ Domain + future hosting: [DEPLOY.md](DEPLOY.md) · [DOMAIN.md](DOMAIN.md)
 
 ```
 stocks/radar/
-  src/pages/index.astro          # watchlist
-  src/pages/datacenter.astro     # screener
+  src/pages/index.astro          # NBIS research desk
+  src/pages/datacenter.astro     # legacy redirect
+  src/client/nbis-dashboard.ts   # NBIS browser hydration
   src/client/board/              # watchlist UI modules
   src/styles/home/               # CSS partials (via global.css)
   src/data/watchlist.json
@@ -164,6 +172,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
 | [ADSENSE.md](ADSENSE.md) | Ads |
 | [SECURITY.md](SECURITY.md) | Hardening |
 | [ALERTS.md](ALERTS.md) | Signal emails |
+| [PRODUCT.md](PRODUCT.md) | NBIS product and monetization path |
+| [infra/terraform/README.md](infra/terraform/README.md) | Cloudflare Pages deployment |
 
 ## License
 

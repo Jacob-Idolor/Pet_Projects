@@ -1,0 +1,11 @@
+cloudflare_account_id = "REPLACE_WITH_CLOUDFLARE_ACCOUNT_ID"
+
+# Prefer CLOUDFLARE_API_TOKEN as an environment variable rather than storing a token here.
+# cloudflare_api_token = null
+
+pages_project_name = "stockswatch-nbis"
+production_branch  = "main"
+zone_name          = "stockswatch.cc"
+site_domain        = "stockswatch.cc"
+manage_dns_record  = true
+enable_custom_domain = true

@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("StocksWatch smoke", () => {
-  test("home shows brand and screener shell", async ({ page }) => {
+  test("home shows the NBIS research product shell", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.locator(".hero-brand").first()).toContainText("StocksWatch");
-    await expect(page.locator("#layers")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Nebius Group/i })).toBeVisible();
+    await expect(page.locator(".logo").first()).toContainText("StocksWatch");
+    await expect(page.locator("#nbis-app")).toBeVisible();
+    await expect(page.locator("#nbis-chart")).toBeVisible();
     // AdSense script should only appear when build gates enable it — never assert present.
     await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
   });
@@ -17,12 +18,10 @@ test.describe("StocksWatch smoke", () => {
     await expect(page.getByRole("link", { name: /watchlist|back/i }).first()).toBeVisible();
   });
 
-  test("datacenter loads screener shell without AdSense", async ({ page }) => {
+  test("legacy datacenter route redirects without AdSense", async ({ page }) => {
     await page.goto("/datacenter.html");
-    await expect(page.getByRole("heading", { name: /AI Data Center/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
-    // Hashed or unhashed app script referenced
-    await expect(page.locator('script[src*="app."]')).toHaveCount(1);
-    await expect(page.locator("#status, .dc-shell, #board").first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("#nbis-app")).toBeVisible();
   });
 });

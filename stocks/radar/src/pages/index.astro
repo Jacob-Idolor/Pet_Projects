@@ -1,348 +1,279 @@
 ---
-import DatacenterLayout from "../layouts/DatacenterLayout.astro";
-import AdSlot from "../components/AdSlot.astro";
-import { datacenterAsset } from "../lib/datacenter-assets";
-import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
-import { featureEnabled } from "../lib/site-config";
-import universe from "../data/datacenter-universe.json";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import profile from "../data/nbis-profile.json";
 
 const base = import.meta.env.BASE_URL;
-const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://");
-const scripts = ["static-api.js", "app.js", "map.js", "backtest.js"].map(
-  (name) => `${dcBase}${datacenterAsset(name)}`
-);
-
-const holdings = (universe.layers || []).reduce((n, L) => n + (L.holdings?.length || 0), 0);
-const ads = getAdSenseConfig();
-const adsFeature = featureEnabled("adsense");
-const contentOk = hasPublisherContent(5) || holdings >= 5;
-const allowAds = adsFeature && contentOk;
-const showBoardAd = allowAds && canShowAdSlot(ads, "board");
-const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
+const dataUrl = `${base}nbis.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
+const description =
+  "Daily NBIS research dashboard covering Nebius Group fundamentals, AI cloud economics, valuation assumptions, filings, price history, risks, and catalysts.";
 ---
 
-<DatacenterLayout
-  title="AI Data Center"
-  description="Six-layer AI data-center buildout screener — land, power, cooling, compute, networking, software. Market snapshots, global campus map, and research prompts."
-  allowAds={allowAds}
+<BaseLayout
+  title="NBIS Deep Dive"
+  description={description}
+  activeNav="nbis"
   canonicalPath="/"
 >
-  <div class="dc-shell">
-    <div class="tickertape" id="tickertape" aria-label="Market movers ticker">
-      <div class="tt-cap" id="ttCap"><span class="tt-dot"></span>MARKETS</div>
-      <div class="tt-viewport"><div class="tt-track" id="ttTrack"></div></div>
-    </div>
-
-    <section class="hero container">
-      <div class="hero-copy">
-        <p class="hero-brand">StocksWatch</p>
-        <h1>AI Data Center</h1>
-        <p class="tagline">
-          Six layers of the buildout — land → power → cooling → compute → networking → software.
-          Snapshot prices from Yahoo; research only, not live trading advice.
-        </p>
+  <div class="nbis-page" id="nbis-app" data-nbis-url={dataUrl}>
+    <section class="nbis-hero container">
+      <div class="nbis-hero__copy">
+        <p class="nbis-eyebrow">STOCKSWATCH / DAILY RESEARCH</p>
+        <h1>Nebius Group <span class="nbis-ticker">NBIS</span></h1>
+        <p class="nbis-lede">{profile.businessSummary}</p>
+        <div class="nbis-links">
+          <a href={profile.investorRelations} target="_blank" rel="noopener">Investor relations ↗</a>
+          <a href={profile.website} target="_blank" rel="noopener">Company site ↗</a>
+          <a href={`https://www.sec.gov/edgar/browse/?CIK=${profile.secCik}&owner=exclude`} target="_blank" rel="noopener">SEC filings ↗</a>
+        </div>
       </div>
-      <dl class="hero-kpis" aria-label="Screener summary" id="heroKpis">
-        <div class="hero-kpi">
-          <dt>Universe</dt>
-          <dd class="mono" id="kpiNames">{holdings || "—"}</dd>
+      <div class="nbis-hero__meta">
+        <div class="nbis-status nbis-status--loading" id="nbis-status" role="status" aria-live="polite">
+          <span class="nbis-status__dot" aria-hidden="true"></span>
+          Loading daily snapshot…
         </div>
-        <div class="hero-kpi">
-          <dt>Layers</dt>
-          <dd class="mono">6</dd>
-        </div>
-        <div class="hero-kpi desktop-only">
-          <dt>Coverage</dt>
-          <dd class="mono" id="kpiOk">—</dd>
-        </div>
-      </dl>
+        <p class="nbis-meta-line">{profile.exchange} · {profile.headquarters}</p>
+        <p class="nbis-meta-line">Facts and provider data are time-stamped below.</p>
+      </div>
     </section>
 
-    <div class="container board-stage">
-      <nav class="mainnav" id="mainnav" aria-label="Screener views">
-        <button type="button" data-mode="screener" class="active" aria-current="page">Screener</button>
-        <button type="button" data-mode="map">Global Map</button>
-        <button type="button" data-mode="analyst">AI Analyst</button>
-        <button type="button" data-mode="backtest">Backtest</button>
-        <button type="button" data-mode="lookup">Lookup</button>
-      </nav>
-      <p class="mode-purpose" id="modePurpose">
-        Screener — rank holdings by valuation, moat, growth, and composite score
-      </p>
+    <nav class="nbis-nav container" aria-label="NBIS research sections">
+      <a href="#overview">Overview</a>
+      <a href="#price">Price &amp; trend</a>
+      <a href="#business">Business</a>
+      <a href="#financials">Financials</a>
+      <a href="#valuation">Valuation</a>
+      <a href="#risks">Risks &amp; catalysts</a>
+      <a href="#filings">Filings &amp; news</a>
+    </nav>
 
-      <div class="board-chrome">
-        <div class="board-header">
-          <div class="board-heading">
-            <p class="board-eyebrow">Screener</p>
-            <h2>
-              Holdings
-              <span class="board-count" id="boardCount" aria-live="polite">
-                <span id="matchCount">—</span>
-                <span class="board-count__of">shown</span>
-              </span>
-            </h2>
-            <p class="board-subtitle">
-              Search the universe · open a row for score &amp; headlines
-            </p>
+    <main class="container nbis-main">
+      <section id="overview" class="nbis-section" aria-labelledby="overview-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">01 / Fast read</p>
+            <h2 id="overview-title">What changed today</h2>
           </div>
-          <div class="board-actions" role="search">
-            <div class="search-wrap search-wrap--dc">
-              <span class="search-icon" aria-hidden="true">⌕</span>
-              <input
-                id="search"
-                type="search"
-                class="search-input"
-                placeholder="Ticker, name, or tag"
-                autocomplete="off"
-                enterkeyhint="search"
-                aria-label="Search ticker, name, or tag"
-              />
-              <kbd class="search-hint desktop-only" title="Press / to focus search">/</kbd>
-              <button
-                type="button"
-                id="searchClear"
-                class="search-clear hidden"
-                aria-label="Clear search"
-              >
-                Clear
-              </button>
-            </div>
-            <button
-              type="button"
-              id="refresh"
-              class="btn-refresh"
-              title="Reload the latest Yahoo snapshot from this site"
-              aria-label="Refresh market snapshot"
-            >
-              <span class="btn-refresh__label">Refresh</span>
-            </button>
-          </div>
+          <p class="nbis-section__note">Automated readouts are prompts for research, not a buy, sell, or hold signal.</p>
         </div>
-
-        <div class="filterbar" id="filterbar" role="toolbar" aria-label="Screener filters">
-          <div class="seg" id="viewToggle" role="group" aria-label="Board layout">
-            <button type="button" data-view="layers" class="active" aria-pressed="true">By layer</button>
-            <button type="button" data-view="flat" aria-pressed="false">All names</button>
-          </div>
-          <div class="exposure-filter" id="exposureFilter" role="group" aria-label="Exposure filter">
-            <span class="flabel">Exposure</span>
-            <button type="button" data-exp="pure" aria-pressed="false">Pure</button>
-            <button type="button" data-exp="high" aria-pressed="false">High</button>
-            <button type="button" data-exp="moderate" aria-pressed="false">Moderate</button>
-            <button type="button" data-exp="diversified" aria-pressed="false">Diversified</button>
-          </div>
-          <button type="button" id="filtersBtn" class="filters-btn" aria-expanded="false" aria-controls="filtersDrawer">
-            More filters
-          </button>
-          <button type="button" id="scoreInfo" class="score-info" title="How the composite score is calculated" aria-haspopup="dialog">
-            Scoring
-          </button>
+        <div class="nbis-stat-grid">
+          <article class="nbis-stat-card nbis-panel">
+            <span class="nbis-stat-card__label">Last price</span>
+            <strong id="nbis-price" class="nbis-stat-card__value">—</strong>
+            <span id="nbis-change" class="nbis-stat-card__sub">Awaiting snapshot</span>
+          </article>
+          <article class="nbis-stat-card nbis-panel">
+            <span class="nbis-stat-card__label">Market cap</span>
+            <strong id="nbis-market-cap" class="nbis-stat-card__value">—</strong>
+            <span class="nbis-stat-card__sub">Provider-reported</span>
+          </article>
+          <article class="nbis-stat-card nbis-panel">
+            <span class="nbis-stat-card__label">Revenue growth</span>
+            <strong id="nbis-revenue-growth" class="nbis-stat-card__value">—</strong>
+            <span class="nbis-stat-card__sub">Latest provider figure</span>
+          </article>
+          <article class="nbis-stat-card nbis-panel">
+            <span class="nbis-stat-card__label">Free cash flow</span>
+            <strong id="nbis-fcf" class="nbis-stat-card__value">—</strong>
+            <span class="nbis-stat-card__sub">Latest provider figure</span>
+          </article>
         </div>
+        <div id="nbis-readouts" class="nbis-readouts" aria-live="polite">
+          <div class="nbis-empty">Loading growth, cash generation, balance sheet, valuation, and trend readouts…</div>
+        </div>
+      </section>
 
-        <div class="filters-drawer hidden" id="filtersDrawer" hidden>
-          <div class="filters-drawer__advanced" aria-label="Columns and caps">
-            <div class="cap-filter" id="capFilter" role="group" aria-label="Market-cap filter">
-              <span class="flabel">Cap</span>
-              <button type="button" data-cap="mega" title="≥ $200B" aria-pressed="false">Mega</button>
-              <button type="button" data-cap="large" title="$10B – $200B" aria-pressed="false">Large</button>
-              <button type="button" data-cap="mid" title="$2B – $10B" aria-pressed="false">Mid</button>
-              <button type="button" data-cap="small" title="$300M – $2B" aria-pressed="false">Small</button>
-              <button type="button" data-cap="micro" title="under $300M" aria-pressed="false">Micro</button>
-            </div>
-            <div class="filters-drawer__row">
-              <span class="flabel cols-label">Columns</span>
-              <div class="seg seg-scroll" id="colset" role="group" aria-label="Column set">
-                <button type="button" data-cs="valuation" class="active" aria-pressed="true">Valuation</button>
-                <button type="button" data-cs="moat" aria-pressed="false">Moat</button>
-                <button type="button" data-cs="growth" aria-pressed="false">Growth</button>
-                <button type="button" data-cs="technical" aria-pressed="false">Technical</button>
-                <button type="button" data-cs="health" aria-pressed="false">Health</button>
-                <button type="button" data-cs="exposure" aria-pressed="false">Exposure</button>
-                <button type="button" data-cs="consensus" aria-pressed="false">Consensus</button>
-                <button type="button" data-cs="trends" aria-pressed="false">Trends</button>
-                <button type="button" data-cs="scores" aria-pressed="false">Scores</button>
+      <section id="price" class="nbis-section" aria-labelledby="price-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">02 / Market tape</p>
+            <h2 id="price-title">Price history and technical context</h2>
+          </div>
+          <p id="nbis-price-meta" class="nbis-section__note">Daily close history is fetched automatically.</p>
+        </div>
+        <div class="nbis-two-column nbis-two-column--wide">
+          <article class="nbis-panel nbis-chart-panel">
+            <div class="nbis-panel__header">
+              <div>
+                <h3>Five-year closing price</h3>
+                <p class="nbis-muted">A chart of historical closes, not a forecast.</p>
               </div>
+              <span id="nbis-chart-range" class="nbis-pill">—</span>
             </div>
-            <div class="filters-drawer__row">
-              <span class="flabel cols-label" title="Rank score factors against the whole universe, or same-layer peers">
-                Score vs
-              </span>
-              <div class="seg" id="scoreMode" role="group" aria-label="Score basis">
-                <button type="button" data-sm="universe" class="active" aria-pressed="true">Universe</button>
-                <button type="button" data-sm="layer" aria-pressed="false">Layer</button>
-              </div>
+            <div id="nbis-chart" class="nbis-chart" role="img" aria-label="NBIS closing price history">
+              <div class="nbis-empty">Chart will appear when price history is available.</div>
             </div>
-          </div>
-          <div class="theme-bar" id="themeBar" aria-label="Theme tags"></div>
-          <div class="filters-panel" id="filtersPanel"></div>
+          </article>
+          <article class="nbis-panel">
+            <div class="nbis-panel__header"><h3>Quote snapshot</h3></div>
+            <div id="nbis-quote-table" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+          </article>
         </div>
-
-        <div class="live-status statusbar" id="statusbar" role="status">
-          <span class="live-status__dot" id="statusDot" aria-hidden="true"></span>
-          <span id="status">Loading universe…</span>
-          <span id="meta" class="muted"></span>
+        <div class="nbis-two-column">
+          <article class="nbis-panel">
+            <div class="nbis-panel__header"><h3>Returns</h3><span class="nbis-muted">Calculated from closes</span></div>
+            <div id="nbis-returns" class="nbis-return-grid"><div class="nbis-empty">Loading…</div></div>
+          </article>
+          <article class="nbis-panel">
+            <div class="nbis-panel__header"><h3>Technical indicators</h3><span class="nbis-muted">Rules-based context</span></div>
+            <div id="nbis-technicals" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+          </article>
         </div>
-      </div>
-
-      <div class="focus-banner hidden" id="focusBanner"></div>
-      <div class="alerts hidden" id="alerts"></div>
-
-      <main id="layers" tabindex="-1">
-        <div class="skeleton-board" aria-busy="true" aria-live="polite">
-          <p class="skeleton-board__label">Loading the latest market snapshot…</p>
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row skeleton-row--short"></div>
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row skeleton-row--short"></div>
-        </div>
-      </main>
-
-      {
-        showBoardAd && (
-          <AdSlot placement="board" label="Sponsored" class="ad-slot--after-board" />
-        )
-      }
-
-      <section class="gmap hidden" id="map">
-        <div class="gmap-head">
-          <div class="gmap-intro">
-            <p class="board-eyebrow">Interactive map</p>
-            <h2>Global AI data-center campuses</h2>
-            <p class="muted">
-              Largest existing and planned campuses. Markers sized by capacity; click for details.
-              <span class="gmap-disc" id="gmapDisc"></span>
-            </p>
-          </div>
-          <div class="gmap-controls">
-            <span class="flabel">Min cap</span>
-            <div class="seg" id="mapThreshold" role="tablist" aria-label="Capacity threshold">
-              <button type="button" data-mw="2000">2 GW+</button>
-              <button type="button" data-mw="1000">1 GW+</button>
-              <button type="button" data-mw="500">500 MW+</button>
-              <button type="button" data-mw="250" class="active">250 MW+</button>
-              <button type="button" data-mw="100">100 MW+</button>
-              <button type="button" data-mw="50">50 MW+</button>
-            </div>
-            <span class="flabel">Colour</span>
-            <div class="seg" id="mapColorBy" role="tablist" aria-label="Colour markers by">
-              <button type="button" data-by="status" class="active">Status</button>
-              <button type="button" data-by="power">Power</button>
-            </div>
-            <button type="button" id="mapRefresh" class="gmap-btn" title="Reload sites">Refresh</button>
-            <button type="button" id="mapAddToggle" class="gmap-btn" title="Log a campus on this device">
-              Add site
-            </button>
-          </div>
-        </div>
-        <div class="gmap-addform hidden" id="mapAddForm"></div>
-        <div class="gmap-stage">
-          <div class="gmap-canvas" id="mapCanvas"></div>
-          <aside class="gmap-panel" id="mapPanel"></aside>
-        </div>
-        <div class="gmap-legend" id="mapLegend"></div>
       </section>
 
-      <section class="lookup hidden" id="lookup">
-        <div class="lk-head">
-          <p class="board-eyebrow">Lookup</p>
-          <h2>Find a ticker in the universe</h2>
-          <p class="muted">
-            Search curated names. Personal additions stay on this device only (not shared to all visitors).
-            To change the shared universe, edit <code>src/data/datacenter-universe.json</code> and redeploy.
-          </p>
-        </div>
-        <div class="lk-bar">
-          <input
-            id="lkTicker"
-            type="search"
-            class="search-input"
-            placeholder="e.g. VRT, ETN, CRDO…"
-            autocomplete="off"
-          />
-          <button type="button" id="lkGo" class="btn-refresh">Look up</button>
-        </div>
-        <div class="lk-result" id="lkResult"></div>
-        <div class="lk-added" id="lkAdded"></div>
-      </section>
-
-      <section class="analyst hidden" id="analyst">
-        <div class="an-head">
-          <p class="board-eyebrow">Research</p>
-          <h2>AI Analyst</h2>
-          <p class="muted">
-            Builds a ready-to-paste prompt from this page’s snapshot (financials, score, peers,
-            headlines). <span id="anKeyNote"></span>
-          </p>
-        </div>
-        <div class="an-bar">
-          <label class="an-pick">
-            Company
-            <select id="anTicker"></select>
-          </label>
-          <div class="an-reports" id="anReports"></div>
-        </div>
-        <div class="an-output" id="anOutput"><div class="muted">Choose a report above to begin.</div></div>
-      </section>
-
-      <section class="backtest hidden" id="backtest">
-        <div class="bt-head">
-          <p class="board-eyebrow">Research</p>
-          <h2>Score backtest</h2>
-          <p class="muted">
-            On the live site this runs from precomputed snapshots when available. Full Yahoo
-            reconstruction stays on the local Flask app under <code>archive/ai-datacenter-screener</code>.
-          </p>
-        </div>
-        <div class="bt-controls">
-          <span class="flabel">Forward horizon</span>
-          <div class="seg" id="btHorizon" role="tablist">
-            <button type="button" data-h="5">1 week</button>
-            <button type="button" data-h="21" class="active">1 month</button>
-            <button type="button" data-h="63">3 months</button>
+      <section id="business" class="nbis-section" aria-labelledby="business-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">03 / The company</p>
+            <h2 id="business-title">Business model and strategic map</h2>
           </div>
-          <span class="flabel">Lookback</span>
-          <div class="seg" id="btMonths" role="tablist">
-            <button type="button" data-m="3">3 mo</button>
-            <button type="button" data-m="6" class="active">6 mo</button>
-          </div>
-          <button type="button" id="btRun" class="gmap-btn">Run backtest</button>
+          <p class="nbis-section__note">Company descriptions are grounded in the linked company and filing sources.</p>
         </div>
-        <div class="bt-results" id="btResults"></div>
+        <div class="nbis-two-column nbis-two-column--wide">
+          <article class="nbis-panel nbis-business-summary">
+            <h3>How the group fits together</h3>
+            <p>{profile.businessSummary}</p>
+            <div class="nbis-fact-line"><span>Issuer</span><strong>{profile.company}</strong></div>
+            <div class="nbis-fact-line"><span>Listing</span><strong>{profile.exchange}</strong></div>
+            <div class="nbis-fact-line"><span>SEC CIK</span><strong class="nbis-mono">{profile.secCik}</strong></div>
+          </article>
+          <div id="nbis-business-lines" class="nbis-business-lines">
+            {
+              profile.businessLines.map((line) => (
+                <article class="nbis-business-line nbis-panel">
+                  <span class="nbis-label-chip">{line.type}</span>
+                  <h3>{line.name}</h3>
+                  <p>{line.description}</p>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+        <article class="nbis-panel nbis-monitor-panel">
+          <div class="nbis-panel__header"><h3>What to monitor</h3><span class="nbis-muted">Research checklist</span></div>
+          <ul class="nbis-monitor-list">
+            {profile.monitor.map((item) => <li>{item}</li>)}
+          </ul>
+        </article>
       </section>
 
-      {
-        showFooterAd && (
-          <AdSlot placement="footer" label="Sponsored" class="ad-slot--footer" />
-        )
-      }
-    </div>
+      <section id="financials" class="nbis-section" aria-labelledby="financials-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">04 / Reported numbers</p>
+            <h2 id="financials-title">Financial performance</h2>
+          </div>
+          <p class="nbis-section__note">Provider statements can differ from SEC presentation. Read the filing before relying on a figure.</p>
+        </div>
+        <article class="nbis-panel nbis-table-panel">
+          <div class="nbis-panel__header"><h3>Annual income and cash flow</h3><span class="nbis-muted">Most recent periods available</span></div>
+          <div id="nbis-annual-table" class="nbis-table-wrap"><div class="nbis-empty">Loading annual statements…</div></div>
+        </article>
+        <article class="nbis-panel nbis-table-panel">
+          <div class="nbis-panel__header"><h3>Quarterly income and cash flow</h3><span class="nbis-muted">Most recent periods available</span></div>
+          <div id="nbis-quarterly-table" class="nbis-table-wrap"><div class="nbis-empty">Loading quarterly statements…</div></div>
+        </article>
+        <div class="nbis-two-column">
+          <article class="nbis-panel">
+            <div class="nbis-panel__header"><h3>Profitability and leverage</h3><span class="nbis-muted">Provider-reported</span></div>
+            <div id="nbis-profitability" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+          </article>
+          <article class="nbis-panel">
+            <div class="nbis-panel__header"><h3>Balance sheet and capital</h3><span class="nbis-muted">Provider-reported</span></div>
+            <div id="nbis-balance-sheet" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+          </article>
+        </div>
+      </section>
 
-    <footer class="site-footer">
-      <div class="container">
-        <p>
-          StocksWatch · Yahoo Finance snapshots · research only, not advice.
-          Archived group watchlist: <a href={`${base}watchlist.html`}>/watchlist.html</a>.
-        </p>
-        <p class="disclaimer">
-          Campus map figures are approximate from public announcements. Optional reference stills:
-          <code>docs/datacenter-reference-photos/</code>.
-        </p>
-      </div>
-    </footer>
+      <section id="valuation" class="nbis-section" aria-labelledby="valuation-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">05 / Expectations</p>
+            <h2 id="valuation-title">Valuation and scenarios</h2>
+          </div>
+          <p class="nbis-section__note">Consensus is not a recommendation. Scenario outputs are assumptions, not price targets.</p>
+        </div>
+        <div class="nbis-two-column nbis-two-column--wide">
+          <article class="nbis-panel">
+            <div class="nbis-panel__header"><h3>Current valuation</h3><span class="nbis-muted">Provider-reported</span></div>
+            <div id="nbis-valuation-table" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+          </article>
+          <article class="nbis-panel nbis-scenario-panel">
+            <div class="nbis-panel__header"><h3>Illustrative EV / revenue scenarios</h3><span class="nbis-pill">Assumptions</span></div>
+            <p id="nbis-scenario-note" class="nbis-muted">Loading assumptions…</p>
+            <div id="nbis-scenario-table" class="nbis-table-wrap"><div class="nbis-empty">Loading…</div></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="risks" class="nbis-section" aria-labelledby="risks-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">06 / Decision pressure</p>
+            <h2 id="risks-title">Risks, catalysts, and evidence gaps</h2>
+          </div>
+          <p class="nbis-section__note">Automatic flags point to questions worth verifying; they do not predict outcomes.</p>
+        </div>
+        <div class="nbis-two-column nbis-two-column--wide">
+          <article class="nbis-panel nbis-risk-panel">
+            <div class="nbis-panel__header"><h3>Risk flags</h3><span class="nbis-muted">Rules-based</span></div>
+            <div id="nbis-risks"><div class="nbis-empty">Loading risk flags…</div></div>
+          </article>
+          <article class="nbis-panel nbis-catalyst-panel">
+            <div class="nbis-panel__header"><h3>Catalysts and checks</h3><span class="nbis-muted">Evidence to watch</span></div>
+            <div id="nbis-catalysts"><div class="nbis-empty">Loading catalysts…</div></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="filings" class="nbis-section" aria-labelledby="filings-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">07 / Primary sources</p>
+            <h2 id="filings-title">SEC filings and recent headlines</h2>
+          </div>
+          <p class="nbis-section__note">Filings are linked directly to EDGAR. Headlines are discovery aids, not verified facts.</p>
+        </div>
+        <article class="nbis-panel nbis-table-panel">
+          <div class="nbis-panel__header"><h3>Recent SEC filings</h3><span id="nbis-filing-count" class="nbis-muted">Loading…</span></div>
+          <div id="nbis-filings-table" class="nbis-table-wrap"><div class="nbis-empty">Loading filings…</div></div>
+        </article>
+        <div class="nbis-two-column nbis-two-column--wide">
+          <article class="nbis-panel nbis-table-panel">
+            <div class="nbis-panel__header"><h3>SEC reported facts</h3><span class="nbis-muted">Structured EDGAR facts</span></div>
+            <div id="nbis-sec-facts" class="nbis-table-wrap"><div class="nbis-empty">Loading EDGAR facts…</div></div>
+          </article>
+          <article class="nbis-panel nbis-table-panel">
+            <div class="nbis-panel__header"><h3>Recent headlines</h3><span class="nbis-muted">Provider discovery feed</span></div>
+            <div id="nbis-news" class="nbis-news-list"><div class="nbis-empty">Loading headlines…</div></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="sources" class="nbis-section nbis-section--last" aria-labelledby="sources-title">
+        <div class="nbis-section__heading">
+          <div>
+            <p class="nbis-eyebrow">Method</p>
+            <h2 id="sources-title">Data notes and sources</h2>
+          </div>
+        </div>
+        <div id="nbis-sources" class="nbis-source-grid">
+          {profile.sources.map((source) => (
+            <a class="nbis-source-card nbis-panel" href={source.url} target="_blank" rel="noopener">
+              <strong>{source.label} ↗</strong>
+              <span>{source.note}</span>
+            </a>
+          ))}
+        </div>
+        <div class="nbis-disclaimer">
+          Research and education only — not investment advice. Data can be delayed, incomplete, restated, or wrong. Verify material claims against the latest company filing and do not treat automated scores, scenarios, or consensus estimates as guaranteed outcomes.
+        </div>
+      </section>
+    </main>
   </div>
+</BaseLayout>
 
-  <div
-    class="modal-overlay hidden"
-    id="scoreModal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="scoreModalTitle"
-    hidden
-  ></div>
+<script src="../client/nbis-dashboard.ts"></script>
 
-  <script is:inline src={scripts[0]}></script>
-  <script is:inline src={scripts[1]}></script>
-  <script is:inline src={scripts[2]}></script>
-  <script is:inline src={scripts[3]}></script>
-</DatacenterLayout>
+<style is:global>
+  @import "../styles/nbis.css";
+</style>

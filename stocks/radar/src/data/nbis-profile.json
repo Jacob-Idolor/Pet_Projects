@@ -1,0 +1,56 @@
+{
+  "ticker": "NBIS",
+  "company": "Nebius Group N.V.",
+  "exchange": "NASDAQ Global Select Market",
+  "headquarters": "Amsterdam, Netherlands",
+  "website": "https://nebius.com/",
+  "investorRelations": "https://nebius.com/investor-hub",
+  "secCik": "0001513845",
+  "businessSummary": "Nebius Group is building a full-stack AI cloud platform spanning GPU compute, storage, managed services, and software for model training, inference, and production deployment. The group also includes Avride and TripleTen and holds strategic stakes in other technology businesses.",
+  "businessLines": [
+    {
+      "name": "Nebius AI Cloud",
+      "description": "The core business: purpose-built AI cloud infrastructure, GPU clusters, storage, managed services, and developer tooling.",
+      "type": "Core"
+    },
+    {
+      "name": "Avride",
+      "description": "Autonomous driving and delivery-robot technology operating as a distinct group business.",
+      "type": "Other business"
+    },
+    {
+      "name": "TripleTen",
+      "description": "Technology-focused education and reskilling business operating under its own brand.",
+      "type": "Other business"
+    },
+    {
+      "name": "Strategic holdings",
+      "description": "Equity interests including ClickHouse and Toloka; ownership, accounting treatment, and liquidity can change over time.",
+      "type": "Investments"
+    }
+  ],
+  "monitor": [
+    "AI cloud revenue and annualized run-rate growth",
+    "GPU capacity added, utilization, pricing, and customer concentration",
+    "Capital intensity, financing terms, and free-cash-flow conversion",
+    "Share count changes, convertibles, equity issuance, and insider ownership",
+    "The mix of core AI cloud results versus Avride, TripleTen, and equity-method investments"
+  ],
+  "sources": [
+    {
+      "label": "Nebius investor hub",
+      "url": "https://nebius.com/investor-hub",
+      "note": "Company releases, shareholder letters, presentations, and event information."
+    },
+    {
+      "label": "Nebius company overview",
+      "url": "https://nebius.com/about",
+      "note": "Company description and product positioning."
+    },
+    {
+      "label": "SEC EDGAR company filings",
+      "url": "https://www.sec.gov/edgar/browse/?CIK=1513845&owner=exclude",
+      "note": "Regulatory filings and reported financial information."
+    }
+  ]
+}

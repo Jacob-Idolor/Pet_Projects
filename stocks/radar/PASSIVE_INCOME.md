@@ -1,95 +1,46 @@
-# Passive income — costs, AdSense, and break-even
+# Passive income — NBIS Research Desk
 
-Honest unit economics for Stocks Radar as a **static** site. The previous AWS stack is gone; `stockswatch.cc` still costs ~$10–12/yr. These numbers are what a cheap CDN origin looked like and what to aim for when you host again.
+This is a small, honest product experiment: publish useful source-linked NBIS research for free, build a repeat audience, then test sponsorship and a low-cost paid archive. Revenue is not guaranteed and the site must remain educational, transparent, and clearly not financial advice.
 
-> **AdSense ≠ Google Ads.** AdSense pays *you* when visitors see ads on the radar. Google Ads is what advertisers buy. You do not need a Google Ads campaign to earn — you need an approved AdSense site + traffic.
+## Cheap architecture
 
-## Architecture choice (why this scales cheap)
+| Principle | Implementation |
+|---|---|
+| No always-on compute | Astro static output on Cloudflare Pages |
+| No database in v1 | `public/nbis.json` is the daily snapshot |
+| Work out-of-band | One GitHub Actions run per day fetches data and deploys `dist/` |
+| Infrastructure as code | Terraform owns the Pages project, custom domain, and DNS |
+| Fail closed | Strict production fetch refuses to deploy without a fresh NBIS snapshot |
+| No public credentials | SEC contact is a GitHub secret; brokerage credentials never ship to the browser |
 
-| Principle | How Radar follows it |
-|-----------|----------------------|
-| **Push work to the edge** | CloudFront `PriceClass_100` + compression; hashed `/_astro/*` cached ~1 year |
-| **No always-on compute** | S3 origin only — no EC2, ECS, Lambda, RDS |
-| **Invalidate narrowly** | Redeploys invalidate HTML + live JSON, not `/*` (protects cache hit ratio) |
-| **Refresh data out-of-band** | GitHub Actions quote refresh / alerts — not a 24/7 API |
-| **Fail closed on spend** | Budget alarm default **$3/mo**; stack is destroyable |
+The expected fixed cost is the domain registration. Cloudflare Pages static delivery and GitHub Actions are intended to stay within their free tiers at small traffic levels; verify current limits before scaling. The first paid dependency should be a better data provider only when readership or revenue justifies it.
 
-CloudFront and S3 scale automatically with traffic. Your real ceilings are Yahoo rate limits on quote refresh and AdSense policy — not AWS capacity.
+## Revenue ladder
 
-## Monthly cost model (USD)
+1. **Free discovery:** the NBIS Deep Dive page is the SEO and trust surface.
+2. **Email habit:** publish a concise “NBIS Close” email after selecting an email provider and adding consent/privacy copy.
+3. **One labeled sponsor:** sell a single placement to a relevant AI infrastructure or developer-tool company once readership is measurable.
+4. **Paid archive:** charge roughly $5–9/month for historical snapshots, scenario-change history, downloadable data, and a weekly memo. Test willingness to pay before building billing.
+5. **Small expansion:** add adjacent AI-infrastructure names only after NBIS has a dependable daily cadence.
 
-| Line item | Friends trial (~100–1k visits) | Growing (~10k–50k visits) | Notes |
-|-----------|-------------------------------|---------------------------|-------|
-| S3 storage + requests | $0.01–0.10 | $0.10–1 | Tiny objects |
-| CloudFront egress + requests | $0.50–2 | $2–8 | `PriceClass_100`; cache hits keep this down |
-| SNS digests / personal alerts | ~$0 | ~$0 | Email free tier |
-| AWS Budgets | $0 | $0 | First budgets free |
-| GitHub Actions | $0 on free minutes | watch minutes | Quote refresh ~2×/weekday |
-| **Domain** (amortized) | ~$1/mo | ~$1/mo | $10–12/yr .com |
-| Cloudflare DNS | $0 | $0 | Free plan |
-| **AWS subtotal** | **~$0.50–3** | **~$2–10** | Destroy → ~$0 |
-| **All-in with domain** | **~$1.50–4** | **~$3–11** | |
+Ads can be tested later, but they should not be the primary business model: finance pages need substantial original content and careful policy compliance, and low traffic often produces less than the domain cost.
 
-**Do not add** for passive-income phase: WAF (~$5+/mo), Lambda quote proxy, multi-region `PriceClass_All`, Route53 (use Cloudflare DNS).
+## Metrics that matter
 
-### Rough AWS formula
+- returning visitors and 7-day retention;
+- daily snapshot success rate and visible data freshness;
+- email opt-in rate and open rate;
+- sponsor inquiries or paid conversion;
+- provider/API cost as a percentage of revenue.
 
-At low/medium traffic, think:
+Do not optimize for page views alone. The defensible asset is a trusted daily research habit and an owned audience.
 
-`monthly ≈ CloudFront_requests_fees + egress_GB × ~$0.085 (PriceClass_100 US/EU) + pennies of S3`
+## Guardrails
 
-Tiered caching (immutable `_astro`, short HTML, **~60s** live JSON) is what keeps **origin** and **egress** from growing linearly with page views.
+- Do not call scenarios forecasts or price targets.
+- Do not present automated flags as buy/sell/hold recommendations.
+- Keep source timestamps and provider names visible.
+- Preserve the not-financial-advice language on every monetized surface.
+- Keep sponsor labeling and editorial decisions separate.
 
-## AdSense revenue model (order-of-magnitude)
-
-AdSense pays on **RPM** (revenue per 1,000 page views) or related metrics. Finance / investing sites often see higher RPM than generic blogs — but Google can also restrict ads on “get rich” or advice-heavy pages. Keep the product as a **tools/check-in** site, not investment advice.
-
-| Scenario | Page views / mo | Assumed RPM | Gross AdSense | Hosting+domain | **Net** |
-|----------|-----------------|-------------|-----------------|----------------|---------|
-| Friends only | 500 | $2 | $1 | ~$3 | **−$2** (learning / utility) |
-| Small SEO | 5,000 | $4 | $20 | ~$4 | **~$16** |
-| Niche traction | 25,000 | $6 | $150 | ~$6 | **~$144** |
-| Strong niche | 100,000 | $8 | $800 | ~$10 | **~$790** |
-
-RPM $2–8 is a **planning band**, not a promise. Your real RPM shows in AdSense after approval + a few weeks of data.
-
-### Break-even traffic (rule of thumb)
-
-With ~$4/mo all-in cost and RPM $4:
-
-`break-even page views ≈ (4 / 4) × 1000 = **1,000 views/mo**`
-
-Below that, treat the site as a **group tool** that happens to have ads. Above that, ads can cover hosting and start compounding with SEO.
-
-## Path to passive income (ordered)
-
-1. **Ship cheap** — `terraform apply` + CloudFront URL; confirm budget email.
-2. **Buy domain** — [DOMAIN.md](DOMAIN.md); keep Cloudflare DNS (no Route53 fee).
-3. **AdSense site approval** — [ADSENSE.md](ADSENSE.md); custom domain preferred.
-4. **Keep UX useful** — 3 ad slots max (hero / after board / footer); never cover the table.
-5. **SEO basics** — real theses, stable URLs, `sitemap.xml` / `ads.txt` on the public hostname.
-6. **Optional growth** — share in communities, light content pages later — still static on S3.
-7. **Watch unit economics monthly** — AdSense estimated earnings − AWS bill − domain amortization.
-
-## What would kill the margin
-
-| Temptation | Why it hurts |
-|------------|--------------|
-| WAF “because security” | Fixed ~$5+/mo before any revenue |
-| Live Yahoo via Lambda@Edge | Compute + cold paths; GHA refresh is enough |
-| Serverful DB for suggestions | Ops + idle cost; IndexedDB + git is fine until paid demand |
-| Buying traffic (Google Ads) | Different product — you become the *advertiser*; easy to lose money |
-| Global CloudFront price class | Higher egress for little friend-group benefit |
-
-## Dashboard checklist (once live)
-
-- AWS Billing → confirm Stocks Radar tags / budget alert
-- CloudFront → cache hit ratio (want high on `/_astro/*`)
-- AdSense → RPM, page RPM, active views
-- Compare: `AdSense month − (AWS + domain/12)`
-
-## Related docs
-
-- [ADSENSE.md](ADSENSE.md) — publisher setup  
-- [DOMAIN.md](DOMAIN.md) — domain  
-- [DEPLOY.md](DEPLOY.md) — hosting status  
+See [PRODUCT.md](PRODUCT.md) for the full product thesis and [infra/terraform/README.md](infra/terraform/README.md) for deployment.
