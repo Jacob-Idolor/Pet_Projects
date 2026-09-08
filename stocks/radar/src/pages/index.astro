@@ -1,16 +1,23 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import AdSlot from "../components/AdSlot.astro";
 import profile from "../data/nbis-profile.json";
+import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
+import { featureEnabled } from "../lib/site-config";
 
 const base = import.meta.env.BASE_URL;
 const dataUrl = `${base}nbis.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
 const description =
   "Daily NBIS research dashboard covering Nebius Group fundamentals, AI cloud economics, valuation assumptions, filings, price history, risks, and catalysts.";
+const ads = getAdSenseConfig();
+const allowAds = featureEnabled("adsense") && hasPublisherContent(5);
+const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
 ---
 
 <BaseLayout
   title="NBIS Deep Dive"
   description={description}
+  allowAds={allowAds}
   activeNav="nbis"
   canonicalPath="/"
 >
@@ -269,6 +276,13 @@ const description =
         </div>
       </section>
     </main>
+    {
+      showFooterAd && (
+        <div class="container nbis-ad-container">
+          <AdSlot placement="footer" label="Sponsored" class="ad-slot--footer" />
+        </div>
+      )
+    }
   </div>
 </BaseLayout>
 

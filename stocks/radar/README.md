@@ -67,7 +67,7 @@ flowchart TB
 
 ```bash
 cd stocks/radar
-npm install
+npm ci
 npm run dev
 ```
 
@@ -85,8 +85,9 @@ SCREENER_SKIP=1 npm run build && npm run test:e2e   # Playwright smoke
 
 | Page | URL |
 |------|-----|
-| NBIS Deep Dive | http://localhost:4321 |
+| NBIS Deep Dive | http://localhost:4321/ |
 | Archived watchlist | http://localhost:4321/watchlist.html |
+| Legacy data-center redirect | http://localhost:4321/datacenter.html |
 
 NBIS snapshot (needs Python once):
 

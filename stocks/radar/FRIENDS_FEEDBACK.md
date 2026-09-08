@@ -1,7 +1,7 @@
 # Friend feedback
 
-The AWS friend-trial loop (apply → share CloudFront URL → digest email → destroy) is **done**. The stack is torn down.
+The old AWS friend-trial loop (apply → share CloudFront URL → digest email → destroy) is **retired**. The current product targets Cloudflare Pages and a public custom domain.
 
 Run the app locally: `cd stocks/radar && npm run dev`.
 
-`stockswatch.cc` is still yours on Cloudflare. Point it at a new host when you want friends on a public URL again — [DOMAIN.md](DOMAIN.md).
+`stockswatch.cc` remains managed by Cloudflare. Once the Pages project and daily deployment are verified, share the NBIS Deep Dive URL — [DOMAIN.md](DOMAIN.md).

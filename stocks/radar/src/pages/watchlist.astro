@@ -1,7 +1,7 @@
 ---
 /**
  * Archived StocksWatch group watchlist.
- * Primary product is now `/` (AI Data Center screener).
+ * Primary product is now `/` (NBIS Deep Dive research desk).
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LiveStatus from "../components/LiveStatus.astro";
@@ -17,7 +17,7 @@ import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/ads
 import { featureEnabled, getSiteSettings } from "../lib/site-config";
 
 const description =
-  "Archived group watchlist — valuations, news, and technical lean for discussion. The main product is the AI Data Center screener.";
+  "Archived group watchlist — valuations, news, and technical lean for discussion. The main product is the NBIS Deep Dive research desk.";
 
 const settings = getSiteSettings();
 const ads = getAdSenseConfig();
@@ -46,7 +46,7 @@ const base = import.meta.env.BASE_URL;
       <p>
         <strong>Archived watchlist.</strong>
         The main StocksWatch product is now the
-        <a href={base}>AI Data Center screener</a>.
+        <a href={base}>NBIS Deep Dive research desk</a>.
         This page stays available for the group check-in board.
       </p>
     </div>

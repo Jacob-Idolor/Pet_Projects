@@ -23,12 +23,14 @@ Codex is the coding agent for StocksWatch. Cursor may remain the editor, but Cur
 
 ## Deployment flow
 
-- There is **no production deploy** until a host is chosen ([radar/DEPLOY.md](radar/DEPLOY.md)).
-- Codex must not create AWS/Terraform resources, upload to a public origin, send alerts, or publish emails unless the user explicitly requests that action.
+- The canonical production path is **NBIS snapshot → schema validation → static Astro build → bundle security scan → Cloudflare Pages direct upload** through `.github/workflows/stocks-radar-nbis-daily.yml`.
+- Terraform in `radar/infra/terraform/` owns the Cloudflare Pages project and custom-domain attachment. It does not own the daily content upload.
+- The scheduled workflow is the normal production deploy. Run it manually once after provisioning, then let the daily schedule take over.
+- Codex must not apply Terraform, upload a public deployment, send alerts, or publish emails unless the user explicitly requests that action.
 
 ## Recovery
 
 - If validation fails, do not merge or deploy; fix the branch and rerun validation.
-- If deployment fails before S3 synchronization, production should remain unchanged; diagnose the workflow before retrying.
-- If deployment changes production but post-deploy checks fail, identify the last known-good commit and prepare a revert through the same branch, validation, and deployment path.
-- Do not make an unreviewed manual S3 or Terraform change as a shortcut around a failed deployment.
+- If deployment fails before the Cloudflare Pages upload, production should remain unchanged; diagnose the workflow before retrying.
+- If deployment changes production but post-deploy checks fail, identify the last known-good commit and prepare a revert through the same branch, validation, and Pages deployment path.
+- Do not make an unreviewed manual Cloudflare or Terraform change as a shortcut around a failed deployment.

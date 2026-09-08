@@ -8,13 +8,6 @@ variable "cloudflare_account_id" {
   }
 }
 
-variable "cloudflare_api_token" {
-  description = "Cloudflare API token with Pages Edit, Zone Read, and DNS Edit permissions. Prefer CLOUDFLARE_API_TOKEN in CI."
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
 variable "pages_project_name" {
   description = "Stable Cloudflare Pages project name used by Wrangler deployments."
   type        = string
@@ -55,9 +48,9 @@ variable "site_domain" {
 }
 
 variable "manage_dns_record" {
-  description = "Create the CNAME record for the custom domain in the Cloudflare zone."
+  description = "Create a Terraform-managed CNAME. Leave false for Cloudflare-managed Pages custom domains, which create the record automatically."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_custom_domain" {

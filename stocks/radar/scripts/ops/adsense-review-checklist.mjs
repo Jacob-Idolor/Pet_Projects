@@ -44,9 +44,9 @@ const dcRedirect = read("datacenter.html");
 
 if (!index) fail("dist/index.html missing — run npm run build");
 else {
-  if (/AI Data Center|mainnav|id="layers"/i.test(index)) {
-    pass("Home is AI Data Center screener");
-  } else fail("Home missing AI Data Center screener markup");
+  if (/NBIS|Nebius|id="overview"|id="sources"/i.test(index)) {
+    pass("Home is the NBIS research desk");
+  } else fail("Home missing NBIS research-desk markup");
 
   const adScript = /pagead2\.googlesyndication\.com|adsbygoogle/i.test(index);
   if (adScript) {
@@ -55,10 +55,10 @@ else {
     pass("Home has no AdSense script in this build (CLIENT unset or gates blocked — OK for pre-approval)");
   }
 
-  const layersIdx = index.indexOf('id="layers"');
+  const sourcesIdx = index.indexOf('id="sources"');
   const adSlotIdx = index.search(/data-ad-placement|class="[^"]*ad-slot/);
-  if (adSlotIdx >= 0 && layersIdx >= 0 && adSlotIdx < layersIdx) {
-    fail("Ad slot markup appears before #layers (policy risk)");
+  if (adSlotIdx >= 0 && sourcesIdx >= 0 && adSlotIdx < sourcesIdx) {
+    fail("Ad slot markup appears before #sources (policy risk)");
   } else if (adSlotIdx >= 0) {
     pass("Any ad slots are after the screener main content");
   } else {
@@ -95,7 +95,7 @@ else {
 console.log(`
 Operator steps (cannot be automated here):
   1. AdSense → Ads → Auto ads → OFF for stockswatch.cc
-  2. Use only manual Display units (board + footer on /)
+  2. Use only manual Display units (post-content footer on / and archived watchlist)
   3. Deploy latest main to production
   4. Spot-check live / and a 404 URL in DevTools (no unexpected pagead requests on 404)
   5. Confirm https://stockswatch.cc/ads.txt

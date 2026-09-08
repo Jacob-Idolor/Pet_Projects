@@ -27,7 +27,7 @@ const dcBase = `${base}datacenter/`.replace(/\/{2,}/g, "/").replace(":/", "://")
 const screenerUrl = `${base}screener.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
 const styleHref = `${dcBase}${datacenterAsset("style.css")}`;
 const ads = getAdSenseConfig();
-const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(ads.verifyMeta));
+const loadAdScript = allowAds && ads.enabled && Boolean(ads.client);
 ---
 
 <!doctype html>

@@ -1,6 +1,7 @@
 /**
  * Bridge between archived StocksWatch watchlist and the AI Data Center universe.
- * Build-time index only — screener scoring lives on `/` (homepage).
+ * Build-time index only — the active `/` page is now the NBIS desk; these
+ * data-center references are retained for the archived watchlist context.
  */
 import universe from "../data/datacenter-universe.json";
 
@@ -99,7 +100,7 @@ export function dcEntryForSymbol(
   return bridge.byTicker[String(symbol).trim().toUpperCase()];
 }
 
-/** Deep-link into the Data Center screener (homepage) for a ticker or layer. */
+/** Deep-link into the NBIS desk while preserving historical filter context. */
 export function datacenterHref(
   base: string,
   opts: { ticker?: string; layer?: string } = {},

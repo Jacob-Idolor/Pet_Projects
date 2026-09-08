@@ -8,7 +8,7 @@ Production hosting is designed around Cloudflare Pages direct uploads. The previ
 
 ## First deployment
 
-1. From `radar/infra/terraform`, export `CLOUDFLARE_API_TOKEN` and fill `terraform.tfvars` from `terraform.tfvars.example`.
+1. From `radar/infra/terraform`, export `CLOUDFLARE_API_TOKEN` in the current shell and fill `terraform.tfvars` from `terraform.tfvars.example`; keep the token out of the file.
 2. Run `terraform init`, `terraform validate`, `terraform plan`, and `terraform apply`.
 3. Add GitHub secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `SEC_CONTACT_EMAIL`.
 4. Run the `StocksWatch — NBIS daily refresh and deploy` workflow manually once, then let the daily schedule take over.

@@ -33,8 +33,8 @@ const path = canonicalPath.startsWith("/") ? canonicalPath : `/${canonicalPath}`
 const canonical = site ? `${site}${path === "/" ? "/" : path}` : undefined;
 const pageTitle = `${title} | StocksWatch`;
 const ads = getAdSenseConfig();
-/** Script only when this page opts in AND live ads (or verify meta) are configured. */
-const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(ads.verifyMeta));
+/** Never load the live Google script on local/preview hosts; metadata is enough for verification. */
+const loadAdScript = allowAds && ads.enabled && Boolean(ads.client);
 ---
 
 <!doctype html>

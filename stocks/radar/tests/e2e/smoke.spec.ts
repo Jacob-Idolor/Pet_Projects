@@ -7,8 +7,7 @@ test.describe("StocksWatch smoke", () => {
     await expect(page.locator(".logo").first()).toContainText("StocksWatch");
     await expect(page.locator("#nbis-app")).toBeVisible();
     await expect(page.locator("#nbis-chart")).toBeVisible();
-    // AdSense script should only appear when build gates enable it — never assert present.
-    await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
+    // Content-rich home may load AdSense when the production gate is enabled.
   });
 
   test("404 has no AdSense and links home", async ({ page }) => {
@@ -18,10 +17,9 @@ test.describe("StocksWatch smoke", () => {
     await expect(page.getByRole("link", { name: /watchlist|back/i }).first()).toBeVisible();
   });
 
-  test("legacy datacenter route redirects without AdSense", async ({ page }) => {
+  test("legacy datacenter route redirects to the research desk", async ({ page }) => {
     await page.goto("/datacenter.html");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
     await expect(page.locator("#nbis-app")).toBeVisible();
   });
 });

@@ -5,11 +5,11 @@ The application code, daily refresh workflow, Terraform configuration, dependenc
 ## User actions before launch
 
 1. In Cloudflare, confirm `stockswatch.cc` is an active zone and record the account ID.
-2. Create a scoped API token with `Account:Cloudflare Pages:Edit`, `Zone:Zone:Read`, and `Zone:DNS:Edit` for this zone. Keep the token out of files and chat.
+2. Create a scoped API token with `Account:Cloudflare Pages:Edit` for the account containing `stockswatch.cc`. Add `Zone:Zone:Read` and `Zone:DNS:Edit` only if you deliberately enable Terraform DNS management. Keep the token out of files and chat.
 3. From `stocks/radar/infra/terraform`, copy `terraform.tfvars.example` to `terraform.tfvars`, set the account ID, then run `terraform init`, `terraform plan`, and review the plan before `terraform apply`.
 4. In GitHub repository settings, add Actions secrets named `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `SEC_CONTACT_EMAIL`.
 5. Run **StocksWatch — NBIS daily refresh and deploy** manually once. Confirm the workflow succeeds and check `/`, `/health.json`, `/nbis.json`, and `/ads.txt`.
-6. If the apex DNS record already exists, import it into Terraform or set `manage_dns_record = false` before applying.
+6. Leave `manage_dns_record = false` for the Cloudflare-managed apex zone; Pages custom-domain setup creates the CNAME. If you deleted that automatically created record, restore it to the project `pages.dev` hostname before testing the site.
 7. Before monetization, publish a privacy policy, terms/disclaimer, and a clear data-source/market-data attribution page. Keep the existing not-financial-advice language.
 
 ## Optional monetization configuration

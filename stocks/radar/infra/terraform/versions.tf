@@ -10,5 +10,6 @@ terraform {
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  # The Cloudflare provider reads CLOUDFLARE_API_TOKEN from the environment.
+  # Keep credentials out of terraform.tfvars and Terraform state inputs.
 }

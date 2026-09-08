@@ -4,10 +4,10 @@
 
 - The active application is `radar/`, a static Astro site.
 - Run application commands from `radar/` unless a task explicitly concerns the repository root.
-- The intended production homepage is the AI Data Center screener at `/`.
+- The intended production homepage is the NBIS Deep Dive research desk at `/`.
 - The archived group watchlist is served at `/watchlist.html`.
-- `radar/archive/ai-datacenter-screener/` is retained for local and historical reference; it is not deployed.
-- There is **no live AWS/Terraform stack**. `stockswatch.cc` is a Cloudflare domain with no origin until hosting is chosen again.
+- `/datacenter.html` is a legacy redirect; `radar/archive/ai-datacenter-screener/` and `radar/public/datacenter/` are retained for historical reference and are not the production homepage.
+- There is **no live AWS stack**. Cloudflare Pages is the intended production host and Terraform owns its project/domain configuration; confirm live state before making infrastructure changes.
 
 ## Setup and validation
 

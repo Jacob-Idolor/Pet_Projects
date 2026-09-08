@@ -20,16 +20,16 @@ const moversUrl = `${base}dc-movers.json`.replace(/\/{2,}/g, "/").replace(":/", 
       <p class="board-eyebrow">AI buildout</p>
       <h2 id="dc-bridge-title">AI Data Center</h2>
       <p class="dc-bridge__lede">
-        Same StocksWatch board language — six layers, 
+        Historical StocksWatch board language — six layers,
         <strong class="mono">{bridge.tickerCount}</strong> thematic names.
-        Overlaps on the master list get a layer chip. Jump into the homepage screener for map
-        and research tools.
+        Overlaps on the master list get a layer chip. The links open the archived data-center
+        context on the NBIS research desk.
       </p>
     </div>
     <nav class="checkin-jump dc-bridge__jump" aria-label="AI Data Center links">
-      <a href={dcHome}>Open screener</a>
-      <a href={`${base}?mode=map`}>Map</a>
-      <a href={`${base}?mode=analyst`}>Analyst</a>
+      <a href={dcHome}>Open NBIS desk</a>
+      <a href={`${base}?mode=map`}>Historical map</a>
+      <a href={`${base}?mode=analyst`}>Research view</a>
     </nav>
   </div>
 
@@ -138,9 +138,9 @@ const moversUrl = `${base}dc-movers.json`.replace(/\/{2,}/g, "/").replace(":/", 
       })
       .catch(function () {
         moversEl.innerHTML =
-          '<p class="dc-bridge__movers-loading">Couldn’t load movers — <a href="' +
+            '<p class="dc-bridge__movers-loading">Couldn’t load movers — <a href="' +
           base +
-          '">open AI Data Center</a>.</p>';
+          '">open NBIS desk</a>.</p>';
       });
   })();
 </script>
