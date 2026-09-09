@@ -2,37 +2,13 @@
   "$schema": "./site-settings.schema.json",
   "app": {
     "name": "StocksWatch",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "environment": "production"
   },
   "features": {
     "adsense": true,
-    "personalAlerts": false,
-    "groupSubmissions": true,
-    "checkInPulse": true,
-    "technicalView": true,
-    "dayMood": true,
     "datacenterBridge": true,
     "otelScripts": false
-  },
-  "quotes": {
-    "staleAfterHours": 6,
-    "pollIntervalMs": 300000,
-    "browserFallback": false,
-    "yahooChunkSize": 8,
-    "yahooMaxRetries": 3
-  },
-  "board": {
-    "defaultPageSize": 50,
-    "defaultSort": "symbol",
-    "defaultView": "table",
-    "pageSizeOptions": [25, 50, 100]
-  },
-  "alerts": {
-    "defaultCooldownHours": 24,
-    "nearTargetPct": 5,
-    "minBuyScore": 3,
-    "onlyOnSignal": true
   },
   "seo": {
     "requireCustomDomainForAds": true

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Stocks Radar site settings",
+  "title": "StocksWatch site settings",
   "type": "object",
-  "required": ["app", "features", "quotes", "board", "alerts"],
+  "required": ["app", "features"],
   "properties": {
     "app": {
       "type": "object",
@@ -19,37 +19,6 @@
     "features": {
       "type": "object",
       "additionalProperties": { "type": "boolean" }
-    },
-    "quotes": {
-      "type": "object",
-      "properties": {
-        "staleAfterHours": { "type": "number", "minimum": 1, "maximum": 72 },
-        "pollIntervalMs": { "type": "number", "minimum": 15000 },
-        "browserFallback": { "type": "boolean" },
-        "yahooChunkSize": { "type": "number", "minimum": 1, "maximum": 20 },
-        "yahooMaxRetries": { "type": "number", "minimum": 1, "maximum": 5 }
-      }
-    },
-    "board": {
-      "type": "object",
-      "properties": {
-        "defaultPageSize": { "type": "number" },
-        "defaultSort": { "type": "string" },
-        "defaultView": { "type": "string", "enum": ["table", "technical"] },
-        "pageSizeOptions": {
-          "type": "array",
-          "items": { "type": "number" }
-        }
-      }
-    },
-    "alerts": {
-      "type": "object",
-      "properties": {
-        "defaultCooldownHours": { "type": "number", "minimum": 1 },
-        "nearTargetPct": { "type": "number", "minimum": 0.5 },
-        "minBuyScore": { "type": "number" },
-        "onlyOnSignal": { "type": "boolean" }
-      }
     },
     "seo": { "type": "object" },
     "ops": { "type": "object" }

@@ -15,7 +15,7 @@ import {
   isCustomDomain,
 } from "../../scripts/lib/adsense-policy.mjs";
 import { getSiteSettings } from "./site-config";
-import { stocks } from "../data/watchlist";
+import profile from "../data/nbis-profile.json";
 import universe from "../data/datacenter-universe.json";
 
 export type AdPlacement = "hero" | "board" | "footer";
@@ -59,10 +59,12 @@ function datacenterHoldingCount(): number {
   );
 }
 
-/** Enough publisher content: watchlist theses OR datacenter universe holdings. */
+/** Enough substantive publisher content: the NBIS research desk or screener universe. */
 export function hasPublisherContent(minTickers = 5): boolean {
+  const nbisContentCount =
+    profile.businessLines.length + profile.monitor.length + profile.sources.length;
   return (
-    hasPublisherContentCount(stocks.length, minTickers) ||
+    hasPublisherContentCount(nbisContentCount, minTickers) ||
     hasPublisherContentCount(datacenterHoldingCount(), minTickers)
   );
 }
@@ -90,14 +92,17 @@ export function getAdSenseConfig(): AdSenseConfig {
   };
 
   const requireDomain = settings.seo?.requireCustomDomainForAds !== false;
-  const tickerCount = Math.max(stocks.length, datacenterHoldingCount());
+  const contentCount = Math.max(
+    profile.businessLines.length + profile.monitor.length + profile.sources.length,
+    datacenterHoldingCount(),
+  );
   const { enabled, blockReason } = evaluateLiveAdsGate({
     client,
     enabledFlag,
     preview,
     siteUrl: siteUrl(),
     requireCustomDomain: requireDomain,
-    tickerCount,
+    tickerCount: contentCount,
     minTickers: 5,
   });
 

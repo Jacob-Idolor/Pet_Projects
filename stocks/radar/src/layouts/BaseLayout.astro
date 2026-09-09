@@ -13,17 +13,17 @@ interface Props {
   allowAds?: boolean;
   /** Search engines: use noindex on error / empty utility pages */
   noindex?: boolean;
-  activeNav?: "watchlist" | "datacenter" | "nbis";
+  activeNav?: "datacenter" | "nbis";
   /** Override canonical path (default `/`) */
   canonicalPath?: string;
 }
 
 const {
   title,
-  description = "Track stocks you own, price targets you're waiting on, and long-term watchlist picks — one page for the whole group.",
+  description = "A source-linked daily research desk for Nebius Group and the AI infrastructure buildout.",
   allowAds = false,
   noindex = false,
-  activeNav = "watchlist",
+  activeNav = "nbis",
   canonicalPath = "/",
 } = Astro.props;
 
@@ -82,19 +82,15 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
     <footer class="site-footer">
       <div class="container">
         <p>
-          Built for friends who talk stocks — not financial advice.
+          Built for careful, source-linked research — not financial advice.
           <a href={base}>NBIS Deep Dive</a>
           ·
-          <a href={`${base}datacenter.html`.replace(/\/{2,}/g, "/")}>AI Data Center archive</a>
-          ·
-          <a href={`${base}watchlist.html`.replace(/\/{2,}/g, "/")}>Archived watchlist</a>
+          <a href="https://www.sec.gov/edgar/browse/?CIK=1829964&owner=exclude" target="_blank" rel="noopener">SEC filings</a>
           ·
           <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
         <p class="disclaimer">
-          Friend suggestions are emailed to the list owner when delivery is configured, and stay pending
-          on your device until an owner adds them to the master list in git.
-          Radar scores are educational guides from technical rules — not financial advice or AI guarantees.
+          Research and education only. Data can be delayed, incomplete, restated, or wrong. Verify material claims against the latest company filing and do not treat automated scenarios or estimates as guaranteed outcomes.
         </p>
       </div>
     </footer>

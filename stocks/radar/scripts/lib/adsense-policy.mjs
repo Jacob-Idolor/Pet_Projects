@@ -63,7 +63,7 @@ export function evaluateLiveAdsGate({
     blockReason =
       "Live ads require a custom domain (seo.requireCustomDomainForAds) — see DOMAIN.md";
   } else if (!hasPublisherContent(tickerCount, minTickers)) {
-    blockReason = "Watchlist too small for ads (need ≥5 tickers with theses)";
+    blockReason = "Publisher content gate not met (need ≥5 substantive content units)";
   }
 
   const enabled =

@@ -4,7 +4,6 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "bundle:watchlist": "node scripts/ops/bundle-watchlist.mjs",
     "sync:tokens": "node scripts/ops/sync-tokens.mjs",
     "hash:datacenter": "node scripts/ops/hash-datacenter-assets.mjs",
     "config:validate": "node scripts/ops/validate-config.mjs",
@@ -15,13 +14,10 @@
     "test": "node --test tests/**/*.test.mjs",
     "test:e2e": "playwright test",
     "typecheck": "astro sync && tsc --noEmit",
-    "dev": "npm run sync:tokens && npm run hash:datacenter && npm run bundle:watchlist && astro dev",
+    "dev": "npm run sync:tokens && npm run hash:datacenter && astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "rebuild": "npm run prebuild && npm run build && npm run preview",
-    "import-csv": "node scripts/ops/csv-to-watchlist.mjs",
-    "update-quotes": "node scripts/fetch/fetch-quotes.mjs",
-    "update-outlook": "node scripts/fetch/fetch-outlook.mjs",
     "update-screener": "python scripts/fetch/fetch-screener.py && node scripts/fetch/write-dc-movers.mjs",
     "update-nbis": "python scripts/fetch/fetch-nbis.py",
     "nbis:snapshot": "node scripts/fetch/fetch-nbis-soft.mjs",
@@ -31,11 +27,7 @@
     "security:dist": "node scripts/ops/check-dist-security.mjs",
     "seo": "node scripts/ops/write-seo-files.mjs",
     "health": "node scripts/ops/write-health.mjs",
-    "digest": "node scripts/alerts/daily-digest.mjs",
-    "alerts": "node scripts/alerts/signal-alerts.mjs",
-    "prebuild": "npm run config:validate && npm run sync:tokens && npm run hash:datacenter && npm run bundle:watchlist && node scripts/fetch/fetch-quotes.mjs && node scripts/fetch/fetch-screener-soft.mjs && npm run screener:schema && npm run nbis:snapshot && npm run nbis:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs",
-    "update-quotes:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/fetch/fetch-quotes.mjs",
-    "alerts:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318} OTEL_TRACES_EXPORTER=${OTEL_TRACES_EXPORTER:-console} node scripts/alerts/signal-alerts.mjs"
+    "prebuild": "npm run config:validate && npm run sync:tokens && npm run hash:datacenter && node scripts/fetch/fetch-screener-soft.mjs && npm run screener:schema && npm run nbis:snapshot && npm run nbis:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs"
   },
   "dependencies": {
     "astro": "^7.1.3"
@@ -51,7 +43,6 @@
   "devDependencies": {
     "@playwright/test": "^1.53.1",
     "@types/node": "^26.1.2",
-    "esbuild": "^0.25.5",
     "typescript": "^5.8.3"
   }
 }

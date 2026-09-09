@@ -1,12 +1,11 @@
 ---
 interface Props {
   /** Which primary nav item is current */
-  active?: "watchlist" | "datacenter" | "nbis";
+  active?: "datacenter" | "nbis";
 }
 
 const { active = "nbis" } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const watchlistHref = `${base}watchlist.html`.replace(/\/{2,}/g, "/").replace(":/", "://");
 ---
 
 <header class="site-header">
@@ -29,14 +28,6 @@ const watchlistHref = `${base}watchlist.html`.replace(/\/{2,}/g, "/").replace(":
         aria-current={active === "datacenter" ? "page" : undefined}
       >
         AI Data Center
-      </a>
-      <a
-        class:list={["header-link", { "is-active": active === "watchlist" }]}
-        href={watchlistHref}
-        aria-current={active === "watchlist" ? "page" : undefined}
-      >
-        Watchlist
-        <span class="header-link__hint">archive</span>
       </a>
     </nav>
   </div>

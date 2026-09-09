@@ -1,11 +1,3 @@
 @import "./tokens.css";
 @import "./home/base.css";
-@import "./home/live-status.css";
-@import "./home/day-mood.css";
-@import "./home/mobile-cards.css";
 @import "./home/ads.css";
-@import "./home/hero-sections.css";
-@import "./home/checkin.css";
-@import "./home/group-submissions.css";
-@import "./home/board.css";
-@import "./home/technical.css";
