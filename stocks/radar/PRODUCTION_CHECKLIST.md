@@ -14,12 +14,12 @@ The application code, daily refresh workflow, Terraform configuration, dependenc
 
 ## Optional monetization configuration
 
-After AdSense approves the site and you have created manual display units, add these as GitHub **repository variables** (not secrets): `PUBLIC_ADSENSE_CLIENT`, `PUBLIC_ADSENSE_ENABLED=true`, `PUBLIC_ADSENSE_SLOT_BOARD`, `PUBLIC_ADSENSE_SLOT_FOOTER`, and optionally `PUBLIC_ADSENSE_VERIFY_META`. Add `PUBLIC_WEB3FORMS_ACCESS_KEY` only if you want group suggestions delivered by email. The workflow passes these values into the build; leaving them unset keeps live ads and external email delivery off.
+After AdSense approves the site and you have created manual display units, add these as GitHub **repository variables** (not secrets): `PUBLIC_ADSENSE_CLIENT`, `PUBLIC_ADSENSE_ENABLED=true`, `PUBLIC_ADSENSE_SLOT_BOARD`, `PUBLIC_ADSENSE_SLOT_FOOTER`, and optionally `PUBLIC_ADSENSE_VERIFY_META`. The workflow passes these values into the build; leaving them unset keeps live ads off.
 
 ## Current scope and deliberate limits
 
 - The public app is read-only. It does not place trades or store brokerage credentials.
-- NBIS is the primary daily product. The old watchlist and data-center surfaces remain archived and are not the reliability dependency for `/`.
+- NBIS is the primary daily product. The former watchlist is retired; the AI-infrastructure screener is supporting context and is not the reliability dependency for `/`.
 - The build refuses a production NBIS refresh without an SEC contact identity and fails schema validation on malformed data.
 - Terraform protects the Pages project with `prevent_destroy`; intentional retirement requires a reviewed change.
 - No Cloudflare account mutation, Terraform apply, GitHub secret write, deploy, or push was performed during this audit.

@@ -1,42 +1,17 @@
 {
   "app": {
     "name": "StocksWatch",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "environment": "production",
     "production": false
   },
   "features": {
-    "adsense": true,
-    "personalAlerts": false,
-    "groupSubmissions": true,
-    "checkInPulse": true,
-    "technicalView": true,
-    "dayMood": true
-  },
-  "quotes": {
-    "staleAfterHours": 6,
-    "pollIntervalMs": 300000,
-    "browserFallback": false
-  },
-  "board": {
-    "defaultPageSize": 50,
-    "defaultSort": "symbol",
-    "defaultView": "table",
-    "pageSizeOptions": [
-      25,
-      50,
-      100
-    ]
-  },
-  "alerts": {
-    "defaultCooldownHours": 24,
-    "nearTargetPct": 5,
-    "minBuyScore": 3
+    "adsense": true
   },
   "ops": {
     "healthPath": "/health.json",
     "settingsPath": "/settings.json"
   },
   "siteUrl": null,
-  "generatedAt": "2026-09-08T01:48:15.138Z"
+  "generatedAt": "2026-09-09T05:49:51.294Z"
 }

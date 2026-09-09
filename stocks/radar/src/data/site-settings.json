@@ -6,9 +6,7 @@
     "environment": "production"
   },
   "features": {
-    "adsense": true,
-    "datacenterBridge": true,
-    "otelScripts": false
+    "adsense": true
   },
   "seo": {
     "requireCustomDomainForAds": true

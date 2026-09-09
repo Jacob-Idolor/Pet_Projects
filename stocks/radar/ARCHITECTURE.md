@@ -1,71 +1,51 @@
 # StocksWatch architecture
 
-Static Astro site for **stockswatch.cc**: **NBIS research desk on `/`**, archived group watchlist on `/watchlist.html`, and a legacy AI Data Center redirect on `/datacenter.html`. Local/dev has no app server. Production targets Cloudflare Pages via Terraform; the previous AWS S3 + CloudFront stack was removed.
+StocksWatch is a static Astro site for the NBIS research desk at `/`. It is designed as a low-cost, source-linked daily research asset: no browser API keys, no always-on server, no database, and no brokerage credentials.
 
 ## Surfaces
 
-| Surface | Where to edit | Runtime |
-|---------|---------------|---------|
-| Home (NBIS Deep Dive) | `src/pages/index.astro`, `src/client/nbis-dashboard.ts`, `src/styles/nbis.css` | Astro HTML + daily `public/nbis.json` hydration |
-| Archived watchlist | `src/pages/watchlist.astro`, `src/client/board/*` | Astro HTML + `public/watchlist-board.mjs` |
-| Legacy `/datacenter.html` | `src/pages/datacenter.astro` | Client redirect → `/` |
-| Local Flask (historical) | `archive/ai-datacenter-screener/` | Not deployed |
-| Shared tokens | `src/styles/tokens.css` → synced to `public/tokens.css` | Both surfaces |
-| Site settings | `src/data/site-settings.json` | Astro + Node via `scripts/config.mjs` |
+| Surface | Source | Runtime |
+| --- | --- | --- |
+| NBIS Deep Dive | `src/pages/index.astro` | Astro HTML + `public/nbis.json` hydration |
+| Legacy data-center redirect | `src/pages/datacenter.astro` | Redirects bookmarks to `/` |
+| Not found | `src/pages/404.astro` | Noindex, no ads |
+
+The former group watchlist, quote board, personal alerts, and submission form have been removed. The retained `public/datacenter/` assets are historical/supporting screener assets and are not a separate product surface.
 
 ## Data flow
 
 ```text
-Daily GitHub Actions (fetch)
-  → public/nbis.json from Yahoo Finance + SEC EDGAR
-  → npm run nbis:schema → astro build
-  → Cloudflare Pages direct upload
-  → Browser: NBIS research desk hydrates from static JSON
-Separate legacy/watchlist data continues to build for `/watchlist.html` and the archived AI Data Center assets.
-  → Archived watchlist: LiveStatus → radar:quotes → board re-render
+Daily refresh
+  → fetch-nbis.py → public/nbis.json
+  → fetch-screener.py → public/screener.json + public/dc-movers.json
+  → schema checks → Astro static build
+  → Cloudflare Pages / static CDN
+  → browser hydrates the NBIS research desk from nbis.json
 ```
 
-## Client code (`src/client/`)
+The NBIS snapshot contains market context, fundamentals, scenarios, filings, research readouts, and timestamps. Missing or stale data remains visible as missing or stale; the site never invents numbers to make a page look healthy.
+
+## Source map
 
 | Path | Role |
-|------|------|
-| `watchlist-board.ts` | esbuild entry (side-effect import) |
-| `board/state.ts` | Shared mutable board state + filters/sort/IDB |
-| `board/render-*.ts` | Table / mobile / check-in HTML |
-| `board/quotes.ts` | quotes.json + outlook loaders |
-| `board/events.ts` | DOM wiring |
-| `board/init.ts` | `initWatchlistBoard` |
-| `group-submissions.ts` | Friend suggestions form |
-| `nbis-dashboard.ts` | NBIS snapshot hydration, chart, tables, readouts |
+| --- | --- |
+| `src/client/nbis-dashboard.ts` | Snapshot hydration, chart, tables, and readouts |
+| `src/data/nbis-profile.json` | Company profile, monitoring checklist, and primary sources |
+| `scripts/fetch/fetch-nbis.py` | Yahoo Finance + SEC snapshot collection |
+| `scripts/fetch/fetch-screener.py` | AI infrastructure screener snapshot |
+| `scripts/ops/validate-nbis-schema.mjs` | NBIS data contract check |
+| `scripts/ops/validate-screener-schema.mjs` | Screener data contract check |
+| `src/lib/adsense.ts` | Domain, content, and placement gates for future ads |
+| `src/components/AdSlot.astro` | Manual, labeled ad units only when configured |
 
-Rebuild the board bundle: `npm run bundle:watchlist` → `public/watchlist-board.mjs` (**generated**).
+## Build lifecycle
 
-## Node scripts
+`npm run prebuild` validates configuration, syncs design tokens, hashes retained data-center assets, refreshes the screener and NBIS snapshot, validates both schemas, writes health/SEO metadata, and then lets Astro build the static site. Production sets strict data-fetch behavior; local builds may preserve an existing valid snapshot with `NBIS_SKIP=1`.
 
-| Folder | Role |
-|--------|------|
-| `scripts/fetch/` | NBIS, Yahoo quotes, outlook, screener, movers |
-| `scripts/ops/` | Health, SEO, validate, hash assets, bundle |
-| `scripts/alerts/` | Digest, signal alerts, radar score |
-| `scripts/lib/` | Shared pure helpers (`action-bias`, `sanitize`, `aws-cli`, `alert-quote-guard`, freshness) |
-| `scripts/config.mjs` | Settings + env overlays (stays at scripts root) |
-| `scripts/datacenter/` | Python universe helpers for the screener |
+## Design and safety rules
 
-NBIS-specific data sources and profile: `src/data/nbis-profile.json`, `scripts/fetch/fetch-nbis.py`, and `scripts/ops/validate-nbis-schema.mjs`.
-
-Infrastructure lives in `infra/terraform/`; deployment is `.github/workflows/stocks-radar-nbis-daily.yml`.
-
-Action bias math lives in **`scripts/lib/action-bias.mjs`** (Node alerts + home board via `src/lib/market-format.ts`). Do not duplicate it.
-
-## Styles
-
-`src/styles/global.css` is an ordered `@import` entry over `src/styles/home/*.css`. Do not rename selectors casually — cascade order matters.
-
-## Generated artifacts (do not hand-edit)
-
-- `public/watchlist-board.mjs`
-- `public/datacenter/*.<hash>.*` (from `npm run hash:datacenter`)
-- `public/settings.json`, `public/health.json`, quote/screener JSON from CI
-- `public/nbis.json` (generated by `npm run update-nbis` / daily CI)
-
-See also [README.md](README.md), [DEPLOY.md](DEPLOY.md), [DOMAIN.md](DOMAIN.md).
+- Keep the NBIS research desk as the product wedge; future guides, tools, templates, and email products should extend the same evidence-first audience.
+- Keep action/scenario language educational. Do not describe scenarios as forecasts, targets, or guaranteed outcomes.
+- Keep ad placement after substantial research content, manually labeled, and disabled until the custom domain, consent/privacy surface, and AdSense review requirements are satisfied.
+- Keep `src/styles/global.css` import order stable: tokens, shared shell, then ad styles.
+- Do not hand-edit generated artifacts under `public/`; use their matching scripts.

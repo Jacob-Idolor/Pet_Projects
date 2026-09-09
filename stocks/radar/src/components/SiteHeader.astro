@@ -1,7 +1,7 @@
 ---
 interface Props {
   /** Which primary nav item is current */
-  active?: "datacenter" | "nbis";
+  active?: "nbis";
 }
 
 const { active = "nbis" } = Astro.props;
@@ -21,13 +21,6 @@ const base = import.meta.env.BASE_URL;
         aria-current={active === "nbis" ? "page" : undefined}
       >
         NBIS Deep Dive
-      </a>
-      <a
-        class:list={["header-link", { "is-active": active === "datacenter" }]}
-        href={`${base}datacenter.html`.replace(/\/{2,}/g, "/").replace(":/", "://")}
-        aria-current={active === "datacenter" ? "page" : undefined}
-      >
-        AI Data Center
       </a>
     </nav>
   </div>

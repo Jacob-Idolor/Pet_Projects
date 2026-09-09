@@ -15,7 +15,7 @@ test.describe("StocksWatch smoke", () => {
     await page.goto("/404.html");
     await expect(page.getByRole("heading", { name: /page not found/i })).toBeVisible();
     await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /watchlist|back/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /NBIS|back/i }).first()).toBeVisible();
   });
 
   test("legacy datacenter route redirects without AdSense", async ({ page }) => {

@@ -7,10 +7,9 @@ Cloudflare Pages is configured as the intended low-cost host, but the first `ter
 ### Surfaces
 
 - `/` — NBIS Deep Dive research desk (main)
-- `/watchlist.html` — archived group watchlist
-- `/datacenter.html` — redirect → `/`
+- `/datacenter.html` — legacy redirect → `/` for old bookmarks
 
-`/health.json` reports NBIS as the primary service status and exposes archived quote/screener freshness separately as `legacyStatus`.
+`/health.json` reports NBIS as the primary service status and exposes the AI-infrastructure screener freshness separately as `secondaryStatus`.
 
 ### Daily NBIS refresh
 

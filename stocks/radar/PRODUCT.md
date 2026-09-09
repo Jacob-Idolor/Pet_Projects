@@ -1,29 +1,51 @@
-# StocksWatch NBIS Research Desk
+# StocksWatch product strategy
 
-## Product thesis
+## Chosen positioning
 
-StocksWatch should be the calm, source-linked daily research page for people following Nebius Group and the AI-cloud buildout. The free page earns trust by showing the raw context, retrieval times, filings, assumptions, and evidence gaps in one place. It does not promise returns, issue trade signals, or execute trades.
+**Source-linked daily research for people navigating the AI infrastructure buildout.**
 
-This fits the existing project well: the site already has a public watchlist, AI-infrastructure data, a technical-data pipeline, and a preference for transparent, timestamped research rather than opaque recommendations.
+The site starts with one narrow, useful wedge: Nebius Group (`NBIS`). It earns trust by showing what changed, where each fact came from, when the snapshot was retrieved, and which assumptions still need verification. It does not promise returns or present automated scenarios as advice.
 
-## Income path
+## Ideal reader
 
-1. **Free discovery layer:** NBIS Deep Dive, indexed daily, with a clean technical/fundamental snapshot and direct primary-source links.
-2. **Email habit:** a short “NBIS Close” email that summarizes what changed, what to verify, and which filing or data point moved. Add a consent-first signup only after choosing the email provider and publishing a privacy policy.
-3. **Sponsor inventory:** sell one clearly labeled sponsor placement to an AI-infrastructure, developer-tool, or research-data company after the page has repeat readership. Keep it separate from analysis.
-4. **Paid archive:** offer the daily archive, historical scenario changes, downloadable data, and a weekly research memo as a low-cost subscription. A reasonable initial test is $5–9/month; validate demand before adding billing complexity.
-5. **Expansion:** reuse the same schema for a small number of adjacent AI-infrastructure names only after NBIS has a reliable publishing cadence.
+Technically literate professionals, operators, and long-term investors who want a fast but serious way to understand AI-cloud companies without relying on hype-heavy feeds.
 
-The site should never imply guaranteed passive income. The asset is the repeatable research habit, search traffic, and owned audience; revenue is an experiment that follows evidence of readership.
+## Why this fits Jacob
 
-## Daily operating loop
+The product uses systems thinking, observability, cloud/infrastructure knowledge, automation, and careful operational habits. It can compound as a digital asset without requiring constant social posting or client delivery.
 
-GitHub Actions runs once per day, fetches Yahoo market/statement data and SEC EDGAR filings, validates `public/nbis.json`, builds the static Astro site, and uploads `dist/` to Cloudflare Pages. Terraform owns the Cloudflare project, custom domain, and DNS record. There is no always-on server or database in the first version.
+## MVP
 
-## Trust rules
+- NBIS Deep Dive with daily price, fundamentals, business map, valuation assumptions, risks, filings, and sources.
+- Visible timestamps and provider/source context.
+- Strong not-financial-advice and data-quality language.
+- Static deployment with a daily automated refresh.
+- Future-ready ad and email seams, both off until the trust and policy work is complete.
 
-- Every snapshot displays its retrieval time and provider context.
-- Missing or stale data stays visibly missing; it is never replaced with invented numbers.
-- Scenario outputs are explicitly labeled assumptions, not price targets.
-- Alpaca can be used for product research or an optional authenticated market-data provider, but this public static site does not contain brokerage credentials or place trades.
-- Preserve the site's not-financial-advice framing and link material claims to company or SEC sources.
+## Revenue hierarchy
+
+1. **Free discovery:** search-friendly daily research and evergreen NBIS explainers.
+2. **Owned audience:** a concise, consent-first “NBIS Close” email brief.
+3. **Sponsor:** one clearly labeled AI infrastructure, developer-tool, or research-data sponsor.
+4. **Paid archive:** historical snapshots, scenario-change history, downloadable data, and a weekly memo at a modest price point.
+5. **Expansion:** a small number of adjacent AI-infrastructure names only after NBIS publishing is dependable.
+6. **Systems products:** later, practical AI/automation guides, Terraform/SRE templates, calculators, and workflow tools for the audience Jacob already understands.
+
+Ads are supplemental, not the business model. Low traffic often produces less than the domain cost, and financial content requires careful review and original value.
+
+## 12-month roadmap
+
+| Stage | Focus | Proof to seek |
+| --- | --- | --- |
+| Months 1–3 | Reliable daily NBIS snapshots, SEO basics, source pages, and one useful evergreen guide | Snapshot success, search impressions, returning readers |
+| Months 4–6 | Newsletter waitlist, a free research checklist, and one clearly labeled sponsor test | Opt-in rate, open rate, sponsor interest |
+| Months 7–9 | Historical archive and a small paid research memo experiment | Paid conversion and retention |
+| Months 10–12 | One adjacent AI-infrastructure page or free tool; first technical template only if demand is visible | Repeat usage and revenue per maintenance hour |
+
+## Passive-by-design rules
+
+- Keep the public app static and the daily job idempotent.
+- Prefer primary sources and reusable schemas over hand-written daily operations.
+- Publish disclosures before collecting email or serving ads.
+- Keep ads manual and labeled; never let monetization alter an editorial conclusion.
+- Add paid data, accounts, payments, or AI features only after traffic validates the need and the threat model is written.

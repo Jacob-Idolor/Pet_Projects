@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildDcMovers } from "../scripts/lib/dc-movers.mjs";
-import { matchesTechnicalFilter } from "../scripts/lib/technical-filters.mjs";
 
 describe("buildDcMovers", () => {
   const screener = {
@@ -48,38 +47,5 @@ describe("buildDcMovers", () => {
     assert.equal(empty.pricedCount, 0);
     assert.deepEqual(empty.gainers, []);
     assert.deepEqual(empty.losers, []);
-  });
-});
-
-describe("matchesTechnicalFilter", () => {
-  const q = {
-    sma: { 50: 100, 200: 90 },
-    trend: "bullish",
-    range52Pct: 12,
-    pctFromAth: -3,
-    rsi14: 28,
-  };
-
-  it("passes through non-tech filters", () => {
-    assert.equal(matchesTechnicalFilter("all", q, 110), true);
-    assert.equal(matchesTechnicalFilter("lean-buy", null, null), true);
-  });
-
-  it("requires quote for tech filters", () => {
-    assert.equal(matchesTechnicalFilter("tech-above-50", undefined, 110), false);
-  });
-
-  it("evaluates MA / trend / range / RSI / ATH predicates", () => {
-    assert.equal(matchesTechnicalFilter("tech-above-50", q, 110), true);
-    assert.equal(matchesTechnicalFilter("tech-below-50", q, 110), false);
-    assert.equal(matchesTechnicalFilter("tech-above-200", q, 110), true);
-    assert.equal(matchesTechnicalFilter("tech-bullish", q, 110), true);
-    assert.equal(matchesTechnicalFilter("tech-bearish", q, 110), false);
-    assert.equal(matchesTechnicalFilter("tech-near-low", q, 110), true);
-    assert.equal(matchesTechnicalFilter("tech-near-high", q, 110), false);
-    assert.equal(matchesTechnicalFilter("tech-near-ath", q, 110), true);
-    assert.equal(matchesTechnicalFilter("tech-at-ath", q, 110), false);
-    assert.equal(matchesTechnicalFilter("tech-oversold", q, 110), true);
-    assert.equal(matchesTechnicalFilter("tech-overbought", q, 110), false);
   });
 });

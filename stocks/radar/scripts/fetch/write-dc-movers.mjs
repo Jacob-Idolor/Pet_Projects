@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Build a tiny home-page movers payload from screener.json.
- * Avoids fetching ~100KB screener.json on every `/` view (DatacenterBridge).
+ * Keeps the supporting screener payload small for any future bridge or embed.
  *
  *   node scripts/fetch/write-dc-movers.mjs
  */
@@ -15,7 +15,7 @@ const IN = resolve(ROOT, "public/screener.json");
 const OUT = resolve(ROOT, "public/dc-movers.json");
 
 const JSON_SPACE =
-  process.env.QUOTES_PRETTY === "1" ||
+  process.env.JSON_PRETTY === "1" ||
   (!process.env.GITHUB_ACTIONS && process.env.STOCKS_RADAR_ENV !== "production")
     ? 2
     : undefined;

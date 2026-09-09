@@ -39,14 +39,13 @@ console.log(`  dist: ${dist}\n`);
 
 const index = read("index.html");
 const notFound = read("404.html");
-const watchlist = read("watchlist.html");
 const dcRedirect = read("datacenter.html");
 
 if (!index) fail("dist/index.html missing — run npm run build");
 else {
-  if (/AI Data Center|mainnav|id="layers"/i.test(index)) {
-    pass("Home is AI Data Center screener");
-  } else fail("Home missing AI Data Center screener markup");
+  if (/NBIS Deep Dive|Nebius Group|id="nbis-app"/i.test(index)) {
+    pass("Home is the NBIS research desk");
+  } else fail("Home missing NBIS research markup");
 
   const adScript = /pagead2\.googlesyndication\.com|adsbygoogle/i.test(index);
   if (adScript) {
@@ -55,22 +54,15 @@ else {
     pass("Home has no AdSense script in this build (CLIENT unset or gates blocked — OK for pre-approval)");
   }
 
-  const layersIdx = index.indexOf('id="layers"');
+  const contentIdx = index.search(/id="nbis-app"|id="sources"/);
   const adSlotIdx = index.search(/data-ad-placement|class="[^"]*ad-slot/);
-  if (adSlotIdx >= 0 && layersIdx >= 0 && adSlotIdx < layersIdx) {
-    fail("Ad slot markup appears before #layers (policy risk)");
+  if (adSlotIdx >= 0 && contentIdx >= 0 && adSlotIdx < contentIdx) {
+    fail("Ad slot markup appears before the NBIS research desk (policy risk)");
   } else if (adSlotIdx >= 0) {
-    pass("Any ad slots are after the screener main content");
+    pass("Any ad slots are after the NBIS research content");
   } else {
     pass("No live/preview ad slots in this build (expected until slots enabled)");
   }
-}
-
-if (!watchlist) fail("dist/watchlist.html missing (archived watchlist)");
-else {
-  if (/watchlist-board|Archived watchlist/i.test(watchlist)) {
-    pass("Archived watchlist page present");
-  } else fail("watchlist.html missing board / archive banner");
 }
 
 if (!notFound) fail("dist/404.html missing");
@@ -95,7 +87,7 @@ else {
 console.log(`
 Operator steps (cannot be automated here):
   1. AdSense → Ads → Auto ads → OFF for stockswatch.cc
-  2. Use only manual Display units (board + footer on /)
+  2. Use only manual Display units after substantial NBIS content
   3. Deploy latest main to production
   4. Spot-check live / and a 404 URL in DevTools (no unexpected pagead requests on 404)
   5. Confirm https://stockswatch.cc/ads.txt

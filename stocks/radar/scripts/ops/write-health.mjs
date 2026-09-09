@@ -1,92 +1,43 @@
 #!/usr/bin/env node
-/**
- * Writes public/settings.json (safe, no secrets) + public/health.json for ops checks.
- * health.ok reflects build stamp AND local data readiness (age/coverage), not always-green.
- */
+/** Write safe public settings and build-time health for the NBIS desk. */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeConfig, publicSettingsPayload } from "../config.mjs";
-import { ageHours, coverageOk, coverageRatio, freshUntil, quotesFreshCount, quotesFreshRatio } from "../lib/freshness-utils.mjs";
+import { ageHours, coverageOk, coverageRatio, freshUntil } from "../lib/freshness-utils.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const config = loadRuntimeConfig();
 const settings = publicSettingsPayload(config);
+writeFileSync(resolve(ROOT, "public/settings.json"), JSON.stringify(settings, null, 2) + "\n");
 
-const settingsOut = resolve(ROOT, "public/settings.json");
-writeFileSync(settingsOut, JSON.stringify(settings, null, 2) + "\n");
-
-const quotesMaxH = Math.max(config.quotes?.staleAfterHours ?? 6, 12);
 const screenerMaxH = Number(process.env.SCREENER_MAX_AGE_HOURS || 24);
 const nbisMaxH = Number(process.env.NBIS_MAX_AGE_HOURS || 30);
 const nbisMinPricePoints = Number(process.env.NBIS_MIN_PRICE_POINTS || 20);
 const minOkRatio = Number(process.env.SCREENER_MIN_OK_RATIO || 0.85);
-const quotesMinRatio = Number(process.env.QUOTES_MIN_OK_RATIO || 0.85);
 
 function readJson(rel) {
-  const p = resolve(ROOT, rel);
-  if (!existsSync(p)) return { missing: true, path: rel };
+  const path = resolve(ROOT, rel);
+  if (!existsSync(path)) return { missing: true, path: rel };
   try {
-    return { data: JSON.parse(readFileSync(p, "utf8")), path: rel };
-  } catch (e) {
-    return { error: String(e.message || e), path: rel };
+    return { data: JSON.parse(readFileSync(path, "utf8")), path: rel };
+  } catch (error) {
+    return { error: String(error.message || error), path: rel };
   }
 }
 
-const quotesFile = readJson("public/quotes.json");
 const screenerFile = readJson("public/screener.json");
 const nbisFile = readJson("public/nbis.json");
-
-const checks = {
-  settings: true,
-  quotes: { ok: false },
-  screener: { ok: false },
-  nbis: { ok: false },
-};
-
-if (quotesFile.data) {
-  const q = quotesFile.data;
-  const count =
-    q.quotes && typeof q.quotes === "object"
-      ? Object.keys(q.quotes).length
-      : Number(q.count) || 0;
-  const total = Number(q.total) || count;
-  const freshCount = quotesFreshCount(q);
-  const age = ageHours(q.fetchedAt || q.updatedAt);
-  const ratio = quotesFreshRatio(q) ?? (total > 0 ? 0 : null);
-  const ok =
-    age != null &&
-    age <= quotesMaxH &&
-    freshCount >= 1 &&
-    (ratio == null || ratio >= quotesMinRatio) &&
-    !q.fetchFailed;
-  checks.quotes = {
-    ok,
-    ageHours: age,
-    count,
-    freshCount,
-    total,
-    coverage: ratio,
-    partial: Boolean(q.partial),
-    fetchFailed: Boolean(q.fetchFailed),
-  };
-} else {
-  checks.quotes = { ok: false, missing: true, error: quotesFile.error || "missing" };
-}
+const checks = { screener: { ok: false }, nbis: { ok: false } };
 
 if (screenerFile.data) {
-  const s = screenerFile.data;
-  const okCount = Number(s.ok_count) || 0;
-  const tickerCount = Number(s.ticker_count) || 0;
-  const age = ageHours(s.fetched_at_iso || s.fetched_at);
-  const ok =
-    age != null &&
-    age <= screenerMaxH &&
-    okCount >= 1 &&
-    coverageOk(okCount, tickerCount, minOkRatio);
+  const data = screenerFile.data;
+  const okCount = Number(data.ok_count) || 0;
+  const tickerCount = Number(data.ticker_count) || 0;
+  const age = ageHours(data.fetched_at_iso || data.fetched_at);
   checks.screener = {
-    ok,
+    ok: age != null && age <= screenerMaxH && okCount >= 1 && coverageOk(okCount, tickerCount, minOkRatio),
     ageHours: age,
     ok_count: okCount,
     ticker_count: tickerCount,
@@ -97,41 +48,32 @@ if (screenerFile.data) {
 }
 
 if (nbisFile.data) {
-  const n = nbisFile.data;
-  const age = ageHours(n.fetchedAt);
-  const pricePoints = Array.isArray(n.priceHistory) ? n.priceHistory.length : 0;
-  const filings = Array.isArray(n.sec?.filings) ? n.sec.filings.length : 0;
+  const data = nbisFile.data;
+  const age = ageHours(data.fetchedAt);
+  const pricePoints = Array.isArray(data.priceHistory) ? data.priceHistory.length : 0;
+  const filings = Array.isArray(data.sec?.filings) ? data.sec.filings.length : 0;
   checks.nbis = {
-    ok: n.status === "ok" && age != null && age <= nbisMaxH && pricePoints >= nbisMinPricePoints,
+    ok: data.status === "ok" && age != null && age <= nbisMaxH && pricePoints >= nbisMinPricePoints,
     ageHours: age,
     pricePoints,
     filings,
-    status: n.status || "unknown",
+    status: data.status || "unknown",
   };
 } else {
   checks.nbis = { ok: false, missing: true, error: nbisFile.error || "missing" };
 }
 
-// NBIS is the production homepage's source of truth. Legacy quote/screener
-// freshness is reported separately because those surfaces are archived.
 const dataOk = checks.nbis.ok;
-const legacyOk = checks.quotes.ok && checks.screener.ok;
-const status = dataOk ? "ok" : "unhealthy";
-const legacyStatus = legacyOk ? "ok" : "stale";
+const screenerOk = checks.screener.ok;
 const evaluatedAt = new Date().toISOString();
-const legacyFreshnessDeadlines = [
-  quotesFile.data ? freshUntil(quotesFile.data.fetchedAt || quotesFile.data.updatedAt, quotesMaxH) : null,
-  screenerFile.data ? freshUntil(screenerFile.data.fetched_at_iso || screenerFile.data.fetched_at, screenerMaxH) : null,
-].filter(Boolean);
 const validUntil = nbisFile.data ? freshUntil(nbisFile.data.fetchedAt, nbisMaxH) : null;
-const legacyValidUntil = legacyFreshnessDeadlines.length
-  ? new Date(Math.min(...legacyFreshnessDeadlines.map((value) => Date.parse(value)))).toISOString()
+const screenerValidUntil = screenerFile.data
+  ? freshUntil(screenerFile.data.fetched_at_iso || screenerFile.data.fetched_at, screenerMaxH)
   : null;
-
 const health = {
   ok: dataOk,
-  status,
-  legacyStatus,
+  status: dataOk ? "ok" : "unhealthy",
+  secondaryStatus: screenerOk ? "ok" : "stale",
   buildOk: true,
   service: config.app.name,
   version: config.app.version,
@@ -142,29 +84,23 @@ const health = {
   freshnessSnapshot: {
     evaluatedAt,
     validUntil,
-    legacyValidUntil,
-    note: "Build-time snapshot. validUntil follows the primary NBIS desk; legacyValidUntil covers archived quotes/screener data.",
+    screenerValidUntil,
+    note: "Build-time snapshot. The NBIS desk is the primary health signal; the screener is reported separately.",
   },
   checks,
   paths: {
-    quotes: "/quotes.json",
-    outlook: "/outlook.json",
+    nbis: "/nbis.json",
     screener: "/screener.json",
     datacenter: "/datacenter.html",
-    watchlist: "/watchlist.html",
     settings: config.ops.settingsPath,
     health: config.ops.healthPath,
   },
 };
 
-const healthOut = resolve(ROOT, "public/health.json");
-writeFileSync(healthOut, JSON.stringify(health, null, 2) + "\n");
-
-console.log(
-  `✓ settings.json + health.json (${config.app.environment}) — status=${status}`
-);
+writeFileSync(resolve(ROOT, "public/health.json"), JSON.stringify(health, null, 2) + "\n");
+console.log(`✓ settings.json + health.json (${config.app.environment}) — status=${health.status}`);
 if (!dataOk) {
-  console.warn("⚠ health status is not ok — NBIS snapshot age, status, or price-history coverage is below threshold");
-} else if (!legacyOk) {
-  console.warn("⚠ primary health is ok — archived quotes/screener data is stale");
+  console.warn("⚠ NBIS health is not ok — snapshot age, status, or price-history coverage is below threshold");
+} else if (!screenerOk) {
+  console.warn("⚠ NBIS health is ok — AI data-center screener data is stale or unavailable");
 }

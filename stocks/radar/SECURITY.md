@@ -8,7 +8,6 @@ Static Astro app (no user auth). There is **no live AWS stack** right now.
 |---------|--------|
 | XSS hardening | Symbol/id/priority sanitized; text fields HTML-escaped; DC score bar widths clamped |
 | Scripts | `execFileSync` argv arrays (no shell injection); Yahoo host fixed |
-| Personal alerts fail-closed | Missing topic map → skip; empty rules never auto-broadcast |
 | Static-origin headers | Cloudflare `_headers` sets `nosniff`, referrer and permissions policy, frame denial, HSTS, and bounded data caching |
 | Production data gate | Strict NBIS refresh requires an SEC contact identity and schema validation before deploy |
 | Release secret scan | `npm run security:dist` fails if obvious credentials enter the generated static bundle |

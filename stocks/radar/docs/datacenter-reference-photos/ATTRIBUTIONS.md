@@ -1,6 +1,6 @@
 # Image attributions
 
-Reference photos (not shipped to S3 / CloudFront — kept under `docs/datacenter-reference-photos/`
+Reference photos (not shipped to the static site — kept under `docs/datacenter-reference-photos/`
 for optional future UI). Originally considered for Data Center Map / Rack Explorer backdrops.
 
 Wikimedia Commons under Creative Commons licenses:

@@ -8,9 +8,6 @@
 /nbis.json
   Cache-Control: public, max-age=300, must-revalidate
 
-/quotes.json
-  Cache-Control: public, max-age=300, must-revalidate
-
 /screener.json
   Cache-Control: public, max-age=300, must-revalidate
 

@@ -27,10 +27,6 @@ const config = loadRuntimeConfig({ production: strict });
 if (!config.app.version) errors.push("settings.app.version is required");
 if (!config.app.name) errors.push("settings.app.name is required");
 
-if (config.quotes.staleAfterHours < 1 || config.quotes.staleAfterHours > 72) {
-  errors.push("quotes.staleAfterHours must be between 1 and 72");
-}
-
 if (strict) {
   if (!config.site.url) {
     errors.push("STOCKS_RADAR_SITE required in production");
@@ -75,8 +71,6 @@ console.log(
     .map(([k]) => k)
     .join(", ") || "(none)"}`
 );
-console.log(`Quotes stale after: ${config.quotes.staleAfterHours}h`);
-console.log(`OTel: ${config.otel.enabled ? "on" : "off"}`);
 
 for (const w of warnings) console.warn(`⚠ ${w}`);
 for (const e of errors) console.error(`✗ ${e}`);

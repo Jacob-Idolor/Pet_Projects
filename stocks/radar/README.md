@@ -1,180 +1,61 @@
 # StocksWatch
 
-NBIS research desk + archived group watchlist. Static Astro — no browser API keys. The production target is Cloudflare Pages, provisioned with Terraform and refreshed once daily by GitHub Actions.
+StocksWatch is a calm, source-linked daily research desk for Nebius Group (`NBIS`) and the AI infrastructure buildout. It is intentionally small: Astro static output, one daily snapshot, Cloudflare Pages, and GitHub Actions. It is educational and not financial advice.
 
-> Not financial advice.
-
-**Domain:** [stockswatch.cc](https://stockswatch.cc) (attach the origin with Terraform) · **Surfaces:** `/` (NBIS Deep Dive) · `/watchlist.html` (archived group watchlist) · `/datacenter.html` (legacy redirect)
-
-Code map: [ARCHITECTURE.md](ARCHITECTURE.md)
-
-Local Flask + full backtest: [archive/ai-datacenter-screener/](archive/ai-datacenter-screener/)
-
----
-
-## How it works
-
-```mermaid
-flowchart LR
-  subgraph edit [You edit]
-    W[watchlist.json]
-    U[datacenter-universe.json]
-  end
-
-  subgraph local [Local / CI]
-    Q[fetch-quotes.mjs]
-    N[fetch-nbis.py]
-    S[fetch-screener.py]
-    B[astro build]
-  end
-
-  subgraph browser [Browser]
-    Home["/ NBIS Deep Dive"]
-    WL["/watchlist.html archive"]
-  end
-
-  W --> Q
-  N --> B
-  U --> S
-  Q --> B
-  S --> B
-  B --> Home
-  B --> WL
-  N -.->|nbis.json| Home
-  Q -.->|quotes.json| WL
-  S -.->|screener.json + news| Home
-```
-
-**Local refresh:** `npm run update-quotes` / `npm run update-screener` writes JSON under `public/`.
-
-```mermaid
-flowchart TB
-  subgraph pages [Two pages, one product]
-    H["Home / — NBIS research desk"]
-    D["Watchlist — archived group list"]
-  end
-
-  T[tokens.css + SiteHeader] --> H
-  T --> D
-
-  H --- NJ[nbis.json + SEC filings]
-  D --- QJ[quotes.json]
-```
-
----
+The old group watchlist and its quote/alert machinery have been retired. The NBIS desk is the main product and the foundation for a long-term, low-overhead digital asset.
 
 ## Quick start
 
 ```bash
 cd stocks/radar
-npm install
+npm ci
 npm run dev
 ```
 
-Useful checks (also run in CI validate):
+Useful checks:
 
 ```bash
-npm test                 # unit tests (ads gates, freshness math, sanitize, radar-score)
-npm run screener:schema  # offline screener.json shape/coverage
-npm run nbis:schema      # offline NBIS snapshot shape/coverage
-npm run typecheck        # tsc --noEmit
-npm run freshness        # local quotes/screener age
-npm run adsense:checklist  # after build — AdSense policy gates in dist/
-SCREENER_SKIP=1 npm run build && npm run test:e2e   # Playwright smoke
+npm test
+npm run screener:schema
+npm run nbis:schema
+npm run typecheck
+npm run adsense:checklist
+SCREENER_SKIP=1 NBIS_SKIP=1 npm run build
+npm run test:e2e
 ```
 
-| Page | URL |
-|------|-----|
-| NBIS Deep Dive | http://localhost:4321 |
-| Archived watchlist | http://localhost:4321/watchlist.html |
+For a local refresh with provider access, install the Python requirements and run `npm run update-nbis`. Production refreshes require `SEC_CONTACT_EMAIL` or `SEC_USER_AGENT`.
 
-NBIS snapshot (needs Python once):
+## Product direction
 
-```bash
-pip install -r scripts/datacenter/requirements.txt
-npm run update-nbis        # → public/nbis.json
-npm run nbis:schema        # local shape/coverage assert
+The first asset is the free NBIS Deep Dive: current context, raw sources, retrieval time, filings, assumptions, and evidence gaps in one page. The long-term revenue ladder is:
+
+1. Search and repeat readership from the free research desk.
+2. A consent-first “NBIS Close” email brief.
+3. One clearly labeled sponsor relevant to AI infrastructure or developer tools.
+4. A low-cost paid archive with historical snapshots and weekly research notes.
+5. Later, practical AI/automation guides, templates, and tools for technically minded professionals.
+
+This follows the supplied business strategy: build a credible system that compounds, avoid hype and guaranteed-income claims, and keep recurring operating work small.
+
+## Ads
+
+AdSense is wired for later but is not required for the site to work. Ads are manual, labeled, domain-gated, and only appear after substantial NBIS content when client, approval, and unit IDs are configured. Auto ads should remain off. See [ADSENSE.md](ADSENSE.md).
+
+## Hosting
+
+The intended host is Cloudflare Pages with static output. Terraform configuration remains under `infra/terraform/`; no deployment or infrastructure mutation is performed by normal local builds.
+
+## Important files
+
+```text
+src/pages/index.astro          # NBIS research desk
+src/client/nbis-dashboard.ts   # browser hydration
+src/data/nbis-profile.json     # editorial profile and primary sources
+public/nbis.json               # generated daily snapshot
+scripts/fetch/fetch-nbis.py    # NBIS data collection
+scripts/fetch/fetch-screener.py# AI infrastructure screener collection
+src/lib/adsense.ts             # future monetization gates
 ```
 
----
-
-## What you edit
-
-| File | Purpose |
-|------|---------|
-| `src/data/watchlist.json` | Group list |
-| `src/data/nbis-profile.json` | NBIS company map, monitoring checklist, primary sources |
-| `src/data/datacenter-universe.json` | Archived AI DC layers + holdings |
-| `src/data/site-settings.json` | Features, quote staleness |
-| `src/styles/tokens.css` | Shared design tokens (`npm run sync:tokens` → `public/tokens.css` on prebuild) |
-
-CSV → watchlist: `npm run import-csv -- my-tickers.csv`
-
-### NBIS product limits (static hosting)
-
-| Feature | Behavior |
-|---------|----------|
-| Prices | Daily CI snapshot — not a live quote stream |
-| Filings | SEC EDGAR links and structured facts where available |
-| Scenarios | Transparent assumptions, never price targets |
-| News | Discovery feed; verify material claims against filings |
-| Monetization | Free research first; email brief/sponsor/premium archive later |
-
----
-
-## Ship
-
-Cloudflare Pages is the intended production host. Provision the project and DNS first:
-
-```powershell
-cd radar/infra/terraform
-$env:CLOUDFLARE_API_TOKEN = "..."
-terraform init
-terraform apply
-```
-
-Then add the GitHub Actions secrets described in [infra/terraform/README.md](infra/terraform/README.md) and run the daily workflow once manually. Local parity: `npm run rebuild`.
-
----
-
-## Layout
-
-```
-stocks/radar/
-  src/pages/index.astro          # NBIS research desk
-  src/pages/datacenter.astro     # legacy redirect
-  src/client/nbis-dashboard.ts   # NBIS browser hydration
-  src/client/board/              # watchlist UI modules
-  src/styles/home/               # CSS partials (via global.css)
-  src/data/watchlist.json
-  src/data/datacenter-universe.json
-  public/quotes.json
-  public/screener.json
-  public/datacenter/             # UI + static-api.js
-  scripts/fetch/                 # quotes, outlook, screener
-  scripts/ops/                   # health, SEO, validate, bundle
-  scripts/alerts/                # digest + signal alerts
-  scripts/lib/                   # shared helpers (action-bias, sanitize)
-```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full map.
----
-
-## Docs
-
-| Doc | Topic |
-|-----|--------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Code map + data flow |
-| [PRODUCTION.md](PRODUCTION.md) | Live ops + hardening |
-| [SCORE.md](SCORE.md) | Radar lean buy / sell |
-| [DEPLOY.md](DEPLOY.md) | Hosting status (none yet) |
-| [DOMAIN.md](DOMAIN.md) | stockswatch.cc / Cloudflare |
-| [ADSENSE.md](ADSENSE.md) | Ads |
-| [SECURITY.md](SECURITY.md) | Hardening |
-| [ALERTS.md](ALERTS.md) | Signal emails |
-| [PRODUCT.md](PRODUCT.md) | NBIS product and monetization path |
-| [infra/terraform/README.md](infra/terraform/README.md) | Cloudflare Pages deployment |
-
-## License
-
-[MIT](../../LICENSE)
+See [ARCHITECTURE.md](ARCHITECTURE.md), [PRODUCT.md](PRODUCT.md), [PASSIVE_INCOME.md](PASSIVE_INCOME.md), [PRODUCTION.md](PRODUCTION.md), and [SECURITY.md](SECURITY.md) for operating details.

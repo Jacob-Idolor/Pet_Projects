@@ -2,7 +2,7 @@
  * AdSense config for StocksWatch — policy-safe placements only.
  *
  * Google policy: no Google-served ads on screens without (or with low-value)
- * publisher content, under construction, or used only for alerts/navigation.
+ * publisher content, under construction, or used only for navigation/error states.
  *
  * Pure gates live in scripts/lib/adsense-policy.mjs (unit-tested).
  * Turn OFF “Auto ads” in the AdSense console — only use manual units after content.
