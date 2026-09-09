@@ -43,15 +43,20 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
       </div>
     </section>
 
-    <nav class="nbis-nav container" aria-label="NBIS research sections">
-      <a href="#overview">Overview</a>
-      <a href="#price">Price &amp; trend</a>
-      <a href="#business">Business</a>
-      <a href="#financials">Financials</a>
-      <a href="#valuation">Valuation</a>
-      <a href="#risks">Risks &amp; catalysts</a>
-      <a href="#filings">Filings &amp; news</a>
-    </nav>
+    <div class="nbis-nav-shell">
+      <nav class="nbis-nav container" aria-label="NBIS research sections">
+        <span class="nbis-nav__label">Research map</span>
+        <div class="nbis-nav__links">
+          <a href="#overview" data-nbis-nav-link="overview" aria-current="location"><span aria-hidden="true">01</span>Overview</a>
+          <a href="#price" data-nbis-nav-link="price"><span aria-hidden="true">02</span>Price &amp; trend</a>
+          <a href="#business" data-nbis-nav-link="business"><span aria-hidden="true">03</span>Business</a>
+          <a href="#financials" data-nbis-nav-link="financials"><span aria-hidden="true">04</span>Financials</a>
+          <a href="#valuation" data-nbis-nav-link="valuation"><span aria-hidden="true">05</span>Valuation</a>
+          <a href="#risks" data-nbis-nav-link="risks"><span aria-hidden="true">06</span>Risks &amp; catalysts</a>
+          <a href="#filings" data-nbis-nav-link="filings"><span aria-hidden="true">07</span>Filings &amp; news</a>
+        </div>
+      </nav>
+    </div>
 
     <main class="container nbis-main">
       <section id="overview" class="nbis-section" aria-labelledby="overview-title">
@@ -287,6 +292,7 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
 </BaseLayout>
 
 <script src="../client/nbis-dashboard.ts"></script>
+<script src="../client/nbis-nav.ts"></script>
 
 <style is:global>
   @import "../styles/nbis.css";

@@ -1,44 +1,44 @@
 {
-  "updatedAt": "2026-08-06T04:08:01.383Z",
-  "sourceFetchedAt": "2026-08-06T04:07:59.283380+00:00",
+  "updatedAt": "2026-09-09T04:19:12.512Z",
+  "sourceFetchedAt": "2026-09-09T04:19:10.031808+00:00",
   "gainers": [
     {
-      "ticker": "ANET",
-      "name": "Arista Networks",
-      "chg": 3.56937,
-      "layerId": "networking"
-    },
-    {
-      "ticker": "NVDA",
-      "name": "NVIDIA",
-      "chg": 3.43493,
-      "layerId": "compute"
-    },
-    {
-      "ticker": "NRG",
-      "name": "NRG Energy",
-      "chg": 3.15277,
+      "ticker": "SMR",
+      "name": "NuScale Power",
+      "chg": 15.2577,
       "layerId": "power"
+    },
+    {
+      "ticker": "CRWV",
+      "name": "CoreWeave",
+      "chg": 11.7167,
+      "layerId": "software"
+    },
+    {
+      "ticker": "LITE",
+      "name": "Lumentum",
+      "chg": 11.0388,
+      "layerId": "networking"
     }
   ],
   "losers": [
     {
       "ticker": "ALAB",
       "name": "Astera Labs",
-      "chg": -11.9557,
+      "chg": -6.94265,
       "layerId": "networking"
     },
     {
-      "ticker": "000660.KS",
-      "name": "SK Hynix",
-      "chg": -8.9928055,
-      "layerId": "compute"
+      "ticker": "CDNS",
+      "name": "Cadence Design Systems",
+      "chg": -2.93475,
+      "layerId": "software"
     },
     {
-      "ticker": "AMD",
-      "name": "Advanced Micro Devices",
-      "chg": -7.04424,
-      "layerId": "compute"
+      "ticker": "PLTR",
+      "name": "Palantir",
+      "chg": -2.31171,
+      "layerId": "software"
     }
   ]
 }

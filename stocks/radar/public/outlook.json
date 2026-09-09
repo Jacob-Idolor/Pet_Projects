@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-06T04:07:49.158Z",
-  "fetchedAt": "2026-08-06T04:07:49.158Z",
+  "updatedAt": "2026-09-09T04:18:53.301Z",
+  "fetchedAt": "2026-09-09T04:18:53.301Z",
   "schemaVersion": 2,
   "hierarchy": "Valuation + news (incl. headline sentiment check) drive stock outlook; rates/bonds/yields frame macro. Technicals are momentum that may or may not hold.",
   "macro": {
@@ -10,8 +10,8 @@
       "label": "US 10Y",
       "unit": "yield",
       "blurb": "10-year Treasury yield — gravity for equity valuations",
-      "price": 4.617,
-      "changePct": -0.21611963161417078,
+      "price": 4.806,
+      "changePct": 0.4598679029480887,
       "name": "CBOE Interest Rate 10 Year T No"
     },
     "us13w": {
@@ -20,8 +20,8 @@
       "label": "US 13W",
       "unit": "yield",
       "blurb": "Short bill yield — front-end rates / Fed path proxy",
-      "price": 3.725,
-      "changePct": -0.13404876804070956,
+      "price": 3.775,
+      "changePct": 0.4791064855946162,
       "name": "13 WEEK TREASURY BILL"
     },
     "us5y": {
@@ -30,8 +30,8 @@
       "label": "US 5Y",
       "unit": "yield",
       "blurb": "5-year yield — mid-curve growth vs inflation bet",
-      "price": 4.324,
-      "changePct": -0.2077125023110075,
+      "price": 4.573,
+      "changePct": 0.5054902923294703,
       "name": "Treasury Yield 5 Years"
     },
     "tlt": {
@@ -40,8 +40,8 @@
       "label": "TLT",
       "unit": "price",
       "blurb": "Long-bond ETF — yields down ≈ TLT up",
-      "price": 83,
-      "changePct": 0.21733917633306904,
+      "price": 82.2,
+      "changePct": -0.012162856810616332,
       "name": "iShares 20+ Year Treasury Bond ETF"
     },
     "uup": {
@@ -50,8 +50,8 @@
       "label": "USD",
       "unit": "price",
       "blurb": "Dollar proxy — strong USD often pressures risk assets",
-      "price": 28.09,
-      "changePct": -0.24857900494109011,
+      "price": 27.99,
+      "changePct": -0.3205125496815809,
       "name": "Invesco DB US Dollar Index Bullish Fund"
     }
   },
@@ -59,7 +59,7 @@
     "SMH": {
       "symbol": "SMH",
       "fundamentals": {
-        "trailingPE": 36.880447,
+        "trailingPE": 39.1863,
         "forwardPE": null,
         "pegRatio": null,
         "priceToBook": null,
@@ -74,92 +74,92 @@
       },
       "news": [
         {
-          "title": "Why Chip ETFs May Be Poised for a Comeback",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/why-chip-etfs-may-poised-174800735.html",
-          "publishedAt": "2026-08-05T17:48:00.000Z",
+          "title": "Is Qualcomm on a Tear? Inside QCOM's 2026 Comeback — and the ETFs That Hold the Most",
+          "publisher": "etf.com",
+          "link": "https://finance.yahoo.com/m/cc75878c-6cf6-3a67-a385-175abda2739c/is-qualcomm-on-a-tear%3F-inside.html",
+          "publishedAt": "2026-09-08T19:36:08.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "This 3x Semiconductor ETF Turned $10,000 Into $56,000, Then Lost a Fifth in One Month",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/0955238e-29a2-369c-b9de-4d657dc921c7/this-3x-semiconductor-etf.html",
-          "publishedAt": "2026-08-05T02:09:34.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Update: S&P 500, Dow Scale New Peaks Amid Strong Earnings Flow, Strait of Hormuz Reopening Optimism",
+          "title": "Rising Oil Prices Pressure Wall Street Pre-Bell; Asia Off, Europe Flat",
           "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/p-500-dow-scale-peaks-211808769.html",
-          "publishedAt": "2026-08-04T21:18:08.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
+          "link": "https://finance.yahoo.com/markets/commodities/articles/rising-oil-prices-pressure-wall-110458020.html",
+          "publishedAt": "2026-09-08T11:04:58.000Z",
+          "sentiment": "negative",
+          "sentimentScore": -1,
           "sentimentHits": [
-            "strong"
+            "pressure"
           ]
+        },
+        {
+          "title": "ETF Zoo: Industry Scale, Speculation, and Sports Betting",
+          "publisher": "etf.com",
+          "link": "https://finance.yahoo.com/m/45446da7-f14c-39fc-8b1e-3773f67f1577/etf-zoo%3A-industry-scale%2C.html",
+          "publishedAt": "2026-09-04T17:08:58.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "positive",
-        "positive": 1,
-        "negative": 0,
+        "tilt": "negative",
+        "positive": 0,
+        "negative": 1,
         "neutral": 2,
-        "net": 1,
-        "scoreDelta": 1,
-        "label": "News check: positive (+1) · 1+ / 0−",
+        "net": -1,
+        "scoreDelta": -1,
+        "label": "News check: negative (-1) · 0+ / 1−",
         "method": "headline-lexicon-v1"
       }
     },
     "NBIS": {
       "symbol": "NBIS",
       "fundamentals": {
-        "trailingPE": 86.900795,
-        "forwardPE": -101.31719,
-        "pegRatio": 0.63,
-        "priceToBook": 7.745552,
-        "evToEbitda": -1458.617,
-        "profitMargin": 0.93086,
-        "revenueGrowth": 6.839,
-        "targetMeanPrice": 255.4375,
-        "recommendationMean": 1.88889,
+        "trailingPE": null,
+        "forwardPE": -81.36114,
+        "pegRatio": 0.54,
+        "priceToBook": 6.465193,
+        "evToEbitda": 267.447,
+        "profitMargin": 0.03129,
+        "revenueGrowth": 4.54,
+        "targetMeanPrice": 286.6875,
+        "recommendationMean": 1.75,
         "bias": "fair",
         "note": "Growth story carries the multiple — watch dilution and AI infra spend cadence.",
         "catalyst": "Capacity / GPU cloud bookings commentary"
       },
       "news": [
         {
-          "title": "Nebius Group (NBIS) Appoints Lindsey Irvine As CMO During Global Expansion",
-          "publisher": "Simply Wall St.",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/nebius-group-nbis-appoints-lindsey-171156494.html",
-          "publishedAt": "2026-08-05T17:11:56.000Z",
+          "title": "Update: US Equity Indexes Drop as Houthi Strikes on Saudi Arabia's Energy Infrastructure Lift Crude Oil",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-drop-houthi-205651069.html",
+          "publishedAt": "2026-09-08T20:56:51.000Z",
+          "sentiment": "negative",
+          "sentimentScore": -1,
+          "sentimentHits": [
+            "drop"
+          ]
+        },
+        {
+          "title": "Why CoreWeave Stock Soared 12% Today",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/b276022b-cfc9-3ccb-8248-1129c0f15e30/why-coreweave-stock-soared.html",
+          "publishedAt": "2026-09-08T20:51:53.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Nebius Surges 310% in a Year: Should You Buy, Hold or Sell?",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/nebius-surges-310-buy-hold-140800071.html",
-          "publishedAt": "2026-08-05T14:08:00.000Z",
+          "title": "Sector Update: Tech Stocks Rise Late Afternoon",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-rise-afternoon-195112771.html",
+          "publishedAt": "2026-09-08T19:51:12.000Z",
           "sentiment": "positive",
           "sentimentScore": 1,
           "sentimentHits": [
-            "surges"
-          ]
-        },
-        {
-          "title": "Analysts Estimate Nebius Group (NBIS) to Report a Decline in Earnings: What to Look Out for",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/analysts-estimate-nebius-group-nbis-140003963.html",
-          "publishedAt": "2026-08-05T14:00:03.000Z",
-          "sentiment": "negative",
-          "sentimentScore": -1,
-          "sentimentHits": [
-            "decline"
+            "rise"
           ]
         }
       ],
@@ -177,278 +177,43 @@
     "COHR": {
       "symbol": "COHR",
       "fundamentals": {
-        "trailingPE": 154.09389,
-        "forwardPE": 39.591087,
+        "trailingPE": 73.27185,
+        "forwardPE": 21.63191,
         "pegRatio": 0.92,
-        "priceToBook": 6.0112453,
-        "evToEbitda": 49.898,
-        "profitMargin": 0.07102,
-        "revenueGrowth": 0.205,
-        "targetMeanPrice": 391.45267,
-        "recommendationMean": 1.63636,
+        "priceToBook": 5.419749,
+        "evToEbitda": 42.865,
+        "profitMargin": 0.11309,
+        "revenueGrowth": 0.337,
+        "targetMeanPrice": 415.36197,
+        "recommendationMean": 1.6087,
         "bias": null,
         "note": null,
         "catalyst": null
       },
       "news": [
         {
-          "title": "Symbotic Inc. (SYM) Misses Q3 Earnings Estimates",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/symbotic-inc-sym-misses-q3-221008946.html",
-          "publishedAt": "2026-08-05T22:10:08.000Z",
-          "sentiment": "negative",
-          "sentimentScore": -1,
-          "sentimentHits": [
-            "misses"
-          ]
-        },
-        {
-          "title": "LITE Stock Alert: Analysts See Big Upside Ahead for Lumentum as Trump Aims to Restrict Chinese Data Center Components",
-          "publisher": "Barchart",
-          "link": "https://finance.yahoo.com/m/3ea045ed-e2fb-3959-977d-bb0accd2b7ed/lite-stock-alert%3A-analysts.html",
-          "publishedAt": "2026-08-05T17:54:09.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "upside"
-          ]
-        },
-        {
-          "title": "Dear Coherent Stock Fans, Mark Your Calendars for August 12",
-          "publisher": "Barchart",
-          "link": "https://finance.yahoo.com/m/8d874278-01e4-34f3-913e-8b3d26dfa53b/dear-coherent-stock-fans%2C.html",
-          "publishedAt": "2026-08-05T14:49:51.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        }
-      ],
-      "newsCheck": {
-        "tilt": "mixed",
-        "positive": 1,
-        "negative": 1,
-        "neutral": 1,
-        "net": 0,
-        "scoreDelta": 0,
-        "label": "News check: mixed (1+ / 1−)",
-        "method": "headline-lexicon-v1"
-      }
-    },
-    "TSEM": {
-      "symbol": "TSEM",
-      "fundamentals": {
-        "trailingPE": 94.25893,
-        "forwardPE": 33.241653,
-        "pegRatio": 6.76,
-        "priceToBook": 7.9913707,
-        "evToEbitda": 46.561,
-        "profitMargin": 0.15131,
-        "revenueGrowth": 0.155,
-        "targetMeanPrice": 318,
-        "recommendationMean": 1.4,
-        "bias": null,
-        "note": null,
-        "catalyst": null
-      },
-      "news": [
-        {
-          "title": "Tower Semiconductor Ltd. Q2 2026 Earnings Call Summary",
-          "publisher": "Moby",
-          "link": "https://finance.yahoo.com/m/e0ea98cd-b939-3e6e-9e38-d3305e5ea155/tower-semiconductor-ltd.-q2.html",
-          "publishedAt": "2026-08-04T21:15:30.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Tower Semiconductor Ltd (TSEM) (Q2 2026) Earnings Call Highlights: Record Revenue and Strategic ...",
-          "publisher": "GuruFocus.com",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/tower-semiconductor-ltd-tsem-q2-210647059.html",
-          "publishedAt": "2026-08-04T21:06:47.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 3,
-          "sentimentHits": [
-            "record revenue",
-            "record"
-          ]
-        },
-        {
-          "title": "Tower Semiconductor Q2 Earnings Call Highlights",
-          "publisher": "MarketBeat",
-          "link": "https://finance.yahoo.com/m/9239c03f-bdb2-3305-9c91-b67c9efc0614/tower-semiconductor-q2.html",
-          "publishedAt": "2026-08-04T18:04:41.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        }
-      ],
-      "newsCheck": {
-        "tilt": "positive",
-        "positive": 1,
-        "negative": 0,
-        "neutral": 2,
-        "net": 1,
-        "scoreDelta": 1,
-        "label": "News check: positive (+1) · 1+ / 0−",
-        "method": "headline-lexicon-v1"
-      }
-    },
-    "AAOI": {
-      "symbol": "AAOI",
-      "fundamentals": {
-        "trailingPE": null,
-        "forwardPE": 26.940487,
-        "pegRatio": 0.78,
-        "priceToBook": 9.179579,
-        "evToEbitda": -369.927,
-        "profitMargin": -0.085480005,
-        "revenueGrowth": 0.514,
-        "targetMeanPrice": 150.3,
-        "recommendationMean": 2.33333,
-        "bias": "cheap",
-        "note": "Screen looks cheap vs optical peers if execution sticks — scrub balance sheet risk in chat.",
-        "catalyst": "Datacenter transceiver wins / next earnings"
-      },
-      "news": [
-        {
-          "title": "New report warns China transceiver ban would hurt U.S. AI giants",
-          "publisher": "Investing.com",
-          "link": "https://finance.yahoo.com/technology/ai/articles/report-warns-china-transceiver-ban-093946021.html",
-          "publishedAt": "2026-08-05T09:39:46.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Applied Optoelectronics to Present at Rosenblatt's 6th Annual Technology Summit",
-          "publisher": "GlobeNewswire",
-          "link": "https://finance.yahoo.com/technology/articles/applied-optoelectronics-present-rosenblatts-6th-201000616.html",
-          "publishedAt": "2026-08-04T20:10:00.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Marvell Surges as China Ban Report Reignites Optical-Networking Stocks",
+          "title": "AMD, Amgen, Novartis, Qualcomn, Corning, and More Stocks That Explain Today’s Market",
           "publisher": "Barrons.com",
-          "link": "https://finance.yahoo.com/m/d907cc32-bb09-37ff-9b73-71565d5b1823/marvell-surges-as-china-ban.html",
-          "publishedAt": "2026-08-04T18:06:00.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "surges"
-          ]
-        }
-      ],
-      "newsCheck": {
-        "tilt": "positive",
-        "positive": 1,
-        "negative": 0,
-        "neutral": 2,
-        "net": 1,
-        "scoreDelta": 1,
-        "label": "News check: positive (+1) · 1+ / 0−",
-        "method": "headline-lexicon-v1"
-      }
-    },
-    "SIVEF": {
-      "symbol": "SIVEF",
-      "fundamentals": {
-        "trailingPE": null,
-        "forwardPE": null,
-        "pegRatio": null,
-        "priceToBook": null,
-        "evToEbitda": null,
-        "profitMargin": -0.74379,
-        "revenueGrowth": -0.215,
-        "targetMeanPrice": null,
-        "recommendationMean": null,
-        "bias": null,
-        "note": null,
-        "catalyst": null
-      },
-      "news": [
-        {
-          "title": "Crypto’s 24/7 Playbook Comes for Wall Street’s Beloved AI Stocks",
-          "publisher": "Bloomberg",
-          "link": "https://finance.yahoo.com/markets/crypto/articles/crypto-24-7-playbook-comes-091500678.html",
-          "publishedAt": "2026-07-28T09:15:00.000Z",
+          "link": "https://finance.yahoo.com/m/5b112dff-b85f-35e5-a3f5-79ce6f8a8bba/amd%2C-amgen%2C-novartis%2C.html",
+          "publishedAt": "2026-09-08T20:21:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Update on Expiry of Lock-up Undertaking and Insider Transactions in Sivers Semiconductors",
-          "publisher": "PR Newswire",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/expiry-lock-undertaking-insider-transactions-180600981.html",
-          "publishedAt": "2026-07-21T18:06:00.000Z",
+          "title": "Coherent Brings AI Datacenter and Photonics Thought Leadership to ECOC 2026 in Málaga, Spain",
+          "publisher": "GlobeNewswire",
+          "link": "https://finance.yahoo.com/technology/ai/articles/coherent-brings-ai-datacenter-photonics-200500935.html",
+          "publishedAt": "2026-09-08T20:05:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Sivers Board Completes Purchase of Shares as Approved at the June 2026 AGM",
-          "publisher": "PR Newswire",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/sivers-board-completes-purchase-shares-052200448.html",
-          "publishedAt": "2026-07-13T05:22:00.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "approved"
-          ]
-        }
-      ],
-      "newsCheck": {
-        "tilt": "positive",
-        "positive": 1,
-        "negative": 0,
-        "neutral": 2,
-        "net": 1,
-        "scoreDelta": 1,
-        "label": "News check: positive (+1) · 1+ / 0−",
-        "method": "headline-lexicon-v1"
-      }
-    },
-    "META": {
-      "symbol": "META",
-      "fundamentals": {
-        "trailingPE": 22.125893,
-        "forwardPE": 16.75677,
-        "pegRatio": 0.83,
-        "priceToBook": 6.1321907,
-        "evToEbitda": 13.879,
-        "profitMargin": 0.29834998,
-        "revenueGrowth": 0.28,
-        "targetMeanPrice": 759.40564,
-        "recommendationMean": 1.35484,
-        "bias": "fair",
-        "note": "Quality compounder — not a deep-value name; thesis is cash flow + AI ads, not PE compression.",
-        "catalyst": null
-      },
-      "news": [
-        {
-          "title": "News Q4 Earnings Call Highlights",
-          "publisher": "MarketBeat",
-          "link": "https://finance.yahoo.com/m/63023390-4575-3623-a842-33764a00052f/news-q4-earnings-call.html",
-          "publishedAt": "2026-08-06T03:03:58.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Meta Joins OpenAI and Anthropic in AI Cybersecurity Scare After Model Hacks Third Party: 'We Are Currently Investigating…'",
-          "publisher": "Benzinga",
-          "link": "https://finance.yahoo.com/technology/ai/articles/meta-joins-openai-anthropic-ai-021055968.html",
-          "publishedAt": "2026-08-06T02:10:55.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Meta Platforms Launches Muse Code AI Coding Tool Powered by Muse Spark 1.2",
-          "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/technology/ai/articles/meta-platforms-launches-muse-code-235028991.html",
-          "publishedAt": "2026-08-05T23:50:28.000Z",
+          "title": "Verizon’s Megadeal Proves Corning Is Integral to the AI Grid",
+          "publisher": "Barrons.com",
+          "link": "https://finance.yahoo.com/m/ce5fa35a-0fbb-3499-a1bd-5793c355f429/verizon%E2%80%99s-megadeal-proves.html",
+          "publishedAt": "2026-09-08T18:52:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
@@ -465,16 +230,128 @@
         "method": "headline-lexicon-v1"
       }
     },
-    "DRAM": {
-      "symbol": "DRAM",
+    "TSEM": {
+      "symbol": "TSEM",
       "fundamentals": {
-        "trailingPE": 24.19991,
+        "trailingPE": 86.885376,
+        "forwardPE": 33.655827,
+        "pegRatio": 3.6,
+        "priceToBook": 8.05113,
+        "evToEbitda": 39.349,
+        "profitMargin": 0.16939,
+        "revenueGrowth": 0.237,
+        "targetMeanPrice": 314.90625,
+        "recommendationMean": 1.28571,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "Here Are Wednesday’s Top Wall Street Analyst Research Calls: Ally Financial, GitLab, GLOBAL FOUNDRIES, Martin Marietta Materials, Rocket Lab USA, Strategy, Toast, Tower Semiconductor, and More",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/afa85b00-68ed-3f22-8e66-5b438b37bdc7/here-are-wednesday%E2%80%99s-top-wall.html",
+          "publishedAt": "2026-09-02T12:00:54.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "The Firm That Filed a Bet Against Taiwan Semiconductor Then Launched a Foundry Fund Five Days Later",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/929c18af-ce08-347f-8b51-52091f4c6ec7/the-firm-that-filed-a-bet.html",
+          "publishedAt": "2026-09-02T11:09:05.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Stifel Initiates Tower Semiconductor With Buy Rating",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/stifel-initiates-tower-semiconductor-buy-110115728.html",
+          "publishedAt": "2026-09-02T11:01:15.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        }
+      ],
+      "newsCheck": {
+        "tilt": "neutral",
+        "positive": 0,
+        "negative": 0,
+        "neutral": 3,
+        "net": 0,
+        "scoreDelta": 0,
+        "label": "News check: quiet / neutral (3 headlines)",
+        "method": "headline-lexicon-v1"
+      }
+    },
+    "AAOI": {
+      "symbol": "AAOI",
+      "fundamentals": {
+        "trailingPE": null,
+        "forwardPE": 24.23946,
+        "pegRatio": 0.78,
+        "priceToBook": 5.643244,
+        "evToEbitda": -287.613,
+        "profitMargin": -0.09568,
+        "revenueGrowth": 0.864,
+        "targetMeanPrice": 163.4,
+        "recommendationMean": null,
+        "bias": "cheap",
+        "note": "Screen looks cheap vs optical peers if execution sticks — scrub balance sheet risk in chat.",
+        "catalyst": "Datacenter transceiver wins / next earnings"
+      },
+      "news": [
+        {
+          "title": "Which Optics Stock Has Dominated in 2026: Applied Optoelectronics, Lumentum, or Coherent?",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/c719b9e4-6e79-3427-ae5f-4e3c2cf4aa61/which-optics-stock-has.html",
+          "publishedAt": "2026-09-07T13:30:22.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "These 3 AI Stocks Are Way Off Their Highs. Is the Pullback a Buying Opportunity?",
+          "publisher": "Insider Monkey",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/3-ai-stocks-way-off-224823238.html",
+          "publishedAt": "2026-09-05T22:48:23.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "HPE Cannot Build AI Servers Fast Enough. Is the Stock Still Cheap?",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/eca7d1f1-5015-3c04-b94e-5c08f3578e45/hpe-cannot-build-ai-servers.html",
+          "publishedAt": "2026-09-03T19:52:50.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        }
+      ],
+      "newsCheck": {
+        "tilt": "neutral",
+        "positive": 0,
+        "negative": 0,
+        "neutral": 3,
+        "net": 0,
+        "scoreDelta": 0,
+        "label": "News check: quiet / neutral (3 headlines)",
+        "method": "headline-lexicon-v1"
+      }
+    },
+    "SIVEF": {
+      "symbol": "SIVEF",
+      "fundamentals": {
+        "trailingPE": null,
         "forwardPE": null,
         "pegRatio": null,
         "priceToBook": null,
         "evToEbitda": null,
-        "profitMargin": null,
-        "revenueGrowth": null,
+        "profitMargin": -1.05834,
+        "revenueGrowth": -0.124,
         "targetMeanPrice": null,
         "recommendationMean": null,
         "bias": null,
@@ -483,34 +360,94 @@
       },
       "news": [
         {
-          "title": "Even the DRAM Bears Are Committed to the Ride",
-          "publisher": "etf.com",
-          "link": "https://finance.yahoo.com/m/6303599e-7f4d-3e8f-a749-df8d12bf9cfc/even-the-dram-bears-are.html",
-          "publishedAt": "2026-07-31T02:10:43.000Z",
+          "title": "Sivers Semiconductors Invests USD 30 Million to Expand European Photonics Manufacturing for AI Datacenters",
+          "publisher": "PR Newswire",
+          "link": "https://finance.yahoo.com/technology/ai/articles/sivers-semiconductors-invests-usd-30-061600765.html",
+          "publishedAt": "2026-09-03T06:16:00.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "expand"
+          ]
+        },
+        {
+          "title": "Change in the Total Number of Shares and Votes in Sivers Semiconductors AB",
+          "publisher": "PR Newswire",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/change-total-number-shares-votes-161500892.html",
+          "publishedAt": "2026-08-31T16:15:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Memory Stocks Surge. Sandisk Tops S&P 500 Gainers.",
-          "publisher": "Barrons.com",
-          "link": "https://finance.yahoo.com/m/db5a2b16-9dba-33bd-b3d3-e6a4d82f21ae/memory-stocks-surge.-sandisk.html",
-          "publishedAt": "2026-07-30T16:29:16.000Z",
+          "title": "Sivers Semiconductors AB (SIVEF) (Q2 2026) Earnings Call Highlights: Pipeline Surges 268% to $1. ...",
+          "publisher": "GuruFocus.com",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/sivers-semiconductors-ab-sivef-q2-010113113.html",
+          "publishedAt": "2026-08-28T01:01:13.000Z",
           "sentiment": "positive",
           "sentimentScore": 1,
           "sentimentHits": [
-            "surge"
+            "surges"
           ]
-        },
+        }
+      ],
+      "newsCheck": {
+        "tilt": "positive",
+        "positive": 2,
+        "negative": 0,
+        "neutral": 1,
+        "net": 2,
+        "scoreDelta": 2,
+        "label": "News check: positive (+2) · 2+ / 0−",
+        "method": "headline-lexicon-v1"
+      }
+    },
+    "META": {
+      "symbol": "META",
+      "fundamentals": {
+        "trailingPE": 23.132729,
+        "forwardPE": 17.548225,
+        "pegRatio": 0.82,
+        "priceToBook": 5.984003,
+        "evToEbitda": 14.454,
+        "profitMargin": 0.29834998,
+        "revenueGrowth": 0.28,
+        "targetMeanPrice": 754.15295,
+        "recommendationMean": 1.35484,
+        "bias": "fair",
+        "note": "Quality compounder — not a deep-value name; thesis is cash flow + AI ads, not PE compression.",
+        "catalyst": null
+      },
+      "news": [
         {
-          "title": "Individual investors are dumping stocks at the fastest pace since the COVID crash",
-          "publisher": "MarketWatch",
-          "link": "https://finance.yahoo.com/m/b4172981-1718-33ad-bf10-e61c06bdf245/individual-investors-are.html",
-          "publishedAt": "2026-07-29T17:40:00.000Z",
+          "title": "Meta Platforms Settles Major Lawsuit, Pays $18 Billion",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/fdaa381b-1047-3af1-8ca3-052632a7d18c/meta-platforms-settles-major.html",
+          "publishedAt": "2026-09-09T01:00:28.000Z",
           "sentiment": "negative",
           "sentimentScore": -1,
           "sentimentHits": [
-            "crash"
+            "lawsuit"
+          ]
+        },
+        {
+          "title": "States That Gave Data Centers Billions in Tax Breaks Are Now Ripping Up the Deals",
+          "publisher": "The Wall Street Journal",
+          "link": "https://finance.yahoo.com/m/2ff10329-f38e-3a7c-a9ef-e9be83d353eb/states-that-gave-data-centers.html",
+          "publishedAt": "2026-09-09T01:00:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Constellation Energy's Biggest AI Power Deal Doesn't Start Paying Until June 2027",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/f037b9c0-a976-3d36-aa81-e5fa5682525a/constellation-energy%27s.html",
+          "publishedAt": "2026-09-08T23:58:01.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "deal"
           ]
         }
       ],
@@ -525,64 +462,122 @@
         "method": "headline-lexicon-v1"
       }
     },
+    "DRAM": {
+      "symbol": "DRAM",
+      "fundamentals": {
+        "trailingPE": 12.987211,
+        "forwardPE": null,
+        "pegRatio": null,
+        "priceToBook": null,
+        "evToEbitda": null,
+        "profitMargin": null,
+        "revenueGrowth": null,
+        "targetMeanPrice": null,
+        "recommendationMean": null,
+        "bias": null,
+        "note": null,
+        "catalyst": null
+      },
+      "news": [
+        {
+          "title": "SK Hynix Jumps 7% as AI Diverts Memory From Phones, Micron Holds Steady, Apple Slips",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/dc5d32e2-54ad-3ff6-b998-74b6f351428d/sk-hynix-jumps-7%25-as-ai.html",
+          "publishedAt": "2026-09-08T15:58:06.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "jumps"
+          ]
+        },
+        {
+          "title": "Chip Stocks Pop Despite Jobs Day Weakness",
+          "publisher": "Barrons.com",
+          "link": "https://finance.yahoo.com/m/a1bb6cc9-8676-3ce2-a47c-de474ad73aba/chip-stocks-pop-despite-jobs.html",
+          "publishedAt": "2026-09-04T15:53:34.000Z",
+          "sentiment": "negative",
+          "sentimentScore": -1,
+          "sentimentHits": [
+            "weakness"
+          ]
+        },
+        {
+          "title": "SanDisk Rises 8%, Micron Gains 5%: Is the NAND Pricing Cycle Still Accelerating?",
+          "publisher": "24/7 Wall St.",
+          "link": "https://finance.yahoo.com/m/98d83e87-38af-3f28-884b-daa1ee96f300/sandisk-rises-8%25%2C-micron.html",
+          "publishedAt": "2026-09-04T15:00:36.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 2,
+          "sentimentHits": [
+            "gains",
+            "rises"
+          ]
+        }
+      ],
+      "newsCheck": {
+        "tilt": "mixed",
+        "positive": 2,
+        "negative": 1,
+        "neutral": 0,
+        "net": 1,
+        "scoreDelta": 0,
+        "label": "News check: mixed (2+ / 1−)",
+        "method": "headline-lexicon-v1"
+      }
+    },
     "000660.KS": {
       "symbol": "000660.KS",
       "fundamentals": {
         "trailingPE": null,
         "forwardPE": null,
-        "pegRatio": 0.25,
+        "pegRatio": 0.18,
         "priceToBook": null,
-        "evToEbitda": 7.771,
-        "profitMargin": 0.85682,
+        "evToEbitda": 1.125,
+        "profitMargin": 0.85619,
         "revenueGrowth": 2.568,
-        "targetMeanPrice": 3191863.2,
-        "recommendationMean": 1.35135,
+        "targetMeanPrice": 3197603.8,
+        "recommendationMean": 1.34211,
         "bias": "fair",
         "note": "Record print still missed lofty targets — stock sold off hard; scrub whether this is mix/LTA noise or a real AI demand crack.",
         "catalyst": "Post-miss price action / HBM4 ramp + LTA commentary"
       },
       "news": [
         {
-          "title": "AMAT at $534: Huge Upside With a Huge Hurdle Approaching",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/b74d2241-af18-33f7-bee1-4b7118389d90/amat-at-%24534%3A-huge-upside.html",
-          "publishedAt": "2026-08-06T03:50:37.000Z",
-          "sentiment": "positive",
-          "sentimentScore": 1,
-          "sentimentHits": [
-            "upside"
-          ]
-        },
-        {
-          "title": "Applied Materials Fell 11% Last Month: A Prominent Wall Street Pro Predicts 70% Gains Moving Forward",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/bda1f95f-b6b9-3e7a-a75d-eef876914a55/applied-materials-fell-11%25.html",
-          "publishedAt": "2026-08-06T03:47:20.000Z",
+          "title": "Adecoagro (AGRO) Completes R$705M Caarapó Mill Acquisition. Can Cluster Synergies Earn an Attractive Return?",
+          "publisher": "Insider Monkey",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/adecoagro-agro-completes-r-705m-041150847.html",
+          "publishedAt": "2026-09-09T04:11:50.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
-          "sentimentHits": [
-            "gains",
-            "fell"
-          ]
+          "sentimentHits": []
         },
         {
-          "title": "VNQ Returned 62.61% in 10 Years. SPY Returned 253.49%. Here’s the Hidden Cost Nobody Talks About",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/1d0a9e91-f86f-3452-9b8a-c6e7e4dd11de/vnq-returned-62.61%25-in-10.html",
-          "publishedAt": "2026-08-06T03:45:46.000Z",
+          "title": "'Our year': Kane and Bayern primed for Champions League tilt",
+          "publisher": "AFP",
+          "link": "https://finance.yahoo.com/m/313547ff-34b6-35c2-9dc9-dcc369fc30d6/%27our-year%27%3A-kane-and-bayern.html",
+          "publishedAt": "2026-09-09T04:11:48.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Copart (CPRT) Reports Earnings Tomorrow: What To Expect",
+          "publisher": "StockStory",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/copart-cprt-reports-earnings-tomorrow-040718214.html",
+          "publishedAt": "2026-09-09T04:07:18.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "positive",
-        "positive": 1,
+        "tilt": "neutral",
+        "positive": 0,
         "negative": 0,
-        "neutral": 2,
-        "net": 1,
-        "scoreDelta": 1,
-        "label": "News check: positive (+1) · 1+ / 0−",
+        "neutral": 3,
+        "net": 0,
+        "scoreDelta": 0,
+        "label": "News check: quiet / neutral (3 headlines)",
         "method": "headline-lexicon-v1"
       }
     },
@@ -590,50 +585,49 @@
       "symbol": "OUST",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": -1002.6666,
+        "forwardPE": -299.92,
         "pegRatio": null,
-        "priceToBook": 10.389132,
-        "evToEbitda": -40.2,
-        "profitMargin": -0.30122,
-        "revenueGrowth": 0.489,
-        "targetMeanPrice": 52.14286,
-        "recommendationMean": 1.28571,
+        "priceToBook": 6.9156985,
+        "evToEbitda": -42.218,
+        "profitMargin": -0.26025,
+        "revenueGrowth": 0.559,
+        "targetMeanPrice": 59.4,
+        "recommendationMean": 1.33333,
         "bias": null,
         "note": null,
         "catalyst": null
       },
       "news": [
         {
-          "title": "Allient (ALNT) Surpasses Q2 Earnings and Revenue Estimates",
+          "title": "Will GeoCue Partnership Accelerate Ouster's Lidar Growth?",
           "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/allient-alnt-surpasses-q2-earnings-003508889.html",
-          "publishedAt": "2026-08-06T00:35:08.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Earnings To Watch: Ouster Inc (OUST) Q2 2026 -- GF Value Sees 61% Downside",
-          "publisher": "GuruFocus.com",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/earnings-watch-ouster-inc-oust-132606987.html",
-          "publishedAt": "2026-08-05T13:26:06.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Serve Robotics Surges 13%, Ouster Climbs 6%, Symbotic Gains 4% as Robotics Stocks Rally",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/80b53044-e6eb-3718-94e2-1ac89435e49e/serve-robotics-surges-13%25%2C.html",
-          "publishedAt": "2026-08-03T15:35:12.000Z",
+          "link": "https://finance.yahoo.com/technology/articles/geocue-partnership-accelerate-ousters-lidar-142200032.html",
+          "publishedAt": "2026-09-03T14:22:00.000Z",
           "sentiment": "positive",
-          "sentimentScore": 4,
+          "sentimentScore": 3,
           "sentimentHits": [
-            "surges",
-            "rally",
-            "gains",
-            "climbs"
+            "partnership",
+            "growth",
+            "accelerate"
           ]
+        },
+        {
+          "title": "GeoCue Elevates Survey-Grade Drone Mapping with Ouster's BABA-Compliant Native Color Rev8 Digital Lidar",
+          "publisher": "Business Wire",
+          "link": "https://finance.yahoo.com/technology/ai/articles/geocue-elevates-survey-grade-drone-110000662.html",
+          "publishedAt": "2026-09-02T11:00:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "How Trossen Robotics Collaboration Could Strengthen Ouster's Prospects",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/trossen-robotics-collaboration-could-strengthen-143500738.html",
+          "publishedAt": "2026-09-01T14:35:00.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
         }
       ],
       "newsCheck": {
@@ -650,59 +644,56 @@
     "VPG": {
       "symbol": "VPG",
       "fundamentals": {
-        "trailingPE": 222.90907,
-        "forwardPE": 40.640884,
-        "pegRatio": 5.61,
-        "priceToBook": 2.9231074,
-        "evToEbitda": 45.754,
-        "profitMargin": 0.0185,
-        "revenueGrowth": 0.176,
-        "targetMeanPrice": 94.66667,
-        "recommendationMean": 1,
+        "trailingPE": 215.59999,
+        "forwardPE": 36.13408,
+        "pegRatio": 1.79,
+        "priceToBook": 2.5892715,
+        "evToEbitda": 35.008,
+        "profitMargin": 0.01202,
+        "revenueGrowth": 0.117,
+        "targetMeanPrice": 93.33333,
+        "recommendationMean": null,
         "bias": null,
         "note": null,
         "catalyst": null
       },
       "news": [
         {
-          "title": "Vishay Precision Shares Fall After Fiscal Q2 Results Miss Analyst Expectations",
-          "publisher": "MT Newswires",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/vishay-precision-shares-fall-fiscal-134611401.html",
-          "publishedAt": "2026-08-05T13:46:11.000Z",
-          "sentiment": "negative",
-          "sentimentScore": -2,
-          "sentimentHits": [
-            "fall",
-            "miss"
-          ]
-        },
-        {
-          "title": "Vishay: Q2 Earnings Snapshot",
-          "publisher": "Associated Press",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/vishay-q2-earnings-snapshot-102235203.html",
-          "publishedAt": "2026-08-05T10:22:35.000Z",
+          "title": "TTDKY or VPG: Which Is the Better Value Stock Right Now?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/ttdky-vpg-better-value-stock-154002081.html",
+          "publishedAt": "2026-08-27T15:40:02.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "VPG Reports Fiscal 2026 Second Quarter Results; Orders of $96 Million Reflect Continued Strength in Key Markets",
-          "publisher": "GlobeNewswire",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/vpg-reports-fiscal-2026-second-101500048.html",
-          "publishedAt": "2026-08-05T10:15:00.000Z",
+          "title": "Vishay Precision Group (VPG) Q2 2026 Earnings Call Transcript",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/5c9efa4a-a740-3469-b8ed-0b8ae64a087a/vishay-precision-group-%28vpg%29.html",
+          "publishedAt": "2026-08-12T17:29:43.000Z",
+          "sentiment": "neutral",
+          "sentimentScore": 0,
+          "sentimentHits": []
+        },
+        {
+          "title": "Vishay Precision Group Q2 Earnings Call Highlights",
+          "publisher": "MarketBeat",
+          "link": "https://finance.yahoo.com/m/8695e554-755d-318c-b59a-27e1457771ff/vishay-precision-group-q2.html",
+          "publishedAt": "2026-08-09T15:04:18.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "negative",
+        "tilt": "neutral",
         "positive": 0,
-        "negative": 1,
-        "neutral": 2,
-        "net": -1,
-        "scoreDelta": -1,
-        "label": "News check: negative (-1) · 0+ / 1−",
+        "negative": 0,
+        "neutral": 3,
+        "net": 0,
+        "scoreDelta": 0,
+        "label": "News check: quiet / neutral (3 headlines)",
         "method": "headline-lexicon-v1"
       }
     },
@@ -710,46 +701,49 @@
       "symbol": "AMBA",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 71.34203,
+        "forwardPE": 56.64924,
         "pegRatio": 2.28,
-        "priceToBook": 5.9260063,
-        "evToEbitda": -52.985,
-        "profitMargin": -0.17185,
-        "revenueGrowth": 0.169,
-        "targetMeanPrice": 95,
-        "recommendationMean": 2.14286,
+        "priceToBook": 4.503405,
+        "evToEbitda": -52.001,
+        "profitMargin": -0.13481,
+        "revenueGrowth": 0.132,
+        "targetMeanPrice": 89.36364,
+        "recommendationMean": 2.28571,
         "bias": null,
         "note": null,
         "catalyst": null
       },
       "news": [
         {
-          "title": "Ichor Holdings (ICHR) Q2 Earnings Top Estimates",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/ichor-holdings-ichr-q2-earnings-214503231.html",
-          "publishedAt": "2026-08-03T21:45:03.000Z",
+          "title": "BofA Adjusts Price Target on Ambarella to $70 From $96",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/bofa-adjusts-price-target-ambarella-122118854.html",
+          "publishedAt": "2026-09-08T12:21:18.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Nvidia Stock Retakes Key Level As Chip Stocks Waver",
-          "publisher": "Investor's Business Daily",
-          "link": "https://finance.yahoo.com/m/94675983-e7f5-3a81-a6aa-028679094423/nvidia-stock-retakes-key.html",
-          "publishedAt": "2026-08-03T20:36:24.000Z",
+          "title": "Ambarella (AMBA) Grew 2Q Revenue 13.2% and Signed 7-Year Channel Agreements. Can Edge-AI Scale Reverse Margin Compression?",
+          "publisher": "Insider Monkey",
+          "link": "https://finance.yahoo.com/technology/ai/articles/ambarella-amba-grew-2q-revenue-231537538.html",
+          "publishedAt": "2026-09-04T23:15:37.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Strength Seen in Ambarella (AMBA): Can Its 16.1% Jump Turn into More Strength?",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/strength-seen-ambarella-amba-16-060800443.html",
-          "publishedAt": "2026-08-03T06:08:00.000Z",
+          "title": "Ambarella Beat Estimates but Fell as NXP Buyout Talk Lingered. Is the Edge-AI Upside Already Priced In?",
+          "publisher": "Insider Monkey",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/ambarella-beat-estimates-fell-nxp-224000253.html",
+          "publishedAt": "2026-09-04T22:40:00.000Z",
           "sentiment": "positive",
-          "sentimentScore": 1,
+          "sentimentScore": 3,
           "sentimentHits": [
-            "jump"
+            "beat estimates",
+            "beat",
+            "upside",
+            "fell"
           ]
         }
       ],
@@ -768,68 +762,70 @@
       "symbol": "SYNA",
       "fundamentals": {
         "trailingPE": null,
-        "forwardPE": 18.989851,
+        "forwardPE": 14.401024,
         "pegRatio": 0.51,
-        "priceToBook": 2.8543735,
-        "evToEbitda": 49.301,
-        "profitMargin": -0.04104,
-        "revenueGrowth": 0.104,
-        "targetMeanPrice": 143.66667,
-        "recommendationMean": 2.69231,
+        "priceToBook": 3.9806683,
+        "evToEbitda": 44.596,
+        "profitMargin": -0.40995997,
+        "revenueGrowth": 0.089,
+        "targetMeanPrice": 130.33333,
+        "recommendationMean": null,
         "bias": null,
         "note": null,
         "catalyst": null
       },
       "news": [
         {
-          "title": "Cirrus Logic (CRUS) Q1 Earnings Surpass Estimates",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/cirrus-logic-crus-q1-earnings-211002567.html",
-          "publishedAt": "2026-08-05T21:10:02.000Z",
+          "title": "Synaptics (SYNA) Agrees to $7 Billion Deal With Onsemi: What Investors Should Know",
+          "publisher": "Insider Monkey",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/synaptics-syna-agrees-7-billion-171314111.html",
+          "publishedAt": "2026-09-01T17:13:14.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "deal"
+          ]
+        },
+        {
+          "title": "Synaptics Insider Sold Shares Worth $404,153, According to a Recent SEC Filing",
+          "publisher": "MT Newswires",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/synaptics-insider-sold-shares-worth-170806409.html",
+          "publishedAt": "2026-08-26T17:08:06.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "SYNA: Lowering target price to $85.00",
-          "publisher": "Argus Research",
-          "link": "https://finance.yahoo.com/m/0c96f36b-ce8e-348c-be19-b55fc829f841/syna%3A-lowering-target-price.html",
-          "publishedAt": "2026-08-05T00:00:00.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "ON Semiconductor (ON) Stock May Be 8% Overvalued Despite Earnings Nearing",
-          "publisher": "Simply Wall St.",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/semiconductor-stock-may-8-overvalued-101648499.html",
-          "publishedAt": "2026-08-04T10:16:48.000Z",
+          "title": "Synaptics' CEO Sold Stock After a 120,000-Share Vest. Here's What to Know.",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/d21fe165-bcdd-3fa8-9538-dff43613e39c/synaptics%27-ceo-sold-stock.html",
+          "publishedAt": "2026-08-23T09:10:14.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "neutral",
-        "positive": 0,
+        "tilt": "positive",
+        "positive": 1,
         "negative": 0,
-        "neutral": 3,
-        "net": 0,
-        "scoreDelta": 0,
-        "label": "News check: quiet / neutral (3 headlines)",
+        "neutral": 2,
+        "net": 1,
+        "scoreDelta": 1,
+        "label": "News check: positive (+1) · 1+ / 0−",
         "method": "headline-lexicon-v1"
       }
     },
     "INOD": {
       "symbol": "INOD",
       "fundamentals": {
-        "trailingPE": 63.063637,
-        "forwardPE": 34.685,
+        "trailingPE": 43.503876,
+        "forwardPE": 26.881641,
         "pegRatio": 0.87,
-        "priceToBook": 17.660387,
-        "evToEbitda": 41.461,
-        "profitMargin": 0.13864,
-        "revenueGrowth": 0.544,
+        "priceToBook": 12.087012,
+        "evToEbitda": 28.404,
+        "profitMargin": 0.14656,
+        "revenueGrowth": 0.578,
         "targetMeanPrice": 122.75,
         "recommendationMean": null,
         "bias": null,
@@ -838,55 +834,57 @@
       },
       "news": [
         {
-          "title": "Innodata Releases the First Stage of Its AI Cyber Training Suite to Enable AI Coding Agents to Write - and Repair - Secure Code",
-          "publisher": "ACCESS Newswire",
-          "link": "https://finance.yahoo.com/technology/ai/articles/innodata-releases-first-stage-ai-123000193.html",
-          "publishedAt": "2026-08-04T12:30:00.000Z",
+          "title": "Can Innodata Make Agentic AI Deployment an Enterprise Growth Driver?",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/technology/ai/articles/innodata-agentic-ai-deployment-enterprise-143600031.html",
+          "publishedAt": "2026-09-07T14:36:00.000Z",
+          "sentiment": "positive",
+          "sentimentScore": 1,
+          "sentimentHits": [
+            "growth"
+          ]
+        },
+        {
+          "title": "Why Innodata Stock Tumbled by 10% Last Month",
+          "publisher": "Motley Fool",
+          "link": "https://finance.yahoo.com/m/a51e3adb-3767-3812-b015-4db7d97e5187/why-innodata-stock-tumbled-by.html",
+          "publishedAt": "2026-09-06T01:23:53.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Innodata Before Q2 Earnings: Should You Buy, Sell or Hold the Stock?",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/innodata-q2-earnings-buy-sell-115300569.html",
-          "publishedAt": "2026-08-04T11:53:00.000Z",
-          "sentiment": "neutral",
-          "sentimentScore": 0,
-          "sentimentHits": []
-        },
-        {
-          "title": "Shimmick Corporation (SHIM) May Report Negative Earnings: Know the Trend Ahead of Next Week's Release",
-          "publisher": "Zacks",
-          "link": "https://finance.yahoo.com/markets/stocks/articles/shimmick-corporation-shim-may-report-140008757.html",
-          "publishedAt": "2026-08-03T14:00:08.000Z",
+          "title": "These 3 AI Stocks Are Way Off Their Highs. Is the Pullback a Buying Opportunity?",
+          "publisher": "Insider Monkey",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/3-ai-stocks-way-off-224823238.html",
+          "publishedAt": "2026-09-05T22:48:23.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         }
       ],
       "newsCheck": {
-        "tilt": "neutral",
-        "positive": 0,
+        "tilt": "positive",
+        "positive": 1,
         "negative": 0,
-        "neutral": 3,
-        "net": 0,
-        "scoreDelta": 0,
-        "label": "News check: quiet / neutral (3 headlines)",
+        "neutral": 2,
+        "net": 1,
+        "scoreDelta": 1,
+        "label": "News check: positive (+1) · 1+ / 0−",
         "method": "headline-lexicon-v1"
       }
     },
     "BE": {
       "symbol": "BE",
       "fundamentals": {
-        "trailingPE": 292.9125,
-        "forwardPE": 47.864063,
-        "pegRatio": 0.86,
-        "priceToBook": 42.644222,
-        "evToEbitda": 165.225,
+        "trailingPE": 364.76315,
+        "forwardPE": 56.344044,
+        "pegRatio": 0.57,
+        "priceToBook": 50.4495,
+        "evToEbitda": 195.411,
         "profitMargin": 0.07868,
         "revenueGrowth": 1.655,
-        "targetMeanPrice": 273.5077,
+        "targetMeanPrice": 276.04614,
         "recommendationMean": 2.24138,
         "bias": null,
         "note": null,
@@ -894,28 +892,28 @@
       },
       "news": [
         {
-          "title": "Bloom Energy's AI Data Center Backlog Just Grew Again -- Here's What It's Worth",
-          "publisher": "Motley Fool",
-          "link": "https://finance.yahoo.com/m/bd4908f3-f290-3353-8828-ea9326df8f60/bloom-energy%27s-ai-data-center.html",
-          "publishedAt": "2026-08-05T15:35:00.000Z",
+          "title": "Dow Jones Futures: Dow Skids But AMD, HPE Are New Buys; Apple iPhone Event Due",
+          "publisher": "Investor's Business Daily",
+          "link": "https://finance.yahoo.com/m/61edb329-2f31-3e10-8832-6860b7819ab2/dow-jones-futures%3A-dow-skids.html",
+          "publishedAt": "2026-09-09T03:09:58.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Bloom Energy, CoreWeave, and Nebius Got Caught in a Wall Street Short Battle. They’re All Rallying Again.",
-          "publisher": "24/7 Wall St.",
-          "link": "https://finance.yahoo.com/m/f7b3c470-8079-321f-8e69-f4eccf67805c/bloom-energy%2C-coreweave%2C-and.html",
-          "publishedAt": "2026-08-05T14:21:37.000Z",
+          "title": "3 Stocks Soon Joining the S&P 500",
+          "publisher": "Zacks",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/3-stocks-soon-joining-p-003800655.html",
+          "publishedAt": "2026-09-09T00:38:00.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
         },
         {
-          "title": "Bloom Energy's Pullback Is the Entry Point Long-Term Investors Wanted",
-          "publisher": "Motley Fool",
-          "link": "https://finance.yahoo.com/m/2682008e-ce25-3b6a-aeb4-c7e6985c500c/bloom-energy%27s-pullback-is.html",
-          "publishedAt": "2026-08-05T13:50:00.000Z",
+          "title": "Why Bloom Energy (BE) Stock Is Trading Up Today",
+          "publisher": "StockStory",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/why-bloom-energy-stock-trading-003118317.html",
+          "publishedAt": "2026-09-09T00:31:18.000Z",
           "sentiment": "neutral",
           "sentimentScore": 0,
           "sentimentHits": []
