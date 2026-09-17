@@ -4,7 +4,7 @@ This is a small, honest product experiment: publish useful source-linked NBIS re
 
 ## Sequence implemented
 
-- **Discovery:** the homepage now emits WebSite/WebPage structured data, links to an evergreen NBIS reading guide, and includes that guide plus the transparency page in the sitemap.
+- **Discovery:** the homepage now emits WebSite/WebPage structured data, links to evergreen NBIS reading and SEC-filings guides, and includes both guides plus the transparency page in the sitemap.
 - **Retention:** “Follow this desk” remembers a reader’s preference locally in the browser. It does not imply email delivery or create an account.
 - **Measurement:** the client emits provider-neutral `stockswatch:engagement` events for navigation, guide opens, follow toggles, and snapshot hydration. No third-party analytics script is enabled by default.
 - **Monetization readiness:** a late, manually labeled board ad slot is available behind the existing domain, content, publisher, and unit-ID gates. It remains dormant until configuration and review are complete.

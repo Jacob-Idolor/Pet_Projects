@@ -1,0 +1,248 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import profile from "../../data/nbis-profile.json";
+
+const base = import.meta.env.BASE_URL;
+const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
+const description = "A practical guide to reading Nebius Group NBIS SEC filings: forms, reporting periods, cash flow, dilution, commitments, and source checks.";
+const guideUrl = site ? `${site}/guides/nbis-sec-filings.html` : "";
+const secFilingsUrl = `https://www.sec.gov/edgar/browse/?CIK=${profile.secCik}&owner=exclude`;
+const structuredData = site
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${guideUrl}#article`,
+          headline: "How to read NBIS SEC filings",
+          description,
+          url: guideUrl,
+          mainEntityOfPage: { "@id": guideUrl },
+          author: { "@type": "Organization", name: "StocksWatch" },
+          publisher: { "@type": "Organization", name: "StocksWatch" },
+          about: { "@type": "Corporation", name: profile.company, url: profile.website },
+          articleSection: "SEC filing methodology",
+          inLanguage: "en-US",
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${guideUrl}#breadcrumb`,
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "StocksWatch", item: `${site}/` },
+            { "@type": "ListItem", position: 2, name: "NBIS SEC filings guide", item: guideUrl },
+          ],
+        },
+      ],
+    }
+  : undefined;
+---
+
+<BaseLayout
+  title="How to read NBIS SEC filings"
+  description={description}
+  allowAds={false}
+  activeNav="nbis"
+  canonicalPath="/guides/nbis-sec-filings.html"
+  ogType="article"
+  articleSection="SEC filing methodology"
+  structuredData={structuredData}
+>
+  <article class="guide-page container">
+    <header class="guide-hero">
+      <p class="nbis-eyebrow">StocksWatch / Filing guide</p>
+      <h1>How to read NBIS SEC filings</h1>
+      <p class="guide-hero__lede">A practical method for moving from a filing header to the numbers, footnotes, and capital decisions that deserve verification.</p>
+      <p class="guide-hero__meta">For Nebius Group N.V. · NBIS · Educational research only</p>
+    </header>
+
+    <div class="guide-layout">
+      <aside class="guide-index" aria-label="Guide contents">
+        <p class="guide-index__label">On this page</p>
+        <a href="#start">01 / Start with the filing</a>
+        <a href="#forms">02 / Know the form</a>
+        <a href="#numbers">03 / Read the numbers</a>
+        <a href="#capital">04 / Check capital decisions</a>
+        <a href="#checklist">05 / Use a repeatable checklist</a>
+      </aside>
+
+      <div class="guide-copy">
+        <section id="start">
+          <p class="nbis-eyebrow">01 / Orientation</p>
+          <h2>Start with the filing header, not the headline</h2>
+          <p>Open the primary document in <a href={secFilingsUrl} target="_blank" rel="noopener">SEC EDGAR</a> and confirm the issuer, filing date, form type, reporting period, and whether the document is an amendment. A headline can summarize one sentence; the filing tells you what was actually reported, when it was reported, and where the caveats live.</p>
+          <p>Save the accession link for anything material. That creates a durable source trail and makes it easier to distinguish a later restatement, amendment, or follow-up filing from the original disclosure.</p>
+        </section>
+
+        <section id="forms">
+          <p class="nbis-eyebrow">02 / Filing types</p>
+          <h2>Know what each form is trying to communicate</h2>
+          <p>For a company such as {profile.company}, the filing list can include foreign-issuer reports, annual reports, ownership filings, and transaction disclosures. The form is a routing clue, not a conclusion: read the document title and reporting period before interpreting its significance.</p>
+          <ul>
+            <li><strong>6-K:</strong> a current report or attached company material. Identify the underlying event, period, and whether it contains financial statements, an earnings release, or another exhibit.</li>
+            <li><strong>20-F:</strong> an annual report filing. Use it for the broadest view of the year, accounting policies, risk factors, and audited financial statements.</li>
+            <li><strong>3, 4, and 5:</strong> ownership or insider transaction reports. Separate a filed transaction from an interpretation about why it happened.</li>
+            <li><strong>13D, 13G, and 144:</strong> beneficial ownership or resale-related disclosures. Check the filer, date, ownership percentage, and stated purpose.</li>
+          </ul>
+          <p>Forms and filing practices can change. Treat EDGAR’s primary document and the issuer’s latest materials as the authority for the specific event.</p>
+        </section>
+
+        <section id="numbers">
+          <p class="nbis-eyebrow">03 / Financial reading</p>
+          <h2>Read income, cash, and balance sheet together</h2>
+          <p>Revenue growth alone does not describe the economics of an AI cloud buildout. Read the income statement alongside operating cash flow, capital spending, cash, debt, and commitments. Then check the footnotes for definitions, accounting changes, related parties, and items that do not fit neatly into a headline metric.</p>
+          <div class="guide-grid">
+            <div>
+              <strong>Income statement</strong>
+              <span>What grew, what carried the margin, and which periods are comparable?</span>
+            </div>
+            <div>
+              <strong>Cash flow</strong>
+              <span>How much cash came from operations, and how much was invested in capacity?</span>
+            </div>
+            <div>
+              <strong>Balance sheet</strong>
+              <span>What cash, debt, leases, and other obligations support the operating plan?</span>
+            </div>
+            <div>
+              <strong>Footnotes</strong>
+              <span>Which definitions, estimates, segment boundaries, or subsequent events change the reading?</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="capital">
+          <p class="nbis-eyebrow">04 / Capital structure</p>
+          <h2>Check dilution and commitments before drawing a conclusion</h2>
+          <p>Fast infrastructure expansion can require capital before the full revenue effect is visible. Look for new shares, options, convertibles, debt, leases, financing commitments, restricted cash, and changes in shares outstanding. A strong operating update and a shareholder-unfriendly financing decision can both be true at the same time.</p>
+          <p>Also separate the core AI cloud from other group businesses and strategic holdings. Consolidated results may combine different operating models, ownership percentages, and accounting treatments. Use the segment or business discussion and the notes to understand what is actually included.</p>
+        </section>
+
+        <section id="checklist">
+          <p class="nbis-eyebrow">05 / Repeatable method</p>
+          <h2>Use this five-question filing checklist</h2>
+          <ol>
+            <li><strong>What changed?</strong> Write one sentence using the filing’s date and reporting period.</li>
+            <li><strong>What is directly reported?</strong> Separate a number or quoted disclosure from management commentary and outside interpretation.</li>
+            <li><strong>What is the cash consequence?</strong> Check operating cash flow, capital spending, financing, and liquidity.</li>
+            <li><strong>What changed per share?</strong> Review shares outstanding, dilution, convertibles, options, and ownership changes.</li>
+            <li><strong>What still needs verification?</strong> Record the missing definition, footnote, period comparison, or follow-up filing.</li>
+          </ol>
+          <div class="guide-sources">
+            <a href={secFilingsUrl} target="_blank" rel="noopener">
+              <strong>SEC EDGAR company filings ↗</strong>
+              <span>Primary filing documents, accession numbers, form types, and filing dates.</span>
+            </a>
+            <a href={profile.investorRelations} target="_blank" rel="noopener">
+              <strong>Nebius investor hub ↗</strong>
+              <span>Company releases, shareholder materials, presentations, and related context.</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="guide-callout">
+          Research and education only — not investment advice. A filing is a primary source, but it can still require interpretation and may later be amended or restated. Do not treat a filing, automated readout, or scenario assumption as a guaranteed outcome.
+        </div>
+        <p class="guide-back"><a href={base}>← Return to the NBIS research desk</a></p>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .guide-page {
+    padding-bottom: 5rem;
+  }
+  .guide-hero {
+    max-width: 52rem;
+    padding: clamp(4.5rem, 10vw, 8rem) 0 4rem;
+  }
+  .guide-hero h1 {
+    margin: .7rem 0 1.2rem;
+    color: var(--text);
+    font-size: clamp(2.7rem, 7vw, 5.8rem);
+    letter-spacing: -.08em;
+    line-height: .95;
+  }
+  .guide-hero__lede {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.2rem;
+    line-height: 1.6;
+  }
+  .guide-hero__meta {
+    margin: 1.4rem 0 0;
+    color: var(--dim);
+    font: .72rem/1.4 var(--mono);
+  }
+  .guide-hero__related { margin: 1.2rem 0 0; font-size: .85rem; }
+  .guide-hero__related a { color: var(--accent); text-decoration: none; }
+  .guide-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 720px);
+    gap: clamp(2rem, 7vw, 6rem);
+    align-items: start;
+  }
+  .guide-index {
+    position: sticky;
+    top: 5.6rem;
+    display: grid;
+    gap: .6rem;
+    padding: 1rem 0;
+    border-block: 1px solid var(--border);
+  }
+  .guide-index__label {
+    margin: 0 0 .25rem;
+    color: var(--dim);
+    font: 600 .68rem/1.2 var(--mono);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .guide-index a {
+    color: var(--muted);
+    font-size: .78rem;
+    text-decoration: none;
+  }
+  .guide-index a:hover { color: var(--accent); }
+  .guide-copy { min-width: 0; }
+  .guide-copy section {
+    padding-top: 4rem;
+    scroll-margin-top: 5.5rem;
+  }
+  .guide-copy section:first-child { padding-top: 0; }
+  .guide-copy h2 {
+    margin: .55rem 0 .9rem;
+    color: var(--text);
+    font-size: clamp(1.6rem, 3vw, 2.45rem);
+    letter-spacing: -.06em;
+    line-height: 1.05;
+  }
+  .guide-copy p, .guide-copy li {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  .guide-copy a { color: var(--accent); }
+  .guide-copy ul, .guide-copy ol { display: grid; gap: .7rem; margin: 1.2rem 0 0; padding-left: 1.15rem; }
+  .guide-copy strong { color: var(--text); }
+  .guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; margin-top: 1.3rem; }
+  .guide-grid div { display: grid; gap: .3rem; padding: .9rem 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); }
+  .guide-grid strong { font-size: .85rem; }
+  .guide-grid span { color: var(--muted); font-size: .8rem; line-height: 1.5; }
+  .guide-sources { display: grid; gap: .7rem; margin-top: 1.25rem; }
+  .guide-sources a { display: grid; gap: .25rem; padding: .9rem 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); text-decoration: none; }
+  .guide-sources a:hover { border-color: var(--accent); }
+  .guide-sources strong { color: var(--accent); font-size: .85rem; }
+  .guide-sources span { color: var(--muted); font-size: .8rem; line-height: 1.5; }
+  .guide-callout { margin-top: 4rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--border)); border-radius: .75rem; background: color-mix(in srgb, var(--amber) 8%, var(--surface)); color: var(--muted); font-size: .82rem; line-height: 1.6; }
+  .guide-back { margin-top: 1.5rem; }
+  .guide-back a { color: var(--accent); }
+  @media (max-width: 760px) {
+    .guide-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+    .guide-index { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .guide-index__label { grid-column: 1 / -1; }
+  }
+  @media (max-width: 540px) {
+    .guide-grid { grid-template-columns: 1fr; }
+  }
+</style>

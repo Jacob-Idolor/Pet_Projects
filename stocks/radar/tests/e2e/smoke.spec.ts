@@ -47,15 +47,22 @@ test.describe("StocksWatch smoke", () => {
     await page.goto("/");
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
     await expect(page.getByRole("link", { name: /How to read this desk/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /How to read SEC filings/i })).toBeVisible();
 
     const sitemap = await page.request.get("/sitemap.xml");
     const sitemapText = await sitemap.text();
     expect(sitemap.ok()).toBeTruthy();
     expect(sitemapText).toContain("/guides/nbis-research-guide.html");
+    expect(sitemapText).toContain("/guides/nbis-sec-filings.html");
     expect(sitemapText).toContain("/privacy.html");
 
     await page.goto("/guides/nbis-research-guide.html");
     await expect(page.getByRole("heading", { name: /How to read the NBIS research desk/i })).toBeVisible();
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+
+    await page.goto("/guides/nbis-sec-filings.html");
+    await expect(page.getByRole("heading", { name: /How to read NBIS SEC filings/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /SEC EDGAR company filings/i })).toBeVisible();
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
 
     await page.goto("/privacy.html");

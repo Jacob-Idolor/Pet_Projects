@@ -27,6 +27,7 @@ Sitemap: ${site}/sitemap.xml
 const sitemapPages = [
   { path: "/", changefreq: "hourly", priority: "1.0" },
   { path: "/guides/nbis-research-guide.html", changefreq: "monthly", priority: "0.8" },
+  { path: "/guides/nbis-sec-filings.html", changefreq: "monthly", priority: "0.8" },
   { path: "/privacy.html", changefreq: "yearly", priority: "0.3" },
 ];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

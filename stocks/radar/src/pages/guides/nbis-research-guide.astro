@@ -52,6 +52,7 @@ const structuredData = site
       <h1>How to read the NBIS research desk</h1>
       <p class="guide-hero__lede">A quick, source-linked way to move from the daily snapshot to the questions that deserve deeper verification.</p>
       <p class="guide-hero__meta">For Nebius Group N.V. · NBIS · Educational research only</p>
+      <p class="guide-hero__related"><a href={`${base}guides/nbis-sec-filings.html`}>Need a filing-first workflow? Read the NBIS SEC filings guide →</a></p>
     </header>
 
     <div class="guide-layout">
@@ -146,6 +147,8 @@ const structuredData = site
     color: var(--dim);
     font: .72rem/1.4 var(--mono);
   }
+  .guide-hero__related { margin: 1.2rem 0 0; font-size: .85rem; }
+  .guide-hero__related a { color: var(--accent); text-decoration: none; }
   .guide-layout {
     display: grid;
     grid-template-columns: 220px minmax(0, 720px);

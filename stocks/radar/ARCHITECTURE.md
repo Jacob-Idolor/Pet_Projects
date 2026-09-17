@@ -8,6 +8,7 @@ StocksWatch is a static Astro site for the NBIS research desk at `/`. It is desi
 | --- | --- | --- |
 | NBIS Deep Dive | `src/pages/index.astro` | Astro HTML + `public/nbis.json` hydration |
 | NBIS reading guide | `src/pages/guides/nbis-research-guide.astro` | Static Astro HTML |
+| NBIS SEC filings guide | `src/pages/guides/nbis-sec-filings.astro` | Static Astro HTML |
 | Privacy & sponsorship | `src/pages/privacy.astro` | Static Astro HTML |
 | Legacy data-center redirect | `src/pages/datacenter.astro` | Redirects bookmarks to `/` |
 | Not found | `src/pages/404.astro` | Noindex, no ads |

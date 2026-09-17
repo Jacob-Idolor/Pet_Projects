@@ -12,6 +12,7 @@ const requiredFiles = [
   "404.html",
   "datacenter.html",
   "guides/nbis-research-guide.html",
+  "guides/nbis-sec-filings.html",
   "privacy.html",
   "nbis.json",
   "screener.json",
@@ -24,7 +25,9 @@ const contentChecks = [
   ["index.html", /application\/ld\+json/],
   ["index.html", /How to read this desk/],
   ["guides/nbis-research-guide.html", /How to read the NBIS research desk/],
+  ["guides/nbis-sec-filings.html", /How to read NBIS SEC filings/],
   ["sitemap.xml", /guides\/nbis-research-guide\.html/],
+  ["sitemap.xml", /guides\/nbis-sec-filings\.html/],
   ["sitemap.xml", /privacy\.html/],
 ];
 
