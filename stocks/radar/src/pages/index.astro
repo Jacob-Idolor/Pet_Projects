@@ -11,7 +11,38 @@ const description =
   "Daily NBIS research dashboard covering Nebius Group fundamentals, AI cloud economics, valuation assumptions, filings, price history, risks, and catalysts.";
 const ads = getAdSenseConfig();
 const allowAds = featureEnabled("adsense") && hasPublisherContent(5);
+const showBoardAd = allowAds && canShowAdSlot(ads, "board");
 const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
+const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
+const structuredData = site
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": `${site}/#website`,
+          url: `${site}/`,
+          name: "StocksWatch",
+          description,
+        },
+        {
+          "@type": "WebPage",
+          "@id": `${site}/#webpage`,
+          url: `${site}/`,
+          name: "NBIS Deep Dive | StocksWatch",
+          description,
+          inLanguage: "en-US",
+          isPartOf: { "@id": `${site}/#website` },
+          about: {
+            "@type": "Corporation",
+            name: profile.company,
+            url: profile.website,
+            sameAs: [profile.website, profile.investorRelations],
+          },
+        },
+      ],
+    }
+  : undefined;
 ---
 
 <BaseLayout
@@ -20,6 +51,7 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
   allowAds={allowAds}
   activeNav="nbis"
   canonicalPath="/"
+  structuredData={structuredData}
 >
   <div class="nbis-page" id="nbis-app" data-nbis-url={dataUrl}>
     <section class="nbis-hero container">
@@ -28,9 +60,17 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
         <h1>Nebius Group <span class="nbis-ticker">NBIS</span></h1>
         <p class="nbis-lede">{profile.businessSummary}</p>
         <div class="nbis-links">
-          <a href={profile.investorRelations} target="_blank" rel="noopener">Investor relations ↗</a>
+          <a href={`${base}guides/nbis-research-guide.html`} data-analytics-event="guide_open">How to read this desk ↗</a>
+          <a href={profile.investorRelations} target="_blank" rel="noopener" data-analytics-event="investor_relations_open">Investor relations ↗</a>
           <a href={profile.website} target="_blank" rel="noopener">Company site ↗</a>
           <a href={`https://www.sec.gov/edgar/browse/?CIK=${profile.secCik}&owner=exclude`} target="_blank" rel="noopener">SEC filings ↗</a>
+        </div>
+        <div class="nbis-follow-wrap">
+          <button class="nbis-follow" id="nbis-follow" type="button" aria-pressed="false">
+            <span class="nbis-follow__mark" aria-hidden="true">+</span>
+            <span id="nbis-follow-label">Follow this desk</span>
+          </button>
+          <span class="nbis-follow__note" id="nbis-follow-note" aria-live="polite">Saved on this device — no account or email required.</span>
         </div>
       </div>
       <div class="nbis-hero__meta nbis-panel">
@@ -45,13 +85,13 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
     </section>
 
     <nav class="nbis-nav container" aria-label="NBIS research sections">
-      <a href="#overview">Overview</a>
-      <a href="#price">Price &amp; trend</a>
-      <a href="#business">Business</a>
-      <a href="#financials">Financials</a>
-      <a href="#valuation">Valuation</a>
-      <a href="#risks">Risks &amp; catalysts</a>
-      <a href="#filings">Filings &amp; news</a>
+      <a href="#overview" data-analytics-event="section_overview">Overview</a>
+      <a href="#price" data-analytics-event="section_price">Price &amp; trend</a>
+      <a href="#business" data-analytics-event="section_business">Business</a>
+      <a href="#financials" data-analytics-event="section_financials">Financials</a>
+      <a href="#valuation" data-analytics-event="section_valuation">Valuation</a>
+      <a href="#risks" data-analytics-event="section_risks">Risks &amp; catalysts</a>
+      <a href="#filings" data-analytics-event="section_filings">Filings &amp; news</a>
     </nav>
 
     <main class="container nbis-main">
@@ -256,6 +296,14 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
           </article>
         </div>
       </section>
+
+      {
+        showBoardAd && (
+          <div class="nbis-ad-container nbis-ad-container--board">
+            <AdSlot placement="board" label="Sponsored" />
+          </div>
+        )
+      }
 
       <section id="sources" class="nbis-section nbis-section--last" aria-labelledby="sources-title">
         <div class="nbis-section__heading">

@@ -16,6 +16,12 @@ test.describe("StocksWatch smoke", () => {
     await expect(page.locator("#theme-toggle")).toBeVisible();
     await expect(page.locator("#theme-toggle-label")).toHaveText("Dark");
     await expect(page.locator("#nbis-readouts .nbis-readout__value").first()).toBeVisible();
+    await expect(page.locator("#nbis-follow-label")).toHaveText("Follow this desk");
+
+    await page.locator("#nbis-follow").click();
+    await expect(page.locator("#nbis-follow-label")).toHaveText("Following this desk");
+    await page.reload();
+    await expect(page.locator("#nbis-follow-label")).toHaveText("Following this desk");
 
     await page.locator("#theme-toggle").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
@@ -23,6 +29,26 @@ test.describe("StocksWatch smoke", () => {
 
     await page.locator("#theme-toggle").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
+  test("discovery and transparency pages are linked and indexable", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+    await expect(page.getByRole("link", { name: /How to read this desk/i })).toBeVisible();
+
+    const sitemap = await page.request.get("/sitemap.xml");
+    const sitemapText = await sitemap.text();
+    expect(sitemap.ok()).toBeTruthy();
+    expect(sitemapText).toContain("/guides/nbis-research-guide.html");
+    expect(sitemapText).toContain("/privacy.html");
+
+    await page.goto("/guides/nbis-research-guide.html");
+    await expect(page.getByRole("heading", { name: /How to read the NBIS research desk/i })).toBeVisible();
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+
+    await page.goto("/privacy.html");
+    await expect(page.getByRole("heading", { name: /Privacy & sponsorship/i })).toBeVisible();
+    await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
   });
 
   test("404 has no AdSense and links home", async ({ page }) => {

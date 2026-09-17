@@ -18,6 +18,51 @@ const safeUrl = (value: unknown) => { try { const url = new URL(String(value ?? 
 const setText = (id: string, value: unknown) => { const element = document.getElementById(id); if (element) element.textContent = String(value ?? "—"); };
 const tone = (value: unknown) => finite(value) ? value > 0 ? "tone-positive" : value < 0 ? "tone-negative" : "tone-neutral" : "tone-neutral";
 const setStatus = (kind: "loading" | "ready" | "error", text: string) => { const element = document.getElementById("nbis-status"); if (element) { element.className = `nbis-status nbis-status--${kind}`; element.innerHTML = `<span class="nbis-status__dot" aria-hidden="true"></span>${esc(text)}`; } };
+const FOLLOW_STORAGE_KEY = "stockswatch-following";
+
+function emitEngagement(name: string, payload: Record<string, unknown> = {}) {
+  window.dispatchEvent(new CustomEvent("stockswatch:engagement", { detail: { name, ...payload } }));
+}
+
+function setupFollowControl() {
+  const button = document.getElementById("nbis-follow");
+  const label = document.getElementById("nbis-follow-label");
+  const note = document.getElementById("nbis-follow-note");
+  if (!(button instanceof HTMLButtonElement) || !label || !note) return;
+
+  let following = false;
+  try {
+    following = localStorage.getItem(FOLLOW_STORAGE_KEY) === "1";
+  } catch {}
+
+  const sync = () => {
+    button.setAttribute("aria-pressed", String(following));
+    label.textContent = following ? "Following this desk" : "Follow this desk";
+    note.textContent = following ? "Saved in this browser — return any time." : "Saved on this device — no account or email required.";
+    const mark = button.querySelector(".nbis-follow__mark");
+    if (mark) mark.textContent = following ? "✓" : "+";
+  };
+
+  button.addEventListener("click", () => {
+    following = !following;
+    try {
+      if (following) localStorage.setItem(FOLLOW_STORAGE_KEY, "1");
+      else localStorage.removeItem(FOLLOW_STORAGE_KEY);
+    } catch {}
+    sync();
+    emitEngagement("follow_toggle", { following });
+  });
+
+  sync();
+}
+
+function setupEngagementHooks() {
+  document.querySelectorAll<HTMLElement>("[data-analytics-event]").forEach((element) => {
+    element.addEventListener("click", () => {
+      emitEngagement(element.dataset.analyticsEvent ?? "click", { target: element.getAttribute("href") ?? element.id });
+    });
+  });
+}
 
 function metricRows(items: Array<[string, unknown, string?]>) {
   return items.map(([label, value, className]) => `<div class="nbis-metric-row"><span>${esc(label)}</span><strong class="${className ?? ""}">${esc(value)}</strong></div>`).join("");
@@ -112,6 +157,7 @@ function render(data: AnyRecord) {
   const news = data.news ?? [];
   const newsElement = document.getElementById("nbis-news");
   if (newsElement) newsElement.innerHTML = news.length ? news.slice(0, 8).map((item: AnyRecord) => `<a class="nbis-news-item" href="${esc(safeUrl(item.link))}" target="_blank" rel="noopener"><strong>${esc(item.title)}</strong><span>${esc(item.publisher)} · ${esc(dateLabel(item.publishedAt))}</span></a>`).join("") : `<div class="nbis-empty">No provider headlines were available.</div>`;
+  emitEngagement("snapshot_loaded", { status: data.status ?? "unknown" });
 }
 
 async function loadSnapshot() {
@@ -126,4 +172,6 @@ async function loadSnapshot() {
   }
 }
 
+setupFollowControl();
+setupEngagementHooks();
 loadSnapshot();

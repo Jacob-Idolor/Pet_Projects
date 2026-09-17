@@ -24,13 +24,18 @@ Allow: /
 Sitemap: ${site}/sitemap.xml
 `;
 
+const sitemapPages = [
+  { path: "/", changefreq: "hourly", priority: "1.0" },
+  { path: "/guides/nbis-research-guide.html", changefreq: "monthly", priority: "0.8" },
+  { path: "/privacy.html", changefreq: "yearly", priority: "0.3" },
+];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${site}/</loc>
-    <changefreq>hourly</changefreq>
-    <priority>1.0</priority>
-  </url>
+${sitemapPages.map(({ path, changefreq, priority }) => `  <url>
+    <loc>${site}${path}</loc>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`).join("\n")}
 </urlset>
 `;
 

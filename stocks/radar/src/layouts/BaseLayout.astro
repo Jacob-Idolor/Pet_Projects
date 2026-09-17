@@ -16,6 +16,8 @@ interface Props {
   activeNav?: "datacenter" | "nbis";
   /** Override canonical path (default `/`) */
   canonicalPath?: string;
+  /** Optional schema.org graph for indexable content pages. */
+  structuredData?: Record<string, unknown>;
 }
 
 const {
@@ -25,6 +27,7 @@ const {
   noindex = false,
   activeNav = "nbis",
   canonicalPath = "/",
+  structuredData,
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
@@ -32,6 +35,9 @@ const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
 const path = canonicalPath.startsWith("/") ? canonicalPath : `/${canonicalPath}`;
 const canonical = site ? `${site}${path === "/" ? "/" : path}` : undefined;
 const pageTitle = `${title} | StocksWatch`;
+const jsonLd = structuredData
+  ? JSON.stringify(structuredData).replace(/</g, "\\u003c")
+  : undefined;
 const ads = getAdSenseConfig();
 /** Script only when this page opts in AND live ads (or verify meta) are configured. */
 const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(ads.verifyMeta));
@@ -63,6 +69,7 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
     <meta property="og:description" content={description} />
     {canonical && !noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:site_name" content="StocksWatch" />
+    {structuredData && <script type="application/ld+json" set:html={jsonLd} />}
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
@@ -92,6 +99,10 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
         <p>
           Built for careful, source-linked research — not financial advice.
           <a href={base}>NBIS Deep Dive</a>
+          ·
+          <a href={`${base}guides/nbis-research-guide.html`}>Research guide</a>
+          ·
+          <a href={`${base}privacy.html`}>Privacy &amp; sponsorship</a>
           ·
           <a href="https://www.sec.gov/edgar/browse/?CIK=1829964&owner=exclude" target="_blank" rel="noopener">SEC filings</a>
           ·

@@ -7,6 +7,8 @@ StocksWatch is a static Astro site for the NBIS research desk at `/`. It is desi
 | Surface | Source | Runtime |
 | --- | --- | --- |
 | NBIS Deep Dive | `src/pages/index.astro` | Astro HTML + `public/nbis.json` hydration |
+| NBIS reading guide | `src/pages/guides/nbis-research-guide.astro` | Static Astro HTML |
+| Privacy & sponsorship | `src/pages/privacy.astro` | Static Astro HTML |
 | Legacy data-center redirect | `src/pages/datacenter.astro` | Redirects bookmarks to `/` |
 | Not found | `src/pages/404.astro` | Noindex, no ads |
 
@@ -29,7 +31,7 @@ The NBIS snapshot contains market context, fundamentals, scenarios, filings, res
 
 | Path | Role |
 | --- | --- |
-| `src/client/nbis-dashboard.ts` | Snapshot hydration, chart, tables, and readouts |
+| `src/client/nbis-dashboard.ts` | Snapshot hydration, chart, tables, readouts, and local engagement hooks |
 | `src/data/nbis-profile.json` | Company profile, monitoring checklist, and primary sources |
 | `scripts/fetch/fetch-nbis.py` | Yahoo Finance + SEC snapshot collection |
 | `scripts/fetch/fetch-screener.py` | AI infrastructure screener snapshot |

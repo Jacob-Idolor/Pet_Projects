@@ -2,6 +2,13 @@
 
 This is a small, honest product experiment: publish useful source-linked NBIS research for free, build a repeat audience, then test sponsorship and a low-cost paid archive. Revenue is not guaranteed and the site must remain educational, transparent, and clearly not financial advice.
 
+## Sequence implemented
+
+- **Discovery:** the homepage now emits WebSite/WebPage structured data, links to an evergreen NBIS reading guide, and includes that guide plus the transparency page in the sitemap.
+- **Retention:** “Follow this desk” remembers a reader’s preference locally in the browser. It does not imply email delivery or create an account.
+- **Measurement:** the client emits provider-neutral `stockswatch:engagement` events for navigation, guide opens, follow toggles, and snapshot hydration. No third-party analytics script is enabled by default.
+- **Monetization readiness:** a late, manually labeled board ad slot is available behind the existing domain, content, publisher, and unit-ID gates. It remains dormant until configuration and review are complete.
+
 ## Cheap architecture
 
 | Principle | Implementation |

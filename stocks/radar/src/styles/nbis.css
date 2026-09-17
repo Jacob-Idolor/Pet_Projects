@@ -71,6 +71,13 @@ html[data-theme="light"] {
 .nbis-links a:first-child { padding: .75rem 1rem; border-radius: 999px; color: var(--nbis-page-top); background: var(--nbis-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--nbis-accent) 18%, transparent); }
 .nbis-links a:hover, .nbis-source-card:hover { text-decoration: underline; }
 .nbis-links a:first-child:hover { text-decoration: none; filter: brightness(1.08); }
+.nbis-follow-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-top: 1rem; }
+.nbis-follow { display: inline-flex; align-items: center; gap: .5rem; padding: .55rem .75rem; border: 1px solid var(--nbis-line); border-radius: 999px; color: var(--nbis-ink); background: var(--nbis-card); font: 600 .75rem/1.2 var(--mono); cursor: pointer; }
+.nbis-follow:hover, .nbis-follow[aria-pressed="true"] { border-color: var(--nbis-accent); color: var(--nbis-accent); }
+.nbis-follow:focus-visible { outline: 2px solid var(--nbis-accent); outline-offset: 2px; }
+.nbis-follow__mark { display: inline-grid; place-items: center; width: 1rem; height: 1rem; border: 1px solid currentColor; border-radius: 50%; font-size: .9rem; line-height: 1; }
+.nbis-follow[aria-pressed="true"] .nbis-follow__mark { font-size: .7rem; }
+.nbis-follow__note { color: var(--nbis-muted); font-size: .72rem; }
 .nbis-hero__meta { min-width: 0; padding: 1.25rem; }
 .nbis-meta-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .nbis-live-label { display: inline-flex; align-items: center; gap: .4rem; color: var(--nbis-positive); font: 700 .63rem/1.2 var(--mono); letter-spacing: .1em; }
@@ -169,6 +176,7 @@ html[data-theme="light"] {
 .nbis-source-card { display: flex; flex-direction: column; gap: .55rem; padding: 1rem; }
 .nbis-source-card span { color: var(--nbis-muted); font-size: .76rem; line-height: 1.5; }
 .nbis-disclaimer { margin-top: 1rem; border: 1px solid color-mix(in srgb, var(--nbis-warm) 35%, var(--nbis-line)); border-radius: .8rem; padding: 1rem; background: color-mix(in srgb, var(--nbis-warm) 8%, var(--nbis-card)); color: color-mix(in srgb, var(--nbis-warm) 75%, var(--nbis-ink)); font-size: .76rem; line-height: 1.6; }
+.nbis-ad-container--board { margin-top: 3rem; }
 .nbis-empty { width: 100%; padding: 1rem 0; color: var(--nbis-muted); font-size: .8rem; }
 
 @media (prefers-reduced-motion: no-preference) {
