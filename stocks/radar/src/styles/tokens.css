@@ -45,3 +45,29 @@
   --layer-networking: #a78bfa;
   --layer-software: #3b82f6;
 }
+
+html {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f7f6;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #edf3f1;
+  --border: #d5e0dd;
+  --border-subtle: #e3ece9;
+  --text: #17231f;
+  --muted: #5d7068;
+  --dim: #83928b;
+  --green: #0f766e;
+  --green-dim: #0b5d57;
+  --green-glow: rgba(15, 118, 110, 0.12);
+  --red: #b42318;
+  --amber: #b76e24;
+  --blue: #2563eb;
+  --accent: var(--green);
+  --chip: #eef7f3;
+  --shadow: 0 12px 32px rgba(31, 65, 54, 0.08);
+}

@@ -54,7 +54,7 @@ function renderTable(id: string, rows: AnyRecord[], columns: Array<[string, stri
 function renderRiskList(id: string, items: AnyRecord[], catalyst = false) {
   const element = document.getElementById(id);
   if (!element) return;
-  element.innerHTML = items.length ? `<div class="nbis-risk-list">${items.map((item) => `<article class="nbis-risk-item ${catalyst ? "nbis-risk-item--catalyst" : ""}"><strong>${esc(item.title)}</strong><p>${esc(item.detail)}</p></article>`).join("")}</div>` : `<div class="nbis-empty">No automated flags were produced.</div>`;
+  element.innerHTML = items.length ? `<div class="nbis-risk-list">${items.map((item) => `<article class="nbis-risk-item ${catalyst ? "nbis-risk-item--catalyst" : ""}"><div class="nbis-risk-item__top"><span class="nbis-risk-item__tag">${esc(catalyst ? "Catalyst" : item.severity ?? "Watch")}</span><strong>${esc(item.title)}</strong></div><p>${esc(item.detail)}</p></article>`).join("")}</div>` : `<div class="nbis-empty">No automated flags were produced.</div>`;
 }
 
 function render(data: AnyRecord) {
@@ -76,7 +76,7 @@ function render(data: AnyRecord) {
 
   const readouts = (data.research?.readouts ?? []) as AnyRecord[];
   const readoutElement = document.getElementById("nbis-readouts");
-  if (readoutElement) readoutElement.innerHTML = readouts.length ? readouts.map((item) => `<article class="nbis-readout"><span class="nbis-readout__label">${esc(item.label)}</span><p>${esc(item.detail)}</p></article>`).join("") : `<div class="nbis-empty">No automated readouts were produced.</div>`;
+  if (readoutElement) readoutElement.innerHTML = readouts.length ? readouts.map((item, index) => `<article class="nbis-readout"><div class="nbis-readout__top"><span class="nbis-readout__index">${String(index + 1).padStart(2, "0")}</span><span class="nbis-readout__label">${esc(item.label)}</span></div><strong class="nbis-readout__value">${esc(item.value ?? "Context")}</strong><p class="nbis-readout__detail">${esc(item.detail)}</p></article>`).join("") : `<div class="nbis-empty">No automated readouts were produced.</div>`;
   const quoteElement = document.getElementById("nbis-quote-table");
   if (quoteElement) quoteElement.innerHTML = metricRows([["Open", usd(quote.open, 2)], ["Day range", `${usd(quote.dayLow, 2)} – ${usd(quote.dayHigh, 2)}`], ["52-week range", `${usd(quote.fiftyTwoWeekLow, 2)} – ${usd(quote.fiftyTwoWeekHigh, 2)}`], ["Volume", compact(quote.volume)], ["Average volume", compact(quote.averageVolume)], ["Currency", quote.currency ?? "—"]]);
   const returnElement = document.getElementById("nbis-returns");

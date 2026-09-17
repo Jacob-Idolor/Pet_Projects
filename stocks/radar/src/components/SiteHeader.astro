@@ -14,17 +14,50 @@ const base = import.meta.env.BASE_URL;
       <span class="logo-mark" aria-hidden="true"></span>
       StocksWatch
     </a>
-    <nav class="header-nav" aria-label="Primary">
-      <a
-        class:list={["header-link", { "is-active": active === "nbis" }]}
-        href={base}
-        aria-current={active === "nbis" ? "page" : undefined}
-      >
-        NBIS Deep Dive
-      </a>
-    </nav>
+    <div class="header-actions">
+      <nav class="header-nav" aria-label="Primary">
+        <a
+          class:list={["header-link", { "is-active": active === "nbis" }]}
+          href={base}
+          aria-current={active === "nbis" ? "page" : undefined}
+        >
+          NBIS Deep Dive
+        </a>
+      </nav>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode" title="Switch to light mode">
+        <span class="theme-toggle__glyph" aria-hidden="true">☼</span>
+        <span id="theme-toggle-label">Dark</span>
+      </button>
+    </div>
   </div>
 </header>
+
+<script is:inline>
+  const themeToggle = document.querySelector("#theme-toggle");
+  const themeGlyph = document.querySelector(".theme-toggle__glyph");
+  const themeLabel = document.querySelector("#theme-toggle-label");
+
+  const syncThemeToggle = () => {
+    const isLight = document.documentElement.dataset.theme === "light";
+    const nextLabel = isLight ? "Switch to dark mode" : "Switch to light mode";
+    themeToggle?.setAttribute("aria-pressed", String(isLight));
+    themeToggle?.setAttribute("aria-label", nextLabel);
+    themeToggle?.setAttribute("title", nextLabel);
+    if (themeGlyph) themeGlyph.textContent = isLight ? "☾" : "☼";
+    if (themeLabel) themeLabel.textContent = isLight ? "Light" : "Dark";
+  };
+
+  themeToggle?.addEventListener("click", () => {
+    const nextTheme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = nextTheme;
+    try {
+      localStorage.setItem("stockswatch-theme", nextTheme);
+    } catch {}
+    syncThemeToggle();
+  });
+
+  syncThemeToggle();
+</script>
 
 <style is:global>
   /* Shared chrome — used by Home (via global.css) and Datacenter layout.
@@ -65,6 +98,11 @@ const base = import.meta.env.BASE_URL;
     display: flex;
     gap: 0.35rem;
   }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
   .header-link {
     padding: 0.4rem 0.7rem;
     border-radius: 6px;
@@ -83,6 +121,36 @@ const base = import.meta.env.BASE_URL;
   .header-link:focus-visible {
     outline: 2px solid var(--accent, #22c55e);
     outline-offset: 2px;
+  }
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--border, #2a3140);
+    border-radius: 999px;
+    color: var(--muted, #9aa3b5);
+    background: color-mix(in srgb, var(--panel, #12161c) 70%, transparent);
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .theme-toggle:hover {
+    color: var(--text, #e8ecf4);
+    border-color: var(--accent, #22c55e);
+  }
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--accent, #22c55e);
+    outline-offset: 2px;
+  }
+  .theme-toggle__glyph {
+    display: inline-grid;
+    place-items: center;
+    width: 1rem;
+    height: 1rem;
+    color: var(--accent, #22c55e);
+    font-size: 0.9rem;
   }
   .header-link__hint {
     display: inline-block;

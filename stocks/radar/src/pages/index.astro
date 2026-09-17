@@ -24,7 +24,7 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
   <div class="nbis-page" id="nbis-app" data-nbis-url={dataUrl}>
     <section class="nbis-hero container">
       <div class="nbis-hero__copy">
-        <p class="nbis-eyebrow">STOCKSWATCH / DAILY RESEARCH</p>
+        <p class="nbis-kicker"><span class="nbis-kicker__rule" aria-hidden="true"></span>STOCKSWATCH / DAILY RESEARCH</p>
         <h1>Nebius Group <span class="nbis-ticker">NBIS</span></h1>
         <p class="nbis-lede">{profile.businessSummary}</p>
         <div class="nbis-links">
@@ -33,7 +33,8 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
           <a href={`https://www.sec.gov/edgar/browse/?CIK=${profile.secCik}&owner=exclude`} target="_blank" rel="noopener">SEC filings ↗</a>
         </div>
       </div>
-      <div class="nbis-hero__meta">
+      <div class="nbis-hero__meta nbis-panel">
+        <div class="nbis-meta-top"><span class="nbis-eyebrow">Live snapshot</span><span class="nbis-live-label"><span class="nbis-status__dot" aria-hidden="true"></span>LIVE</span></div>
         <div class="nbis-status nbis-status--loading" id="nbis-status" role="status" aria-live="polite">
           <span class="nbis-status__dot" aria-hidden="true"></span>
           Loading daily snapshot…
@@ -57,35 +58,35 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
       <section id="overview" class="nbis-section" aria-labelledby="overview-title">
         <div class="nbis-section__heading">
           <div>
-            <p class="nbis-eyebrow">01 / Fast read</p>
+            <p class="nbis-eyebrow">01 / Signal board</p>
             <h2 id="overview-title">What changed today</h2>
           </div>
           <p class="nbis-section__note">Automated readouts are prompts for research, not a buy, sell, or hold signal.</p>
         </div>
         <div class="nbis-stat-grid">
           <article class="nbis-stat-card nbis-panel">
-            <span class="nbis-stat-card__label">Last price</span>
+            <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">01</span><span class="nbis-stat-card__label">Last price</span></div>
             <strong id="nbis-price" class="nbis-stat-card__value">—</strong>
             <span id="nbis-change" class="nbis-stat-card__sub">Awaiting snapshot</span>
           </article>
           <article class="nbis-stat-card nbis-panel">
-            <span class="nbis-stat-card__label">Market cap</span>
+            <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">02</span><span class="nbis-stat-card__label">Market cap</span></div>
             <strong id="nbis-market-cap" class="nbis-stat-card__value">—</strong>
             <span class="nbis-stat-card__sub">Provider-reported</span>
           </article>
           <article class="nbis-stat-card nbis-panel">
-            <span class="nbis-stat-card__label">Revenue growth</span>
+            <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">03</span><span class="nbis-stat-card__label">Revenue growth</span></div>
             <strong id="nbis-revenue-growth" class="nbis-stat-card__value">—</strong>
             <span class="nbis-stat-card__sub">Latest provider figure</span>
           </article>
           <article class="nbis-stat-card nbis-panel">
-            <span class="nbis-stat-card__label">Free cash flow</span>
+            <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">04</span><span class="nbis-stat-card__label">Free cash flow</span></div>
             <strong id="nbis-fcf" class="nbis-stat-card__value">—</strong>
             <span class="nbis-stat-card__sub">Latest provider figure</span>
           </article>
         </div>
         <div id="nbis-readouts" class="nbis-readouts" aria-live="polite">
-          <div class="nbis-empty">Loading growth, cash generation, balance sheet, valuation, and trend readouts…</div>
+          <div class="nbis-empty">Loading the story behind the numbers…</div>
         </div>
       </section>
 
@@ -93,7 +94,7 @@ const showFooterAd = allowAds && canShowAdSlot(ads, "footer");
         <div class="nbis-section__heading">
           <div>
             <p class="nbis-eyebrow">02 / Market tape</p>
-            <h2 id="price-title">Price history and technical context</h2>
+            <h2 id="price-title">Price, but with context</h2>
           </div>
           <p id="nbis-price-meta" class="nbis-section__note">Daily close history is fetched automatically.</p>
         </div>

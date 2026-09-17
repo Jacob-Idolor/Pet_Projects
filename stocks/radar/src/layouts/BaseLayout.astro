@@ -40,6 +40,14 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
 <!doctype html>
 <html lang="en">
   <head>
+    <script is:inline>
+      try {
+        const savedTheme = localStorage.getItem("stockswatch-theme");
+        if (savedTheme === "light" || savedTheme === "dark") {
+          document.documentElement.dataset.theme = savedTheme;
+        }
+      } catch {}
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05070a" />

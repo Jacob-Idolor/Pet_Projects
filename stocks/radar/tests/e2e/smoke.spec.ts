@@ -11,6 +11,20 @@ test.describe("StocksWatch smoke", () => {
     await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
   });
 
+  test("home exposes the theme control and readout values", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#theme-toggle")).toBeVisible();
+    await expect(page.locator("#theme-toggle-label")).toHaveText("Dark");
+    await expect(page.locator("#nbis-readouts .nbis-readout__value").first()).toBeVisible();
+
+    await page.locator("#theme-toggle").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(page.locator("#theme-toggle-label")).toHaveText("Light");
+
+    await page.locator("#theme-toggle").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
   test("404 has no AdSense and links home", async ({ page }) => {
     await page.goto("/404.html");
     await expect(page.getByRole("heading", { name: /page not found/i })).toBeVisible();
