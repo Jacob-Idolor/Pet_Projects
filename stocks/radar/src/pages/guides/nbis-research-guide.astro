@@ -5,18 +5,33 @@ import profile from "../../data/nbis-profile.json";
 const base = import.meta.env.BASE_URL;
 const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
 const description = "A practical guide to reading the StocksWatch NBIS research desk: freshness, fundamentals, valuation assumptions, risks, and primary sources.";
+const guideUrl = site ? `${site}/guides/nbis-research-guide.html` : "";
 const structuredData = site
   ? {
       "@context": "https://schema.org",
-      "@type": "Article",
-      headline: "How to read the NBIS research desk",
-      description,
-      url: `${site}/guides/nbis-research-guide.html`,
-      mainEntityOfPage: `${site}/guides/nbis-research-guide.html`,
-      author: { "@type": "Organization", name: "StocksWatch" },
-      publisher: { "@type": "Organization", name: "StocksWatch" },
-      about: { "@type": "Corporation", name: profile.company, url: profile.website },
-      articleSection: "Research methodology",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${guideUrl}#article`,
+          headline: "How to read the NBIS research desk",
+          description,
+          url: guideUrl,
+          mainEntityOfPage: { "@id": guideUrl },
+          author: { "@type": "Organization", name: "StocksWatch" },
+          publisher: { "@type": "Organization", name: "StocksWatch" },
+          about: { "@type": "Corporation", name: profile.company, url: profile.website },
+          articleSection: "Research methodology",
+          inLanguage: "en-US",
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${guideUrl}#breadcrumb`,
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "StocksWatch", item: `${site}/` },
+            { "@type": "ListItem", position: 2, name: "NBIS research guide", item: guideUrl },
+          ],
+        },
+      ],
     }
   : undefined;
 ---
@@ -27,6 +42,8 @@ const structuredData = site
   allowAds={false}
   activeNav="nbis"
   canonicalPath="/guides/nbis-research-guide.html"
+  ogType="article"
+  articleSection="Research methodology"
   structuredData={structuredData}
 >
   <article class="guide-page container">

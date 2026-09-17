@@ -51,6 +51,11 @@ jobs:
           python -m pip install -r scripts/datacenter/requirements.txt
           npm ci
 
+      - name: Validate source
+        run: |
+          npm run typecheck
+          npm test
+
       - name: Fetch strict NBIS snapshot
         run: npm run update-nbis
         env:
@@ -65,6 +70,9 @@ jobs:
           SCREENER_SKIP: "1"
           NBIS_SKIP: "1"
           QUOTES_SKIP: "1"
+
+      - name: Verify static release
+        run: npm run verify:dist
 
       - name: Scan built bundle for credentials
         run: npm run security:dist

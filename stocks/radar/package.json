@@ -25,6 +25,7 @@
     "freshness": "node scripts/ops/check-live-freshness.mjs",
     "freshness:live": "node scripts/ops/check-live-freshness.mjs --url",
     "security:dist": "node scripts/ops/check-dist-security.mjs",
+    "verify:dist": "node scripts/ops/verify-dist.mjs",
     "seo": "node scripts/ops/write-seo-files.mjs",
     "health": "node scripts/ops/write-health.mjs",
     "prebuild": "npm run config:validate && npm run sync:tokens && npm run hash:datacenter && node scripts/fetch/fetch-screener-soft.mjs && npm run screener:schema && npm run nbis:snapshot && npm run nbis:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs"

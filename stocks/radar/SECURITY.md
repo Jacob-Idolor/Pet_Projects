@@ -11,7 +11,7 @@ Static Astro app (no user auth). There is **no live AWS stack** right now.
 | Static-origin headers | Cloudflare `_headers` sets `nosniff`, referrer and permissions policy, frame denial, HSTS, and bounded data caching |
 | Production data gate | Strict NBIS refresh requires an SEC contact identity and schema validation before deploy |
 | Release secret scan | `npm run security:dist` fails if obvious credentials enter the generated static bundle |
-| CI scope | GitHub workflows use read-only checkout permissions, a deployment timeout, and separate Cloudflare secrets |
+| CI scope | GitHub workflows use read-only checkout permissions, source type/unit checks, required-output verification, a deployment timeout, and separate Cloudflare secrets |
 | Not financial advice | Keep that framing in UI and docs |
 
 ## When you host again

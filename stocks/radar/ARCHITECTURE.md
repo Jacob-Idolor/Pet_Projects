@@ -42,7 +42,7 @@ The NBIS snapshot contains market context, fundamentals, scenarios, filings, res
 
 ## Build lifecycle
 
-`npm run prebuild` validates configuration, syncs design tokens, hashes retained data-center assets, refreshes the screener and NBIS snapshot, validates both schemas, writes health/SEO metadata, and then lets Astro build the static site. Production sets strict data-fetch behavior; local builds may preserve an existing valid snapshot with `NBIS_SKIP=1`.
+`npm run prebuild` validates configuration, syncs design tokens, hashes retained data-center assets, refreshes the screener and NBIS snapshot, validates both schemas, writes health/SEO metadata, and then lets Astro build the static site. CI runs source type/unit checks before the fetch, then verifies required static release files before the bundle scan and deploy. Production sets strict data-fetch behavior; local builds may preserve an existing valid snapshot with `NBIS_SKIP=1`.
 
 ## Design and safety rules
 

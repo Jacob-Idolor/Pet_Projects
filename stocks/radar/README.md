@@ -21,6 +21,7 @@ npm run nbis:schema
 npm run typecheck
 npm run adsense:checklist
 SCREENER_SKIP=1 NBIS_SKIP=1 npm run build
+npm run verify:dist
 npm run test:e2e
 ```
 
