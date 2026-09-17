@@ -159,6 +159,16 @@ html[data-theme="light"] {
 .nbis-data-table th:first-child, .nbis-data-table td:first-child { text-align: left; }
 .nbis-data-table th { color: var(--nbis-muted); font: 600 .64rem/1.2 var(--mono); letter-spacing: .04em; text-transform: uppercase; }
 .nbis-data-table td:first-child { color: var(--nbis-muted); }
+.nbis-filings-table { min-width: 460px; table-layout: fixed; }
+.nbis-filings-table th:nth-child(1), .nbis-filings-table td:nth-child(1) { width: 29%; }
+.nbis-filings-table th:nth-child(2), .nbis-filings-table td:nth-child(2) { width: 16%; }
+.nbis-filings-table th:nth-child(3), .nbis-filings-table td:nth-child(3) { width: 25%; }
+.nbis-filings-table th:nth-child(4), .nbis-filings-table td:nth-child(4) { width: 30%; }
+.nbis-filings-table td:nth-child(3) { overflow: hidden; text-overflow: ellipsis; }
+.nbis-filings-more { margin-top: .7rem; border-top: 1px solid var(--nbis-line); }
+.nbis-filings-more summary { padding: .75rem 0 .15rem; cursor: pointer; color: var(--nbis-accent-strong); font: 600 .7rem/1.3 var(--mono); list-style-position: inside; }
+.nbis-filings-more summary:focus-visible { outline: 2px solid var(--nbis-accent); outline-offset: 3px; }
+.nbis-filings-more .nbis-filings-table { margin-top: .3rem; }
 .nbis-risk-list { display: grid; gap: .65rem; }
 .nbis-risk-item { padding: .85rem .9rem; border-left: 3px solid var(--nbis-warm); border-radius: 0 .7rem .7rem 0; background: color-mix(in srgb, var(--nbis-warm) 9%, var(--nbis-card)); }
 .nbis-risk-item--catalyst { border-left-color: var(--nbis-positive); background: color-mix(in srgb, var(--nbis-positive) 9%, var(--nbis-card)); }

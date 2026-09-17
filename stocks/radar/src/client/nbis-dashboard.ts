@@ -102,6 +102,16 @@ function renderRiskList(id: string, items: AnyRecord[], catalyst = false) {
   element.innerHTML = items.length ? `<div class="nbis-risk-list">${items.map((item) => `<article class="nbis-risk-item ${catalyst ? "nbis-risk-item--catalyst" : ""}"><div class="nbis-risk-item__top"><span class="nbis-risk-item__tag">${esc(catalyst ? "Catalyst" : item.severity ?? "Watch")}</span><strong>${esc(item.title)}</strong></div><p>${esc(item.detail)}</p></article>`).join("")}</div>` : `<div class="nbis-empty">No automated flags were produced.</div>`;
 }
 
+function filingTable(rows: AnyRecord[]) {
+  const body = rows.map((item) => {
+    const filed = item.filingDate ?? item.filed;
+    const accession = String(item.accessionNumber ?? item.accession ?? "—");
+    const shortAccession = accession.split("-").at(-1) ?? accession;
+    return `<tr><td>${esc(dateLabel(filed))}</td><td>${esc(item.form)}</td><td class="nbis-mono nbis-filing-accession" title="${esc(accession)}">${esc(shortAccession)}</td><td><a href="${esc(safeUrl(item.url))}" target="_blank" rel="noopener" aria-label="Open SEC filing ${esc(accession)}">Open ↗</a></td></tr>`;
+  }).join("");
+  return `<table class="nbis-data-table nbis-filings-table"><thead><tr><th>Filed</th><th>Form</th><th>ID</th><th>Document</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
 function render(data: AnyRecord) {
   const price = data.price ?? {};
   const technical = data.technical ?? {};
@@ -147,7 +157,13 @@ function render(data: AnyRecord) {
   const filings = data.sec?.filings ?? [];
   setText("nbis-filing-count", `${filings.length} recent filings`);
   const filingElement = document.getElementById("nbis-filings-table");
-  if (filingElement) filingElement.innerHTML = filings.length ? `<table class="nbis-data-table"><thead><tr><th>Filed</th><th>Form</th><th>Accession</th><th>Document</th></tr></thead><tbody>${filings.map((item: AnyRecord) => `<tr><td>${esc(dateLabel(item.filed))}</td><td>${esc(item.form)}</td><td class="nbis-mono">${esc(item.accession)}</td><td><a href="${esc(safeUrl(item.url))}" target="_blank" rel="noopener">Open ↗</a></td></tr>`).join("")}</tbody></table>` : `<div class="nbis-empty">No SEC filing data was available.</div>`;
+  if (filingElement) {
+    const preview = filings.slice(0, 8);
+    const older = filings.slice(8);
+    filingElement.innerHTML = filings.length
+      ? `${filingTable(preview)}${older.length ? `<details class="nbis-filings-more"><summary>Show ${older.length} older filings</summary>${filingTable(older)}</details>` : ""}`
+      : `<div class="nbis-empty">No SEC filing data was available.</div>`;
+  }
   const facts = Object.entries(data.sec?.facts ?? {}).flatMap(([key, item]) => {
     const latest = (item as AnyRecord)?.annual?.[0];
     return latest ? [{ label: (item as AnyRecord).label ?? key, value: latest.value, period: latest.period, form: latest.form }] : [];

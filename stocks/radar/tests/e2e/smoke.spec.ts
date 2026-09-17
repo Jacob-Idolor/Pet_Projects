@@ -31,6 +31,18 @@ test.describe("StocksWatch smoke", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 
+  test("SEC filings stay compact while retaining older filing links", async ({ page }) => {
+    await page.goto("/");
+    const filings = page.locator("#nbis-filings-table");
+    await expect(filings.locator(".nbis-filings-table").first().locator("tbody tr")).toHaveCount(8);
+    await expect(filings.locator(".nbis-filings-table").first().locator("tbody td").first()).not.toHaveText("—");
+    await expect(filings.locator(".nbis-filings-table").first().locator("tbody td").nth(2)).not.toHaveText("—");
+    await expect(filings.locator("summary")).toContainText(/older filings/);
+
+    await filings.locator("summary").click();
+    await expect(filings.locator("details .nbis-filings-table tbody tr").first()).toBeVisible();
+  });
+
   test("discovery and transparency pages are linked and indexable", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
