@@ -14,14 +14,14 @@ const script = resolve(root, "scripts/fetch/fetch-nbis.py");
 const out = resolve(root, "public/nbis.json");
 const strict = process.env.NBIS_STRICT === "1" || process.env.STOCKS_RADAR_ENV === "production";
 
-if (strict && !process.env.SEC_CONTACT_EMAIL?.trim() && !process.env.SEC_USER_AGENT?.trim()) {
-  console.error("Production NBIS refresh requires SEC_CONTACT_EMAIL or SEC_USER_AGENT for the SEC User-Agent header.");
-  process.exit(1);
-}
-
 if (process.env.NBIS_SKIP === "1") {
   console.log("NBIS_SKIP=1 — leaving existing public/nbis.json");
   process.exit(existsSync(out) ? 0 : 1);
+}
+
+if (strict && !process.env.SEC_CONTACT_EMAIL?.trim() && !process.env.SEC_USER_AGENT?.trim()) {
+  console.error("Production NBIS refresh requires SEC_CONTACT_EMAIL or SEC_USER_AGENT for the SEC User-Agent header.");
+  process.exit(1);
 }
 
 const python = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
