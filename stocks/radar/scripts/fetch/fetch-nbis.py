@@ -15,6 +15,7 @@ import math
 import os
 import re
 import sys
+import subprocess
 import time
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -434,6 +435,9 @@ def build_research(price: dict[str, Any], technical: dict[str, Any], fundamental
 
 
 def build_payload() -> dict[str, Any]:
+    strict = os.environ.get("NBIS_STRICT") == "1" or os.environ.get("STOCKS_RADAR_ENV") == "production"
+    if strict and not (os.environ.get("SEC_CONTACT_EMAIL", "").strip() or os.environ.get("SEC_USER_AGENT", "").strip()):
+        raise ValueError("Production NBIS refresh requires SEC_CONTACT_EMAIL or SEC_USER_AGENT")
     fetched_at = now_iso()
     profile = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
     ticker = yf.Ticker(TICKER)
@@ -559,8 +563,22 @@ def build_payload() -> dict[str, Any]:
 
 def main() -> int:
     payload = build_payload()
+    # Validate before replacing the previous snapshot, using the CI/browser contract.
+    result = subprocess.run(
+        ["node", str(ROOT / "scripts/ops/validate-nbis-schema.mjs"), "--stdin", "--fresh"],
+        input=json.dumps(payload), text=True, capture_output=True, check=False,
+    )
+    if result.returncode:
+        strict = os.environ.get("NBIS_STRICT") == "1" or os.environ.get("STOCKS_RADAR_ENV") == "production"
+        if strict:
+            raise ValueError(result.stderr or "NBIS quality validation failed")
+        payload["status"] = "degraded"
+        payload["qualityErrors"] = [result.stderr.strip()]
+        print(result.stderr, file=sys.stderr)
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    pending = OUT.with_suffix(".json.tmp")
+    pending.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    pending.replace(OUT)
     print(f"Wrote {OUT} — {payload['ticker']} snapshot at {payload['fetchedAt']}")
     print(f"SEC filings: {len(payload['sec']['filings'])}; price points: {len(payload['priceHistory'])}")
     return 0

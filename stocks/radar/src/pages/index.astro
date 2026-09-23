@@ -1,10 +1,14 @@
 ---
+import { readFileSync } from "node:fs";
+import { renderSnapshot } from "../lib/nbis-render";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
 import profile from "../data/nbis-profile.json";
 import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
 import { featureEnabled } from "../lib/site-config";
 
+const snapshot = JSON.parse(readFileSync(new URL("../../public/nbis.json", import.meta.url), "utf8"));
+const view = renderSnapshot(snapshot);
 const base = import.meta.env.BASE_URL;
 const dataUrl = `${base}nbis.json`.replace(/\/{2,}/g, "/").replace(":/", "://");
 const description =
@@ -53,7 +57,7 @@ const structuredData = site
   canonicalPath="/"
   structuredData={structuredData}
 >
-  <div class="nbis-page" id="nbis-app" data-nbis-url={dataUrl}>
+  <div class="nbis-page" id="nbis-app" data-nbis-url={dataUrl} data-fetched-at={snapshot.fetchedAt} data-snapshot-status={snapshot.status}>
     <section class="nbis-hero container">
       <div class="nbis-hero__copy">
         <p class="nbis-kicker"><span class="nbis-kicker__rule" aria-hidden="true"></span>STOCKSWATCH / DAILY RESEARCH</p>
@@ -75,12 +79,11 @@ const structuredData = site
         </div>
       </div>
       <div class="nbis-hero__meta nbis-panel">
-        <div class="nbis-meta-top"><span class="nbis-eyebrow">Live snapshot</span><span class="nbis-live-label"><span class="nbis-status__dot" aria-hidden="true"></span>LIVE</span></div>
-        <div class="nbis-status nbis-status--loading" id="nbis-status" role="status" aria-live="polite">
-          <span class="nbis-status__dot" aria-hidden="true"></span>
-          Loading daily snapshot…
-        </div>
+        <div class="nbis-meta-top"><span class="nbis-eyebrow">Daily snapshot</span><span class="nbis-live-label" id="nbis-freshness" set:html={view.html["nbis-freshness"]} /></div>
+        <div class={`nbis-status nbis-status--${view.state.kind === "ready" ? "ready" : "error"}`} id="nbis-status" role="status" aria-live="polite" set:html={view.html["nbis-status"]} />
         <p class="nbis-meta-line">{profile.exchange} · {profile.headquarters}</p>
+        <button id="nbis-retry" type="button" hidden>Retry snapshot</button>
+        <noscript><p class="nbis-meta-line">Saved page snapshot; compare its timestamp with the current date. Enable JavaScript to check freshness and refresh.</p></noscript>
         <p class="nbis-meta-line">Facts and provider data are time-stamped below.</p>
       </div>
     </section>
@@ -95,7 +98,7 @@ const structuredData = site
       <a href="#filings" data-analytics-event="section_filings">Filings &amp; news</a>
     </nav>
 
-    <main class="container nbis-main">
+    <div class="container nbis-main">
       <section id="overview" class="nbis-section" aria-labelledby="overview-title">
         <div class="nbis-section__heading">
           <div>
@@ -107,28 +110,26 @@ const structuredData = site
         <div class="nbis-stat-grid">
           <article class="nbis-stat-card nbis-panel">
             <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">01</span><span class="nbis-stat-card__label">Last price</span></div>
-            <strong id="nbis-price" class="nbis-stat-card__value">—</strong>
-            <span id="nbis-change" class="nbis-stat-card__sub">Awaiting snapshot</span>
+            <strong id="nbis-price" class="nbis-stat-card__value" set:html={view.html["nbis-price"]} />
+            <span id="nbis-change" class="nbis-stat-card__sub" set:html={view.html["nbis-change"]} />
           </article>
           <article class="nbis-stat-card nbis-panel">
             <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">02</span><span class="nbis-stat-card__label">Market cap</span></div>
-            <strong id="nbis-market-cap" class="nbis-stat-card__value">—</strong>
+            <strong id="nbis-market-cap" class="nbis-stat-card__value" set:html={view.html["nbis-market-cap"]} />
             <span class="nbis-stat-card__sub">Provider-reported</span>
           </article>
           <article class="nbis-stat-card nbis-panel">
             <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">03</span><span class="nbis-stat-card__label">Revenue growth</span></div>
-            <strong id="nbis-revenue-growth" class="nbis-stat-card__value">—</strong>
+            <strong id="nbis-revenue-growth" class="nbis-stat-card__value" set:html={view.html["nbis-revenue-growth"]} />
             <span class="nbis-stat-card__sub">Latest provider figure</span>
           </article>
           <article class="nbis-stat-card nbis-panel">
             <div class="nbis-stat-card__top"><span class="nbis-stat-card__index">04</span><span class="nbis-stat-card__label">Free cash flow</span></div>
-            <strong id="nbis-fcf" class="nbis-stat-card__value">—</strong>
+            <strong id="nbis-fcf" class="nbis-stat-card__value" set:html={view.html["nbis-fcf"]} />
             <span class="nbis-stat-card__sub">Latest provider figure</span>
           </article>
         </div>
-        <div id="nbis-readouts" class="nbis-readouts" aria-live="polite">
-          <div class="nbis-empty">Loading the story behind the numbers…</div>
-        </div>
+        <div id="nbis-readouts" class="nbis-readouts" aria-live="polite" set:html={view.html["nbis-readouts"]} />
       </section>
 
       <section id="price" class="nbis-section" aria-labelledby="price-title">
@@ -137,34 +138,32 @@ const structuredData = site
             <p class="nbis-eyebrow">02 / Market tape</p>
             <h2 id="price-title">Price, but with context</h2>
           </div>
-          <p id="nbis-price-meta" class="nbis-section__note">Daily close history is fetched automatically.</p>
+          <p id="nbis-price-meta" class="nbis-section__note" set:html={view.html["nbis-price-meta"]} />
         </div>
         <div class="nbis-two-column nbis-two-column--wide">
           <article class="nbis-panel nbis-chart-panel">
             <div class="nbis-panel__header">
               <div>
-                <h3>Five-year closing price</h3>
+                <h3>Available closing-price history</h3>
                 <p class="nbis-muted">A chart of historical closes, not a forecast.</p>
               </div>
-              <span id="nbis-chart-range" class="nbis-pill">—</span>
+              <span id="nbis-chart-range" class="nbis-pill" set:html={view.html["nbis-chart-range"]} />
             </div>
-            <div id="nbis-chart" class="nbis-chart" role="img" aria-label="NBIS closing price history">
-              <div class="nbis-empty">Chart will appear when price history is available.</div>
-            </div>
+            <div id="nbis-chart" class="nbis-chart" role="img" aria-label="NBIS closing price history" aria-describedby="nbis-chart-range" set:html={view.html["nbis-chart"]} />
           </article>
           <article class="nbis-panel">
             <div class="nbis-panel__header"><h3>Quote snapshot</h3></div>
-            <div id="nbis-quote-table" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+            <div id="nbis-quote-table" class="nbis-metric-list" set:html={view.html["nbis-quote-table"]} />
           </article>
         </div>
         <div class="nbis-two-column">
           <article class="nbis-panel">
             <div class="nbis-panel__header"><h3>Returns</h3><span class="nbis-muted">Calculated from closes</span></div>
-            <div id="nbis-returns" class="nbis-return-grid"><div class="nbis-empty">Loading…</div></div>
+            <div id="nbis-returns" class="nbis-return-grid" set:html={view.html["nbis-returns"]} />
           </article>
           <article class="nbis-panel">
             <div class="nbis-panel__header"><h3>Technical indicators</h3><span class="nbis-muted">Rules-based context</span></div>
-            <div id="nbis-technicals" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+            <div id="nbis-technicals" class="nbis-metric-list" set:html={view.html["nbis-technicals"]} />
           </article>
         </div>
       </section>
@@ -215,20 +214,20 @@ const structuredData = site
         </div>
         <article class="nbis-panel nbis-table-panel">
           <div class="nbis-panel__header"><h3>Annual income and cash flow</h3><span class="nbis-muted">Most recent periods available</span></div>
-          <div id="nbis-annual-table" class="nbis-table-wrap"><div class="nbis-empty">Loading annual statements…</div></div>
+          <div id="nbis-annual-table" class="nbis-table-wrap" tabindex="0" role="region" aria-label="Scrollable data table" set:html={view.html["nbis-annual-table"]} />
         </article>
         <article class="nbis-panel nbis-table-panel">
           <div class="nbis-panel__header"><h3>Quarterly income and cash flow</h3><span class="nbis-muted">Most recent periods available</span></div>
-          <div id="nbis-quarterly-table" class="nbis-table-wrap"><div class="nbis-empty">Loading quarterly statements…</div></div>
+          <div id="nbis-quarterly-table" class="nbis-table-wrap" tabindex="0" role="region" aria-label="Scrollable data table" set:html={view.html["nbis-quarterly-table"]} />
         </article>
         <div class="nbis-two-column">
           <article class="nbis-panel">
             <div class="nbis-panel__header"><h3>Profitability and leverage</h3><span class="nbis-muted">Provider-reported</span></div>
-            <div id="nbis-profitability" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+            <div id="nbis-profitability" class="nbis-metric-list" set:html={view.html["nbis-profitability"]} />
           </article>
           <article class="nbis-panel">
             <div class="nbis-panel__header"><h3>Balance sheet and capital</h3><span class="nbis-muted">Provider-reported</span></div>
-            <div id="nbis-balance-sheet" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+            <div id="nbis-balance-sheet" class="nbis-metric-list" set:html={view.html["nbis-balance-sheet"]} />
           </article>
         </div>
       </section>
@@ -244,12 +243,12 @@ const structuredData = site
         <div class="nbis-two-column nbis-two-column--wide">
           <article class="nbis-panel">
             <div class="nbis-panel__header"><h3>Current valuation</h3><span class="nbis-muted">Provider-reported</span></div>
-            <div id="nbis-valuation-table" class="nbis-metric-list"><div class="nbis-empty">Loading…</div></div>
+            <div id="nbis-valuation-table" class="nbis-metric-list" set:html={view.html["nbis-valuation-table"]} />
           </article>
           <article class="nbis-panel nbis-scenario-panel">
             <div class="nbis-panel__header"><h3>Illustrative EV / revenue scenarios</h3><span class="nbis-pill">Assumptions</span></div>
-            <p id="nbis-scenario-note" class="nbis-muted">Loading assumptions…</p>
-            <div id="nbis-scenario-table" class="nbis-table-wrap"><div class="nbis-empty">Loading…</div></div>
+            <p id="nbis-scenario-note" class="nbis-muted" set:html={view.html["nbis-scenario-note"]} />
+            <div id="nbis-scenario-table" class="nbis-table-wrap" tabindex="0" role="region" aria-label="Scrollable data table" set:html={view.html["nbis-scenario-table"]} />
           </article>
         </div>
       </section>
@@ -265,11 +264,11 @@ const structuredData = site
         <div class="nbis-two-column nbis-two-column--wide">
           <article class="nbis-panel nbis-risk-panel">
             <div class="nbis-panel__header"><h3>Risk flags</h3><span class="nbis-muted">Rules-based</span></div>
-            <div id="nbis-risks"><div class="nbis-empty">Loading risk flags…</div></div>
+            <div id="nbis-risks" set:html={view.html["nbis-risks"]} />
           </article>
           <article class="nbis-panel nbis-catalyst-panel">
             <div class="nbis-panel__header"><h3>Catalysts and checks</h3><span class="nbis-muted">Evidence to watch</span></div>
-            <div id="nbis-catalysts"><div class="nbis-empty">Loading catalysts…</div></div>
+            <div id="nbis-catalysts" set:html={view.html["nbis-catalysts"]} />
           </article>
         </div>
       </section>
@@ -283,17 +282,17 @@ const structuredData = site
           <p class="nbis-section__note">Filings are linked directly to EDGAR. Headlines are discovery aids, not verified facts.</p>
         </div>
         <article class="nbis-panel nbis-table-panel">
-          <div class="nbis-panel__header"><h3>Recent SEC filings</h3><span id="nbis-filing-count" class="nbis-muted">Loading…</span></div>
-          <div id="nbis-filings-table" class="nbis-table-wrap"><div class="nbis-empty">Loading filings…</div></div>
+          <div class="nbis-panel__header"><h3>Recent SEC filings</h3><span id="nbis-filing-count" class="nbis-muted" set:html={view.html["nbis-filing-count"]} /></div>
+          <div id="nbis-filings-table" class="nbis-table-wrap" tabindex="0" role="region" aria-label="Scrollable data table" set:html={view.html["nbis-filings-table"]} />
         </article>
         <div class="nbis-two-column nbis-two-column--wide">
           <article class="nbis-panel nbis-table-panel">
             <div class="nbis-panel__header"><h3>SEC reported facts</h3><span class="nbis-muted">Structured EDGAR facts</span></div>
-            <div id="nbis-sec-facts" class="nbis-table-wrap"><div class="nbis-empty">Loading EDGAR facts…</div></div>
+            <div id="nbis-sec-facts" class="nbis-table-wrap" tabindex="0" role="region" aria-label="Scrollable data table" set:html={view.html["nbis-sec-facts"]} />
           </article>
           <article class="nbis-panel nbis-table-panel">
             <div class="nbis-panel__header"><h3>Recent headlines</h3><span class="nbis-muted">Provider discovery feed</span></div>
-            <div id="nbis-news" class="nbis-news-list"><div class="nbis-empty">Loading headlines…</div></div>
+            <div id="nbis-news" class="nbis-news-list" set:html={view.html["nbis-news"]} />
           </article>
         </div>
       </section>
@@ -325,7 +324,7 @@ const structuredData = site
           Research and education only — not investment advice. Data can be delayed, incomplete, restated, or wrong. Verify material claims against the latest company filing and do not treat automated scores, scenarios, or consensus estimates as guaranteed outcomes.
         </div>
       </section>
-    </main>
+    </div>
     {
       showFooterAd && (
         <div class="container nbis-ad-container">

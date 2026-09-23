@@ -69,7 +69,7 @@ const fallback = {
   technical: { returns: {} },
   fundamentals: {},
   statements: { annual: [], quarterly: [] },
-  sec: { filings: [], facts: [] },
+  sec: { filings: [], facts: {} },
   scenarios: { rows: [], assumptionNote: "No live snapshot is available." },
   research: {
     readouts: [],
