@@ -15,7 +15,6 @@ const requiredFiles = [
   "guides/nbis-sec-filings.html",
   "privacy.html",
   "nbis.json",
-  "screener.json",
   "health.json",
   "settings.json",
   "robots.txt",
@@ -32,12 +31,14 @@ const contentChecks = [
 ];
 
 const missingFiles = requiredFiles.filter((file) => !existsSync(resolve(DIST, file)));
+const retiredFiles = ["screener.json", "dc-movers.json", "datacenter"].filter((file) => existsSync(resolve(DIST, file)));
 const missingContent = contentChecks.filter(([file, pattern]) => {
   if (!existsSync(resolve(DIST, file))) return true;
   return !pattern.test(readFileSync(resolve(DIST, file), "utf8"));
 });
 
-if (missingFiles.length || missingContent.length) {
+if (missingFiles.length || missingContent.length || retiredFiles.length) {
+  for (const file of retiredFiles) console.error(`✗ historical artifact must not ship: dist/${file}`);
   for (const file of missingFiles) console.error(`✗ missing dist/${file}`);
   for (const [file, pattern] of missingContent) console.error(`✗ dist/${file} missing ${pattern}`);
   process.exit(1);

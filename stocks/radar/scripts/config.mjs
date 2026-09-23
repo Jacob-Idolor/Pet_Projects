@@ -49,7 +49,7 @@ export function loadRuntimeConfig(opts = {}) {
     },
     adsense: {
       client: process.env.PUBLIC_ADSENSE_CLIENT || "",
-      enabled: truthy(process.env.PUBLIC_ADSENSE_ENABLED, false) && Boolean(process.env.PUBLIC_ADSENSE_CLIENT),
+      enabled: truthy(process.env.PUBLIC_ADSENSE_ENABLED, false) && process.env.PUBLIC_ADSENSE_CONSENT_READY === "true" && Boolean(process.env.PUBLIC_ADSENSE_CLIENT),
       slots: {
         hero: process.env.PUBLIC_ADSENSE_SLOT_HERO || "",
         board: process.env.PUBLIC_ADSENSE_SLOT_BOARD || "",

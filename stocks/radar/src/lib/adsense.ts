@@ -96,7 +96,9 @@ export function getAdSenseConfig(): AdSenseConfig {
     profile.businessLines.length + profile.monitor.length + profile.sources.length,
     datacenterHoldingCount(),
   );
+  const consentReady = env("PUBLIC_ADSENSE_CONSENT_READY") === "true";
   const { enabled, blockReason } = evaluateLiveAdsGate({
+    consentReady,
     client,
     enabledFlag,
     preview,

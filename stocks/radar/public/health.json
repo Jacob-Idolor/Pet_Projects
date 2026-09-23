@@ -1,31 +1,22 @@
 {
-  "ok": true,
-  "status": "ok",
-  "secondaryStatus": "stale",
+  "ok": false,
+  "status": "unhealthy",
   "buildOk": true,
   "service": "StocksWatch",
   "version": "0.3.0",
   "environment": "production",
-  "builtAt": "2026-09-09T05:49:51.298Z",
+  "builtAt": "2026-09-23T16:09:11.057Z",
   "gitSha": "local",
   "siteUrl": null,
   "freshnessSnapshot": {
-    "evaluatedAt": "2026-09-09T05:49:51.298Z",
+    "evaluatedAt": "2026-09-23T16:09:11.057Z",
     "validUntil": "2026-09-09T07:40:12.274Z",
-    "screenerValidUntil": "2026-08-07T04:07:59.283Z",
-    "note": "Build-time snapshot. The NBIS desk is the primary health signal; the screener is reported separately."
+    "note": "Build-time NBIS health; compare validUntil with the current time. Historical screener feeds are not published."
   },
   "checks": {
-    "screener": {
-      "ok": false,
-      "ageHours": 817.6977819444445,
-      "ok_count": 80,
-      "ticker_count": 80,
-      "coverage": 1
-    },
     "nbis": {
-      "ok": true,
-      "ageHours": 28.16084,
+      "ok": false,
+      "ageHours": 374.482995,
       "pricePoints": 470,
       "filings": 40,
       "status": "ok"
@@ -33,8 +24,6 @@
   },
   "paths": {
     "nbis": "/nbis.json",
-    "screener": "/screener.json",
-    "datacenter": "/datacenter.html",
     "settings": "/settings.json",
     "health": "/health.json"
   }

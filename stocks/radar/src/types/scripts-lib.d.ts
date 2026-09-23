@@ -26,5 +26,6 @@ declare module "../../scripts/lib/adsense-policy.mjs" {
     requireCustomDomain: boolean;
     tickerCount: number;
     minTickers?: number;
+    consentReady?: boolean;
   }): { enabled: boolean; blockReason: string | null };
 }

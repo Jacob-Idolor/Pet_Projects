@@ -13,7 +13,7 @@ const payload = {
   gitSha: process.env.GITHUB_SHA ?? "local",
   gitRef: process.env.GITHUB_REF_NAME ?? "local",
   siteUrl: process.env.STOCKS_RADAR_SITE ?? "",
-  deployProvider: process.env.DEPLOY_PROVIDER ?? "local",
+  deployProvider: process.env.DEPLOY_PROVIDER ?? (process.env.GITHUB_ACTIONS ? "github-actions" : "local"),
   workflowRun: process.env.GITHUB_RUN_ID ?? null,
 };
 

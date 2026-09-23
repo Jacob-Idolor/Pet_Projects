@@ -20,53 +20,51 @@ export function renderSnapshot(data: AnyRecord, now = Date.now()) {
   const html: Record<string, string> = {};
   const state = snapshotState(data, now);
   const setText = (id: string, value: unknown) => { html[id] = esc(value); };
-function metricRows(items: Array<[string, unknown, string?]>) {
-  return items.map(([label, value, className]) => `<div class="nbis-metric-row"><span>${esc(label)}</span><strong class="${className ?? ""}">${esc(value)}</strong></div>`).join("");
-}
+  function metricRows(items: Array<[string, unknown, string?]>) {
+    return items.map(([label, value, className]) => `<div class="nbis-metric-row"><span>${esc(label)}</span><strong class="${className ?? ""}">${esc(value)}</strong></div>`).join("");
+  }
 
-function renderChart(history: AnyRecord[]) {
-  const element = "nbis-chart";
-  const points = history.filter((point) => finite(point.close));
-  if (points.length < 2) { html[element] = `<div class="nbis-empty">No price history available.</div>`; return; }
-  const width = 900;
-  const height = 320;
-  const pad = { top: 22, right: 20, bottom: 38, left: 54 };
-  const values = points.map((point) => point.close as number);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const x = (index: number) => pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
-  const y = (value: number) => pad.top + (1 - (value - min) / span) * (height - pad.top - pad.bottom);
-  const line = points.map((point, index) => `${x(index).toFixed(1)},${y(point.close).toFixed(1)}`).join(" ");
-  const area = `${pad.left},${height - pad.bottom} ${line} ${width - pad.right},${height - pad.bottom}`;
-  const grid = [0, .5, 1].map((ratioValue) => { const value = max - ratioValue * span; const yValue = y(value); return `<line class="nbis-chart__grid" x1="${pad.left}" x2="${width - pad.right}" y1="${yValue}" y2="${yValue}"/><text class="nbis-chart__label" x="8" y="${yValue + 4}">${esc(usd(value))}</text>`; }).join("");
-  const labels = [0, Math.floor(points.length / 2), points.length - 1].map((index) => `<text class="nbis-chart__label" x="${x(index)}" y="${height - 12}" text-anchor="middle">${esc(String(points[index].date ?? "").slice(0, 7))}</text>`).join("");
-  html[element] = `<svg viewBox="0 0 ${width} ${height}" aria-hidden="true"><defs><linearGradient id="nbis-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0f766e" stop-opacity=".18"/><stop offset="1" stop-color="#0f766e" stop-opacity="0"/></linearGradient></defs>${grid}<polygon class="nbis-chart__area" points="${area}"/><polyline class="nbis-chart__line" points="${line}"/>${labels}</svg>`;
-  setText("nbis-chart-range", `${dateLabel(points[0].date)} → ${dateLabel(points.at(-1)?.date)}`);
-}
+  function renderChart(history: AnyRecord[]) {
+    const element = "nbis-chart";
+    const points = history.filter((point) => finite(point.close));
+    if (points.length < 2) { html[element] = `<div class="nbis-empty">No price history available.</div>`; return; }
+    const width = 900;
+    const height = 320;
+    const pad = { top: 22, right: 20, bottom: 38, left: 54 };
+    const values = points.map((point) => point.close as number);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = max - min || 1;
+    const x = (index: number) => pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
+    const y = (value: number) => pad.top + (1 - (value - min) / span) * (height - pad.top - pad.bottom);
+    const line = points.map((point, index) => `${x(index).toFixed(1)},${y(point.close).toFixed(1)}`).join(" ");
+    const area = `${pad.left},${height - pad.bottom} ${line} ${width - pad.right},${height - pad.bottom}`;
+    const grid = [0, .5, 1].map((ratioValue) => { const value = max - ratioValue * span; const yValue = y(value); return `<line class="nbis-chart__grid" x1="${pad.left}" x2="${width - pad.right}" y1="${yValue}" y2="${yValue}"/><text class="nbis-chart__label" x="8" y="${yValue + 4}">${esc(usd(value))}</text>`; }).join("");
+    const labels = [0, Math.floor(points.length / 2), points.length - 1].map((index) => `<text class="nbis-chart__label" x="${x(index)}" y="${height - 12}" text-anchor="middle">${esc(String(points[index].date ?? "").slice(0, 7))}</text>`).join("");
+    html[element] = `<svg viewBox="0 0 ${width} ${height}" aria-hidden="true"><defs><linearGradient id="nbis-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0f766e" stop-opacity=".18"/><stop offset="1" stop-color="#0f766e" stop-opacity="0"/></linearGradient></defs>${grid}<polygon class="nbis-chart__area" points="${area}"/><polyline class="nbis-chart__line" points="${line}"/>${labels}</svg>`;
+    setText("nbis-chart-range", `${dateLabel(points[0].date)} → ${dateLabel(points.at(-1)?.date)}`);
+  }
 
-function renderTable(id: string, rows: AnyRecord[], columns: Array<[string, string, (value: unknown) => string]>, firstLabel = "Period", firstKey = "period") {
-  const element = id;
-  if (!element) return;
-  if (!rows.length) { html[element] = `<div class="nbis-empty">No statement data was available in this snapshot.</div>`; return; }
-  html[element] = `<table class="nbis-data-table"><thead><tr><th scope="col">${esc(firstLabel)}</th>${columns.map(([label]) => `<th scope="col">${esc(label)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr><td>${esc(row[firstKey] ?? row.end ?? "—")}</td>${columns.map(([, key, formatter]) => `<td>${esc(formatter(row[key]))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-}
+  function renderTable(id: string, rows: AnyRecord[], columns: Array<[string, string, (value: unknown) => string]>, firstLabel = "Period", firstKey = "period") {
+    const element = id;
+      if (!rows.length) { html[element] = `<div class="nbis-empty">No statement data was available in this snapshot.</div>`; return; }
+    html[element] = `<table class="nbis-data-table"><thead><tr><th scope="col">${esc(firstLabel)}</th>${columns.map(([label]) => `<th scope="col">${esc(label)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr><td>${esc(row[firstKey] ?? row.end ?? "—")}</td>${columns.map(([, key, formatter]) => `<td>${esc(formatter(row[key]))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  }
 
-function renderRiskList(id: string, items: AnyRecord[], catalyst = false) {
-  const element = id;
-  if (!element) return;
-  html[element] = items.length ? `<div class="nbis-risk-list">${items.map((item) => `<article class="nbis-risk-item ${catalyst ? "nbis-risk-item--catalyst" : ""}"><div class="nbis-risk-item__top"><span class="nbis-risk-item__tag">${esc(catalyst ? "Catalyst" : item.severity ?? "Watch")}</span><strong>${esc(item.title)}</strong></div><p>${esc(item.detail)}</p></article>`).join("")}</div>` : `<div class="nbis-empty">No automated flags were produced.</div>`;
-}
+  function renderRiskList(id: string, items: AnyRecord[], catalyst = false) {
+    const element = id;
+      html[element] = items.length ? `<div class="nbis-risk-list">${items.map((item) => `<article class="nbis-risk-item ${catalyst ? "nbis-risk-item--catalyst" : ""}"><div class="nbis-risk-item__top"><span class="nbis-risk-item__tag">${esc(catalyst ? "Catalyst" : item.severity ?? "Watch")}</span><strong>${esc(item.title)}</strong></div><p>${esc(item.detail)}</p></article>`).join("")}</div>` : `<div class="nbis-empty">No automated flags were produced.</div>`;
+  }
 
-function filingTable(rows: AnyRecord[]) {
-  const body = rows.map((item) => {
-    const filed = item.filingDate ?? item.filed;
-    const accession = String(item.accessionNumber ?? item.accession ?? "—");
-    const shortAccession = accession.split("-").at(-1) ?? accession;
-    return `<tr><td>${esc(dateLabel(filed))}</td><td>${esc(item.form)}</td><td class="nbis-mono nbis-filing-accession" title="${esc(accession)}">${esc(shortAccession)}</td><td><a href="${esc(safeUrl(item.url))}" target="_blank" rel="noopener" aria-label="Open SEC filing ${esc(accession)}">Open ↗</a></td></tr>`;
-  }).join("");
-  return `<table class="nbis-data-table nbis-filings-table"><thead><tr><th scope="col">Filed</th><th scope="col">Form</th><th scope="col">ID</th><th scope="col">Document</th></tr></thead><tbody>${body}</tbody></table>`;
-}
+  function filingTable(rows: AnyRecord[]) {
+    const body = rows.map((item) => {
+      const filed = item.filingDate ?? item.filed;
+      const accession = String(item.accessionNumber ?? item.accession ?? "—");
+      const shortAccession = accession.split("-").at(-1) ?? accession;
+      return `<tr><td>${esc(dateLabel(filed))}</td><td>${esc(item.form)}</td><td class="nbis-mono nbis-filing-accession" title="${esc(accession)}">${esc(shortAccession)}</td><td><a href="${esc(safeUrl(item.url))}" target="_blank" rel="noopener" aria-label="Open SEC filing ${esc(accession)}">Open ↗</a></td></tr>`;
+    }).join("");
+    return `<table class="nbis-data-table nbis-filings-table"><thead><tr><th scope="col">Filed</th><th scope="col">Form</th><th scope="col">ID</th><th scope="col">Document</th></tr></thead><tbody>${body}</tbody></table>`;
+  }
 
 
   const price = data.price ?? {};

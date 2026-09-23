@@ -4,10 +4,10 @@
 
 - The active application is `radar/`, a static Astro site.
 - Run application commands from `radar/` unless a task explicitly concerns the repository root.
-- The intended production homepage is the AI Data Center screener at `/`.
-- The archived group watchlist is served at `/watchlist.html`.
+- The production homepage is the NBIS research desk at `/`.
+- The group watchlist is retired. `/datacenter.html` redirects to `/`.
 - `radar/archive/ai-datacenter-screener/` is retained for local and historical reference; it is not deployed.
-- There is **no live AWS/Terraform stack**. `stockswatch.cc` is a Cloudflare domain with no origin until hosting is chosen again.
+- There is **no live AWS/Terraform stack**. `stockswatch.cc` is served by Cloudflare Pages; active workflows live in the parent repository's `.github/` directory.
 
 ## Setup and validation
 
@@ -15,7 +15,7 @@
 - Use `npm run dev` for local development.
 - For normal code changes, run the narrowest relevant tests plus `npm test` and `npm run typecheck`.
 - Run `npm run screener:schema` when screener data or its consumers change.
-- Run a build and the Playwright suite for UI, routing, or release-sensitive changes. In PowerShell, set `$env:SCREENER_SKIP='1'` before an offline build.
+- Run a build and the Playwright suite for UI, routing, or release-sensitive changes. In PowerShell, set `$env:SCREENER_SKIP='1'; $env:NBIS_SKIP='1'` before an offline build.
 - Do not run deploy, infrastructure, alert, email, or live-data mutation commands unless the user explicitly asks.
 
 ## Architecture and editing rules

@@ -1,5 +1,5 @@
 ---
-import { readFileSync } from "node:fs";
+import snapshot from "../../public/nbis.json";
 import { renderSnapshot } from "../lib/nbis-render";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import AdSlot from "../components/AdSlot.astro";
@@ -7,7 +7,6 @@ import profile from "../data/nbis-profile.json";
 import { canShowAdSlot, getAdSenseConfig, hasPublisherContent } from "../lib/adsense";
 import { featureEnabled } from "../lib/site-config";
 
-const snapshot = JSON.parse(readFileSync(new URL("../../public/nbis.json", import.meta.url), "utf8"));
 const view = renderSnapshot(snapshot);
 const base = import.meta.env.BASE_URL;
 const dataUrl = `${base}nbis.json`.replace(/\/{2,}/g, "/").replace(":/", "://");

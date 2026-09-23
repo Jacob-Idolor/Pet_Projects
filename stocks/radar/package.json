@@ -14,10 +14,10 @@
     "test": "node --test tests/**/*.test.mjs",
     "test:e2e": "playwright test",
     "typecheck": "astro sync && tsc --noEmit",
-    "dev": "npm run sync:tokens && npm run hash:datacenter && astro dev",
+    "dev": "npm run sync:tokens && astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "rebuild": "npm run prebuild && npm run build && npm run preview",
+    "rebuild": "npm run build && npm run preview",
     "update-screener": "python scripts/fetch/fetch-screener.py && node scripts/fetch/write-dc-movers.mjs",
     "update-nbis": "python scripts/fetch/fetch-nbis.py",
     "nbis:snapshot": "node scripts/fetch/fetch-nbis-soft.mjs",
@@ -29,14 +29,21 @@
     "verify:dist": "node scripts/ops/verify-dist.mjs",
     "seo": "node scripts/ops/write-seo-files.mjs",
     "health": "node scripts/ops/write-health.mjs",
-    "prebuild": "npm run config:validate && npm run sync:tokens && npm run hash:datacenter && node scripts/fetch/fetch-screener-soft.mjs && npm run screener:schema && npm run nbis:snapshot && npm run nbis:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs"
+    "prebuild": "npm run config:validate && npm run sync:tokens && npm run nbis:snapshot && npm run nbis:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs",
+    "postbuild": "node scripts/ops/prepare-release.mjs",
+    "nbis:quality": "node scripts/ops/validate-nbis-schema.mjs --fresh"
   },
   "dependencies": {
     "astro": "^7.3.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "^1.53.1",
     "@types/node": "^26.1.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "4.137.0"
+  },
+  "engines": {
+    "node": ">=22.19.0 <23"
   }
 }

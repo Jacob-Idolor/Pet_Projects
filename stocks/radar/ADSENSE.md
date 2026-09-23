@@ -18,12 +18,17 @@ Set these as GitHub Actions repository variables or build environment values, no
 ```text
 PUBLIC_ADSENSE_CLIENT=ca-pub-…
 PUBLIC_ADSENSE_ENABLED=true
+PUBLIC_ADSENSE_CONSENT_READY=false
 PUBLIC_ADSENSE_VERIFY_META=ca-pub-…
 PUBLIC_ADSENSE_SLOT_FOOTER=<numeric display-unit-id>
 STOCKS_RADAR_SITE=https://stockswatch.cc
 ```
 
 `PUBLIC_ADSENSE_SLOT_HERO` remains available but the hero placement is disabled by default. Keep the first test unit late on the page so the research is useful before any sponsored content appears.
+
+Keep `PUBLIC_ADSENSE_CONSENT_READY=false` until the site's consent setup is verified. In AdSense → Privacy & messaging, configure and publish a Google-certified consent message for the domain, then check consent choices and withdrawal controls in the relevant regions. Only afterward set the repository variable to `true`. This flag records operator verification; it is not a consent manager and does not collect consent itself. See [Google's publisher requirements](https://support.google.com/adsense/answer/13554116?hl=en).
+
+Publisher verification uses the account meta tag; it never bypasses the consent gate or loads AdSense by itself. Cloudflare Web Analytics is configured at the hosting layer and is disclosed on the privacy page.
 
 ## Files
 

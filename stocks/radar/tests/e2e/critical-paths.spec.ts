@@ -9,12 +9,6 @@ test.describe("NBIS research homepage critical paths", () => {
     expect(nbisBody).toHaveProperty("fetchedAt");
     expect(Array.isArray(nbisBody.priceHistory)).toBeTruthy();
 
-    const res = await request.get("/screener.json");
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(Array.isArray(body.layers)).toBeTruthy();
-    expect(body.layers.length).toBeGreaterThan(0);
-
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /Nebius Group/i })).toBeVisible();
 
@@ -25,28 +19,14 @@ test.describe("NBIS research homepage critical paths", () => {
       .toBeGreaterThan(0);
   });
 
-  test("campuses.json is available for the map", async ({ request }) => {
-    const res = await request.get("/datacenter/campuses.json");
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(Array.isArray(body.sites)).toBeTruthy();
-    expect(body.sites.length).toBeGreaterThan(0);
+  test("historical screener feeds are not published", async ({ request }) => {
+    for (const path of ["/screener.json", "/dc-movers.json", "/datacenter/campuses.json"]) {
+      expect((await request.get(path)).status()).toBe(404);
+    }
   });
 
   test("legacy /datacenter.html redirects toward home", async ({ page }) => {
     await page.goto("/datacenter.html");
     await expect(page).toHaveURL(/\/($|\?)/);
-  });
-});
-
-test.describe("AI data-center critical paths", () => {
-  test("dc-movers.json is compact for bridges", async ({ request }) => {
-    const res = await request.get("/dc-movers.json");
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(Array.isArray(body.gainers)).toBeTruthy();
-    expect(Array.isArray(body.losers)).toBeTruthy();
-    expect(body.gainers.length).toBeLessThanOrEqual(5);
-    expect(body.losers.length).toBeLessThanOrEqual(5);
   });
 });

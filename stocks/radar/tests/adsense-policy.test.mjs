@@ -27,8 +27,14 @@ describe("hasPublisherContent", () => {
 });
 
 describe("evaluateLiveAdsGate", () => {
+  it("blocks live ads until consent configuration is verified", () => {
+    const r = evaluateLiveAdsGate({ client: "ca-pub-123", enabledFlag: "true", preview: false, siteUrl: "https://stockswatch.cc", requireCustomDomain: true, tickerCount: 14 });
+    assert.equal(r.enabled, false);
+    assert.match(r.blockReason, /Consent/);
+  });
   it("enables on custom domain with content", () => {
     const r = evaluateLiveAdsGate({
+      consentReady: true,
       client: "ca-pub-123",
       enabledFlag: "true",
       preview: false,

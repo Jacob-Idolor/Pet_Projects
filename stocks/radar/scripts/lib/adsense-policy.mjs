@@ -52,6 +52,7 @@ export function evaluateLiveAdsGate({
   requireCustomDomain,
   tickerCount,
   minTickers = 5,
+  consentReady = false,
 }) {
   const flagOn = enabledFlag === "true" || enabledFlag === "1";
 
@@ -64,6 +65,8 @@ export function evaluateLiveAdsGate({
       "Live ads require a custom domain (seo.requireCustomDomainForAds) — see DOMAIN.md";
   } else if (!hasPublisherContent(tickerCount, minTickers)) {
     blockReason = "Publisher content gate not met (need ≥5 substantive content units)";
+  } else if (!consentReady) {
+    blockReason = "Consent configuration has not been verified";
   }
 
   const enabled =

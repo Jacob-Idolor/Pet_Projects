@@ -6,24 +6,23 @@ StocksWatch is a static Astro site for the NBIS research desk at `/`. It is desi
 
 | Surface | Source | Runtime |
 | --- | --- | --- |
-| NBIS Deep Dive | `src/pages/index.astro` | Astro HTML + `public/nbis.json` hydration |
+| NBIS Deep Dive | `src/pages/index.astro` | Build-rendered snapshot HTML + browser refresh from `public/nbis.json` |
 | NBIS reading guide | `src/pages/guides/nbis-research-guide.astro` | Static Astro HTML |
 | NBIS SEC filings guide | `src/pages/guides/nbis-sec-filings.astro` | Static Astro HTML |
 | Privacy & sponsorship | `src/pages/privacy.astro` | Static Astro HTML |
 | Legacy data-center redirect | `src/pages/datacenter.astro` | Redirects bookmarks to `/` |
 | Not found | `src/pages/404.astro` | Noindex, no ads |
 
-The former group watchlist, quote board, personal alerts, and submission form have been removed. The retained `public/datacenter/` assets are historical/supporting screener assets and are not a separate product surface.
+The former group watchlist, quote board, personal alerts, and submission form have been removed. Retained `public/datacenter/`, screener and movers files are historical local sources. `postbuild` excludes them from `dist/`; they are not published feeds.
 
 ## Data flow
 
 ```text
 Daily refresh
   → fetch-nbis.py → public/nbis.json
-  → fetch-screener.py → public/screener.json + public/dc-movers.json
-  → schema checks → Astro static build
+  → shared quality gate → Astro static build → exclude historical artifacts
   → Cloudflare Pages / static CDN
-  → browser hydrates the NBIS research desk from nbis.json
+  → browser checks snapshot age and refreshes from nbis.json
 ```
 
 The NBIS snapshot contains market context, fundamentals, scenarios, filings, research readouts, and timestamps. Missing or stale data remains visible as missing or stale; the site never invents numbers to make a page look healthy.
@@ -33,6 +32,8 @@ The NBIS snapshot contains market context, fundamentals, scenarios, filings, res
 | Path | Role |
 | --- | --- |
 | `src/client/nbis-dashboard.ts` | Snapshot hydration, chart, tables, readouts, and local engagement hooks |
+| `src/lib/nbis-render.ts` | Pure escaped renderer shared by initial HTML and browser refresh |
+| `scripts/lib/nbis-quality.mjs` | Shared structural, coverage, and freshness validation |
 | `src/data/nbis-profile.json` | Company profile, monitoring checklist, and primary sources |
 | `scripts/fetch/fetch-nbis.py` | Yahoo Finance + SEC snapshot collection |
 | `scripts/fetch/fetch-screener.py` | AI infrastructure screener snapshot |
@@ -43,7 +44,7 @@ The NBIS snapshot contains market context, fundamentals, scenarios, filings, res
 
 ## Build lifecycle
 
-`npm run prebuild` validates configuration, syncs design tokens, hashes retained data-center assets, refreshes the screener and NBIS snapshot, validates both schemas, writes health/SEO metadata, and then lets Astro build the static site. CI runs source type/unit checks before the fetch, then verifies required static release files before the bundle scan and deploy. Production sets strict data-fetch behavior; local builds may preserve an existing valid snapshot with `NBIS_SKIP=1`.
+`npm run prebuild` validates configuration, syncs tokens, refreshes NBIS when requested, validates its snapshot schema, and writes health/SEO metadata. Astro renders NBIS data directly into HTML through the same renderer used by browser refreshes. `postbuild` removes historical feeds from the release. Production validates fresh data before deployment and checks the public revision afterward. Offline builds use `SCREENER_SKIP=1 NBIS_SKIP=1`; stale data stays explicitly labeled. The static health file's `validUntil` must be compared to the current time, not treated as a perpetual health guarantee.
 
 ## Design and safety rules
 

@@ -7,3 +7,6 @@ node_modules/
 public/alert-state.json
 .alert-state.json
 .cache/
+test-results/
+playwright-report/
+__pycache__/

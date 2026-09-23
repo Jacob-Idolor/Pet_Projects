@@ -32,7 +32,18 @@ For a local refresh with provider access, install the Python requirements and ru
 
 Use Node.js 22.19 or newer in the Node 22 release line (CI installs the latest Node 22). Run `npm ci` after pulling lockfile updates. `npm run security:deps` audits all dependencies, including optional image-processing packages, and blocks high/critical vulnerabilities. Dependabot checks this application's npm packages weekly. Pull requests run source checks, an offline snapshot build, bundle checks, and Chromium tests; daily refreshes also audit dependencies and validate source before building. The active workflows and Dependabot configuration live in the parent repository's `.github/` directory.
 
-Keep dependency updates within supported version ranges unless a major upgrade has been reviewed and tested. TypeScript remains on version 5 for this maintenance update.
+Keep dependency updates within supported version ranges unless a major upgrade has been reviewed and tested. TypeScript remains on version 5. Wrangler is pinned in the npm lockfile. Python snapshot dependencies are hash-locked in `scripts/datacenter/requirements.txt`; install with `python -m pip install --require-hashes -r scripts/datacenter/requirements.txt`. Regenerate on Python 3.13 from `requirements.in` using pip-tools 7.5.0.
+
+For this Windows checkout, activate the installed project-local Node 22.23.2 toolchain before using npm:
+
+```powershell
+. ./scripts/ops/use-node.ps1
+npm ci
+```
+
+The helper changes only the current PowerShell session. Other machines can install the version in `.nvmrc`; `package.json` declares the supported Node range. The cached runtime is not committed.
+
+Snapshot percentages use explicit units: provider growth/margin fractions and scenario CAGR are multiplied by 100 for display; market returns are already percentage points. Initial HTML and browser refresh share the same renderer. The retired screener files remain local and are stripped from releases.
 
 ## Product direction
 
@@ -52,7 +63,7 @@ AdSense is wired for later but is not required for the site to work. Ads are man
 
 ## Hosting
 
-The intended host is Cloudflare Pages with static output. Terraform configuration remains under `infra/terraform/`; no deployment or infrastructure mutation is performed by normal local builds.
+The site is hosted on Cloudflare Pages with static output. Terraform configuration remains under `infra/terraform/`; no deployment or infrastructure mutation is performed by normal local builds.
 
 ## Important files
 

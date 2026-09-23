@@ -5,17 +5,16 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadRuntimeConfig, publicSettingsPayload } from "../config.mjs";
-import { ageHours, coverageOk, coverageRatio, freshUntil } from "../lib/freshness-utils.mjs";
+import { ageHours, freshUntil } from "../lib/freshness-utils.mjs";
+
+import { NBIS_MAX_AGE_HOURS, validateNbisSnapshot } from "../lib/nbis-quality.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const config = loadRuntimeConfig();
 const settings = publicSettingsPayload(config);
 writeFileSync(resolve(ROOT, "public/settings.json"), JSON.stringify(settings, null, 2) + "\n");
 
-const screenerMaxH = Number(process.env.SCREENER_MAX_AGE_HOURS || 24);
-const nbisMaxH = Number(process.env.NBIS_MAX_AGE_HOURS || 30);
-const nbisMinPricePoints = Number(process.env.NBIS_MIN_PRICE_POINTS || 20);
-const minOkRatio = Number(process.env.SCREENER_MIN_OK_RATIO || 0.85);
+const nbisMaxH = NBIS_MAX_AGE_HOURS;
 
 function readJson(rel) {
   const path = resolve(ROOT, rel);
@@ -27,25 +26,8 @@ function readJson(rel) {
   }
 }
 
-const screenerFile = readJson("public/screener.json");
 const nbisFile = readJson("public/nbis.json");
-const checks = { screener: { ok: false }, nbis: { ok: false } };
-
-if (screenerFile.data) {
-  const data = screenerFile.data;
-  const okCount = Number(data.ok_count) || 0;
-  const tickerCount = Number(data.ticker_count) || 0;
-  const age = ageHours(data.fetched_at_iso || data.fetched_at);
-  checks.screener = {
-    ok: age != null && age <= screenerMaxH && okCount >= 1 && coverageOk(okCount, tickerCount, minOkRatio),
-    ageHours: age,
-    ok_count: okCount,
-    ticker_count: tickerCount,
-    coverage: coverageRatio(okCount, tickerCount),
-  };
-} else {
-  checks.screener = { ok: false, missing: true, error: screenerFile.error || "missing" };
-}
+const checks = { nbis: { ok: false } };
 
 if (nbisFile.data) {
   const data = nbisFile.data;
@@ -53,7 +35,7 @@ if (nbisFile.data) {
   const pricePoints = Array.isArray(data.priceHistory) ? data.priceHistory.length : 0;
   const filings = Array.isArray(data.sec?.filings) ? data.sec.filings.length : 0;
   checks.nbis = {
-    ok: data.status === "ok" && age != null && age <= nbisMaxH && pricePoints >= nbisMinPricePoints,
+    ok: validateNbisSnapshot(data, { requireFresh: true }).length === 0,
     ageHours: age,
     pricePoints,
     filings,
@@ -64,16 +46,12 @@ if (nbisFile.data) {
 }
 
 const dataOk = checks.nbis.ok;
-const screenerOk = checks.screener.ok;
+
 const evaluatedAt = new Date().toISOString();
 const validUntil = nbisFile.data ? freshUntil(nbisFile.data.fetchedAt, nbisMaxH) : null;
-const screenerValidUntil = screenerFile.data
-  ? freshUntil(screenerFile.data.fetched_at_iso || screenerFile.data.fetched_at, screenerMaxH)
-  : null;
 const health = {
   ok: dataOk,
   status: dataOk ? "ok" : "unhealthy",
-  secondaryStatus: screenerOk ? "ok" : "stale",
   buildOk: true,
   service: config.app.name,
   version: config.app.version,
@@ -84,14 +62,11 @@ const health = {
   freshnessSnapshot: {
     evaluatedAt,
     validUntil,
-    screenerValidUntil,
-    note: "Build-time snapshot. The NBIS desk is the primary health signal; the screener is reported separately.",
+    note: "Build-time NBIS health; compare validUntil with the current time. Historical screener feeds are not published.",
   },
   checks,
   paths: {
     nbis: "/nbis.json",
-    screener: "/screener.json",
-    datacenter: "/datacenter.html",
     settings: config.ops.settingsPath,
     health: config.ops.healthPath,
   },
@@ -101,6 +76,4 @@ writeFileSync(resolve(ROOT, "public/health.json"), JSON.stringify(health, null, 
 console.log(`✓ settings.json + health.json (${config.app.environment}) — status=${health.status}`);
 if (!dataOk) {
   console.warn("⚠ NBIS health is not ok — snapshot age, status, or price-history coverage is below threshold");
-} else if (!screenerOk) {
-  console.warn("⚠ NBIS health is ok — AI data-center screener data is stale or unavailable");
 }

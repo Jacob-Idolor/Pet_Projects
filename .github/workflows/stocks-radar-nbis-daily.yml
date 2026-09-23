@@ -1,6 +1,11 @@
 name: StocksWatch — NBIS daily refresh and deploy
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "stocks/radar/**"
+      - ".github/workflows/stocks-radar-nbis-daily.yml"
   schedule:
     - cron: "30 22 * * *"
   workflow_dispatch:
@@ -20,13 +25,14 @@ jobs:
       run:
         working-directory: stocks/radar
     env:
+      DEPLOY_PROVIDER: github-actions
       STOCKS_RADAR_ENV: production
       STOCKS_RADAR_SITE: https://stockswatch.cc
       STOCKS_RADAR_BASE: /
       SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
       # Public build-time configuration; unset values keep monetization off.
-      PUBLIC_WEB3FORMS_ACCESS_KEY: ${{ vars.PUBLIC_WEB3FORMS_ACCESS_KEY }}
       PUBLIC_ADSENSE_CLIENT: ${{ vars.PUBLIC_ADSENSE_CLIENT }}
+      PUBLIC_ADSENSE_CONSENT_READY: ${{ vars.PUBLIC_ADSENSE_CONSENT_READY }}
       PUBLIC_ADSENSE_ENABLED: ${{ vars.PUBLIC_ADSENSE_ENABLED }}
       PUBLIC_ADSENSE_SLOT_BOARD: ${{ vars.PUBLIC_ADSENSE_SLOT_BOARD }}
       PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.PUBLIC_ADSENSE_SLOT_FOOTER }}
@@ -48,7 +54,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install -r scripts/datacenter/requirements.txt
+          python -m pip install --require-hashes -r scripts/datacenter/requirements.txt
           npm ci
 
       - name: Audit npm dependencies
@@ -65,7 +71,7 @@ jobs:
           NBIS_STRICT: "1"
 
       - name: Validate NBIS snapshot
-        run: npm run nbis:schema
+        run: npm run nbis:quality
 
       - name: Build static site
         run: npm run build
@@ -81,7 +87,19 @@ jobs:
         run: npm run security:dist
 
       - name: Deploy to Cloudflare Pages
-        run: npx --yes wrangler@4 pages deploy dist --project-name stockswatch-nbis --branch main
+        run: npx --no-install wrangler pages deploy dist --project-name stockswatch-nbis --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify deployed revision and freshness
+        env:
+          EXPECTED_GIT_SHA: ${{ github.sha }}
+        run: |
+          for attempt in 1 2 3 4; do
+            if npm run freshness:live -- https://stockswatch.cc; then
+              exit 0
+            fi
+            sleep 15
+          done
+          exit 1

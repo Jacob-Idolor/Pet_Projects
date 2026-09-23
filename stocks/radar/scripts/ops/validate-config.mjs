@@ -44,6 +44,9 @@ if (strict) {
   const adsRequested =
     process.env.PUBLIC_ADSENSE_ENABLED === "true" || Boolean(process.env.PUBLIC_ADSENSE_CLIENT);
   if (adsRequested) {
+    if (process.env.PUBLIC_ADSENSE_CONSENT_READY !== "true") {
+      warnings.push("Ad scripts disabled until PUBLIC_ADSENSE_CONSENT_READY=true after consent setup is verified");
+    }
     if (!config.adsense.client.startsWith("ca-pub-")) {
       errors.push("PUBLIC_ADSENSE_CLIENT must be a ca-pub-… id when ads are enabled");
     }

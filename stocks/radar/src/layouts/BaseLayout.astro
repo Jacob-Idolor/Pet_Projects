@@ -1,6 +1,7 @@
 ---
 import { getAdSenseConfig } from "../lib/adsense";
 import SiteHeader from "../components/SiteHeader.astro";
+import profile from "../data/nbis-profile.json";
 
 interface Props {
   title: string;
@@ -46,7 +47,7 @@ const jsonLd = structuredData
   : undefined;
 const ads = getAdSenseConfig();
 /** Script only when this page opts in AND live ads (or verify meta) are configured. */
-const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(ads.verifyMeta));
+const loadAdScript = allowAds && Boolean(ads.client) && ads.enabled;
 ---
 
 <!doctype html>
@@ -97,8 +98,9 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
     }
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <SiteHeader active={activeNav} />
-    <main>
+    <main id="main-content" tabindex="-1">
       <slot />
     </main>
     <footer class="site-footer">
@@ -111,7 +113,7 @@ const loadAdScript = allowAds && Boolean(ads.client) && (ads.enabled || Boolean(
           ·
           <a href={`${base}privacy.html`}>Privacy &amp; sponsorship</a>
           ·
-          <a href="https://www.sec.gov/edgar/browse/?CIK=1829964&owner=exclude" target="_blank" rel="noopener">SEC filings</a>
+          <a href={`https://www.sec.gov/edgar/browse/?CIK=${profile.secCik}&owner=exclude`} target="_blank" rel="noopener">SEC filings</a>
           ·
           <a href="https://github.com/Jacob-Idolor/Pet_Projects" target="_blank" rel="noopener">GitHub</a>
         </p>
