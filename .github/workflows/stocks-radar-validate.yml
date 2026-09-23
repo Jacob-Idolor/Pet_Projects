@@ -30,7 +30,7 @@ jobs:
           cache-dependency-path: stocks/radar/package-lock.json
       - run: npm ci
       - name: Audit npm dependencies
-        run: npm audit --omit=optional --audit-level=high
+        run: npm run security:deps
       - run: npm run config:validate
       - run: npm test
       - run: npm run screener:schema
@@ -42,8 +42,11 @@ jobs:
           STOCKS_RADAR_BASE: /
           STOCKS_RADAR_SITE: https://stockswatch.cc
           STOCKS_RADAR_ENV: development
+          NBIS_SKIP: "1"
           SCREENER_SKIP: "1"
           QUOTES_SKIP: "1"
+      - name: Verify static release
+        run: npm run verify:dist
       - name: Scan built bundle for credentials
         run: npm run security:dist
       - run: npm run adsense:checklist

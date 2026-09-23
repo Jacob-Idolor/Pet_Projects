@@ -16,6 +16,7 @@ Useful checks:
 
 ```bash
 npm test
+npm run security:deps
 npm run screener:schema
 npm run nbis:schema
 npm run typecheck
@@ -26,6 +27,12 @@ npm run test:e2e
 ```
 
 For a local refresh with provider access, install the Python requirements and run `npm run update-nbis`. Production refreshes require `SEC_CONTACT_EMAIL` or `SEC_USER_AGENT`.
+
+## Dependency maintenance
+
+Use Node.js 22.19 or newer in the Node 22 release line (CI installs the latest Node 22). Run `npm ci` after pulling lockfile updates. `npm run security:deps` audits all dependencies, including optional image-processing packages, and blocks high/critical vulnerabilities. Dependabot checks this application's npm packages weekly. Pull requests run source checks, an offline snapshot build, bundle checks, and Chromium tests; daily refreshes also audit dependencies and validate source before building. The active workflows and Dependabot configuration live in the parent repository's `.github/` directory.
+
+Keep dependency updates within supported version ranges unless a major upgrade has been reviewed and tested. TypeScript remains on version 5 for this maintenance update.
 
 ## Product direction
 

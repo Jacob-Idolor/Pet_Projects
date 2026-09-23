@@ -25,13 +25,14 @@
     "freshness": "node scripts/ops/check-live-freshness.mjs",
     "freshness:live": "node scripts/ops/check-live-freshness.mjs --url",
     "security:dist": "node scripts/ops/check-dist-security.mjs",
+    "security:deps": "npm audit --audit-level=high",
     "verify:dist": "node scripts/ops/verify-dist.mjs",
     "seo": "node scripts/ops/write-seo-files.mjs",
     "health": "node scripts/ops/write-health.mjs",
     "prebuild": "npm run config:validate && npm run sync:tokens && npm run hash:datacenter && node scripts/fetch/fetch-screener-soft.mjs && npm run screener:schema && npm run nbis:snapshot && npm run nbis:schema && node scripts/ops/write-build-meta.mjs && node scripts/ops/write-seo-files.mjs && node scripts/ops/write-health.mjs"
   },
   "dependencies": {
-    "astro": "^7.1.3"
+    "astro": "^7.3.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.1",

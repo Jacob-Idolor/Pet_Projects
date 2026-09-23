@@ -51,6 +51,9 @@ jobs:
           python -m pip install -r scripts/datacenter/requirements.txt
           npm ci
 
+      - name: Audit npm dependencies
+        run: npm run security:deps
+
       - name: Validate source
         run: |
           npm run typecheck
