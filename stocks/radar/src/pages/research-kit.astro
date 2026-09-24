@@ -1,0 +1,164 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const download = `${base}downloads/ai-infrastructure-research-kit.md`;
+const description = "A free, editable AI infrastructure research kit: organize sources, separate facts from assumptions, and keep a clear record of what changed.";
+const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
+const structuredData = site ? {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "AI Infrastructure Research Kit",
+  description,
+  url: `${site}/research-kit.html`,
+  isPartOf: { "@type": "WebSite", name: "StocksWatch", url: `${site}/` },
+} : undefined;
+const sections = [
+  { number: "01", title: "Follow the evidence", text: "Keep the document, reporting period, source link and retrieval date beside each material claim.", detail: "SOURCE LOG" },
+  { number: "02", title: "Make assumptions visible", text: "Separate what is reported from what you infer. Record the evidence that could change your view.", detail: "ASSUMPTION REGISTER" },
+  { number: "03", title: "Remember what changed", text: "Compare your previous notes with new evidence. Keep unanswered questions and review triggers in view.", detail: "REVIEW & CHANGE LOG" },
+];
+---
+
+<BaseLayout title="Free AI Infrastructure Research Kit" description={description} canonicalPath="/research-kit.html" activeNav="resources" structuredData={structuredData}>
+  <div class="kit-page">
+    <section class="kit-hero container" aria-labelledby="kit-title">
+      <div class="kit-intro">
+        <p class="kit-eyebrow">STOCKSWATCH / FIELD NOTES 001</p>
+        <h1 id="kit-title">Better research starts with <em>a clearer process.</em></h1>
+        <p class="kit-lede">A free, editable kit for understanding AI infrastructure companies. Organize the evidence, question your assumptions, and keep track of what changed.</p>
+        <div class="kit-actions">
+          <a class="kit-button" href={download} download="stockswatch-research-kit.md" data-kit-download>Download the free kit <span aria-hidden="true">↓</span></a>
+          <a class="kit-text-link" href="#inside">See what’s inside <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="kit-fine">No email required. Editable Markdown · version 1.0</p>
+      </div>
+      <aside class="kit-document" aria-label="Preview of the research kit">
+        <div class="kit-document-top"><span>THE RESEARCH KIT</span><span>FREE / 01</span></div>
+        <h2>From scattered notes<br />to a repeatable system.</h2>
+        <p>One question. Clear sources.<br />Assumptions you can revisit.</p>
+        <ol class="kit-preview-list">
+          <li><span>01</span> Record the evidence</li>
+          <li><span>02</span> Map the business</li>
+          <li><span>03</span> Compare consistently</li>
+          <li><span>04</span> Track assumptions</li>
+          <li><span>05</span> Review what changed</li>
+        </ol>
+        <div class="kit-document-bottom">SOURCE FIRST. ALWAYS.</div>
+      </aside>
+    </section>
+
+    <div class="container kit-body">
+      <section class="kit-section" id="inside" aria-labelledby="inside-title">
+        <div class="kit-section-heading"><div><p class="kit-eyebrow">01 / WHAT’S INSIDE</p><h2 id="inside-title">Less scattered. More considered.</h2></div><p>A framework you can use with the NBIS desk<br class="kit-desktop-break" /> or your own primary-source research.</p></div>
+        <div class="kit-grid">
+          {sections.map((section) => <article class="kit-card"><span class="kit-number">{section.number}</span><h3>{section.title}</h3><p>{section.text}</p><span class="kit-card-label">{section.detail}</span></article>)}
+        </div>
+      </section>
+
+      <section class="kit-section kit-workflow" aria-labelledby="workflow-title">
+        <div><p class="kit-eyebrow">02 / PUT IT TO WORK</p><h2 id="workflow-title">Make your next review<br />easier to revisit.</h2><p class="kit-section-copy">Use the kit to organize a question, not to manufacture an answer. Missing evidence stays missing until you can verify it.</p><a class="kit-text-link" href={`${base}guides/nbis-research-guide.html`}>Read the NBIS research guide ↗</a></div>
+        <ol class="kit-steps">
+          <li><strong>Save a copy for one company.</strong><p>Open the .md file in any text editor. Write down your question and the reporting period you are reviewing.</p></li>
+          <li><strong>Start with the original document.</strong><p>Record the source, date, unit and exact definition. Keep reported results separate from guidance and estimates.</p></li>
+          <li><strong>Leave a trail for your next review.</strong><p>Note what you could not verify and what evidence would change an assumption. Revisit after a new filing or update.</p></li>
+        </ol>
+      </section>
+
+      <section class="kit-section" aria-labelledby="sample-title">
+        <div class="kit-section-heading"><div><p class="kit-eyebrow">03 / A LOOK AT THE FORMAT</p><h2 id="sample-title">Every claim needs somewhere to point.</h2></div><p>Blank prompts from the source log.<br />No sample market figures.</p></div>
+        <div class="kit-table-wrap" role="region" aria-label="Source log preview" tabindex="0">
+          <table><caption>Source log — a preview of the editable template</caption><thead><tr><th scope="col">Claim or metric</th><th scope="col">Evidence type</th><th scope="col">Source &amp; period</th><th scope="col">Status</th></tr></thead><tbody><tr><td>[Your research question]</td><td>[Reported / assumption]</td><td>[Document, URL, period]</td><td>Not verified</td></tr></tbody></table>
+        </div>
+        <p class="kit-fine">The full kit also includes units, retrieval dates, limitations, review triggers and a checklist for checking AI summaries.</p>
+      </section>
+
+      <section class="kit-section kit-next" aria-labelledby="next-title">
+        <div><p class="kit-eyebrow">04 / WHAT WE’RE EXPLORING</p><h2 id="next-title">A deeper workflow.<br />The same evidence-first approach.</h2></div>
+        <div><p>Explore the Research Workflow Pack: expanded editable templates, a review routine, and a fictional worked example. It is not available to buy yet. Read the preview and try the sample to see whether the process fits the way you work.</p><a class="kit-text-link" href={`${base}workflow-pack.html`}>Preview the Workflow Pack ↗</a><p class="kit-fine">Free sample available. Sales are not open.</p></div>
+      </section>
+
+      <section class="kit-section kit-faq" aria-labelledby="faq-title">
+        <div><p class="kit-eyebrow">BEFORE YOU DOWNLOAD</p><h2 id="faq-title">A few practical details.</h2></div>
+        <div>
+          <details><summary>What do I need to open it?</summary><p>Any text editor. Markdown is plain text with simple formatting, so you can use the kit without a new app or account.</p></details>
+          <details><summary>Does the kit include current data or stock picks?</summary><p>No. It contains blank templates and research checklists. Use current primary sources for your research and verify material information independently. This is educational material, not financial advice.</p></details>
+          <details><summary>Can I adapt it?</summary><p>Yes, for your own personal or internal business research. Do not resell the kit or represent it as your original product. The download includes the use terms.</p></details>
+          <details><summary>Will downloading it subscribe me to email?</summary><p>No. The download does not collect your email address or create an account. The planned email brief is not active.</p></details>
+        </div>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>("[data-kit-download]").forEach((link) => {
+    link.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("stockswatch:engagement", {
+        detail: { name: "research_kit_download", target: link.getAttribute("href") },
+      }));
+    });
+  });
+</script>
+
+<style>
+  .kit-page { background: var(--bg); color: var(--text); }
+  .kit-hero { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 6rem); padding-block: clamp(3rem, 7vw, 7rem); align-items: center; }
+  .kit-eyebrow, .kit-document-top, .kit-document-bottom, .kit-card-label { font-family: var(--mono); font-size: .7rem; line-height: 1.7; letter-spacing: .1em; }
+  .kit-eyebrow { color: var(--accent); margin: 0 0 1.5rem; }
+  h1 { font-size: clamp(2.5rem, 4.9vw, 4.7rem); letter-spacing: -.055em; line-height: 1.06; font-weight: 500; margin: 0; max-width: 12ch; }
+  h1 em { font-style: normal; color: var(--accent); }
+  h2 { font-size: clamp(1.65rem, 2.6vw, 2.5rem); line-height: 1.18; letter-spacing: -.035em; font-weight: 500; margin: 0; }
+  h3 { font-size: 1.25rem; letter-spacing: -.025em; font-weight: 500; margin: 1.4rem 0 .7rem; }
+  .kit-lede { font-size: 1.08rem; line-height: 1.8; color: var(--muted); max-width: 48ch; margin: 1.6rem 0 2rem; }
+  .kit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; }
+  .kit-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 48px; padding: .85rem 1.2rem; border-radius: var(--radius-sm); background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; }
+  .kit-button:hover { filter: brightness(1.1); }
+  .kit-text-link { color: var(--text); display: inline-flex; gap: .6rem; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: .3em; font-size: .92rem; }
+  .kit-fine { color: var(--muted); font-size: .79rem; line-height: 1.7; margin: 1rem 0 0; }
+  .kit-document { border: 1px solid var(--border); border-top: 3px solid var(--accent); background: var(--surface); padding: clamp(1.4rem, 3vw, 2.7rem); border-radius: var(--radius); }
+  .kit-document-top { display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); padding-bottom: 2.2rem; }
+  .kit-document h2 { font-size: clamp(1.5rem, 2.3vw, 2.1rem); }
+  .kit-document p { color: var(--muted); line-height: 1.8; margin: 1rem 0 1.8rem; }
+  .kit-preview-list { margin: 0; padding: 0; list-style: none; }
+  .kit-preview-list li { display: flex; gap: 1.3rem; padding: .85rem 0; border-top: 1px solid var(--border); font-size: .92rem; }
+  .kit-preview-list span { font-family: var(--mono); color: var(--accent); font-size: .75rem; }
+  .kit-document-bottom { color: var(--muted); margin-top: 1.5rem; }
+  .kit-section { border-top: 1px solid var(--border); padding-block: clamp(2.5rem, 5vw, 4.5rem); scroll-margin-top: 6rem; }
+  .kit-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2rem; }
+  .kit-section-heading .kit-eyebrow, .kit-workflow .kit-eyebrow, .kit-next .kit-eyebrow, .kit-faq .kit-eyebrow { margin-bottom: .8rem; }
+  .kit-section-heading > p { color: var(--muted); line-height: 1.7; font-size: .9rem; margin: 0; }
+  .kit-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .kit-card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 1.7rem; display: flex; flex-direction: column; align-items: start; }
+  .kit-number { font: .8rem var(--mono); color: var(--accent); }
+  .kit-card p { color: var(--muted); font-size: .94rem; line-height: 1.8; margin: 0 0 1.8rem; }
+  .kit-card-label { margin-top: auto; color: var(--muted); }
+  .kit-workflow, .kit-next, .kit-faq { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
+  .kit-section-copy, .kit-next p:not(.kit-eyebrow):not(.kit-fine) { color: var(--muted); line-height: 1.85; max-width: 45ch; }
+  .kit-steps { margin: 0; padding-left: 1.5rem; }
+  .kit-steps li { padding: 0 0 1.5rem .65rem; }
+  .kit-steps li::marker { color: var(--accent); font-family: var(--mono); font-size: .8rem; }
+  .kit-steps strong { font-weight: 500; font-size: 1.05rem; }
+  .kit-steps p { color: var(--muted); line-height: 1.8; margin: .5rem 0 0; font-size: .94rem; }
+  .kit-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; min-width: 580px; text-align: left; font-size: .85rem; }
+  caption { text-align: left; padding: 1rem 1.3rem; color: var(--muted); font-size: .8rem; }
+  th { background: var(--surface); font-weight: 500; }
+  th, td { padding: 1.2rem 1.3rem; border-top: 1px solid var(--border); }
+  td { color: var(--muted); }
+  .kit-next p:first-child { margin-top: 0; }
+  details { border-bottom: 1px solid var(--border); }
+  summary { cursor: pointer; padding: 1.2rem 0; line-height: 1.6; }
+  details p { color: var(--muted); line-height: 1.8; margin: 0 0 1.2rem; }
+  a:focus-visible, summary:focus-visible, .kit-table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  @media (max-width: 760px) {
+    .kit-hero, .kit-workflow, .kit-next, .kit-faq { grid-template-columns: 1fr; }
+    h1 { max-width: 15ch; }
+    .kit-grid { grid-template-columns: 1fr; }
+    .kit-section-heading { display: block; }
+    .kit-section-heading > p { margin-top: 1rem; }
+    .kit-desktop-break { display: none; }
+    .kit-card { padding: 1.5rem; }
+    .kit-document { max-width: 32rem; width: 100%; box-sizing: border-box; }
+  }
+</style>

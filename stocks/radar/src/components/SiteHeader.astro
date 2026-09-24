@@ -1,7 +1,7 @@
 ---
 interface Props {
   /** Which primary nav item is current */
-  active?: "nbis";
+  active?: "nbis" | "resources" | "datacenter";
 }
 
 const { active = "nbis" } = Astro.props;
@@ -23,6 +23,11 @@ const base = import.meta.env.BASE_URL;
         >
           NBIS Deep Dive
         </a>
+        <a
+          class:list={["header-link", { "is-active": active === "resources" }]}
+          href={`${base}research-kit.html`}
+          aria-current={active === "resources" ? "page" : undefined}
+        >Research kit</a>
       </nav>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode" title="Switch to light mode">
         <span class="theme-toggle__glyph" aria-hidden="true">☼</span>
@@ -165,5 +170,11 @@ const base = import.meta.env.BASE_URL;
   .logo:focus-visible {
     outline: 2px solid var(--accent, #22c55e);
     outline-offset: 3px;
+  }
+  @media (max-width: 540px) {
+    .site-header__inner { flex-wrap: wrap; gap: .3rem; }
+    .header-actions { width: 100%; justify-content: space-between; }
+    .header-link { min-height: 44px; display: inline-flex; align-items: center; }
+    .theme-toggle { min-height: 44px; }
   }
 </style>

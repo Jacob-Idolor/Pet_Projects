@@ -26,6 +26,8 @@ Sitemap: ${site}/sitemap.xml
 
 const sitemapPages = [
   { path: "/", changefreq: "hourly", priority: "1.0" },
+  { path: "/research-kit.html", changefreq: "monthly", priority: "0.8" },
+  { path: "/workflow-pack.html", changefreq: "monthly", priority: "0.7" },
   { path: "/guides/nbis-research-guide.html", changefreq: "monthly", priority: "0.8" },
   { path: "/guides/nbis-sec-filings.html", changefreq: "monthly", priority: "0.8" },
   { path: "/privacy.html", changefreq: "yearly", priority: "0.3" },

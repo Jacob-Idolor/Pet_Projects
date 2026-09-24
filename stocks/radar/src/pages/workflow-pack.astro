@@ -1,0 +1,94 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import pack from "../data/workflow-pack.json";
+import "../styles/workflow-pack.css";
+
+const base = import.meta.env.BASE_URL;
+const sample = `${base}downloads/research-workflow-sample.md`;
+const description = "Preview the StocksWatch Research Workflow Pack: editable templates, a fictional worked example, and a repeatable review process. Download the free sample.";
+const site = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
+// This is a preview, not a purchasable Offer. Keep price out of offer structured data.
+const structuredData = site ? {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: `${pack.name} — preview`,
+  description,
+  url: `${site}/workflow-pack.html`,
+  isPartOf: { "@type": "WebSite", name: "StocksWatch", url: `${site}/` },
+} : undefined;
+---
+
+<BaseLayout title="Research Workflow Pack — Preview" description={description} canonicalPath="/workflow-pack.html" activeNav="resources" structuredData={structuredData}>
+  <article class="workflow-page container">
+    <a class="workflow-back" href={`${base}research-kit.html`}>← Back to the free research kit</a>
+    <section class="workflow-hero" aria-labelledby="workflow-title">
+      <div>
+        <p class="workflow-eyebrow">STOCKSWATCH / RESEARCH WORKFLOW PACK</p>
+        <h1 id="workflow-title">Pick up your research.<br /><em>Not the pieces.</em></h1>
+        <p class="workflow-lede">A set of editable templates and a worked example for keeping sources, assumptions, and revisions together. Leave a clear trail for the next time you return.</p>
+        <div class="workflow-actions">
+          <a class="workflow-button" href={sample} download="stockswatch-workflow-sample.md" data-workflow-sample>Download the free sample <span aria-hidden="true">↓</span></a>
+          <a class="workflow-link" href="#contents">Explore the pack ↗</a>
+        </div>
+        <p class="workflow-note">No email required. Plain-text Markdown. Open in any text editor.</p>
+      </div>
+      <aside class="workflow-edition" aria-label="Product availability and proposed price">
+        <span class="workflow-status">PREVIEW · SALES NOT OPEN</span>
+        <div class="workflow-price">${pack.proposedPriceUsd}<span>USD / proposed one-time price</span></div>
+        <p>No payment is being accepted. Explore the sample before deciding whether the full workflow would be useful to you.</p>
+        <dl><div><dt>Format</dt><dd>Editable Markdown in a ZIP</dd></div><div><dt>Contents</dt><dd>{pack.files.length} documents + file manifest</dd></div><div><dt>Example</dt><dd>Fictional, fully explained</dd></div><div><dt>Edition</dt><dd>{pack.version}</dd></div></dl>
+        <p class="workflow-note">No subscription. No stock picks. No current market data.</p>
+      </aside>
+    </section>
+
+    <section class="workflow-section workflow-purpose" aria-labelledby="purpose-title">
+      <div><p class="workflow-eyebrow">01 / A SYSTEM FOR RETURNING</p><h2 id="purpose-title">The value is in<br />the trail you leave.</h2></div>
+      <div><p>Knowing where a number came from is only the beginning. You also need its definition, what it fails to establish, and a record of why your interpretation changed.</p><p>The pack follows one question from the initial brief through source review to a short memo and a future handoff. It is designed for readers who want to maintain their own notes, rather than receive a finished investment opinion.</p></div>
+    </section>
+
+    <section class="workflow-section" id="contents" aria-labelledby="contents-title">
+      <div class="workflow-heading"><div><p class="workflow-eyebrow">02 / INSIDE THE PACK</p><h2 id="contents-title">One workflow. Ten useful files.</h2></div><p>Use the complete sequence<br />or just the templates you need.</p></div>
+      <ol class="workflow-contents">
+        {pack.files.map((file, index) => <li><span class="workflow-index">{String(index + 1).padStart(2, "0")}</span><div><h3>{file.title}</h3><p>{file.description}</p></div></li>)}
+      </ol>
+    </section>
+
+    <section class="workflow-section" aria-labelledby="example-title">
+      <div class="workflow-heading"><div><p class="workflow-eyebrow">03 / A WORKED EXAMPLE</p><h2 id="example-title">A good answer can include<br />“we don’t know yet.”</h2></div><p class="workflow-example-label">FICTIONAL TEACHING MATERIAL<br />Not NBIS or live market data.</p></div>
+      <div class="workflow-example">
+        <div><span class="workflow-eyebrow">THE SOURCE</span><blockquote>Revenue was USD 18 million for the quarter, compared with USD 12 million in the same quarter of the prior year.</blockquote><p class="workflow-note">Original fictional excerpt for this exercise. Same period length and revenue definition.</p></div>
+        <div><span class="workflow-eyebrow">THE RESEARCH NOTE</span><p>Revenue increased by USD 6 million, or 50%.</p><p class="workflow-equation">(18 − 12) ÷ 12 × 100 = 50%</p><p>The excerpt does not establish why revenue increased. The cause remains an open question.</p></div>
+      </div>
+      <p class="workflow-explanation">The full example adds a capacity disclosure and a later correction. Follow the evidence records, revised calculation, contradiction log, and a memo that preserves what remains unknown.</p>
+    </section>
+
+    <section class="workflow-section" aria-labelledby="compare-title">
+      <div class="workflow-heading"><div><p class="workflow-eyebrow">04 / START WHERE YOU ARE</p><h2 id="compare-title">The free kit may be all you need.</h2></div></div>
+      <div class="workflow-comparison">
+        <div><h3>Free Research Kit</h3><p>A single editable document with the core checklists, source log, assumption register, and change log.</p><p>Best for trying the method or keeping a compact set of notes.</p><a class="workflow-link" href={`${base}research-kit.html`}>Get the free kit ↗</a></div>
+        <div><h3>Research Workflow Pack</h3><p>Separate, reusable templates with detailed prompts, a quarterly memo, correction handling, a handoff routine, and a complete fictional example.</p><p>Best for readers who want a more structured review process.</p><a class="workflow-link" href={sample} download="stockswatch-workflow-sample.md" data-workflow-sample>Try the free sample ↓</a></div>
+      </div>
+    </section>
+
+    <section class="workflow-section workflow-faq" aria-labelledby="faq-title">
+      <div><p class="workflow-eyebrow">BEFORE YOU DECIDE</p><h2 id="faq-title">Clear expectations.</h2></div>
+      <div>
+        <details><summary>Can I buy the pack now?</summary><p>No. This is a product preview and the USD {pack.proposedPriceUsd} price is proposed. Sales are not open. The free sample and research kit are available now without an account.</p></details>
+        <details><summary>Is this a spreadsheet, course, or data service?</summary><p>No. It is a set of plain-text Markdown documents in a ZIP archive. There are no spreadsheet models, videos, live feeds, or software subscriptions.</p></details>
+        <details><summary>Do I need an AI tool?</summary><p>No. AI verification is an optional part of the workflow. You can complete every research template through manual source review.</p></details>
+        <details><summary>What is not included?</summary><p>Stock picks, current market data, personalized advice, automatic research, custom consulting, and lifetime updates are not included. The pack helps organize research; it does not guarantee accuracy, time savings, or financial outcomes.</p></details>
+        <details><summary>How can I use the files?</summary><p>The intended use is your own personal or internal business research. You can adapt the templates, but not resell or redistribute the pack as a competing product. Final purchase, refund, and support terms will be available before sales open.</p></details>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>("[data-workflow-sample]").forEach((link) => {
+    link.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("stockswatch:engagement", {
+        detail: { name: "workflow_sample_download", target: link.getAttribute("href") },
+      }));
+    });
+  });
+</script>

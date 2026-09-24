@@ -10,3 +10,4 @@ public/alert-state.json
 test-results/
 playwright-report/
 __pycache__/
+.private-products/

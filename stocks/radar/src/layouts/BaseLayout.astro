@@ -14,7 +14,7 @@ interface Props {
   allowAds?: boolean;
   /** Search engines: use noindex on error / empty utility pages */
   noindex?: boolean;
-  activeNav?: "datacenter" | "nbis";
+  activeNav?: "datacenter" | "nbis" | "resources";
   /** Override canonical path (default `/`) */
   canonicalPath?: string;
   /** Open Graph type for indexable content pages. */
@@ -110,6 +110,8 @@ const loadAdScript = allowAds && Boolean(ads.client) && ads.enabled;
           <a href={base}>NBIS Deep Dive</a>
           ·
           <a href={`${base}guides/nbis-research-guide.html`}>Research guide</a>
+          ·
+          <a href={`${base}research-kit.html`}>Free research kit</a>
           ·
           <a href={`${base}privacy.html`}>Privacy &amp; sponsorship</a>
           ·

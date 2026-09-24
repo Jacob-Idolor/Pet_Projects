@@ -50,12 +50,14 @@ Snapshot percentages use explicit units: provider growth/margin fractions and sc
 The first asset is the free NBIS Deep Dive: current context, raw sources, retrieval time, filings, assumptions, and evidence gaps in one page. The long-term revenue ladder is:
 
 1. Search and repeat readership from the free research desk.
-2. A consent-first “NBIS Close” email brief.
-3. One clearly labeled sponsor relevant to AI infrastructure or developer tools.
-4. A low-cost paid archive with historical snapshots and weekly research notes.
+2. A free, editable [research kit](https://stockswatch.cc/research-kit.html), then optional consent-based email once a provider is connected.
+3. A proposed one-time Research Workflow Pack, with price and demand still to be tested.
+4. Later, disclosed sponsorship or a paid archive if readership, demand and data rights justify them.
 5. Later, practical AI/automation guides, templates, and tools for technically minded professionals.
 
 This follows the supplied business strategy: build a credible system that compounds, avoid hype and guaranteed-income claims, and keep recurring operating work small.
+
+The implementation includes `/research-kit.html`, `/workflow-pack.html` and original free Markdown downloads in `public/downloads/`. These authored resources are not generated market-data artifacts. The full Workflow Pack is prepared locally in Git-ignored `.private-products/`; `npm run product:pack` creates a private ZIP with an integrity manifest. Back it up privately: a Git clone does not include it. Email collection and checkout remain unimplemented. See [WORKFLOW_PACK.md](WORKFLOW_PACK.md) for packaging and sales setup, [NEWSLETTER_SETUP.md](NEWSLETTER_SETUP.md) for the email flow, and [INCOME_MVP.md](INCOME_MVP.md) for the strategy.
 
 ## Ads
 

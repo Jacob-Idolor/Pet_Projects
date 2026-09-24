@@ -9,11 +9,17 @@ StocksWatch is a static Astro site for the NBIS research desk at `/`. It is desi
 | NBIS Deep Dive | `src/pages/index.astro` | Build-rendered snapshot HTML + browser refresh from `public/nbis.json` |
 | NBIS reading guide | `src/pages/guides/nbis-research-guide.astro` | Static Astro HTML |
 | NBIS SEC filings guide | `src/pages/guides/nbis-sec-filings.astro` | Static Astro HTML |
+| Free research kit | `src/pages/research-kit.astro` | Static Astro HTML; optional browser engagement event |
+| Editable kit download | `public/downloads/ai-infrastructure-research-kit.md` | Original authored Markdown, copied into releases |
+| Workflow Pack preview | `src/pages/workflow-pack.astro` | Static product preview; no checkout or live Offer metadata |
+| Workflow sample | `public/downloads/research-workflow-sample.md` | Intentionally public sample with fictional teaching data |
 | Privacy & sponsorship | `src/pages/privacy.astro` | Static Astro HTML |
 | Legacy data-center redirect | `src/pages/datacenter.astro` | Redirects bookmarks to `/` |
 | Not found | `src/pages/404.astro` | Noindex, no ads |
 
 The former group watchlist, quote board, personal alerts, and submission form have been removed. Retained `public/datacenter/`, screener and movers files are historical local sources. `postbuild` excludes them from `dist/`; they are not published feeds.
+
+The complete Workflow Pack is local-only in Git-ignored `.private-products/`, outside the Astro source/public trees. `npm run product:pack` reads an explicit list from `src/data/workflow-pack.json` and writes a private, versioned ZIP. Website builds do not require private files. Release verification rejects known full-product filenames, archive names and private product directories in `dist/`. Email copy and setup are documented but no collection endpoint or provider is active.
 
 ## Data flow
 

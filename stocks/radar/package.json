@@ -11,6 +11,8 @@
     "screener:schema": "node scripts/ops/validate-screener-schema.mjs",
     "nbis:schema": "node scripts/ops/validate-nbis-schema.mjs",
     "adsense:checklist": "node scripts/ops/adsense-review-checklist.mjs",
+    "product:pack": "python scripts/ops/package-workflow-pack.py",
+    "product:test": "python -m unittest discover -s tests/python -p test_workflow_pack.py",
     "test": "node --test tests/**/*.test.mjs",
     "test:e2e": "playwright test",
     "typecheck": "astro sync && tsc --noEmit",

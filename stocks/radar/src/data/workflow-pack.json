@@ -1,0 +1,19 @@
+{
+  "name": "Research Workflow Pack",
+  "version": "1.0.0",
+  "proposedPriceUsd": 19,
+  "status": "preview",
+  "format": "Editable Markdown files in a ZIP archive",
+  "files": [
+    { "name": "00-start-here.md", "title": "Start here", "description": "Choose a research question, make a working copy, and follow the first-review walkthrough." },
+    { "name": "01-research-brief.md", "title": "Research brief", "description": "Define the question, scope, evidence threshold, and boundaries before collecting information." },
+    { "name": "02-evidence-register.md", "title": "Evidence register", "description": "Connect claims to sources, definitions, dates, units, and any conflicting evidence." },
+    { "name": "03-assumptions-and-contradictions.md", "title": "Assumptions & contradictions", "description": "Document what you infer, what would change your view, and where sources disagree." },
+    { "name": "04-quarterly-review.md", "title": "Quarterly review", "description": "Compare like-for-like reporting periods and prepare a short, traceable research memo." },
+    { "name": "05-change-log-and-handoff.md", "title": "Change log & handoff", "description": "Keep a history of revisions and leave clear next steps for your future self." },
+    { "name": "06-ai-verification.md", "title": "AI verification workflow", "description": "Use a bounded extraction prompt and audit its output against the original text." },
+    { "name": "07-fictional-worked-example.md", "title": "Worked example", "description": "Follow a fictional company from source excerpts to evidence, contradictions, and a qualified conclusion." },
+    { "name": "08-operating-routine.md", "title": "Operating routine", "description": "Set review triggers, file conventions, maintenance limits, and a repeatable quality check." },
+    { "name": "09-use-and-support.md", "title": "Use & support guide", "description": "Understand the file format, permitted use, product boundaries, and troubleshooting steps." }
+  ]
+}

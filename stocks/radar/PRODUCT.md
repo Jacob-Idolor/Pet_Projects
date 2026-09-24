@@ -24,10 +24,12 @@ The product uses systems thinking, observability, cloud/infrastructure knowledge
 
 ## Revenue hierarchy
 
+The September 2026 continuation is detailed in [INCOME_MVP.md](INCOME_MVP.md). It prioritizes a small reusable product before recurring editorial commitments. Prices and demand remain unvalidated.
+
 1. **Free discovery:** search-friendly daily research and evergreen NBIS explainers.
-2. **Owned audience:** a concise, consent-first “NBIS Close” email brief.
-3. **Sponsor:** one clearly labeled AI infrastructure, developer-tool, or research-data sponsor.
-4. **Paid archive:** historical snapshots, scenario-change history, downloadable data, and a weekly memo at a modest price point.
+2. **Useful resource:** a free, editable AI Infrastructure Research Kit; optional consent-based email after a provider is connected.
+3. **First product experiment:** a proposed $19 one-time Research Workflow Pack, with a real preview and automated delivery before taking payment.
+4. **Later revenue:** clearly disclosed sponsorship or affiliates, then a paid archive only if demand and data rights justify it. A paid weekly memo is deferred to avoid an ongoing publishing obligation.
 5. **Expansion:** a small number of adjacent AI-infrastructure names only after NBIS publishing is dependable.
 6. **Systems products:** later, practical AI/automation guides, Terraform/SRE templates, calculators, and workflow tools for the audience Jacob already understands.
 
@@ -37,10 +39,10 @@ Ads are supplemental, not the business model. Low traffic often produces less th
 
 | Stage | Focus | Proof to seek |
 | --- | --- | --- |
-| Months 1–3 | Reliable daily NBIS snapshots, SEO basics, source pages, and one useful evergreen guide | Snapshot success, search impressions, returning readers |
-| Months 4–6 | Newsletter waitlist, a free research checklist, and one clearly labeled sponsor test | Opt-in rate, open rate, sponsor interest |
-| Months 7–9 | Historical archive and a small paid research memo experiment | Paid conversion and retention |
-| Months 10–12 | One adjacent AI-infrastructure page or free tool; first technical template only if demand is visible | Repeat usage and revenue per maintenance hour |
+| Months 1–3 | Reliable snapshots, free research kit, original guides, optional email | Snapshot success, downloads, search impressions, confirmed opt-ins |
+| Months 4–6 | Reader feedback and one finished workflow-pack experiment | Useful feedback, purchases, refunds and support time |
+| Months 7–9 | Improve the product; test one adjacent guide or useful tool | Repeat usage and revenue per maintenance hour |
+| Months 10–12 | Evaluate sponsorship, affiliates or an archive only with evidence | Verified audience, explicit demand and sustainable operating cost |
 
 ## Passive-by-design rules
 
