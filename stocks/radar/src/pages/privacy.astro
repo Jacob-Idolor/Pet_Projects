@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { buttondownConfig } from "../../scripts/lib/buttondown-config.mjs";
+const newsletter = buttondownConfig(import.meta.env.PUBLIC_BUTTONDOWN_USERNAME);
 
 const description = "StocksWatch privacy and sponsorship disclosure: local preferences, Cloudflare hosting and analytics, Google advertising, and external links.";
 ---
@@ -15,18 +17,20 @@ const description = "StocksWatch privacy and sponsorship disclosure: local prefe
     <p class="nbis-eyebrow">StocksWatch / Transparency</p>
     <h1>Privacy &amp; sponsorship</h1>
     <p class="policy-lede">How this research desk uses browser preferences, hosting, analytics, and advertising services.</p>
-    <p>Last updated: September 23, 2026.</p>
+    <p>Last updated: September 24, 2026.</p>
 
     <section>
       <h2>Current site behavior</h2>
-      <p>StocksWatch is a static, source-linked research site. It does not currently provide accounts, payments, or an email subscription. The theme choice and the optional “Follow this desk” preference are stored locally in your browser so the interface can remember your choice. They are not sent to StocksWatch.</p>
+      <p>StocksWatch is a static, source-linked research site. It does not currently provide site accounts or accept product payments. {newsletter ? "The optional newsletter signup sends your email directly to Buttondown, as described below." : "Newsletter signup is not connected on this site yet."} The theme choice and the optional “Follow this desk” preference are stored locally in your browser so the interface can remember your choice. They are not sent to StocksWatch.</p>
       <p>The site links to company, SEC, and provider pages. Those destinations have their own privacy practices and are outside StocksWatch control.</p>
       <p>Cloudflare hosts and protects the site. Cloudflare Web Analytics measures page visits and page-load performance through a browser beacon; it is separate from the local theme and follow preferences. See <a href="https://developers.cloudflare.com/web-analytics/about/">Cloudflare Web Analytics</a> and <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</p>
     </section>
 
-    <section>
-      <h2>Future email brief</h2>
-      <p>The planned “NBIS Close” email brief is not active yet. Before collecting an address, StocksWatch will select an email provider, publish consent and unsubscribe details, and add the provider’s data-processing terms to this page.</p>
+    <section id="newsletter">
+      <h2>NBIS Close and Buttondown</h2>
+      <p>{newsletter ? "Signup is available through the optional form on the research-kit page." : "Buttondown is the selected email provider; signup is not connected on this site yet."} NBIS Close covers occasional research workflows, source-checking tips, resource updates and product announcements.</p>
+      <p>When you submit an enabled signup form, your browser sends your email address directly to Buttondown to manage your subscription and send the newsletter. Buttondown handles any validation and verification steps. StocksWatch does not put your email address in local browser storage or engagement-event payloads. Downloading a free resource does not subscribe you.</p>
+      <p>Use the unsubscribe link in newsletter emails to stop receiving them. See <a href="https://buttondown.com/legal/privacy">Buttondown’s privacy policy</a> for its processing practices. {newsletter && <a href={newsletter.archiveUrl}>Visit the StocksWatch newsletter on Buttondown.</a>}</p>
     </section>
 
     <section>

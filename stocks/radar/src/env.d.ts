@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly PROD: boolean;
   readonly MODE: string;
   readonly PUBLIC_ADSENSE_CLIENT?: string;
+  readonly PUBLIC_BUTTONDOWN_USERNAME?: string;
   readonly PUBLIC_ADSENSE_ENABLED?: string;
   readonly PUBLIC_ADSENSE_PREVIEW?: string;
   readonly PUBLIC_ADSENSE_SLOT_HERO?: string;

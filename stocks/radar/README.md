@@ -57,7 +57,7 @@ The first asset is the free NBIS Deep Dive: current context, raw sources, retrie
 
 This follows the supplied business strategy: build a credible system that compounds, avoid hype and guaranteed-income claims, and keep recurring operating work small.
 
-The implementation includes `/research-kit.html`, `/workflow-pack.html` and original free Markdown downloads in `public/downloads/`. These authored resources are not generated market-data artifacts. The full Workflow Pack is prepared locally in Git-ignored `.private-products/`; `npm run product:pack` creates a private ZIP with an integrity manifest. Back it up privately: a Git clone does not include it. Email collection and checkout remain unimplemented. See [WORKFLOW_PACK.md](WORKFLOW_PACK.md) for packaging and sales setup, [NEWSLETTER_SETUP.md](NEWSLETTER_SETUP.md) for the email flow, and [INCOME_MVP.md](INCOME_MVP.md) for the strategy.
+The implementation includes `/research-kit.html`, `/workflow-pack.html` and original free Markdown downloads in `public/downloads/`. These authored resources are not generated market-data artifacts. The full Workflow Pack is prepared locally in Git-ignored `.private-products/`; `npm run product:pack` creates a private ZIP with an integrity manifest. Back it up privately: a Git clone does not include it. The optional NBIS Close signup posts directly to Buttondown (public username `stockwatch`); checkout remains unimplemented. Set `PUBLIC_BUTTONDOWN_USERNAME` to override the username, or to an empty string to disable signup. See [WORKFLOW_PACK.md](WORKFLOW_PACK.md) for packaging and sales setup, [NEWSLETTER_SETUP.md](NEWSLETTER_SETUP.md) for the email flow, and [INCOME_MVP.md](INCOME_MVP.md) for the strategy.
 
 ## Ads
 

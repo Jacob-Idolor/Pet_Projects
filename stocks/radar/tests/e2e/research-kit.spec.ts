@@ -7,7 +7,7 @@ test("research journey delivers an actual kit without signup", async ({ page, re
   await expect(page).toHaveURL(/\/research-kit\.html$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Better research starts with a clearer process.");
   await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Research kit" })).toHaveAttribute("aria-current", "page");
-  await expect(page.locator('input[type="email"]')).toHaveCount(0);
+  // Download remains available independently of the optional newsletter form.
   await expect(page.locator('script[src*="adsbygoogle"]')).toHaveCount(0);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/research-kit\.html$/);
 

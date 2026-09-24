@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
 
 const base = import.meta.env.BASE_URL;
 const download = `${base}downloads/ai-infrastructure-research-kit.md`;
@@ -84,9 +85,10 @@ const sections = [
           <details><summary>What do I need to open it?</summary><p>Any text editor. Markdown is plain text with simple formatting, so you can use the kit without a new app or account.</p></details>
           <details><summary>Does the kit include current data or stock picks?</summary><p>No. It contains blank templates and research checklists. Use current primary sources for your research and verify material information independently. This is educational material, not financial advice.</p></details>
           <details><summary>Can I adapt it?</summary><p>Yes, for your own personal or internal business research. Do not resell the kit or represent it as your original product. The download includes the use terms.</p></details>
-          <details><summary>Will downloading it subscribe me to email?</summary><p>No. The download does not collect your email address or create an account. The planned email brief is not active.</p></details>
+          <details><summary>Will downloading it subscribe me to email?</summary><p>No. The download does not collect your email address or create an account. Signing up for NBIS Close is a separate, optional action.</p></details>
         </div>
       </section>
+      <NewsletterSignup />
     </div>
   </div>
 </BaseLayout>

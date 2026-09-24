@@ -55,7 +55,7 @@ and packaging unit tests do not need them.
 
 ## Checkout readiness
 
-Use one selected hosted checkout and its digital-file delivery. Do not place the ZIP
+Stripe is the selected checkout provider. See [STRIPE_SETUP.md](STRIPE_SETUP.md) for the sandbox setup. Payment Links require a separate verified digital-file delivery integration. Do not place the ZIP
 at a permanent public URL and rely on an obscured link for access control.
 
 Before enabling purchases, complete:

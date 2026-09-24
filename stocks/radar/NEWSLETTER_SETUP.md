@@ -1,94 +1,38 @@
-# StocksWatch Notes — provider-ready email flow
+# NBIS Close — Buttondown signup
 
-Status: prepared, not connected. No signup form, list, sender or automated email
-has been created. No email has been sent. Provider selection is still needed.
+The owner has selected Buttondown and reports the account/domain setup is complete.
+Public newsletter: https://buttondown.com/stockwatch. Name: **NBIS Close**.
+The site now includes an optional native HTML signup form on `/research-kit.html`.
+No live subscription or email send was performed during implementation.
 
-## Audience promise
+## Configuration and behavior
 
-Name: StocksWatch Notes.
-Promise: occasional research workflows, source-checking tips and resource updates
-for technically minded readers of the AI infrastructure desk. Avoid a daily
-delivery promise. The site's automated daily snapshot is a separate feature.
+`scripts/lib/buttondown-config.mjs` defaults to the owner-provided public username
+`stockwatch`. Both local and GitHub Actions builds use this tracked default;
+no new CI variable or secret is required. `PUBLIC_BUTTONDOWN_USERNAME` can override
+it at build time. An explicitly empty value disables the form. Invalid usernames
+fail the build instead of targeting another domain.
 
-Sample landing-page copy:
+The form posts `email` and `embed=1` directly to Buttondown's documented endpoint.
+It navigates to Buttondown for validation, CAPTCHA, verification and success/error
+handling; there is no fetch interception or invented local success state. Browser
+email validation and submission work without JavaScript. The site does not retain
+submitted addresses in localStorage or engagement events.
 
-> Build a research process you can revisit.
-> Get occasional practical notes on sources, assumptions and AI infrastructure
-> research, plus updates about StocksWatch resources. No daily market alerts or
-> personalized investment advice.
+The free kit remains ungated. Consent names NBIS Close and occasional resource and
+product updates. Privacy details identify Buttondown. Cadence is not promised as
+an automated daily email; the daily website snapshot is a separate feature.
 
-The free kit remains available without signup. Product delivery must not silently
-subscribe a buyer to marketing. Provide a separate, optional newsletter opt-in.
+## Account checks before launch
 
-## Intended signup journey
+Verify the actual sender mailbox in the existing Buttondown account, its confirmation
+settings and unsubscribe footer. Keep the existing Cloudflare DNS setup unless
+Buttondown reports a specific problem. The website integration does not verify or
+change those account settings. A live end-to-end confirmation check still needs a
+consenting test subscriber and explicit authorization to send the test email.
 
-1. Resource page links to a clearly labeled newsletter page.
-2. Explain content, cadence, provider, privacy and unsubscribe before submission.
-3. Ask only for email. Any marketing checkbox is unchecked by default.
-4. Submit to the selected provider's hosted form or documented endpoint. Use its
-   spam controls and validation; never put a private API token in browser code.
-5. Show "Check your inbox to confirm" after accepted submission, not "Subscribed."
-6. Provider sends a confirmation message to the submitted address.
-7. Only confirmation activates the subscription. Confirmation failure or expiry
-   shows a recovery route through the provider.
-8. Send the welcome note after confirmation. Include a working unsubscribe link.
+The automated browser test intercepts the POST locally; no address reaches Buttondown.
+Purchases must not silently opt buyers into this newsletter. Stripe setup is documented
+in [STRIPE_SETUP.md](STRIPE_SETUP.md).
 
-Public UI states: idle; invalid email; sending; confirmation requested; already
-subscribed (provider-safe response); network/provider error; confirmation expired;
-confirmed; unsubscribed. Do not retain the email in localStorage or analytics events.
-
-## Copy prepared for the selected provider
-
-### Consent wording to adapt after provider selection
-
-"Email me StocksWatch Notes: research workflows, resource updates and occasional
-product announcements. I can unsubscribe at any time."
-
-Place a privacy link beside this text. State the actual provider and verified
-sender in the final disclosure. Do not insert a guessed business address or an
-unverified `brief@...` mailbox.
-
-### Confirmation email draft
-
-Subject: Confirm your StocksWatch Notes subscription
-
-You requested occasional notes from StocksWatch about research workflows and
-resources. Confirm using the provider's confirmation button. If you did not request
-this, you can ignore this message and you will not be added to the newsletter.
-
-[Provider-generated confirmation action; never hardcode a token.]
-
-### Welcome email draft
-
-Subject: Start with one question and one source
-
-Welcome to StocksWatch Notes.
-
-The free Research Kit is available at the published research-kit page. Start with
-one company and one question. Record the source, reporting period and units beside
-each material claim. If a document does not establish an answer, leave the gap visible.
-
-These notes cover research methods and resources, not stock picks or personalized
-financial advice. Expect occasional updates, not a daily inbox commitment.
-
-[Use the verified sender identity and provider-generated unsubscribe/footer.]
-
-## Connection checklist
-
-- Service/account selected and owner can access it.
-- Sender mailbox and domain spelling verified; provider-required DNS configured
-  only with explicit account/DNS authorization.
-- Actual sender identity and required mailing/contact details supplied by owner.
-- Privacy page names the actual provider and relevant data handling.
-- Double opt-in and unsubscribe behavior verified with a consenting test address.
-- Invalid input, errors, retries and expired confirmation handled accessibly.
-- Free kit works without giving an address; unsubscribing does not break downloads.
-- No addresses, confirmation tokens or subscriber IDs in analytics events or Git.
-- No bulk import, live marketing send or recurring automation until explicitly requested.
-
-## Measurement
-
-Separate signup intent, provider acceptance and confirmed subscriptions. A clicked
-button is not a subscriber. Aggregate counts can come from the provider; do not
-build a subscriber database merely for reporting. Define retention and deletion
-settings against the selected provider before collecting addresses.
+Reference: [Buttondown embedded forms](https://docs.buttondown.com/building-your-subscriber-base).

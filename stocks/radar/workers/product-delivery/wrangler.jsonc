@@ -1,0 +1,23 @@
+{
+  "name": "stockswatch-product-delivery-sandbox",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-09-24",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {
+    "enabled": false
+  },
+  "vars": {
+    "DELIVERY_ENABLED": "false",
+    "STRIPE_MODE": "test",
+    "STRIPE_PAYMENT_LINK_ID": "plink_1UJJLDJRFkKy1u6RiEkOn4Du",
+    "STRIPE_PRICE_ID": "price_1UJJL9JRFkKy1u6Rknhry6i2",
+    "STRIPE_PRODUCT_ID": "prod_VJxFLM6gR3Xv9s"
+  },
+  "r2_buckets": [
+    {
+      "binding": "PRODUCTS",
+      "bucket_name": "stockswatch-products-sandbox"
+    }
+  ]
+}

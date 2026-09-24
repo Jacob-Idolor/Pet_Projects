@@ -19,7 +19,7 @@ StocksWatch is a static Astro site for the NBIS research desk at `/`. It is desi
 
 The former group watchlist, quote board, personal alerts, and submission form have been removed. Retained `public/datacenter/`, screener and movers files are historical local sources. `postbuild` excludes them from `dist/`; they are not published feeds.
 
-The complete Workflow Pack is local-only in Git-ignored `.private-products/`, outside the Astro source/public trees. `npm run product:pack` reads an explicit list from `src/data/workflow-pack.json` and writes a private, versioned ZIP. Website builds do not require private files. Release verification rejects known full-product filenames, archive names and private product directories in `dist/`. Email copy and setup are documented but no collection endpoint or provider is active.
+The complete Workflow Pack is local-only in Git-ignored `.private-products/`, outside the Astro source/public trees. `npm run product:pack` reads an explicit list from `src/data/workflow-pack.json` and writes a private, versioned ZIP. Website builds do not require private files. Release verification rejects known full-product filenames, archive names and private product directories in `dist/`. The optional NBIS Close signup posts directly to Buttondown. The separate `workers/product-delivery/` Worker is a disabled, undeployed prototype for Stripe-verified private downloads; it is not part of the Astro build.
 
 ## Data flow
 

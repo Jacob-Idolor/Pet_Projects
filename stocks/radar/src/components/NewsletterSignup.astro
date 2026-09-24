@@ -1,0 +1,52 @@
+---
+import { buttondownConfig } from "../../scripts/lib/buttondown-config.mjs";
+const newsletter = buttondownConfig(import.meta.env.PUBLIC_BUTTONDOWN_USERNAME);
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="newsletter-signup" aria-labelledby="newsletter-title">
+  <div>
+    <p class="newsletter-eyebrow">NBIS CLOSE</p>
+    <h2 id="newsletter-title">A useful note.<br />A clearer next step.</h2>
+    <p>Occasional research workflows, source-checking tips, and updates about StocksWatch resources. No daily market alerts or personalized investment advice.</p>
+  </div>
+  <div>
+    {newsletter ? (
+      <form action={newsletter.subscribeUrl} method="post" class="newsletter-form">
+        <label for="newsletter-email">Email address</label>
+        <div class="newsletter-controls">
+          <input id="newsletter-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-describedby="newsletter-consent newsletter-provider" />
+          <button type="submit">Subscribe to NBIS Close</button>
+        </div>
+        <input type="hidden" name="embed" value="1" />
+        <p id="newsletter-consent">By subscribing, you ask to receive NBIS Close, including occasional product announcements. You can unsubscribe at any time.</p>
+        <p id="newsletter-provider">Your email is sent directly to Buttondown. Continue there for any verification steps. <a href={`${base}privacy.html#newsletter`}>Email privacy details</a>.</p>
+      </form>
+    ) : (
+      <div class="newsletter-pending">
+        <h3>Signup is being connected.</h3>
+        <p>NBIS Close is not accepting signups on this site yet. The free research kit is available now, without giving an email address.</p>
+        <a href={`${base}research-kit.html`}>Explore the free kit ↗</a>
+      </div>
+    )}
+    <p class="newsletter-footnote">Downloading a resource does not subscribe you. The newsletter is optional.</p>
+  </div>
+</section>
+
+<style>
+  .newsletter-signup { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); padding-block: clamp(2.5rem, 5vw, 4.5rem); border-top: 1px solid var(--border); }
+  .newsletter-eyebrow { font: .7rem var(--mono); color: var(--accent); letter-spacing: .1em; margin: 0 0 1rem; }
+  h2 { color: var(--text); font-size: clamp(1.7rem, 2.8vw, 2.6rem); font-weight: 500; line-height: 1.18; letter-spacing: -.035em; margin: 0; }
+  h3 { font-size: 1.1rem; font-weight: 500; margin: 0; }
+  p:not(.newsletter-eyebrow) { color: var(--muted); line-height: 1.8; max-width: 49ch; }
+  label { display: block; font-size: .9rem; margin-bottom: .6rem; }
+  .newsletter-controls { display: flex; flex-wrap: wrap; gap: .7rem; }
+  input[type="email"] { flex: 1 1 13rem; min-width: 0; min-height: 48px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); padding: .75rem; font: inherit; }
+  button { min-height: 48px; border: 0; border-radius: var(--radius-sm); padding: .8rem 1rem; background: var(--accent); color: var(--bg); font: inherit; font-weight: 600; cursor: pointer; }
+  .newsletter-form p, .newsletter-footnote { font-size: .8rem; }
+  .newsletter-pending { padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .newsletter-pending p { font-size: .94rem; }
+  a { color: var(--accent); text-decoration: underline; text-underline-offset: .2em; }
+  a:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  @media (max-width: 760px) { .newsletter-signup { grid-template-columns: 1fr; } }
+</style>
