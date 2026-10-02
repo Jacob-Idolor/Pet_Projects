@@ -8,7 +8,7 @@
     "enabled": false
   },
   "vars": {
-    "DELIVERY_ENABLED": "false",
+    "DELIVERY_ENABLED": "true",
     "STRIPE_MODE": "test",
     "STRIPE_PAYMENT_LINK_ID": "plink_1UJJLDJRFkKy1u6RiEkOn4Du",
     "STRIPE_PRICE_ID": "price_1UJJL9JRFkKy1u6Rknhry6i2",

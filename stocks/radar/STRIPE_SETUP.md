@@ -122,3 +122,59 @@ Verified `/download` returns HTTP 503 with `Downloads are not open yet.` and
 `Cache-Control: private, no-store`. `DELIVERY_ENABLED=false` remains in force.
 The dashboard secret form is prepared for the owner to enter `STRIPE_SECRET_KEY`
 from the same Stripe sandbox. No secret value was collected or stored in Git.
+
+## September 25 sandbox verification
+
+Confirmed the `STRIPE_SECRET_KEY` secret exists (value not read). Enabled only the
+sandbox Worker with `STRIPE_MODE=test`. A missing session returned HTTP 400; a
+nonexistent test session reached Stripe and returned HTTP 403 (not found). This
+checks connectivity and rejection, not successful payment or the configured IDs.
+
+Set the sandbox Payment Link after-payment redirect to:
+`https://stockswatch-product-delivery-sandbox.jacobidolor.workers.dev/complete?session_id={CHECKOUT_SESSION_ID}`
+
+The redirect has not been set by this task. A successful sandbox purchase-to-ZIP
+test remains outstanding. Production purchases remain disabled.
+
+## Reliable delivery implementation in progress
+
+Owner reports sandbox payment, redirect and download working on September 25.
+`webhook.mjs` now verifies Stripe HMAC signatures against the unchanged request
+body, enforces a five-minute timestamp tolerance and a 256 KiB request limit,
+and accepts paid completion/delayed-success events for the configured Payment Link.
+It queues only session references, not emails or full payloads. The SQL primary key
+prevents duplicate sessions from creating duplicate jobs. Database failures return
+503 so Stripe retries. The future consumer must retrieve and validate each purchase
+again before sending; queued events alone do not authorize delivery.
+
+This code is local only. `/stripe/webhook` stays disabled without `WEBHOOK_ENABLED=true`,
+`STRIPE_WEBHOOK_SECRET` and an `ORDERS` D1 binding using the migration in
+`workers/product-delivery/migrations/`. Do not enable or register it until an email
+consumer, retries, retention and recovery are implemented. No emails were sent.
+
+Low-cost direction: use Resend Free for transactional delivery rather than upgrade
+Cloudflare solely for outbound email. Owner has not set up an email provider yet.
+Keep Buttondown for newsletter subscriptions. Confirm account/domain verification
+and provider quotas before enabling sends. No paid plan was purchased.
+
+References: https://resend.com/pricing and
+https://developers.cloudflare.com/email-service/platform/pricing/
+
+## Email transport (October 2, local only)
+
+`workers/product-delivery/email.mjs` is a disabled Resend adapter, not a fulfillment
+consumer. Its caller must first retrieve and authorize the Stripe purchase. Required
+configuration: EMAIL_ENABLED, RESEND_API_KEY (secret), EMAIL_FROM (bare verified
+address), EMAIL_REPLY_TO (monitored address), DELIVERY_ORIGIN (HTTPS origin),
+STRIPE_MODE, and EMAIL_TEST_RECIPIENT in test mode. There is no live trigger yet.
+Provider acceptance does not prove inbox delivery. The provider receives the buyer's
+email and private download URL; disable link/open tracking and document this processor
+before launch. Never log request bodies or send results containing customer details.
+
+Use the Free plan without paid upgrades. Persistent job state must prevent resends;
+provider idempotency expires after 24 hours. Keep automatic retries inside that window,
+then reconcile ambiguous sends manually. Durable consumer, quota enforcement, recovery,
+retention and sender/domain setup remain outstanding.
+
+References: https://resend.com/docs/api-reference/emails/send-email
+and https://resend.com/docs/dashboard/emails/idempotency-keys

@@ -1,3 +1,4 @@
+import { handleWebhook } from "./webhook.mjs";
 const headers = {
   'Cache-Control': 'private, no-store',
   'Referrer-Policy': 'no-referrer',
@@ -89,4 +90,5 @@ Keep your downloaded files. Keep this page link private; it grants download acce
   }
 }
 
-export default { fetch: (request, env) => handleDownload(request, env) };
+export default { fetch: (request, env) => new URL(request.url).pathname === "/stripe/webhook"
+  ? handleWebhook(request, env) : handleDownload(request, env) };
