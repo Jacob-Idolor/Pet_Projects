@@ -43,7 +43,7 @@
     "@playwright/test": "^1.53.1",
     "@types/node": "^26.1.2",
     "typescript": "^7.0.2",
-    "wrangler": "4.137.0"
+    "wrangler": "4.146.0"
   },
   "engines": {
     "node": ">=22.19.0 <23"
