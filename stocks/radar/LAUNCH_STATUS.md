@@ -1,4 +1,36 @@
-# StocksWatch launch status — September 25, 2026
+# StocksWatch launch status — October 2, 2026
+
+## Current priority: validate demand before further spending
+
+This priority supersedes the infrastructure-first next actions recorded below.
+Use [DEMAND_VALIDATION.md](DEMAND_VALIDATION.md) for the sharing draft, manual tracker
+and two-week review. Owner reports posting on October 2; review on October 16.
+Post URL and feedback are pending. No outreach has been sent by the assistant.
+Pause implementation of the delivery queue, database, email sender and recovery.
+Preserve the existing work. Keep website checkout closed; existing Stripe payment
+links have not been deactivated. Do not promote them while fulfillment is incomplete.
+
+- Incremental spending budget: $0 for this validation phase. No new subscriptions,
+  paid upgrades, advertising or infrastructure. This does not mean existing bills are zero.
+- Keep the current site, free research kit and existing newsletter integration.
+- Proposed experiment: two weeks after the owner begins sharing the free kit with
+  relevant readers. No outreach or newsletter sends are authorized by this document.
+- Track manually: relevant people reached, confirmed signups, substantive feedback,
+  and explicit interest in the ten-template pack at $19. Do not add analytics services.
+- Working decision rule: seek five substantive reader responses and at least three
+  explicit expressions of interest at $19 before revisiting paid fulfillment. These
+  are small experiment thresholds, not proof of sales or profitability.
+- If interest is weak, revise the offer or pause the paid product. If reach is too low,
+  record the result as inconclusive rather than treating silence as rejection.
+
+Draft feedback prompt (not sent):
+“Which part of researching NBIS takes you the most time? Here's our free research
+kit: https://stockswatch.cc/research-kit.html. Would ten editable research templates
+at $19 solve a specific problem for you? What would need to be included?”
+
+Cost review still outstanding: identify the services behind September's $21.65 AWS
+bill after account sign-in; check actual Cloudflare, Buttondown and domain charges.
+No service cancellation or resource deletion has been performed.
 
 The business is in pre-launch development. No revenue or demand has been validated.
 Local implementation is not proof of production deployment or working delivery.
@@ -54,3 +86,13 @@ Remaining, in order:
 5. Review and deploy production, then measure confirmed signups and sales.
 
 No paid plan, email send, database creation or deployment was performed on October 2.
+
+## October 2: deployment dependency fix verified
+
+Published commit ac74f75 updating only package.json/package-lock.json to Wrangler
+4.146.0 (Miniflare's undici is now 7.29.1). npm audit reports zero vulnerabilities.
+GitHub run 37067252629 passed every step, including strict NBIS refresh, Cloudflare
+Pages deployment, and deployed revision/freshness verification.
+Local unit tests (46), typecheck, offline build and release/security scans passed.
+All 24 Playwright cases reported passing; its local preview teardown hung and was
+interrupted afterward. The delivery queue/email work remains uncommitted and undeployed.
