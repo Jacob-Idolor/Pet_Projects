@@ -85,7 +85,7 @@ Remaining, in order:
 4. Verify Buttondown signup, support/refund terms and daily data refresh health.
 5. Review and deploy production, then measure confirmed signups and sales.
 
-No paid plan, email send, database creation or deployment was performed on October 2.
+No paid plan, email send or database creation was performed on October 2. The subsequent dependency fix was deployed, as recorded below.
 
 ## October 2: deployment dependency fix verified
 
