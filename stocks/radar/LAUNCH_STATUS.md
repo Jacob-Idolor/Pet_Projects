@@ -1,3 +1,45 @@
+# October 6, 2026: published baseline and local reader polish
+
+Jacob Builds is live at stockswatch.cc. The latest verified release is main
+`204f7f175f229fa7514e907c7cd74bb4e6f31db1`, published by workflow run
+[37422469267](https://github.com/Jacob-Idolor/Pet_Projects/actions/runs/37422469267).
+Its live checks passed for all eight reader pages and thirteen retired assets;
+all twelve production browser tests passed.
+
+The separate local branch `codex/jacob-builds-reader-polish` starts from that
+release. It aligns canonical, sitemap and internal-link URLs with Cloudflare's
+extensionless 200 routes, adds official documentation links and related guides,
+and supplies per-guide dates, author links and article metadata. The homepage
+links to a clearly illustrative filename dry-run/failure/recovery example.
+Publication dates are October 5, the owner's Pacific publication day; the first
+release build at 2026-10-06T05:19:58.674Z was October 5 at 22:19 Pacific. Each
+modifiedAt is October 6 for the approved release: all three articles gain author,
+metadata and related-guide changes, and the automation guide gains its example.
+The illustrative exercise uses neutral language and claims no personal experience.
+
+The owner explicitly approved publishing the prepared website improvements on
+October 6. This authorizes the reviewed website changes plus the necessary two-file Sharp security repair; unrelated projects and notes are excluded. The original
+publication date remains October 5; update dates use the owner's Pacific calendar.
+Validate the exact release commit, integrate through required checks and linear
+history, then manually publish and verify the actual production revision.
+
+Local verification: source typecheck, sixty unit tests, static build and distribution
+verification/security/policy checks passed; dependency audit reported zero
+vulnerabilities. All sixteen browser tests passed against both Astro preview and
+the Cloudflare Pages emulator, including mobile WCAG checks, direct 200 links,
+sitemap/canonical agreement and article metadata. The local release probe passed
+for eight reader pages and thirteen retired assets. Desktop/mobile screenshots
+were reviewed; the no-JavaScript capture observed no external requests.
+
+This approved release is being validated for publication. Its source notes do not
+claim deployment has completed; the release evidence records actual PR, commit,
+workflow and live verification results. The mandatory npm audit newly reported Sharp 0.35.4 via Miniflare/Wrangler. A narrow
+override pins the official patched Sharp 0.35.5 without changing Astro, Wrangler or
+Miniflare versions. Security gates remain enabled. No infrastructure, services or billing
+changes are part of this release.
+
+---
+
 # October 5, 2026: direction changed to Jacob Builds
 
 The owner authorized retiring StocksWatch and reusing stockswatch.cc for a small

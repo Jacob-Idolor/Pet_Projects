@@ -2,6 +2,7 @@ export const guides = [
   {
     slug: 'before-you-automate', category: 'Technology & systems', title: 'Before you automate, make the task smaller.',
     description: 'A practical checklist for deciding what to automate, what to keep manual, and how to recover when things go wrong.',
+    publishedAt: '2026-10-05', modifiedAt: '2026-10-06',
     minutes: 5,
     intro: 'A repeated task is a candidate for automation, not an obligation. Start by deciding whether it needs to happen at all. Then make the smallest useful version dependable before expanding it.',
     sections: [
@@ -9,12 +10,14 @@ export const guides = [
       { title: '2. Count maintenance, not just minutes saved', paragraphs: ['Estimate the time per run and frequency. Then include setup, checking results, fixing failures and adapting when the input changes. A five-minute weekly task saves about four hours a year before maintenance; a complicated solution may cost more attention than it returns.', 'A useful first version can be a checklist, a saved query or a script you run yourself. A schedule is worth adding only when unattended execution has a clear benefit and a clear failure path.'] },
       { title: '3. Define the boundary', paragraphs: ['Write down what the automation may read, what it may change and what it must never do. Use the minimum access needed. Keep credentials out of source files and avoid copying customer or employer data into tools that are not approved for it.'], items: ['Input: which files or records are expected?', 'Validation: what makes an input invalid or incomplete?', 'Output: what result should a normal run produce?', 'Repeat: what happens if the same input arrives twice?', 'Recovery: can you undo the change or safely run it again?'] },
       { title: '4. Start with a reviewable result', paragraphs: ['For example, a file-cleanup script can first list proposed renames without touching anything. Compare that list against a small set of sample files, including duplicates and missing fields. Only enable changes once the preview is understandable.', 'For actions that send messages, delete records or spend money, keep a human review step until the failure cases are understood. A silent partial success is often harder to repair than an explicit failure.'] },
-      { title: '5. Decide how it earns its place', paragraphs: ['After a few real runs, ask: did this save attention? Can I explain a failure? Could I stop using it without creating a mess? Keep a short note with its purpose, inputs, owner and recovery steps.', 'If the task changes constantly or still needs extensive checking, keep it manual for now. That is a valid design decision.'] },
+      { title: '5. Try a dry run, a failure and a recovery', paragraphs: ['This is an illustrative filename exercise. Use two disposable text files in a test folder and keep an untouched copy. The proposed change is to add reviewed- to each original filename.'], items: ['Dry run: show notes-a.txt -> reviewed-notes-a.txt and notes-b.txt -> reviewed-notes-b.txt. Change no files. If either target already exists, flag a conflict and stop; do not overwrite it.', 'Apply in the test folder: keep a log of each original name, target name and result. Imagine the first rename succeeds but the second fails because the file is locked. Stop and record the partial result instead of reporting the whole batch as complete.', 'Recover: release the lock, compare the completed target with the untouched copy, and check that the remaining target is free. Retry only the failed original-to-target pair. Do not build a fresh rename list from the current filenames: that could add reviewed- twice.', 'Verify: both expected names exist, the file count is unchanged and their contents match the untouched copies. If the log or contents are uncertain, discard only the disposable test folder and start again from the copies.'] },
+      { title: '6. Decide how it earns its place', paragraphs: ['After a few real runs, ask: did this save attention? Can I explain a failure? Could I stop using it without creating a mess? Keep a short note with its purpose, inputs, owner and recovery steps.', 'If the task changes constantly or still needs extensive checking, keep it manual for now. That is a valid design decision.'] },
     ], takeaway: 'Choose one task. Describe a normal run, one failure and a safe retry. If those are still unclear, clarify the process before writing more code.'
   },
   {
     slug: 'ai-output-you-can-check', category: 'AI & automation', title: 'Ask AI for an answer you can check.',
     description: 'A small workflow for turning an AI draft into something reviewable, with explicit evidence, uncertainty and a human decision.',
+    publishedAt: '2026-10-05', modifiedAt: '2026-10-06',
     minutes: 4,
     intro: 'A fluent answer can still be wrong. For work that matters, the useful output is a draft with a trail you can inspect: what it used, what it inferred and what it could not establish.',
     sections: [
@@ -28,6 +31,7 @@ export const guides = [
   {
     slug: 'starting-smaller', category: 'Building smarter', title: 'When the side project becomes the work.',
     description: 'A project note on narrowing StocksWatch from a market-data and product-delivery experiment into a small, useful publishing site.',
+    publishedAt: '2026-10-05', modifiedAt: '2026-10-06',
     minutes: 4,
     intro: 'This domain began as StocksWatch, a source-linked research desk for NBIS. The project grew to include downloadable research materials and a sandbox purchase flow. This note records the decision to simplify, not a claim of revenue or proven demand.',
     sections: [

@@ -16,7 +16,7 @@ const contentChecks = [
   ["index.html", /Make room for life/],
   ["guides.html", /Before you automate/],
   ["about.html", /Jacob Builds/],
-  ["sitemap.xml", /guides\/before-you-automate\.html/],
+  ["sitemap.xml", /<loc>https?:\/\/[^<]+\/guides\/before-you-automate<\/loc>/],
 ];
 
 // The full product is distributed separately through a protected checkout.

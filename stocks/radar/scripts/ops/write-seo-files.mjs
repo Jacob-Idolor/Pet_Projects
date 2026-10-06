@@ -26,13 +26,13 @@ Sitemap: ${site}/sitemap.xml
 
 const sitemapPages = [
   { path: "/", changefreq: "monthly", priority: "1.0" },
-  { path: "/guides.html", changefreq: "monthly", priority: "0.8" },
-  { path: "/resources.html", changefreq: "monthly", priority: "0.6" },
-  { path: "/about.html", changefreq: "monthly", priority: "0.5" },
-  { path: "/guides/before-you-automate.html", changefreq: "monthly", priority: "0.8" },
-  { path: "/guides/ai-output-you-can-check.html", changefreq: "monthly", priority: "0.8" },
-  { path: "/guides/starting-smaller.html", changefreq: "monthly", priority: "0.8" },
-  { path: "/privacy.html", changefreq: "yearly", priority: "0.3" },
+  { path: "/guides", changefreq: "monthly", priority: "0.8" },
+  { path: "/resources", changefreq: "monthly", priority: "0.6" },
+  { path: "/about", changefreq: "monthly", priority: "0.5" },
+  { path: "/guides/before-you-automate", changefreq: "monthly", priority: "0.8" },
+  { path: "/guides/ai-output-you-can-check", changefreq: "monthly", priority: "0.8" },
+  { path: "/guides/starting-smaller", changefreq: "monthly", priority: "0.8" },
+  { path: "/privacy", changefreq: "yearly", priority: "0.3" },
 ];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

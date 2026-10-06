@@ -3,13 +3,13 @@ const site = (process.argv[2] || "https://stockswatch.cc").replace(/\/$/, "");
 const revision = Date.now();
 const pages = [
   ["/", "Make room for life."],
-  ["/guides.html", "Before you automate"],
-  ["/resources.html", "A small toolkit."],
-  ["/about.html", "Good systems should give something back."],
-  ["/privacy.html", "A short privacy note."],
-  ["/guides/before-you-automate.html", "Before you automate, make the task smaller."],
-  ["/guides/ai-output-you-can-check.html", "Ask AI for an answer you can check."],
-  ["/guides/starting-smaller.html", "When the side project becomes the work."],
+  ["/guides", "Before you automate"],
+  ["/resources", "A small toolkit."],
+  ["/about", "Good systems should give something back."],
+  ["/privacy", "A short privacy note."],
+  ["/guides/before-you-automate", "Before you automate, make the task smaller."],
+  ["/guides/ai-output-you-can-check", "Ask AI for an answer you can check."],
+  ["/guides/starting-smaller", "When the side project becomes the work."],
 ];
 
 for (const [path, marker] of pages) {
