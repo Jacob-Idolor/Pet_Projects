@@ -1,4 +1,53 @@
-# StocksWatch
+# Jacob Builds
+
+The current local application is a small personal publishing site about practical
+AI, automation and systems, reusing stockswatch.cc. Home, Guides, Resources and
+About are the main navigation, with three articles and a short privacy page.
+The owner authorized retiring StocksWatch; the previous research and sales plan
+below is historical. See [ARCHITECTURE.md](ARCHITECTURE.md) for the active design
+and [LAUNCH_STATUS.md](LAUNCH_STATUS.md) for release blockers.
+
+## Current stack
+
+- Static Astro and TypeScript in `stocks/radar`; articles live in `src/data/guides.ts`.
+- Cloudflare Pages direct uploads through GitHub Actions and Wrangler. Terraform
+  in `infra/terraform` defines the Pages project, custom-domain attachment and DNS
+  CNAME, with `prevent_destroy` on the project. The old AWS site was retired.
+- The new build reads local content and makes no market-data requests. This
+  revision replaces scheduled Yahoo/SEC refreshes with a manual publishing
+  workflow; PR and main-push validation retain the preserved legacy source tests.
+- No accounts, database, checkout, newsletter form or analytics in the redesigned
+  site. Legacy Stripe, Buttondown and sandbox Worker/R2 services have not been
+  cancelled; removing website links does not close accounts or settle billing.
+- No new recurring spending is required by these local changes. Existing domain,
+  Cloudflare, newsletter and reported AWS charges need an account billing review;
+  local files cannot establish current costs or live resource state.
+
+## Local development and validation
+
+```powershell
+# In this Windows checkout, use the existing project-local Node 22 runtime.
+. ./scripts/ops/use-node.ps1
+npm ci
+npm run dev
+```
+
+Run `npm test`, `npm run typecheck`, `npm run build`, `npm run verify:dist`,
+`npm run security:dist`, `npm run policy:dist`, `npm run security:deps` and
+`npm run test:e2e` before release.
+The build is static and strips retired data, downloads and ad metadata from dist.
+`freshness:live` now checks all eight reader-facing pages and build metadata;
+`EXPECTED_GIT_SHA` makes it reject a different deployed revision. It is suitable
+for the new site after deployment, and is not a market-data freshness check.
+
+The owner approved the workflow transition and publication on October 6, 2026.
+Publishing remains a manual action after validation. Follow the protected-main
+review/merge process; retain npm audit, source checks, bundle checks, browser tests
+and Terraform validation. See [DEPLOY.md](DEPLOY.md) for the publishing route.
+
+---
+
+# Historical StocksWatch notes
 
 StocksWatch is a calm, source-linked daily research desk for Nebius Group (`NBIS`) and the AI infrastructure buildout. It is intentionally small: Astro static output, one daily snapshot, Cloudflare Pages, and GitHub Actions. It is educational and not financial advice.
 

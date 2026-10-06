@@ -1,0 +1,61 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { buttondownConfig } from "../../scripts/lib/buttondown-config.mjs";
+const newsletter = buttondownConfig(import.meta.env.PUBLIC_BUTTONDOWN_USERNAME);
+
+const description = "StocksWatch privacy and sponsorship disclosure: local preferences, Cloudflare hosting and analytics, Google advertising, and external links.";
+---
+
+<BaseLayout
+  title="Privacy & sponsorship"
+  description={description}
+  allowAds={false}
+  activeNav="nbis"
+  canonicalPath="/privacy.html"
+>
+  <article class="policy-page container">
+    <p class="nbis-eyebrow">StocksWatch / Transparency</p>
+    <h1>Privacy &amp; sponsorship</h1>
+    <p class="policy-lede">How this research desk uses browser preferences, hosting, analytics, and advertising services.</p>
+    <p>Last updated: September 24, 2026.</p>
+
+    <section>
+      <h2>Current site behavior</h2>
+      <p>StocksWatch is a static, source-linked research site. It does not currently provide site accounts or accept product payments. {newsletter ? "The optional newsletter signup sends your email directly to Buttondown, as described below." : "Newsletter signup is not connected on this site yet."} The theme choice and the optional “Follow this desk” preference are stored locally in your browser so the interface can remember your choice. They are not sent to StocksWatch.</p>
+      <p>The site links to company, SEC, and provider pages. Those destinations have their own privacy practices and are outside StocksWatch control.</p>
+      <p>Cloudflare hosts and protects the site. Cloudflare Web Analytics measures page visits and page-load performance through a browser beacon; it is separate from the local theme and follow preferences. See <a href="https://developers.cloudflare.com/web-analytics/about/">Cloudflare Web Analytics</a> and <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</p>
+    </section>
+
+    <section id="newsletter">
+      <h2>NBIS Close and Buttondown</h2>
+      <p>{newsletter ? "Signup is available through the optional form on the research-kit page." : "Buttondown is the selected email provider; signup is not connected on this site yet."} NBIS Close covers occasional research workflows, source-checking tips, resource updates and product announcements.</p>
+      <p>When you submit an enabled signup form, your browser sends your email address directly to Buttondown to manage your subscription and send the newsletter. Buttondown handles any validation and verification steps. StocksWatch does not put your email address in local browser storage or engagement-event payloads. Downloading a free resource does not subscribe you.</p>
+      <p>Use the unsubscribe link in newsletter emails to stop receiving them. See <a href="https://buttondown.com/legal/privacy">Buttondown’s privacy policy</a> for its processing practices. {newsletter && <a href={newsletter.archiveUrl}>Visit the StocksWatch newsletter on Buttondown.</a>}</p>
+    </section>
+
+    <section>
+      <h2>Advertising and sponsorship</h2>
+      <p>StocksWatch uses Google AdSense when advertising is enabled. Ads are labeled “Sponsored” and placed after research content. Google and its partners may process device information and use cookies or similar technologies for advertising, measurement, and fraud prevention. Read <a href="https://policies.google.com/technologies/partner-sites">how Google uses information from partner sites</a>.</p>
+      <p>Ad loading requires verified consent configuration as well as the publisher and placement settings. Where a consent message is presented, use its choices and privacy controls to manage your preferences. Publisher verification metadata alone does not load advertising scripts. Sponsor relationships do not control editorial conclusions, and ads are not required to use the research desk.</p>
+    </section>
+
+    <section>
+      <h2>Data quality and financial framing</h2>
+      <p>Market and company data can be delayed, incomplete, restated, or wrong. Verify material claims against the latest company filing. Automated readouts and scenario assumptions are educational context, not investment advice or guaranteed outcomes.</p>
+    </section>
+
+    <div class="policy-callout">This is a product disclosure, not legal advice. Review it for the jurisdictions and providers involved before enabling email collection, analytics, or advertising.</div>
+    <p><a href={import.meta.env.BASE_URL}>← Return to StocksWatch</a></p>
+  </article>
+</BaseLayout>
+
+<style>
+  .policy-page { max-width: 820px; padding: clamp(4.5rem, 10vw, 8rem) 0 5rem; }
+  .policy-page h1 { margin: .7rem 0 1rem; color: var(--text); font-size: clamp(2.7rem, 7vw, 5.8rem); letter-spacing: -.08em; line-height: .95; }
+  .policy-lede { max-width: 48rem; color: var(--muted); font-size: 1.15rem; line-height: 1.65; }
+  .policy-page section { padding-top: 2.8rem; }
+  .policy-page h2 { margin: 0 0 .65rem; color: var(--text); font-size: 1.65rem; letter-spacing: -.05em; }
+  .policy-page p { color: var(--muted); font-size: .95rem; line-height: 1.75; }
+  .policy-page a { color: var(--accent); }
+  .policy-callout { margin: 2.8rem 0 1.5rem; padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); color: var(--muted); font-size: .8rem; line-height: 1.6; }
+</style>

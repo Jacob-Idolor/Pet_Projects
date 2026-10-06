@@ -8,34 +8,15 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const DIST = resolve(ROOT, "dist");
 const requiredFiles = [
-  "index.html",
-  "404.html",
-  "datacenter.html",
-  "guides/nbis-research-guide.html",
-  "guides/nbis-sec-filings.html",
-  "privacy.html",
-  "research-kit.html",
-  "downloads/ai-infrastructure-research-kit.md",
-  "workflow-pack.html",
-  "downloads/research-workflow-sample.md",
-  "nbis.json",
-  "health.json",
-  "settings.json",
-  "robots.txt",
-  "sitemap.xml",
+  "index.html", "guides.html", "resources.html", "about.html", "privacy.html", "404.html",
+  "guides/before-you-automate.html", "guides/ai-output-you-can-check.html", "guides/starting-smaller.html",
+  "build-meta.json", "robots.txt", "sitemap.xml",
 ];
 const contentChecks = [
-  ["index.html", /application\/ld\+json/],
-  ["index.html", /How to read this desk/],
-  ["guides/nbis-research-guide.html", /How to read the NBIS research desk/],
-  ["guides/nbis-sec-filings.html", /How to read NBIS SEC filings/],
-  ["sitemap.xml", /guides\/nbis-research-guide\.html/],
-  ["sitemap.xml", /guides\/nbis-sec-filings\.html/],
-  ["sitemap.xml", /privacy\.html/],
-  ["sitemap.xml", /research-kit\.html/],
-  ["research-kit.html", /downloads\/ai-infrastructure-research-kit\.md/],
-  ["workflow-pack.html", /downloads\/research-workflow-sample\.md/],
-  ["sitemap.xml", /workflow-pack\.html/],
+  ["index.html", /Make room for life/],
+  ["guides.html", /Before you automate/],
+  ["about.html", /Jacob Builds/],
+  ["sitemap.xml", /guides\/before-you-automate\.html/],
 ];
 
 // The full product is distributed separately through a protected checkout.
@@ -53,7 +34,7 @@ function findPrivateFiles(dir) {
 const privateFiles = findPrivateFiles(DIST);
 
 const missingFiles = requiredFiles.filter((file) => !existsSync(resolve(DIST, file)));
-const retiredFiles = ["screener.json", "dc-movers.json", "datacenter"].filter((file) => existsSync(resolve(DIST, file)));
+const retiredFiles = ["screener.json", "dc-movers.json", "datacenter", "nbis.json", "health.json", "settings.json", "downloads", "watchlist-board.mjs", "ads.txt"].filter((file) => existsSync(resolve(DIST, file)));
 const missingContent = contentChecks.filter(([file, pattern]) => {
   if (!existsSync(resolve(DIST, file))) return true;
   return !pattern.test(readFileSync(resolve(DIST, file), "utf8"));

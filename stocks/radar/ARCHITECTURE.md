@@ -1,61 +1,59 @@
-# StocksWatch architecture
+# Jacob Builds architecture
 
-StocksWatch is a static Astro site for the NBIS research desk at `/`. It is designed as a low-cost, source-linked daily research asset: no browser API keys, no always-on server, no database, and no brokerage credentials.
+## Purpose and scope
 
-## Surfaces
+Jacob Builds is a small personal site about practical AI, automation and systems.
+It reuses stockswatch.cc and the existing static Astro/TypeScript application and
+Cloudflare Pages hosting. The owner explicitly retired the StocksWatch product
+on October 5, 2026. There are no new services, accounts, databases or payments.
 
-| Surface | Source | Runtime |
-| --- | --- | --- |
-| NBIS Deep Dive | `src/pages/index.astro` | Build-rendered snapshot HTML + browser refresh from `public/nbis.json` |
-| NBIS reading guide | `src/pages/guides/nbis-research-guide.astro` | Static Astro HTML |
-| NBIS SEC filings guide | `src/pages/guides/nbis-sec-filings.astro` | Static Astro HTML |
-| Free research kit | `src/pages/research-kit.astro` | Static Astro HTML; optional browser engagement event |
-| Editable kit download | `public/downloads/ai-infrastructure-research-kit.md` | Original authored Markdown, copied into releases |
-| Workflow Pack preview | `src/pages/workflow-pack.astro` | Static product preview; no checkout or live Offer metadata |
-| Workflow sample | `public/downloads/research-workflow-sample.md` | Intentionally public sample with fictional teaching data |
-| Privacy & sponsorship | `src/pages/privacy.astro` | Static Astro HTML |
-| Legacy data-center redirect | `src/pages/datacenter.astro` | Redirects bookmarks to `/` |
-| Not found | `src/pages/404.astro` | Noindex, no ads |
+## Active pages
 
-The former group watchlist, quote board, personal alerts, and submission form have been removed. Retained `public/datacenter/`, screener and movers files are historical local sources. `postbuild` excludes them from `dist/`; they are not published feeds.
+- `/`: introduction, three guide cards and author context.
+- `/guides.html`: the complete three-guide library.
+- `/guides/[slug].html`: static articles from `src/data/guides.ts`.
+- `/resources.html`: tools evidenced by this repository, without affiliate links.
+- `/about.html`: owner-provided professional background and project philosophy.
+- `/privacy.html`: current data-handling explanation and legacy-service caveat.
+- Retired research/product URLs: noindex retirement notices with a link to guides.
 
-The complete Workflow Pack is local-only in Git-ignored `.private-products/`, outside the Astro source/public trees. `npm run product:pack` reads an explicit list from `src/data/workflow-pack.json` and writes a private, versioned ZIP. Website builds do not require private files. Release verification rejects known full-product filenames, archive names and private product directories in `dist/`. The optional NBIS Close signup posts directly to Buttondown. The separate `workers/product-delivery/` Worker serves Stripe-verified private downloads in the sandbox; it is not part of the Astro build. The owner reported successful sandbox checkout and download. Webhook/outbox and email transport code are not deployed, and further fulfillment development is paused during demand validation. Production checkout remains absent from the site.
+`PersonalLayout.astro` and `personal.css` provide the active shell and responsive
+styles. No client JavaScript is required. System fonts avoid external font requests.
+The previous layout/styles and domain-specific libraries remain available locally,
+but are not imported by active pages. Archived pages and tests are preserved in
+`archive/stockswatch-retired/` outside the application and active browser suite.
 
-## Data flow
+## Build and release
 
-```text
-Daily refresh
-  → fetch-nbis.py → public/nbis.json
-  → shared quality gate → Astro static build → exclude historical artifacts
-  → Cloudflare Pages / static CDN
-  → browser checks snapshot age and refreshes from nbis.json
-```
+`npm run build` writes build metadata and SEO files, builds static pages, and
+removes retired market data, health/settings feeds, downloads and advertising
+metadata from the distribution. It performs no live market-data requests.
+`verify:dist` checks active routes and excludes retired/private artifacts;
+`security:dist` scans for credentials. `freshness:live` now checks all eight reader-facing pages, valid build metadata
+and the expected revision, not market-data freshness. It rejects missing pages,
+homepage fallbacks, malformed metadata and a different deployed revision. This is only suitable after
+this redesign is deployed. The underlying checker is `check-personal-live.mjs`.
 
-The NBIS snapshot contains market context, fundamentals, scenarios, filings, research readouts, and timestamps. Missing or stale data remains visible as missing or stale; the site never invents numbers to make a page look healthy.
+Run npm test, npm run typecheck, npm run build, npm run verify:dist,
+npm run security:dist, npm run policy:dist and npm run test:e2e for release verification.
 
-## Source map
+The owner explicitly approved the workflow transition and publication on October 6,
+2026. This revision changes the parent publishing workflow to manual dispatch only;
+there are no scheduled or push-triggered deployments and no NBIS data fetch.
+Dependency audit, source checks, build, release/security scans and browser checks
+run before upload. PR/main-push validation retains the Python and legacy source
+checks and the Terraform job. The obsolete NBIS/AdSense build checklist is replaced
+by policy:dist, which rejects ads, analytics, forms, iframes and third-party scripts
+and requires noindex on error and retirement pages. Existing secrets and hosting
+resources are unchanged. Protected-main review/merge requirements still apply.
 
-| Path | Role |
-| --- | --- |
-| `src/client/nbis-dashboard.ts` | Snapshot hydration, chart, tables, readouts, and local engagement hooks |
-| `src/lib/nbis-render.ts` | Pure escaped renderer shared by initial HTML and browser refresh |
-| `scripts/lib/nbis-quality.mjs` | Shared structural, coverage, and freshness validation |
-| `src/data/nbis-profile.json` | Company profile, monitoring checklist, and primary sources |
-| `scripts/fetch/fetch-nbis.py` | Yahoo Finance + SEC snapshot collection |
-| `scripts/fetch/fetch-screener.py` | AI infrastructure screener snapshot |
-| `scripts/ops/validate-nbis-schema.mjs` | NBIS data contract check |
-| `scripts/ops/validate-screener-schema.mjs` | Screener data contract check |
-| `src/lib/adsense.ts` | Domain, content, and placement gates for future ads |
-| `src/components/AdSlot.astro` | Manual, labeled ad units only when configured |
+## Content rules
 
-## Build lifecycle
+Keep three loose themes, with no empty category pages. Use real project history or
+clearly illustrative examples; do not invent personal experience, savings, revenue,
+endorsements or demand. Review owner-attributed copy before publishing. No publishing
+quota, paid-product expansion, analytics or newsletter funnel is required for V1.
 
-`npm run prebuild` validates configuration, syncs tokens, refreshes NBIS when requested, validates its snapshot schema, and writes health/SEO metadata. Astro renders NBIS data directly into HTML through the same renderer used by browser refreshes. `postbuild` removes historical feeds from the release. Production validates fresh data before deployment and checks the public revision afterward. Offline builds use `SCREENER_SKIP=1 NBIS_SKIP=1`; stale data stays explicitly labeled. The static health file's `validUntil` must be compared to the current time, not treated as a perpetual health guarantee.
-
-## Design and safety rules
-
-- Keep the NBIS research desk as the product wedge; future guides, tools, templates, and email products should extend the same evidence-first audience.
-- Keep action/scenario language educational. Do not describe scenarios as forecasts, targets, or guaranteed outcomes.
-- Keep ad placement after substantial research content, manually labeled, and disabled until the custom domain, consent/privacy surface, and AdSense review requirements are satisfied.
-- Keep `src/styles/global.css` import order stable: tokens, shared shell, then ad styles.
-- Do not hand-edit generated artifacts under `public/`; use their matching scripts.
+Private products, sandbox delivery code and external newsletter/payment accounts
+have not been deleted or cancelled. They are not linked from the new interface.
+Website retirement does not imply cancellation of external billing or subscriptions.

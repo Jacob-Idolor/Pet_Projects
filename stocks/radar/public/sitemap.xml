@@ -2,26 +2,36 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://stockswatch.cc/</loc>
-    <changefreq>hourly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://stockswatch.cc/research-kit.html</loc>
+    <loc>https://stockswatch.cc/guides.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://stockswatch.cc/workflow-pack.html</loc>
+    <loc>https://stockswatch.cc/resources.html</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://stockswatch.cc/guides/nbis-research-guide.html</loc>
+    <loc>https://stockswatch.cc/about.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://stockswatch.cc/guides/before-you-automate.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://stockswatch.cc/guides/nbis-sec-filings.html</loc>
+    <loc>https://stockswatch.cc/guides/ai-output-you-can-check.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://stockswatch.cc/guides/starting-smaller.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

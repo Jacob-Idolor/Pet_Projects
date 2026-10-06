@@ -1,0 +1,5 @@
+---
+import Layout from '../layouts/PersonalLayout.astro';
+import { guides } from '../data/guides';
+---
+<Layout title="Guides" description="A small library of practical guides on AI, automation and building simpler systems." active="Guides"><div class="wrap"><header class="page-head"><p class="eyebrow">The notebook</p><h1>Useful things,<br />written down.</h1><p class="lead">Start with a question you actually have. These guides focus on decisions, checks and small experiments you can apply to your own work.</p></header><section class="section cards" aria-label="All guides">{guides.map(guide => <article class="card"><p class="eyebrow">{guide.category}</p><h2 style="font-size:1.5rem"><a href={`/guides/${guide.slug}.html`}>{guide.title}</a></h2><p>{guide.description}</p><a class="read" href={`/guides/${guide.slug}.html`}>Read the guide ↗ · {guide.minutes} min</a></article>)}</section></div></Layout>
