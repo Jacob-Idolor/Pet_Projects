@@ -10,15 +10,21 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
 ## Active pages
 
 - `/`: introduction, three guide cards and author context.
-- `/guides.html`: the complete three-guide library.
-- `/guides/[slug].html`: static articles from `src/data/guides.ts`.
-- `/resources.html`: tools evidenced by this repository, without affiliate links.
-- `/about.html`: owner-provided professional background and project philosophy.
-- `/privacy.html`: current data-handling explanation and legacy-service caveat.
+- `/guides`: the complete three-guide library.
+- `/guides/[slug]`: static articles from `src/data/guides.ts`.
+- `/resources`: tools evidenced by this repository, without affiliate links.
+- `/about`: owner-provided professional background and project philosophy.
+- `/privacy`: current data-handling explanation and legacy-service caveat.
 - Retired research/product URLs: noindex retirement notices with a link to guides.
 
 `PersonalLayout.astro` and `personal.css` provide the active shell and responsive
 styles. No client JavaScript is required. System fonts avoid external font requests.
+Canonicals, sitemap entries and internal links use extensionless routes, matching
+Cloudflare Pages' direct 200 responses; the physical build still contains .html files.
+Each guide owns its date-only publication/modification values using the owner's
+Pacific calendar dates, links to the author and
+other guides, and emits article Open Graph plus BlogPosting JSON-LD metadata.
+The resources page links to official documentation for the four existing tools.
 The previous layout/styles and domain-specific libraries remain available locally,
 but are not imported by active pages. Archived pages and tests are preserved in
 `archive/stockswatch-retired/` outside the application and active browser suite.

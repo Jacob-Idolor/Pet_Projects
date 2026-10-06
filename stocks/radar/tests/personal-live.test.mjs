@@ -7,13 +7,13 @@ import { test } from "node:test";
 const checker = fileURLToPath(new URL("../scripts/ops/check-personal-live.mjs", import.meta.url));
 const pages = {
   "/": "Make room for life.",
-  "/guides.html": "Before you automate",
-  "/resources.html": "A small toolkit.",
-  "/about.html": "Good systems should give something back.",
-  "/privacy.html": "A short privacy note.",
-  "/guides/before-you-automate.html": "Before you automate, make the task smaller.",
-  "/guides/ai-output-you-can-check.html": "Ask AI for an answer you can check.",
-  "/guides/starting-smaller.html": "When the side project becomes the work.",
+  "/guides": "Before you automate",
+  "/resources": "A small toolkit.",
+  "/about": "Good systems should give something back.",
+  "/privacy": "A short privacy note.",
+  "/guides/before-you-automate": "Before you automate, make the task smaller.",
+  "/guides/ai-output-you-can-check": "Ask AI for an answer you can check.",
+  "/guides/starting-smaller": "When the side project becomes the work.",
 };
 
 async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset, injected404 } = {}) {
@@ -63,7 +63,7 @@ test("live check verifies the complete static reader journey and revision", asyn
   const result = await runCheck();
   assert.equal(result.status, 0, result.output);
   assert.match(result.output, /8 pages/);
-  assert.ok(result.requests.includes("/guides/starting-smaller.html"));
+  assert.ok(result.requests.includes("/guides/starting-smaller"));
   for (const path of ["/nbis.json", "/downloads/research-workflow-sample.md", "/datacenter/app.js", "/datacenter/map.js", "/datacenter/style.css"]) assert.ok(result.requests.includes(path), path);
 });
 
@@ -88,13 +88,13 @@ test("live check follows a retired-asset redirect to a missing route", async () 
 });
 
 test("live check rejects a partial release with a missing guide", async () => {
-  const result = await runCheck({ missingPage: "/guides/ai-output-you-can-check.html" });
+  const result = await runCheck({ missingPage: "/guides/ai-output-you-can-check" });
   assert.notEqual(result.status, 0);
   assert.match(result.output, /Page unavailable.*ai-output-you-can-check/);
 });
 
 test("live check rejects a homepage fallback served as a guide", async () => {
-  const result = await runCheck({ fallbackPage: "/guides/starting-smaller.html" });
+  const result = await runCheck({ fallbackPage: "/guides/starting-smaller" });
   assert.notEqual(result.status, 0);
   assert.match(result.output, /Unexpected page content.*starting-smaller/);
 });
