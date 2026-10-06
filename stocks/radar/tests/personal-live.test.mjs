@@ -16,12 +16,16 @@ const pages = {
   "/guides/starting-smaller.html": "When the side project becomes the work.",
 };
 
-async function runCheck({ missingPage, fallbackPage, metadata } = {}) {
+async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset } = {}) {
   const requests = [];
   const server = createServer((request, response) => {
     const path = new URL(request.url, "http://localhost").pathname;
     requests.push(path);
-    if (path === missingPage) {
+    if (path === retainedAsset && !new URL(request.url, "http://localhost").search) {
+      response.end("Retained legacy asset");
+    } else if (path === redirectAsset) {
+      response.writeHead(302, { Location: "/retired-files/missing" }).end();
+    } else if (path === missingPage) {
       response.writeHead(404).end("Missing page");
     } else if (path === "/build-meta.json") {
       response.setHeader("Content-Type", "application/json");
@@ -30,7 +34,8 @@ async function runCheck({ missingPage, fallbackPage, metadata } = {}) {
         : metadata));
     } else if (pages[path]) {
       const text = path === fallbackPage ? pages["/"] : pages[path];
-      response.end(`<html><title>Jacob Builds</title><h1>${text}</h1></html>`);
+      const script = injectedScript && path === "/" ? '<script src="https://static.cloudflareinsights.com/beacon.min.js"></script>' : "";
+      response.end(`<html><title>Jacob Builds</title><h1>${text}</h1>${script}</html>`);
     } else {
       response.writeHead(404).end("Not found");
     }
@@ -59,6 +64,25 @@ test("live check verifies the complete static reader journey and revision", asyn
   assert.equal(result.status, 0, result.output);
   assert.match(result.output, /8 pages/);
   assert.ok(result.requests.includes("/guides/starting-smaller.html"));
+  assert.ok(result.requests.includes("/nbis.json"));
+});
+
+test("live check rejects an edge-injected analytics script", async () => {
+  const result = await runCheck({ injectedScript: true });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Unexpected script or interactive embed/);
+});
+
+test("live check rejects retained assets without masking them with query strings", async () => {
+  const result = await runCheck({ retainedAsset: "/nbis.json" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Retired asset still available.*nbis.json.*200/);
+});
+
+test("live check follows a retired-asset redirect to a missing route", async () => {
+  const result = await runCheck({ redirectAsset: "/nbis.json" });
+  assert.equal(result.status, 0, result.output);
+  assert.ok(result.requests.includes("/retired-files/missing"));
 });
 
 test("live check rejects a partial release with a missing guide", async () => {

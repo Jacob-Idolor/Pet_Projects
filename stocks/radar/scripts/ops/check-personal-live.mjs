@@ -21,6 +21,27 @@ for (const [path, marker] of pages) {
   if (!html.includes(marker) || !html.includes("Jacob Builds")) {
     throw new Error(`Unexpected page content: ${path}`);
   }
+  if (/<script\b[^>]*\bsrc\s*=|<form\b|<iframe\b/i.test(html)) {
+    throw new Error(`Unexpected script or interactive embed: ${path}`);
+  }
+}
+
+// Do not cache-bust these requests: retained legacy assets can return 200 only
+// at their original URL, while a query-string URL correctly returns 404.
+const retiredAssets = [
+  "/nbis.json", "/screener.json", "/dc-movers.json", "/health.json",
+  "/settings.json", "/ads.txt", "/watchlist-board.mjs",
+  "/downloads/ai-infrastructure-research-kit.md",
+  "/downloads/stockswatch-research-workflow-pack.zip",
+];
+for (const path of retiredAssets) {
+  const response = await fetch(`${site}${path}`, {
+    signal: AbortSignal.timeout(15000),
+  });
+  if (response.status !== 404) {
+    throw new Error(`Retired asset still available: ${path} (HTTP ${response.status})`);
+  }
+  await response.body?.cancel();
 }
 
 const response = await fetch(`${site}/build-meta.json?revision=${revision}`, {
@@ -35,4 +56,4 @@ if (!meta || typeof meta.gitSha !== "string" || !meta.gitSha.trim() ||
 if (process.env.EXPECTED_GIT_SHA && meta.gitSha !== process.env.EXPECTED_GIT_SHA) {
   throw new Error("Deployed revision does not match");
 }
-console.log(`Personal site verified: ${pages.length} pages and build revision ${meta.gitSha}.`);
+console.log(`Personal site verified: ${pages.length} pages, ${retiredAssets.length} retired assets and build revision ${meta.gitSha}.`);
