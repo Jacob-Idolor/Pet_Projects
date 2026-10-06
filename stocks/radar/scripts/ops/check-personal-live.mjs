@@ -32,6 +32,8 @@ const retiredAssets = [
   "/nbis.json", "/screener.json", "/dc-movers.json", "/health.json",
   "/settings.json", "/ads.txt", "/watchlist-board.mjs",
   "/downloads/ai-infrastructure-research-kit.md",
+  "/downloads/research-workflow-sample.md",
+  "/datacenter/app.js", "/datacenter/map.js", "/datacenter/style.css",
   "/downloads/stockswatch-research-workflow-pack.zip",
 ];
 for (const path of retiredAssets) {
@@ -41,7 +43,10 @@ for (const path of retiredAssets) {
   if (response.status !== 404) {
     throw new Error(`Retired asset still available: ${path} (HTTP ${response.status})`);
   }
-  await response.body?.cancel();
+  const retiredHtml = await response.text();
+  if (/<script\b[^>]*\bsrc\s*=|<form\b|<iframe\b/i.test(retiredHtml)) {
+    throw new Error(`Unexpected script or interactive embed on retired response: ${path}`);
+  }
 }
 
 const response = await fetch(`${site}/build-meta.json?revision=${revision}`, {

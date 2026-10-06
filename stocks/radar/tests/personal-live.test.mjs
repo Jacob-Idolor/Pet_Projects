@@ -16,7 +16,7 @@ const pages = {
   "/guides/starting-smaller.html": "When the side project becomes the work.",
 };
 
-async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset } = {}) {
+async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset, injected404 } = {}) {
   const requests = [];
   const server = createServer((request, response) => {
     const path = new URL(request.url, "http://localhost").pathname;
@@ -37,7 +37,7 @@ async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, r
       const script = injectedScript && path === "/" ? '<script src="https://static.cloudflareinsights.com/beacon.min.js"></script>' : "";
       response.end(`<html><title>Jacob Builds</title><h1>${text}</h1>${script}</html>`);
     } else {
-      response.writeHead(404).end("Not found");
+      response.writeHead(404).end(injected404 ? '<html><script src="https://static.cloudflareinsights.com/beacon.min.js"></script></html>' : "Not found");
     }
   });
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
@@ -64,7 +64,7 @@ test("live check verifies the complete static reader journey and revision", asyn
   assert.equal(result.status, 0, result.output);
   assert.match(result.output, /8 pages/);
   assert.ok(result.requests.includes("/guides/starting-smaller.html"));
-  assert.ok(result.requests.includes("/nbis.json"));
+  for (const path of ["/nbis.json", "/downloads/research-workflow-sample.md", "/datacenter/app.js", "/datacenter/map.js", "/datacenter/style.css"]) assert.ok(result.requests.includes(path), path);
 });
 
 test("live check rejects an edge-injected analytics script", async () => {
@@ -74,9 +74,11 @@ test("live check rejects an edge-injected analytics script", async () => {
 });
 
 test("live check rejects retained assets without masking them with query strings", async () => {
-  const result = await runCheck({ retainedAsset: "/nbis.json" });
-  assert.notEqual(result.status, 0);
-  assert.match(result.output, /Retired asset still available.*nbis.json.*200/);
+  for (const retainedAsset of ["/nbis.json", "/downloads/research-workflow-sample.md", "/datacenter/app.js"]) {
+    const result = await runCheck({ retainedAsset });
+    assert.notEqual(result.status, 0);
+    assert.ok(result.output.includes(`Retired asset still available: ${retainedAsset} (HTTP 200)`));
+  }
 });
 
 test("live check follows a retired-asset redirect to a missing route", async () => {
@@ -109,4 +111,10 @@ test("live check rejects malformed build metadata", async () => {
     assert.notEqual(result.status, 0);
     assert.match(result.output, /Build metadata is invalid/);
   }
+});
+
+test("live check rejects an injected script on a final 404 response", async () => {
+  const result = await runCheck({ injected404: true });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Unexpected script or interactive embed on retired response/);
 });
