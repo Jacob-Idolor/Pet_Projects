@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+{/* No AdSense script / units — error screens must not carry Google-served ads. */}
+<BaseLayout
+  title="Not found"
+  description="That page is not on StocksWatch."
+  allowAds={false}
+  noindex={true}
+>
+  <div class="container error-page">
+    <p class="hero-brand">StocksWatch</p>
+    <h1>Page not found</h1>
+    <p class="error-page__lead">
+      The daily research desk lives on the home page. Check the URL or return to the latest snapshot.
+    </p>
+    <p class="error-page__links">
+      <a class="btn btn-primary" href={import.meta.env.BASE_URL}>NBIS Deep Dive</a>
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-page {
+    padding: 3rem 1.15rem 4rem;
+    text-align: center;
+  }
+  .error-page h1 {
+    margin: 0.35rem 0 0.75rem;
+    font-size: 1.75rem;
+  }
+  .error-page__lead {
+    color: var(--muted);
+    max-width: 28rem;
+    margin: 0 auto 1.5rem;
+    line-height: 1.5;
+  }
+  .error-page__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+  }
+</style>

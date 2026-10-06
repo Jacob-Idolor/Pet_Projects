@@ -4,10 +4,10 @@
 
 - The active application is `radar/`, a static Astro site.
 - Run application commands from `radar/` unless a task explicitly concerns the repository root.
-- The production homepage is the NBIS research desk at `/`.
-- The group watchlist is retired. `/datacenter.html` redirects to `/`.
+- The local release candidate is Jacob Builds: Home, Guides, Resources and About, with three static articles. The owner retired StocksWatch. Read `radar/ARCHITECTURE.md` and the latest section of `radar/LAUNCH_STATUS.md` before continuing.
+- Old research/product routes show noindex retirement notices in the local release candidate. Production still uses the earlier NBIS release until an approved deployment.
 - `radar/archive/ai-datacenter-screener/` is retained for local and historical reference; it is not deployed.
-- There is **no live AWS/Terraform stack**. `stockswatch.cc` is served by Cloudflare Pages; active workflows live in the parent repository's `.github/` directory.
+- `stockswatch.cc` uses Cloudflare Pages. `radar/infra/terraform` defines the Pages project, domain attachment and DNS record; the previous AWS site is recorded as destroyed. Local configuration does not verify live resource state or billing. Active workflows live in the parent repository's `.github/` directory.
 
 ## Setup and validation
 
@@ -17,6 +17,7 @@
 - Run `npm run screener:schema` when screener data or its consumers change.
 - Run a build and the Playwright suite for UI, routing, or release-sensitive changes. In PowerShell, set `$env:SCREENER_SKIP='1'; $env:NBIS_SKIP='1'` before an offline build.
 - Do not run deploy, infrastructure, alert, email, or live-data mutation commands unless the user explicitly asks.
+- On October 6, 2026, the owner explicitly approved the static workflow transition and publication. This revision removes scheduled NBIS refreshes and push-triggered publishing, retains validation jobs, and makes publishing manual. Preserve security, browser and Terraform validation; do not broaden authorization to unrelated merges, infrastructure, credentials, costs or account changes.
 
 ## Architecture and editing rules
 

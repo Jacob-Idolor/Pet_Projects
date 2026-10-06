@@ -1,4 +1,56 @@
-# StocksWatch launch status — October 2, 2026
+# October 5, 2026: direction changed to Jacob Builds
+
+The owner authorized retiring StocksWatch and reusing stockswatch.cc for a small
+personal site about AI, automation and systems. This supersedes the research-kit
+and paid-product launch plan below. The historical plan remains for reference.
+
+Local implementation: homepage, guides library, three substantive guides,
+resources, About, privacy and retirement notices. Static Astro hosting retained.
+No new recurring services or costs introduced. No deploy, message, account deletion,
+resource deletion, subscription cancellation or newsletter repurposing performed.
+
+October 6 update: the owner explicitly approved the workflow transition and
+publication ("Okay, do that and then publish it"). This release prepares manual-only
+publishing, retires scheduled NBIS fetching, retains all validation jobs and replaces
+the obsolete AdSense/NBIS homepage checklist with static-site policy checks.
+The earlier automatic-review blocker is resolved by that specific authorization.
+Protected-main review/merge requirements remain; publishing must follow validation.
+
+Copy review: the About page's experience and small-business-owner statements match
+the user-supplied prompt. Project-history statements are supported by repository
+and chat history. The new site makes no revenue, traffic or time-saving claims.
+
+Next: validate the isolated release, push the scoped branch, follow protected-main
+review requirements and perform the authorized manual deployment. Review billing separately;
+retiring site pages does not cancel Stripe, Buttondown or Cloudflare services.
+
+---
+
+# StocksWatch launch status — October 5, 2026
+
+## Current local release candidate
+
+The free kit page now includes a keyboard-accessible five-minute exercise and
+worked answer, and the downloadable kit includes the same offline practice.
+The product preview contrasts blank and completed evidence records. The homepage
+separates snapshot retrieval time from the latest daily price date and explains
+missing values. These changes are local, not deployed; public paid-product
+metadata remains edition 1.0.0 and checkout remains closed.
+
+Site validation: 46 unit tests, 25 browser tests, typecheck, offline build,
+release verification and distribution security checks passed. Browser coverage
+includes mobile accessibility and the exercise without JavaScript. An offline
+build does not establish current production data freshness.
+
+Next actions:
+1. Publish this release when deployment is explicitly requested, then verify
+   the production revision, exercise, downloads and data timestamps.
+2. Collect feedback from the owner's existing post; use the October 16 review
+   in DEMAND_VALIDATION.md. No new analytics or paid acquisition is needed.
+3. Before opening sales, verify an independent private product backup, a working
+   support inbox, purchase/refund terms and reliable fulfillment/recovery.
+
+The infrastructure-first lists later in this file are historical and paused.
 
 ## Current priority: validate demand before further spending
 

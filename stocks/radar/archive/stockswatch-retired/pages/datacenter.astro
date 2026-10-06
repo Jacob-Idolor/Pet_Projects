@@ -1,0 +1,21 @@
+---
+/** Legacy URL — AI Data Center is now the homepage. */
+const base = import.meta.env.BASE_URL;
+const dest = base.endsWith("/") ? base : `${base}/`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0;url=${dest}`} />
+    <link rel="canonical" href={dest} />
+    <title>Redirecting to StocksWatch…</title>
+    <script is:inline define:vars={{ dest }}>
+      location.replace(dest);
+    </script>
+  </head>
+  <body>
+    <p>AI Data Center moved to the homepage. <a href={dest}>Continue →</a></p>
+  </body>
+</html>

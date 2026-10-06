@@ -1,13 +1,6 @@
-name: StocksWatch — NBIS daily refresh and deploy
+name: Jacob Builds - publish manually
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "stocks/radar/**"
-      - ".github/workflows/stocks-radar-nbis-daily.yml"
-  schedule:
-    - cron: "30 22 * * *"
   workflow_dispatch:
 
 permissions:
@@ -29,16 +22,6 @@ jobs:
       STOCKS_RADAR_ENV: production
       STOCKS_RADAR_SITE: https://stockswatch.cc
       STOCKS_RADAR_BASE: /
-      SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
-      # Public build-time configuration; unset values keep monetization off.
-      PUBLIC_ADSENSE_CLIENT: ${{ vars.PUBLIC_ADSENSE_CLIENT }}
-      PUBLIC_ADSENSE_CONSENT_READY: ${{ vars.PUBLIC_ADSENSE_CONSENT_READY }}
-      PUBLIC_ADSENSE_ENABLED: ${{ vars.PUBLIC_ADSENSE_ENABLED }}
-      PUBLIC_ADSENSE_SLOT_BOARD: ${{ vars.PUBLIC_ADSENSE_SLOT_BOARD }}
-      PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.PUBLIC_ADSENSE_SLOT_FOOTER }}
-      PUBLIC_ADSENSE_SLOT_HERO: ${{ vars.PUBLIC_ADSENSE_SLOT_HERO }}
-      PUBLIC_ADSENSE_VERIFY_META: ${{ vars.PUBLIC_ADSENSE_VERIFY_META }}
-      PUBLIC_ADSENSE_ALLOW_HERO: ${{ vars.PUBLIC_ADSENSE_ALLOW_HERO }}
     steps:
       - uses: actions/checkout@v5
 
@@ -48,14 +31,8 @@ jobs:
           cache: npm
           cache-dependency-path: stocks/radar/package-lock.json
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
       - name: Install dependencies
-        run: |
-          python -m pip install --require-hashes -r scripts/datacenter/requirements.txt
-          npm ci
+        run: npm ci
 
       - name: Audit npm dependencies
         run: npm run security:deps
@@ -64,14 +41,6 @@ jobs:
         run: |
           npm run typecheck
           npm test
-
-      - name: Fetch strict NBIS snapshot
-        run: npm run update-nbis
-        env:
-          NBIS_STRICT: "1"
-
-      - name: Validate NBIS snapshot
-        run: npm run nbis:quality
 
       - name: Build static site
         run: npm run build
@@ -86,13 +55,24 @@ jobs:
       - name: Scan built bundle for credentials
         run: npm run security:dist
 
+      - name: Verify static publishing policy
+        run: npm run policy:dist
+
+      - name: Install Playwright Chromium
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Verify reader journey
+        run: npm run test:e2e
+        env:
+          CI: "true"
+
       - name: Deploy to Cloudflare Pages
         run: npx --no-install wrangler pages deploy dist --project-name stockswatch-nbis --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Verify deployed revision and freshness
+      - name: Verify deployed pages and revision
         env:
           EXPECTED_GIT_SHA: ${{ github.sha }}
         run: |

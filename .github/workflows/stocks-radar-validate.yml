@@ -1,4 +1,4 @@
-name: Stocks Radar — validate
+name: Jacob Builds - validate
 
 on:
   pull_request:
@@ -53,7 +53,8 @@ jobs:
         run: npm run verify:dist
       - name: Scan built bundle for credentials
         run: npm run security:dist
-      - run: npm run adsense:checklist
+      - name: Verify static publishing policy
+        run: npm run policy:dist
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

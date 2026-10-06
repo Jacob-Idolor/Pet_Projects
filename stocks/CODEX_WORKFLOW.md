@@ -1,34 +1,45 @@
-# StocksWatch Codex workflow
+# Jacob Builds Codex workflow
 
-Codex is the coding agent for StocksWatch. Cursor may remain the editor, but Cursor Chat or Cursor Agent should not edit the same working tree while Codex is working.
+Codex is the coding agent for the small personal site in `stocks/radar/`.
+Do not edit the same worktree concurrently with another agent or editor.
 
-## Scope
+## Scope and current direction
 
-- StocksWatch lives in `stocks/radar/` inside the `Pet_Projects` monorepo.
-- Keep StocksWatch changes inside `stocks/` and the StocksWatch-specific files under `.github/` unless the user explicitly expands the task.
-- Follow `stocks/AGENTS.md` for validation, generated-file, security, and financial-data rules.
+- Follow `stocks/AGENTS.md`, `radar/ARCHITECTURE.md` and the latest section of
+  `radar/LAUNCH_STATUS.md`. The earlier StocksWatch business plan is historical.
+- Keep changes inside `stocks/` and the site's specific parent `.github/` files
+  unless the user expands the scope. Preserve unrelated monorepo and drive-audit work.
+- The reader-facing site uses Astro, TypeScript and Cloudflare Pages. Terraform
+  defines Cloudflare Pages/domain/DNS resources; the old AWS site was retired.
 
-## Normal change flow
+## Local change flow
 
-1. Start from an up-to-date `main` branch with a reviewed working tree.
-2. Create a focused branch named `codex/<short-task-name>`.
-3. Inspect the relevant architecture, source, tests, and workflow files before editing.
-4. Make small, task-focused changes and preserve unrelated work.
-5. Run the narrowest relevant checks during development.
-6. Before handoff, run unit tests, typechecking, and any data-schema checks affected by the change.
-7. For UI, routing, or release-sensitive changes, run an offline build and Playwright tests.
-8. Review the final diff for secrets, generated market data, unintended monorepo changes, and stale documentation.
-9. Commit and push only when requested, then open a pull request.
-10. Merge only after the Stocks Radar validation workflow succeeds.
+1. Read the latest task, check its activity, and inspect the dirty worktree.
+2. Use a focused `codex/<short-task-name>` branch. Preserve existing local work;
+   do not reset, stash, pull over changes or switch away from an active editor.
+3. Inspect source, tests, architecture and workflows before making focused edits.
+4. Run the relevant tests, `npm test` and `npm run typecheck`.
+5. For UI, routing, dependencies or release checks, run the static build,
+   `verify:dist`, `security:dist`, `security:deps` and Playwright suite.
+6. Review the diff for credentials, private products, generated-data changes,
+   unintended monorepo changes and stale guidance. Summarize files and checks.
+7. Commit or push only when requested. Any requested PR must be draft until reviewed.
 
-## Deployment flow
+## Production transition and recovery
 
-- There is **no production deploy** until a host is chosen ([radar/DEPLOY.md](radar/DEPLOY.md)).
-- Codex must not create AWS/Terraform resources, upload to a public origin, send alerts, or publish emails unless the user explicitly requests that action.
-
-## Recovery
-
-- If validation fails, do not merge or deploy; fix the branch and rerun validation.
-- If deployment fails before S3 synchronization, production should remain unchanged; diagnose the workflow before retrying.
-- If deployment changes production but post-deploy checks fail, identify the last known-good commit and prepare a revert through the same branch, validation, and deployment path.
-- Do not make an unreviewed manual S3 or Terraform change as a shortcut around a failed deployment.
+- The owner explicitly approved the static workflow transition and publication
+  on October 6, 2026, after an earlier approval review rejected the transition.
+  This revision removes the scheduled NBIS refresh and publishing on code pushes.
+  Publishing is manual; PR and main-push validation and Terraform checks remain.
+- Protected main still requires the established review/merge process. Present
+  the specific validated draft PR for merge confirmation if a merge is necessary.
+- Retain npm audit, source tests, bundle checks, browser checks and Terraform
+  validation when preparing the replacement publishing flow.
+- No deployment, Terraform apply/destroy, account change, alert, email or billing
+  change without explicit authorization. Do not infer account cancellation from
+  removing a feature on the site.
+- When deployment is requested and the transition is ready, verify all active
+  pages and the expected Git revision with `freshness:live`. This checks the new
+  site's content, not the freshness of retired market data.
+- If a release fails, diagnose it and prepare a reviewed revert through the same
+  validation path. Do not use manual infrastructure changes as a shortcut.
