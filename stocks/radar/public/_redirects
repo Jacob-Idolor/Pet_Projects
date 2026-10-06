@@ -1,0 +1,12 @@
+# Pages can retain removed assets at an edge after a deployment.
+# Send retired URLs to uncached missing paths, where 404.astro handles them.
+# Do not point these at /404.html, which is itself a successful static asset.
+/nbis.json /retired-files/nbis.json 302
+/screener.json /retired-files/screener.json 302
+/dc-movers.json /retired-files/dc-movers.json 302
+/health.json /retired-files/health.json 302
+/settings.json /retired-files/settings.json 302
+/ads.txt /retired-files/ads.txt 302
+/watchlist-board.mjs /retired-files/watchlist-board.mjs 302
+/downloads/* /retired-files/downloads/:splat 302
+/datacenter/* /retired-files/datacenter/:splat 302
