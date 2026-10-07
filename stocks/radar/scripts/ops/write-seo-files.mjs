@@ -28,6 +28,7 @@ const sitemapPages = [
   { path: "/", changefreq: "monthly", priority: "1.0" },
   { path: "/guides", changefreq: "monthly", priority: "0.8" },
   { path: "/resources", changefreq: "monthly", priority: "0.6" },
+  { path: "/consulting", changefreq: "monthly", priority: "0.8" },
   { path: "/about", changefreq: "monthly", priority: "0.5" },
   { path: "/guides/before-you-automate", changefreq: "monthly", priority: "0.8" },
   { path: "/guides/ai-output-you-can-check", changefreq: "monthly", priority: "0.8" },

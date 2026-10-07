@@ -13,6 +13,10 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
 - `/guides`: the complete three-guide library.
 - `/guides/[slug]`: static articles from `src/data/guides.ts`.
 - `/resources`: tools evidenced by this repository, without affiliate links.
+- `/consulting`: the approved $750 USD Monitoring & Alert Health Check, with
+  clearly illustrative examples and assessment boundaries. The inquiry CTA opens
+  the owner's exact public Upwork profile URL in a new tab; there is no email
+  inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy.
 - `/privacy`: current data-handling explanation and legacy-service caveat.
 - Retired research/product URLs: noindex retirement notices with a link to guides.
@@ -35,7 +39,7 @@ but are not imported by active pages. Archived pages and tests are preserved in
 removes retired market data, health/settings feeds, downloads and advertising
 metadata from the distribution. It performs no live market-data requests.
 `verify:dist` checks active routes and excludes retired/private artifacts;
-`security:dist` scans for credentials. `freshness:live` now checks all eight reader-facing pages, valid build metadata
+`security:dist` scans for credentials. `freshness:live` now checks all nine reader-facing pages, valid build metadata
 and the expected revision, not market-data freshness. It rejects missing pages,
 homepage fallbacks, malformed metadata and a different deployed revision. This is only suitable after
 this redesign is deployed. The underlying checker is `check-personal-live.mjs`.

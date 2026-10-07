@@ -1,3 +1,54 @@
+# October 7, 2026 (UTC): consulting page prepared for publication
+
+The owner selected the consulting website as the sole active local task, retained
+Jacob Builds and stockswatch.cc, and approved finishing and publishing it on the
+existing static Cloudflare Pages setup. The isolated branch
+`codex/jacob-builds-consulting` starts from main
+`812454e99754b547f1c9ed1f73df02e91cbfe631`, the previous checked release.
+
+Approved offer: a $750 USD Monitoring & Alert Health Check covering one app or
+environment on one monitoring platform, up to 15 alerts and one existing
+dashboard, five prioritized recommendations, one incident runbook and a 45-minute
+handoff. Timing is estimated at two weeks after agreed inputs. It is assessment
+only: no production changes, on-call coverage or 24/7 service.
+
+Local implementation adds `/consulting`, a homepage introduction and primary
+navigation link, responsive styles, sitemap coverage and release/browser checks.
+Examples are explicitly hypothetical; there are no client, employer,
+certification, measured-result or guaranteed-outcome claims. No unapproved
+secondary service prices, forms, payments, accounts or infrastructure are added.
+
+The owner chose a public Upwork profile link instead of an email inquiry link
+and supplied `https://www.upwork.com/freelancers/~01970b1d2f8e96b33f`. The contact
+CTA uses that exact URL and identifies the new-tab destination. This is a public
+profile link, with no claim that booking or payment has been tested. Do not access
+the restricted Upwork session or send a message. The owner explicitly authorized
+finishing validation and publishing this consulting page on stockswatch.cc.
+The optional Library content pack could not be materialized (HTTP 403); this
+implementation uses the owner-approved scope and existing verified About copy.
+
+Required handoff: record sequential local checks and visual QA, preserve the
+original dirty checkout, then publish only the reviewed, checked revision through
+the existing manual workflow after the exact release revision passes its checks. Other local
+tasks stay paused. No Terraform apply, account/security changes or new costs are
+authorized.
+
+Local verification completed: source typecheck, 61 unit tests run with test
+concurrency one, offline build, production config (explicit stockswatch.cc site
+URL), distribution verification/security/policy checks and dependency audit all
+passed. The audit reported zero vulnerabilities. All 20 browser tests passed on
+the isolated Astro preview with one worker, including the no-JavaScript service
+journey, 320/390/1440px layouts, accessibility checks, direct internal links,
+sitemap/canonical agreement and existing articles. The local release probe passed
+for nine pages and thirteen retired assets with local build metadata.
+Desktop/mobile/narrow screenshots were reviewed. The isolated no-JavaScript
+capture recorded zero external requests, page errors or horizontal overflow.
+The final 20-case browser run includes the exact approved Upwork URL, its new-tab
+notice and safe link attributes. No test navigates to Upwork or sends a message.
+These are local checks and do not establish deployment of the consulting page.
+
+---
+
 # October 6, 2026: published baseline and local reader polish
 
 Jacob Builds is live at stockswatch.cc. The latest verified release is main

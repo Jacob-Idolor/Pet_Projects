@@ -5,6 +5,7 @@ const pages = [
   ["/", "Make room for life."],
   ["/guides", "Before you automate"],
   ["/resources", "A small toolkit."],
+  ["/consulting", "Monitoring &amp; Alert Health Check"],
   ["/about", "Good systems should give something back."],
   ["/privacy", "A short privacy note."],
   ["/guides/before-you-automate", "Before you automate, make the task smaller."],

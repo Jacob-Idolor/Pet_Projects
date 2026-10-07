@@ -9,6 +9,7 @@ const pages = {
   "/": "Make room for life.",
   "/guides": "Before you automate",
   "/resources": "A small toolkit.",
+  "/consulting": "Monitoring &amp; Alert Health Check",
   "/about": "Good systems should give something back.",
   "/privacy": "A short privacy note.",
   "/guides/before-you-automate": "Before you automate, make the task smaller.",
@@ -62,7 +63,8 @@ async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, r
 test("live check verifies the complete static reader journey and revision", async () => {
   const result = await runCheck();
   assert.equal(result.status, 0, result.output);
-  assert.match(result.output, /8 pages/);
+  assert.match(result.output, /9 pages/);
+  assert.ok(result.requests.includes("/consulting"));
   assert.ok(result.requests.includes("/guides/starting-smaller"));
   for (const path of ["/nbis.json", "/downloads/research-workflow-sample.md", "/datacenter/app.js", "/datacenter/map.js", "/datacenter/style.css"]) assert.ok(result.requests.includes(path), path);
 });
@@ -91,6 +93,12 @@ test("live check rejects a partial release with a missing guide", async () => {
   const result = await runCheck({ missingPage: "/guides/ai-output-you-can-check" });
   assert.notEqual(result.status, 0);
   assert.match(result.output, /Page unavailable.*ai-output-you-can-check/);
+});
+
+test("live check rejects a partial release with a missing consulting page", async () => {
+  const result = await runCheck({ missingPage: "/consulting" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Page unavailable.*consulting/);
 });
 
 test("live check rejects a homepage fallback served as a guide", async () => {
