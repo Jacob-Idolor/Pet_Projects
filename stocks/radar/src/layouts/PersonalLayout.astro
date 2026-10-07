@@ -12,7 +12,7 @@ const { title, description, active, noindex = false, article } = Astro.props;
 const canonicalPath = Astro.url.pathname === '/index.html' ? '/' : Astro.url.pathname.replace(/\.html$/, '');
 const canonical = new URL(canonicalPath, Astro.site);
 const authorUrl = new URL('/about', Astro.site);
-const navigation = [['Guides', '/guides'], ['Resources', '/resources'], ['About', '/about']];
+const navigation = [['Guides', '/guides'], ['Resources', '/resources'], ['Consulting', '/consulting'], ['About', '/about']];
 const articleData = article && !noindex ? {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',

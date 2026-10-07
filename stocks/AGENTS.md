@@ -4,8 +4,8 @@
 
 - The active application is `radar/`, a static Astro site.
 - Run application commands from `radar/` unless a task explicitly concerns the repository root.
-- The local release candidate is Jacob Builds: Home, Guides, Resources and About, with three static articles. The owner retired StocksWatch. Read `radar/ARCHITECTURE.md` and the latest section of `radar/LAUNCH_STATUS.md` before continuing.
-- Old research/product routes show noindex retirement notices. Jacob Builds is published; the latest verified baseline is main `204f7f175f229fa7514e907c7cd74bb4e6f31db1`. The owner explicitly approved the reviewed reader/SEO polish publication on October 6. Validate the exact release commit and follow required linear-history integration and manual publishing; do not publish unrelated projects or notes.
+- The local release candidate is Jacob Builds: Home, Guides, Resources, Consulting and About, with three static articles. The owner retired StocksWatch. Read `radar/ARCHITECTURE.md` and the latest section of `radar/LAUNCH_STATUS.md` before continuing.
+- Old research/product routes show noindex retirement notices. Jacob Builds is published; the consulting branch starts from verified main `812454e99754b547f1c9ed1f73df02e91cbfe631`. The owner explicitly approved the reviewed reader/SEO polish publication on October 6 and subsequently approved finishing and publishing the consulting page with the exact supplied public Upwork profile link. Validate the exact release commit and follow required linear-history integration and manual publishing; do not publish unrelated projects or notes.
 - `radar/archive/ai-datacenter-screener/` is retained for local and historical reference; it is not deployed.
 - `stockswatch.cc` uses Cloudflare Pages. `radar/infra/terraform` defines the Pages project, domain attachment and DNS record; the previous AWS site is recorded as destroyed. Local configuration does not verify live resource state or billing. Active workflows live in the parent repository's `.github/` directory.
 

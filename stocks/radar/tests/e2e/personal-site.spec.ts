@@ -1,6 +1,46 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('consulting journey explains the approved assessment without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Consulting', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Clear signals.A practical next step.');
+  await expect(page.locator('.offer-card')).toContainText('$750 USD');
+  await expect(page.locator('.offer-card')).toContainText('One app or environment.');
+  await expect(page.locator('.offer-card')).toContainText('One monitoring platform.');
+  await expect(page.locator('.offer-facts')).toContainText('Up to 15 alerts + 1 dashboard');
+  await expect(page.locator('.offer-facts')).toContainText('45 minutes');
+  await expect(page.locator('.offer-facts')).toContainText('Estimated 2 weeks after agreed inputs');
+  await page.getByRole('link', { name: 'Explore the health check', exact: true }).click();
+  await expect(page).toHaveURL(/#health-check$/);
+  await expect(page.locator('.deliverable')).toHaveCount(5);
+  await expect(page.locator('.scope-note')).toContainText('No production changes, on-call coverage or 24/7 monitoring');
+  await expect(page.getByText('These hypothetical examples', { exact: false })).toContainText('not client work or measured results');
+  await page.getByRole('link', { name: 'Review inquiry details', exact: true }).click();
+  await expect(page).toHaveURL(/#inquiry$/);
+  const profile = page.getByRole('link', { name: 'View my Upwork profile', exact: true });
+  await expect(profile).toBeVisible();
+  await expect(profile).toHaveAttribute('href', 'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f');
+  await expect(profile).toHaveAttribute('target', '_blank');
+  await expect(profile).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect(page.getByText("Opens Jacob's public profile in a new tab.", { exact: false })).toBeVisible();
+  await expect(page.locator('form, iframe, script[src], a[href^="mailto:"]')).toHaveCount(0);
+  await context.close();
+});
+
+for (const width of [320, 1440]) {
+  test(`consulting layout and accessibility at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/consulting');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Consulting', exact: true })).toHaveAttribute('aria-current', 'page');
+    const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    expect(result.violations).toEqual([]);
+  });
+}
+
 test('new reader journey works without JavaScript', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
@@ -14,7 +54,7 @@ test('new reader journey works without JavaScript', async ({ browser, baseURL })
   await context.close();
 });
 
-for (const path of ['/', '/guides', '/resources', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller']) {
+for (const path of ['/', '/guides', '/resources', '/consulting', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller']) {
   test(`mobile accessibility and metadata: ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(path);
@@ -47,7 +87,7 @@ test('retired routes explain the change and private/data files are absent', asyn
 });
 
 test('all internal page links resolve and no third-party scripts are loaded', async ({ page, request }) => {
-  const paths = ['/', '/guides', '/resources', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller'];
+  const paths = ['/', '/guides', '/resources', '/consulting', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller'];
   const links = new Set<string>();
   for (const path of paths) {
     await page.goto(path);
@@ -89,8 +129,8 @@ test('sitemap URLs are direct 200 pages with matching canonicals', async ({ page
   const sitemap = await request.get('/sitemap.xml', { maxRedirects: 0 });
   expect(sitemap.status()).toBe(200);
   const urls = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
-  expect(urls).toHaveLength(8);
-  expect(new Set(urls).size).toBe(8);
+  expect(urls).toHaveLength(9);
+  expect(new Set(urls).size).toBe(9);
   for (const url of urls) {
     const parsed = new URL(url);
     expect(parsed.origin).toBe('https://stockswatch.cc');

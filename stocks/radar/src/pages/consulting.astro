@@ -1,0 +1,67 @@
+---
+import Layout from '../layouts/PersonalLayout.astro';
+import '../styles/consulting.css';
+const deliverables = [
+  { number: '01', title: 'Alert review', detail: 'Review up to 15 alerts for intent, ownership, actionability and overlap.' },
+  { number: '02', title: 'Dashboard review', detail: 'Review one existing dashboard for the questions it answers and the context it leaves out.' },
+  { number: '03', title: 'Five priorities', detail: 'Receive five prioritized recommendations with a reason, a suggested owner and a way to check the change.' },
+  { number: '04', title: 'One incident runbook', detail: 'Receive a practical runbook for one agreed scenario: first checks, escalation and recovery verification.' },
+  { number: '05', title: 'A clear handoff', detail: 'Walk through the findings and next steps in a 45-minute handoff.' },
+];
+const steps = [
+  { title: 'Agree on the scope', detail: 'Choose one app or environment on one monitoring platform and confirm the alerts, dashboard and incident scenario.' },
+  { title: 'Share the agreed inputs', detail: 'Provide approved, sanitized exports or screenshots and the relevant context. Use the minimum information needed; do not send credentials or secrets.' },
+  { title: 'Review the signals', detail: 'Assess the agreed material and write the recommendations and runbook. Timing is estimated at two weeks after the agreed inputs are received.' },
+  { title: 'Make the next step clear', detail: 'Use the handoff to review priorities, assumptions and what your team can verify before implementing any changes.' },
+];
+---
+<Layout title="Monitoring & Alert Health Check" description="A $750 USD assessment of one app or environment: up to 15 alerts, one dashboard, five recommendations, one incident runbook and a 45-minute handoff." active="Consulting">
+  <div class="wrap consulting">
+    <section class="consult-hero" aria-labelledby="consult-title">
+      <div>
+        <p class="eyebrow">Consulting / A focused assessment</p>
+        <h1 id="consult-title">Clear signals.<br /><em>A practical next step.</em></h1>
+        <p class="lead">When an alert fires, your team should know what it means and where to start. Take a focused look at the monitoring you already have, with a small, clearly defined review.</p>
+        <div class="actions"><a class="button" href="#health-check">Explore the health check <span aria-hidden="true">&darr;</span></a><a class="text-link" href="/about">Meet Jacob</a></div>
+        <p class="consult-footnote">Independent consulting in reliability and observability. Practical findings your team can evaluate and implement.</p>
+      </div>
+      <aside class="offer-card" aria-labelledby="offer-title">
+        <p class="eyebrow">One service. A defined scope.</p>
+        <h2 id="offer-title">Monitoring &amp; Alert Health Check</h2>
+        <p class="offer-price">$750 <span>USD</span></p>
+        <p class="offer-summary">One app or environment.<br />One monitoring platform.</p>
+        <dl class="offer-facts"><div><dt>Review</dt><dd>Up to 15 alerts + 1 dashboard</dd></div><div><dt>Handoff</dt><dd>45 minutes</dd></div><div><dt>Timing</dt><dd>Estimated 2 weeks after agreed inputs</dd></div></dl>
+        <a class="text-link" href="#inquiry">Review inquiry details <span aria-hidden="true">&darr;</span></a>
+      </aside>
+    </section>
+
+    <section class="section" id="health-check" aria-labelledby="scope-title">
+      <div class="section-head"><div><p class="eyebrow">What you receive</p><h2 id="scope-title">A review you can act on.</h2></div><p>Five concrete deliverables, with the scope agreed before the assessment begins.</p></div>
+      <div class="deliverables">{deliverables.map(item => <article class="deliverable"><span class="deliverable-number" aria-hidden="true">{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div></article>)}</div>
+      <div class="scope-note"><p><strong>Assessment only.</strong> No production changes, on-call coverage or 24/7 monitoring are included. Your team retains control of implementation and operations.</p></div>
+    </section>
+
+    <section class="section consult-process" aria-labelledby="process-title">
+      <div><p class="eyebrow">How it works</p><h2 id="process-title">Start with what<br />you already have.</h2><p class="consult-muted">No tool migration is needed for this review. The first step is agreeing on a useful, manageable slice of your existing monitoring.</p></div>
+      <ol class="process-list">{steps.map(step => <li><h3>{step.title}</h3><p>{step.detail}</p></li>)}</ol>
+    </section>
+
+    <section class="section" aria-labelledby="sample-title">
+      <div class="section-head"><div><p class="eyebrow">A look at the format</p><h2 id="sample-title">Useful detail. Clear limits.</h2></div><p>These hypothetical examples illustrate the format of a recommendation and runbook. They are not client work or measured results.</p></div>
+      <div class="sample-grid">
+        <article class="sample-card"><p class="eyebrow">Illustrative recommendation</p><h3>An alert without a first step</h3><dl><div><dt>Observation</dt><dd>An example latency alert links to a chart but does not identify an owner or a first diagnostic check.</dd></div><div><dt>Recommendation</dt><dd>Add the responsible team, the relevant dashboard and an initial check for affected requests.</dd></div><div><dt>Verify</dt><dd>Ask a responder unfamiliar with the alert to follow the proposed instructions in a tabletop exercise.</dd></div></dl></article>
+        <article class="sample-card"><p class="eyebrow">Illustrative runbook outline</p><h3>A starting point for elevated latency</h3><ol><li>Confirm the affected service, time window and user impact.</li><li>Check the agreed dashboard and recent changes.</li><li>Record the evidence and escalate to the named owner.</li><li>Verify recovery using the agreed service indicators.</li></ol><p class="small">The delivered runbook would use your agreed scenario and context. This outline is an example, not instructions for a live incident.</p></article>
+      </div>
+    </section>
+
+    <section class="section fit-grid" aria-labelledby="fit-title">
+      <div><p class="eyebrow">Keep the work focused</p><h2 id="fit-title">Is this a useful fit?</h2><p>The health check suits a team with existing monitoring that wants an outside review of a specific app or environment.</p><p>It is most useful when someone on your team can explain the current setup and own the follow-up decisions.</p></div>
+      <div class="fit-details"><h3>Outside this assessment</h3><ul><li>Tool installation, migration or new dashboards</li><li>Production configuration changes or remediation</li><li>Continuous monitoring, emergency response or on-call coverage</li><li>Reviews spanning multiple apps, environments or platforms</li></ul><p class="small">If your needs differ, describe them in the initial inquiry so scope can be clarified before any work is agreed.</p></div>
+    </section>
+
+    <section class="section inquiry" id="inquiry" aria-labelledby="inquiry-title">
+      <div><p class="eyebrow">The next step</p><h2 id="inquiry-title">Begin with a clear scope.</h2><p>For an initial inquiry, describe the app or environment, monitoring platform, main concern and who would join the handoff. Keep the first message high level and leave out sensitive data.</p></div>
+      <aside class="inquiry-note" aria-label="Discuss scope on Upwork"><h3>Continue on Upwork</h3><p>Use my public freelancer profile to discuss scope and availability.</p><a class="button" href="https://www.upwork.com/freelancers/~01970b1d2f8e96b33f" target="_blank" rel="noopener noreferrer">View my Upwork profile <span aria-hidden="true">&nearr;</span></a><p class="small inquiry-link-note">Opens Jacob's public profile in a new tab. Start dates and suitability are confirmed before work is agreed.</p></aside>
+    </section>
+  </div>
+</Layout>
