@@ -1,3 +1,42 @@
+# Jacob Builds newsletter readiness — October 10, 2026
+
+The published Jacob Builds site has no newsletter signup form or email funnel.
+The NBIS Close setup below is historical, from the retired StocksWatch product.
+Do not reconnect that form or reuse its consent copy for the new AI, automation
+and systems content without deciding the newsletter's identity and audience.
+
+The owner subsequently approved the personal newsletter identity Jsol’s Space.
+Its public name and description were saved in the existing authenticated Buttondown
+session and verified at https://buttondown.com/stockwatch. The public username
+remains `stockwatch`. This newsletter covers gaming, writing, everyday life and
+creative interests; it is separate from the website's consulting offer.
+Sender verification, confirmation, welcome and unsubscribe behavior still need
+account review and an approved consenting test recipient. No subscriber addresses,
+credentials, contact imports or emails were accessed or sent.
+
+Before adding an optional newsletter link or form:
+
+1. Before adding a website link, confirm how Jsol’s Space relates to Jacob Builds
+   and describe its personal topics accurately. No cadence has been promised.
+2. Inspect sender mailbox/domain verification, confirmation settings, welcome copy
+   and unsubscribe footer. DNS, credential, billing and access changes require
+   separate authorization; do not create a replacement account.
+3. Keep legacy NBIS subscribers' expectations intact. Do not silently repurpose
+   their subscriptions for a different subject or import contacts.
+4. Prefer a simple optional hosted-page link, or an accessible native HTML POST
+   form using Buttondown's documented embed endpoint. State the publication/topics,
+   provider and unsubscribe option beside signup; update Privacy accurately.
+5. Update the current no-form policy checks deliberately if a form is approved.
+   Test the POST with local interception first. A real signup/confirmation test
+   needs approval for the exact recipient and action; it sends personal data/email.
+
+Official integration reference:
+https://docs.buttondown.com/building-your-subscriber-base
+
+---
+
+## Historical NBIS Close setup (not the current website)
+
 # NBIS Close — Buttondown signup
 
 The owner has selected Buttondown and reports the account/domain setup is complete.
