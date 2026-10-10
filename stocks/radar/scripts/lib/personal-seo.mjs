@@ -1,5 +1,7 @@
 import { SaxesParser } from "saxes";
 
+const trimAscii = value => value.replace(/^[\t\n\v\f\r ]+|[\t\n\v\f\r ]+$/g, "");
+
 // Site release policy: default crawlers, Googlebot and Bingbot must be able to
 // crawl reader routes and discovery endpoints. Named groups replace '*'.
 // Matching follows Google's documented prefix, wildcard, anchor and tie rules:
@@ -15,15 +17,15 @@ function normalizePath(path) {
 export function validateRobots(text, site, paths) {
   const groups = []; const sitemaps = []; let group;
   for (const raw of text.replace(/^\uFEFF/, "").split(/\r\n|\r|\n/)) {
-    const line = raw.split("#", 1)[0].trim();
-    const match = /^([a-z-]+)\s*:\s*(.*?)\s*$/i.exec(line);
+    const line = trimAscii(raw.split("#", 1)[0]);
+    const match = /^([a-z-]+)[\t\v\f ]*:[\t\v\f ]*(.*?)[\t\v\f ]*$/i.exec(line);
     if (!match) continue;
     const [, field, value] = match;
     const key = field.toLowerCase();
     if (key === "sitemap") sitemaps.push(value);
     if (key === "user-agent" && value) {
       if (!group || group.rules.length) { group = { agents: [], rules: [] }; groups.push(group); }
-      group.agents.push(/^\*(?:\s|$)/.test(value) ? "*" : value.match(/^[a-z_-]+/i)?.[0].toLowerCase());
+      group.agents.push(/^\*(?:[\t\v\f\r\n ]|$)/.test(value) ? "*" : value.match(/^[a-z_-]+/i)?.[0].toLowerCase());
     } else if ((key === "allow" || key === "disallow") && group) {
       // Empty rules still terminate the agent header of their group.
       group.rules.push({ allow: key === "allow", path: value });
