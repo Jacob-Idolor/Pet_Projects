@@ -43,6 +43,11 @@ metadata from the distribution. It performs no live market-data requests.
 and the expected revision, plus the exact public robots and nine-route sitemap endpoints, not market-data freshness. It rejects missing pages,
 homepage fallbacks, malformed metadata and a different deployed revision. This is only suitable after
 this redesign is deployed. The underlying checker is `check-personal-live.mjs`.
+Its SEO helper uses strict namespace-aware XML parsing for complete `urlset > url > loc`
+entries. Robots validation checks actual reader and discovery paths for the default
+group, Googlebot and Bingbot, merging repeated named groups without inheriting the
+wildcard group. Prefix/wildcard/anchor matching uses longest-rule precedence with
+Allow winning ties; unrelated crawler and private-path restrictions remain valid.
 
 Run npm test, npm run typecheck, npm run build, npm run verify:dist,
 npm run security:dist, npm run policy:dist and npm run test:e2e for release verification.
