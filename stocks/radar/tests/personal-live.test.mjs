@@ -173,6 +173,8 @@ for (const [name, directives] of [
   ["root wildcard priority", "User-agent: *\nAllow: /\nDisallow: /*"],
   ["spaced Googlebot token", "User-agent: *\nAllow: /\nUser-agent: Googlebot Images\nDisallow: /guides"],
   ["tabbed Bingbot token", "User-agent: *\nAllow: /\nUser-agent: Bingbot\tImages\nDisallow: /about"],
+  ["non-ASCII space cannot create an allowing wildcard group", "User-agent: *\u00a0all\nAllow: /\nUser-agent: *\nDisallow: /"],
+  ["non-ASCII leading space cannot create an allowing wildcard group", "\u00a0User-agent: *\nAllow: /\nUser-agent: *\nDisallow: /"],
 ]) {
   test(`live check rejects robots: ${name}`, async () => {
     const result = await runCheck({ robotsBody: site => `${directives}\nSitemap: ${site}/sitemap.xml\n` });
