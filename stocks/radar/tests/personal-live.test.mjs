@@ -17,12 +17,18 @@ const pages = {
   "/guides/starting-smaller": "When the side project becomes the work.",
 };
 
-async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset, injected404 } = {}) {
+async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset, injected404, brokenRobots, brokenSitemap, missingSitemapPage, redirectSitemap } = {}) {
   const requests = [];
   const server = createServer((request, response) => {
     const path = new URL(request.url, "http://localhost").pathname;
     requests.push(path);
-    if (path === retainedAsset && !new URL(request.url, "http://localhost").search) {
+    if (path === "/robots.txt") {
+      response.end(brokenRobots ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nAllow: /\nSitemap: http://127.0.0.1:${server.address().port}/sitemap.xml\n`);
+    } else if (path === "/sitemap.xml") {
+      if (redirectSitemap) return response.writeHead(302, { Location: "/" }).end();
+      const urls = Object.keys(pages).filter(path => path !== missingSitemapPage).map(path => `<url><loc>http://127.0.0.1:${server.address().port}${path}</loc></url>`).join("");
+      response.end(brokenSitemap ? "<html>Homepage fallback</html>" : `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+    } else if (path === retainedAsset && !new URL(request.url, "http://localhost").search) {
       response.end("Retained legacy asset");
     } else if (path === redirectAsset) {
       response.writeHead(302, { Location: "/retired-files/missing" }).end();
@@ -125,4 +131,28 @@ test("live check rejects an injected script on a final 404 response", async () =
   const result = await runCheck({ injected404: true });
   assert.notEqual(result.status, 0);
   assert.match(result.output, /Unexpected script or interactive embed on retired response/);
+});
+
+test("live check rejects robots that block indexing", async () => {
+  const result = await runCheck({ brokenRobots: true });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Unexpected robots directives/);
+});
+
+test("live check rejects a sitemap homepage fallback", async () => {
+  const result = await runCheck({ brokenSitemap: true });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Sitemap is not a sitemap XML document/);
+});
+
+test("live check rejects a sitemap missing an active route", async () => {
+  const result = await runCheck({ missingSitemapPage: "/consulting" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Sitemap does not match the active reader routes/);
+});
+
+test("live check rejects a redirect at the submitted sitemap URL", async () => {
+  const result = await runCheck({ redirectSitemap: true });
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /Sitemap unavailable \(HTTP 302\)/);
 });

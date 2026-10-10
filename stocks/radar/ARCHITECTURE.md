@@ -40,7 +40,7 @@ removes retired market data, health/settings feeds, downloads and advertising
 metadata from the distribution. It performs no live market-data requests.
 `verify:dist` checks active routes and excludes retired/private artifacts;
 `security:dist` scans for credentials. `freshness:live` now checks all nine reader-facing pages, valid build metadata
-and the expected revision, not market-data freshness. It rejects missing pages,
+and the expected revision, plus the exact public robots and nine-route sitemap endpoints, not market-data freshness. It rejects missing pages,
 homepage fallbacks, malformed metadata and a different deployed revision. This is only suitable after
 this redesign is deployed. The underlying checker is `check-personal-live.mjs`.
 

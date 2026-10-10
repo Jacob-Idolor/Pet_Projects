@@ -27,6 +27,31 @@ for (const [path, marker] of pages) {
   }
 }
 
+// Verify the exact public SEO URLs Google fetches, without masking edge failures.
+const robotsResponse = await fetch(`${site}/robots.txt`, {
+  redirect: "manual", signal: AbortSignal.timeout(15000),
+});
+if (robotsResponse.status !== 200) throw new Error(`Robots unavailable (HTTP ${robotsResponse.status})`);
+const robots = await robotsResponse.text();
+if (!/^User-agent:\s*\*\s*$/im.test(robots) || !/^Allow:\s*\/\s*$/im.test(robots) ||
+    /^Disallow:\s*\/\s*$/im.test(robots) || !robots.includes(`Sitemap: ${site}/sitemap.xml`)) {
+  throw new Error("Unexpected robots directives or sitemap target");
+}
+const sitemapResponse = await fetch(`${site}/sitemap.xml`, {
+  redirect: "manual", signal: AbortSignal.timeout(15000),
+});
+if (sitemapResponse.status !== 200) throw new Error(`Sitemap unavailable (HTTP ${sitemapResponse.status})`);
+const sitemap = await sitemapResponse.text();
+if (!/<urlset\b[^>]*xmlns=["']http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9["']/.test(sitemap)) {
+  throw new Error("Sitemap is not a sitemap XML document");
+}
+const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+const expectedUrls = pages.map(([path]) => `${site}${path}`);
+if (urls.length !== expectedUrls.length || new Set(urls).size !== urls.length ||
+    expectedUrls.some(url => !urls.includes(url))) {
+  throw new Error("Sitemap does not match the active reader routes");
+}
+
 // Do not cache-bust these requests: retained legacy assets can return 200 only
 // at their original URL, while a query-string URL correctly returns 404.
 const retiredAssets = [
@@ -62,4 +87,4 @@ if (!meta || typeof meta.gitSha !== "string" || !meta.gitSha.trim() ||
 if (process.env.EXPECTED_GIT_SHA && meta.gitSha !== process.env.EXPECTED_GIT_SHA) {
   throw new Error("Deployed revision does not match");
 }
-console.log(`Personal site verified: ${pages.length} pages, ${retiredAssets.length} retired assets and build revision ${meta.gitSha}.`);
+console.log(`Personal site verified: ${pages.length} pages, robots and sitemap, ${retiredAssets.length} retired assets and build revision ${meta.gitSha}.`);
