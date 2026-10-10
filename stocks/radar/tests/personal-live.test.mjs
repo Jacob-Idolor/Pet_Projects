@@ -17,17 +17,18 @@ const pages = {
   "/guides/starting-smaller": "When the side project becomes the work.",
 };
 
-async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset, injected404, brokenRobots, brokenSitemap, missingSitemapPage, redirectSitemap } = {}) {
+async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, retainedAsset, redirectAsset, injected404, brokenRobots, brokenSitemap, missingSitemapPage, redirectSitemap, robotsBody, sitemapTransform } = {}) {
   const requests = [];
   const server = createServer((request, response) => {
     const path = new URL(request.url, "http://localhost").pathname;
     requests.push(path);
     if (path === "/robots.txt") {
-      response.end(brokenRobots ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nAllow: /\nSitemap: http://127.0.0.1:${server.address().port}/sitemap.xml\n`);
+      response.end(robotsBody ? robotsBody(`http://127.0.0.1:${server.address().port}`) : brokenRobots ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nAllow: /\nSitemap: http://127.0.0.1:${server.address().port}/sitemap.xml\n`);
     } else if (path === "/sitemap.xml") {
       if (redirectSitemap) return response.writeHead(302, { Location: "/" }).end();
       const urls = Object.keys(pages).filter(path => path !== missingSitemapPage).map(path => `<url><loc>http://127.0.0.1:${server.address().port}${path}</loc></url>`).join("");
-      response.end(brokenSitemap ? "<html>Homepage fallback</html>" : `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+      const xml = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
+      response.end(sitemapTransform ? sitemapTransform(xml) : brokenSitemap ? "<html>Homepage fallback</html>" : xml);
     } else if (path === retainedAsset && !new URL(request.url, "http://localhost").search) {
       response.end("Retained legacy asset");
     } else if (path === redirectAsset) {
@@ -155,4 +156,67 @@ test("live check rejects a redirect at the submitted sitemap URL", async () => {
   const result = await runCheck({ redirectSitemap: true });
   assert.notEqual(result.status, 0);
   assert.match(result.output, /Sitemap unavailable \(HTTP 302\)/);
+});
+
+for (const [name, directives] of [
+  ["narrow guide prefix", "User-agent: *\nAllow: /\nDisallow: /guides"],
+  ["wildcard blocks reader routes", "User-agent: *\nDisallow: /*"],
+  ["anchored wildcard", "User-agent: *\nAllow: /\nDisallow: /*smaller$"],
+  ["percent-encoded guide prefix", "User-agent: *\nAllow: /\nDisallow: /%67uides"],
+  ["Googlebot-specific block", "User-agent: *\nAllow: /\nUser-agent: Googlebot\nDisallow: /consulting"],
+  ["merged Googlebot groups", "User-agent: *\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: Googlebot\nDisallow: /guides"],
+  ["Googlebot does not inherit wildcard Allow", "User-agent: *\nAllow: /guides\nUser-agent: Googlebot*\nDisallow: /guides"],
+  ["Bingbot-specific block", "User-agent: *\nAllow: /\nUser-agent: Bingbot\nDisallow: /about"],
+  ["consecutive agents share rules", "User-agent: *\nAllow: /\nUser-agent: Otherbot\nSitemap: https://example.com/other.xml\nUser-agent: Googlebot\nDisallow: /about"],
+  ["sitemap is crawlable", "User-agent: *\nAllow: /\nDisallow: /sitemap.xml$"],
+]) {
+  test(`live check rejects robots: ${name}`, async () => {
+    const result = await runCheck({ robotsBody: site => `${directives}\nSitemap: ${site}/sitemap.xml\n` });
+    assert.notEqual(result.status, 0, result.output);
+    assert.match(result.output, /Unexpected robots directives/);
+  });
+}
+
+for (const [name, directives] of [
+  ["comments, case and empty restrictions", "\uFEFFuSeR-aGeNt: * # all\r\nDisallow:\r\nAllow: / # readers"],
+  ["unrelated path restrictions", "User-agent: *\nDisallow: /private\nDisallow: /GUIDES"],
+  ["specific allow beats broad block", "User-agent: *\nDisallow: /guides\nAllow: /guides$\nAllow: /guides/"],
+  ["allow wins equal-length conflicts", "User-agent: *\nAllow: /guides\nDisallow: /guides\nAllow: /\nDisallow: /*"],
+  ["wildcard does not combine with named group", "User-agent: *\nAllow: /guides\nDisallow: /guides\nUser-agent: Googlebot\nDisallow: /private"],
+  ["nonmatching end anchor", "User-agent: *\nAllow: /\nDisallow: /guide$"],
+  ["unrelated crawler restrictions", "User-agent: *\nAllow: /\nUser-agent: Otherbot\nDisallow: /"],
+]) {
+  test(`live check accepts robots: ${name}`, async () => {
+    const result = await runCheck({ robotsBody: site => `${directives}\nSitemap: ${site}/sitemap.xml\n` });
+    assert.equal(result.status, 0, result.output);
+  });
+}
+
+for (const [name, transform] of [
+  ["truncated after all locations", xml => xml.slice(0, -15)],
+  ["locations outside url entries", xml => xml.replaceAll("<url>", "").replaceAll("</url>", "")],
+  ["mismatched closing tag", xml => xml.replace("</url>", "</wrong>")],
+  ["undeclared entity", xml => xml.replace("<loc>", "<loc>&unknown;")],
+  ["duplicate root attribute", xml => xml.replace("<urlset ", '<urlset test="1" test="2" ')],
+  ["wrong child namespace", xml => xml.replace("<url>", '<url xmlns="https://example.com/not-sitemap">')],
+  ["multiple locations per entry", xml => xml.replace("</loc>", "</loc><loc>https://example.com/extra</loc>")],
+  ["entry without location", xml => xml.replace("</urlset>", "<url><lastmod>2026-10-10</lastmod></url></urlset>")],
+  ["extra root", xml => xml + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>'],
+  ["DTD", xml => '<!DOCTYPE urlset [<!ENTITY x "https://example.com/">]>' + xml],
+]) {
+  test(`live check rejects sitemap XML: ${name}`, async () => {
+    const result = await runCheck({ sitemapTransform: transform });
+    assert.notEqual(result.status, 0, result.output);
+    assert.match(result.output, /Sitemap is not a sitemap XML document/);
+  });
+}
+
+test("live check accepts complete namespace-prefixed XML with metadata, comments and decoded location text", async () => {
+  const result = await runCheck({ sitemapTransform: xml => '<?xml version="1.0"?>\n<!-- generated -->' + xml
+    .replace('xmlns=', 'xmlns:s=')
+    .replace(/<(\/?)(urlset|url|loc)(?=[ >])/g, '<$1s:$2')
+    .replaceAll('<s:loc>', '<s:loc> \n')
+    .replaceAll('</s:loc>', '\n </s:loc><s:lastmod>2026-10-10</s:lastmod>')
+    .replaceAll('http://', 'http:&#47;&#47;') });
+  assert.equal(result.status, 0, result.output);
 });

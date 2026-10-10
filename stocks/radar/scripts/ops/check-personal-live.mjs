@@ -1,4 +1,5 @@
 /** Read-only post-deploy checks for the static personal site. */
+import { validateRobots, parseSitemap } from "../lib/personal-seo.mjs";
 const site = (process.argv[2] || "https://stockswatch.cc").replace(/\/$/, "");
 const revision = Date.now();
 const pages = [
@@ -33,19 +34,13 @@ const robotsResponse = await fetch(`${site}/robots.txt`, {
 });
 if (robotsResponse.status !== 200) throw new Error(`Robots unavailable (HTTP ${robotsResponse.status})`);
 const robots = await robotsResponse.text();
-if (!/^User-agent:\s*\*\s*$/im.test(robots) || !/^Allow:\s*\/\s*$/im.test(robots) ||
-    /^Disallow:\s*\/\s*$/im.test(robots) || !robots.includes(`Sitemap: ${site}/sitemap.xml`)) {
-  throw new Error("Unexpected robots directives or sitemap target");
-}
+validateRobots(robots, site, [...pages.map(([path]) => path), "/robots.txt", "/sitemap.xml"]);
 const sitemapResponse = await fetch(`${site}/sitemap.xml`, {
   redirect: "manual", signal: AbortSignal.timeout(15000),
 });
 if (sitemapResponse.status !== 200) throw new Error(`Sitemap unavailable (HTTP ${sitemapResponse.status})`);
 const sitemap = await sitemapResponse.text();
-if (!/<urlset\b[^>]*xmlns=["']http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9["']/.test(sitemap)) {
-  throw new Error("Sitemap is not a sitemap XML document");
-}
-const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+const urls = parseSitemap(sitemap);
 const expectedUrls = pages.map(([path]) => `${site}${path}`);
 if (urls.length !== expectedUrls.length || new Set(urls).size !== urls.length ||
     expectedUrls.some(url => !urls.includes(url))) {
