@@ -169,6 +169,10 @@ for (const [name, directives] of [
   ["Bingbot-specific block", "User-agent: *\nAllow: /\nUser-agent: Bingbot\nDisallow: /about"],
   ["consecutive agents share rules", "User-agent: *\nAllow: /\nUser-agent: Otherbot\nSitemap: https://example.com/other.xml\nUser-agent: Googlebot\nDisallow: /about"],
   ["sitemap is crawlable", "User-agent: *\nAllow: /\nDisallow: /sitemap.xml$"],
+  ["trailing wildcard priority", "User-agent: *\nAllow: /guides/\nDisallow: /guides/*"],
+  ["root wildcard priority", "User-agent: *\nAllow: /\nDisallow: /*"],
+  ["spaced Googlebot token", "User-agent: *\nAllow: /\nUser-agent: Googlebot Images\nDisallow: /guides"],
+  ["tabbed Bingbot token", "User-agent: *\nAllow: /\nUser-agent: Bingbot\tImages\nDisallow: /about"],
 ]) {
   test(`live check rejects robots: ${name}`, async () => {
     const result = await runCheck({ robotsBody: site => `${directives}\nSitemap: ${site}/sitemap.xml\n` });
@@ -181,7 +185,9 @@ for (const [name, directives] of [
   ["comments, case and empty restrictions", "\uFEFFuSeR-aGeNt: * # all\r\nDisallow:\r\nAllow: / # readers"],
   ["unrelated path restrictions", "User-agent: *\nDisallow: /private\nDisallow: /GUIDES"],
   ["specific allow beats broad block", "User-agent: *\nDisallow: /guides\nAllow: /guides$\nAllow: /guides/"],
-  ["allow wins equal-length conflicts", "User-agent: *\nAllow: /guides\nDisallow: /guides\nAllow: /\nDisallow: /*"],
+  ["allow wins equal-length conflicts", "User-agent: *\nAllow: /guides\nDisallow: /guides\nAllow: /*\nDisallow: /*"],
+  ["longer trailing wildcard Allow", "User-agent: *\nDisallow: /guides/\nAllow: /guides/*"],
+  ["spaced wildcard group", "User-agent: * all crawlers\nAllow: /"],
   ["wildcard does not combine with named group", "User-agent: *\nAllow: /guides\nDisallow: /guides\nUser-agent: Googlebot\nDisallow: /private"],
   ["nonmatching end anchor", "User-agent: *\nAllow: /\nDisallow: /guide$"],
   ["unrelated crawler restrictions", "User-agent: *\nAllow: /\nUser-agent: Otherbot\nDisallow: /"],
