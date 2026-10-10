@@ -42,7 +42,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@playwright/test": "^1.53.1",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.6.4",
     "saxes": "6.0.0",
     "typescript": "^7.0.2",
     "wrangler": "4.146.0"
