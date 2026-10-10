@@ -23,7 +23,7 @@ export function validateRobots(text, site, paths) {
     if (key === "sitemap") sitemaps.push(value);
     if (key === "user-agent" && value) {
       if (!group || group.rules.length) { group = { agents: [], rules: [] }; groups.push(group); }
-      group.agents.push(value === "*" ? "*" : value.toLowerCase().split(/[*/]/, 1)[0]);
+      group.agents.push(/^\*(?:\s|$)/.test(value) ? "*" : value.match(/^[a-z_-]+/i)?.[0].toLowerCase());
     } else if ((key === "allow" || key === "disallow") && group) {
       // Empty rules still terminate the agent header of their group.
       group.rules.push({ allow: key === "allow", path: value });
@@ -40,8 +40,9 @@ export function validateRobots(text, site, paths) {
       let longest = -1; let allowed = true;
       for (const rule of rules) {
         if (!rule.path.startsWith("/")) continue;
-        // Google treats trailing '*' as equivalent to a prefix without it.
-        const pattern = normalizePath(rule.path).replace(/\*+$/, "");
+        // Google's matcher ranks the original pattern, including trailing '*'.
+        // https://github.com/google/robotstxt/blob/master/robots.cc#L642-L649
+        const pattern = normalizePath(rule.path);
         const anchored = pattern.endsWith("$");
         const body = anchored ? pattern.slice(0, -1) : pattern;
         const expression = body.split("*").map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*");
