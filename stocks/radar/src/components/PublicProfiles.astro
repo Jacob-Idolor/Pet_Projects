@@ -1,20 +1,41 @@
 ---
 // Public URLs supplied and verified by the owner. Add another profile only after
 // its public identity and destination have been confirmed.
-const profiles = [
-  { name: 'Upwork', url: 'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f' },
-  { name: 'Guru', url: 'https://www.guru.com/freelancers/jacob-idolor' },
+const personalProfiles = [
+  { name: 'Twitch', identity: 'jakecuzzi', url: 'https://www.twitch.tv/jakecuzzi', action: 'Visit channel' },
+  { name: 'YouTube', identity: '@MrJakecuzzi', url: 'https://www.youtube.com/@MrJakecuzzi', action: 'Visit channel' },
+  { name: 'LinkedIn', identity: 'Jacob Idolor', url: 'https://www.linkedin.com/in/jacob-idolor/', action: 'View profile' },
+  { name: 'Instagram', identity: '@jakejustjacob', url: 'https://www.instagram.com/jakejustjacob/', action: 'View profile' },
+];
+const consultingProfiles = [
+  { name: 'Upwork', identity: 'Jacob Idolor', url: 'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f', action: 'View profile' },
+  { name: 'Guru', identity: 'Jacob Idolor', url: 'https://www.guru.com/freelancers/jacob-idolor', action: 'View profile' },
 ];
 ---
-<section id="profiles" aria-labelledby="profiles-title">
-  <h2 id="profiles-title">Profiles and services</h2>
-  <p>Explore my <a href="/consulting">Monitoring &amp; Alert Health Check</a> for the service scope and deliverables. You can also find me on these freelance platforms.</p>
+<section id="profiles" aria-labelledby="profiles-title" tabindex="-1">
+  <h2 id="profiles-title">Connect with Jacob</h2>
+  <p>Find my personal channels and social profiles, or connect about consulting through Upwork or Guru.</p>
+  <h3>Personal channels and socials</h3>
   <ul class="profile-links">
-    {profiles.map(profile => (
+    {personalProfiles.map(profile => (
       <li>
         <a href={profile.url} target="_blank" rel="noopener noreferrer">
-          <span>{profile.name}</span>
-          <span class="profile-action">View my public profile <span aria-hidden="true">↗</span></span>
+          <span class="profile-platform">{profile.name}</span>
+          <span class="profile-identity">{profile.identity}</span>
+          <span class="profile-action">{profile.action} <span aria-hidden="true">&nearr;</span></span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <h3>Consulting</h3>
+  <p>Explore my <a href="/consulting">Monitoring &amp; Alert Health Check</a> for the service scope and deliverables.</p>
+  <ul class="profile-links">
+    {consultingProfiles.map(profile => (
+      <li>
+        <a href={profile.url} target="_blank" rel="noopener noreferrer">
+          <span class="profile-platform">{profile.name}</span>
+          <span class="profile-identity">{profile.identity}</span>
+          <span class="profile-action">{profile.action} <span aria-hidden="true">&nearr;</span></span>
         </a>
       </li>
     ))}
@@ -22,11 +43,13 @@ const profiles = [
   <p class="small">Profiles open in a new tab. Discuss scope and availability on your preferred platform before starting a project.</p>
 </section>
 <style>
+  #profiles { scroll-margin-top: 24px; }
   ul.profile-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; list-style: none; padding: 0; margin: 24px 0 18px; }
   .profile-links li { margin: 0; }
   .profile-links a { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); border-radius: 5px; padding: 20px; background: #faf9f5; text-decoration: none; }
   .profile-links a:hover { border-color: var(--blue); }
-  .profile-links a > span:first-child { font-weight: 700; }
+  .profile-platform { font-weight: 700; }
+  .profile-identity { color: var(--muted); overflow-wrap: anywhere; }
   .profile-action { color: var(--muted); font-size: .85rem; }
   @media (max-width: 480px) { ul.profile-links { grid-template-columns: 1fr; } }
 </style>

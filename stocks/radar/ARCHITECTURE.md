@@ -2,14 +2,15 @@
 
 ## Purpose and scope
 
-Jacob Builds is a small personal site about practical AI, automation and systems.
+Jacob Builds is Jacob's personal home base for consulting, public personal
+channels and practical AI, automation and systems notes.
 It reuses stockswatch.cc and the existing static Astro/TypeScript application and
 Cloudflare Pages hosting. The owner explicitly retired the StocksWatch product
 on October 5, 2026. There are no new services, accounts, databases or payments.
 
 ## Active pages
 
-- `/`: introduction, three guide cards and author context.
+- `/`: introduction, prominent Connect action, three guide cards and author context.
 - `/guides`: the complete three-guide library.
 - `/guides/[slug]`: static articles from `src/data/guides.ts`.
 - `/resources`: tools evidenced by this repository, without affiliate links.
@@ -17,7 +18,12 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   clearly illustrative examples and assessment boundaries. The inquiry CTA opens
   the owner's exact public Upwork profile URL in a new tab; there is no email
   inquiry link, embedded form, booking system or payment integration.
-- `/about`: owner-provided professional background and project philosophy.
+- `/about`: owner-provided professional background and project philosophy, plus
+  a Connect section with verified personal Twitch, YouTube, LinkedIn and Instagram
+  destinations and the existing Guru/Upwork consulting profiles. The header and
+  home hero link directly to `/about#profiles`; platform links open in a new tab.
+  There are no channel embeds, live-status badges, highlight placeholders or
+  new visitor/click analytics.
 - `/privacy`: current data-handling explanation and legacy-service caveat.
 - Retired research/product URLs: noindex retirement notices with a link to guides.
 
