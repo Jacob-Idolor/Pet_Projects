@@ -1,6 +1,37 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('Connect reaches the approved public profiles by keyboard without JavaScript', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/');
+  await expect(page.getByRole('link', { name: 'Connect with Jacob', exact: true })).toHaveAttribute('href', '/about#profiles');
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Connect', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/about#profiles$/);
+  const profiles = page.getByRole('region', { name: 'Connect with Jacob', exact: true });
+  await expect(profiles).toBeVisible();
+  await expect(profiles).toBeFocused();
+  const destinations = [
+    'https://www.twitch.tv/jakecuzzi',
+    'https://www.youtube.com/@MrJakecuzzi',
+    'https://www.linkedin.com/in/jacob-idolor/',
+    'https://www.instagram.com/jakejustjacob/',
+    'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f',
+    'https://www.guru.com/freelancers/jacob-idolor',
+  ];
+  const links = profiles.locator('a[href^="https://"]');
+  expect(await links.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual(destinations);
+  for (const link of await links.all()) {
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  }
+  await page.keyboard.press('Tab');
+  await expect(links.first()).toBeFocused();
+  await expect(page.locator('form, iframe, script[src]')).toHaveCount(0);
+  await context.close();
+});
+
 test('consulting journey explains the approved assessment without JavaScript', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
