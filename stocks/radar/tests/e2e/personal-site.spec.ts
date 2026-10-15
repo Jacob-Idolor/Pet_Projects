@@ -5,6 +5,8 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('/');
+  await expect(page).toHaveTitle('Jacob · J Sol');
+  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(3);
   await expect(page.getByRole('link', { name: 'Connect with Jacob', exact: true })).toHaveAttribute('href', '/about#profiles');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Connect', exact: true }).focus();
   await page.keyboard.press('Enter');
@@ -15,8 +17,8 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   const destinations = [
     'https://www.twitch.tv/jakecuzzi',
     'https://www.youtube.com/@MrJakecuzzi',
-    'https://www.linkedin.com/in/jacob-idolor/',
     'https://www.instagram.com/jakejustjacob/',
+    'https://www.linkedin.com/in/jacob-idolor/',
     'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f',
     'https://www.guru.com/freelancers/jacob-idolor',
   ];
@@ -28,6 +30,13 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   }
   await page.keyboard.press('Tab');
   await expect(links.first()).toBeFocused();
+  const consulting = profiles.locator('details');
+  await expect(consulting).not.toHaveAttribute('open');
+  await consulting.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(consulting.getByRole('link', { name: 'Upwork', exact: true })).toBeVisible();
+  await expect(consulting.getByRole('link', { name: 'Guru', exact: true })).toBeVisible();
+  await expect(consulting.getByRole('link', { name: 'Monitoring & Alert Health Check', exact: true })).toHaveAttribute('href', '/consulting');
   await expect(page.locator('form, iframe, script[src]')).toHaveCount(0);
   await context.close();
 });
@@ -76,7 +85,7 @@ test('new reader journey works without JavaScript', async ({ browser, baseURL })
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Make room for life.');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText("Hi, I'm Jacob.");
   await page.getByRole('link', { name: 'Explore the guides' }).click();
   await expect(page.locator('article.card')).toHaveCount(3);
   await page.getByRole('heading', { name: 'Before you automate, make the task smaller.' }).getByRole('link').click();
@@ -90,6 +99,7 @@ for (const path of ['/', '/guides', '/resources', '/consulting', '/about', '/pri
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(path);
     await expect(page.locator('h1')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', 'J Sol');
     await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', path.startsWith('/guides/') ? 'article' : 'website');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://stockswatch.cc${path}`);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

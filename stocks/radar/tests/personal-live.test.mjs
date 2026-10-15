@@ -43,7 +43,7 @@ async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, r
     } else if (pages[path]) {
       const text = path === fallbackPage ? pages["/"] : pages[path];
       const script = injectedScript && path === "/" ? '<script src="https://static.cloudflareinsights.com/beacon.min.js"></script>' : "";
-      response.end(`<html><title>Jacob Builds</title><h1>${text}</h1>${script}</html>`);
+      response.end(`<html><title>J Sol</title><h1>${text}</h1>${script}</html>`);
     } else {
       response.writeHead(404).end(injected404 ? '<html><script src="https://static.cloudflareinsights.com/beacon.min.js"></script></html>' : "Not found");
     }
