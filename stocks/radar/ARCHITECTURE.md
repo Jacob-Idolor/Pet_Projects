@@ -30,7 +30,11 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
 `src/data/profiles.ts` is the shared inventory of owner-confirmed public URLs;
 `SocialChannels.astro` renders the same three channel cards on Home and About,
 with Twitch visually prominent. J Sol is the shared public title/header/footer
-brand; the existing j mark, visual palette, routes and content are retained.
+brand; the existing j mark, routes and content are retained. Shared design
+uses bold system typography, a restrained violet palette, rounded surfaces and
+local decorative SVG platform icons. Connect has a wider creator-focused panel;
+article reading width remains bounded. Motion is limited to hover feedback and
+disabled for reduced-motion preferences. No remote fonts or image assets are used.
 - `/privacy`: current data-handling explanation and legacy-service caveat.
 - Retired research/product URLs: noindex retirement notices with a link to guides.
 
