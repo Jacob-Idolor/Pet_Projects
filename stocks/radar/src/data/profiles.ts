@@ -3,6 +3,7 @@ export const channels = [
   { id: 'twitch', name: 'Twitch', identity: 'jakecuzzi', url: 'https://www.twitch.tv/jakecuzzi', action: 'Visit Twitch' },
   { id: 'youtube', name: 'YouTube', identity: '@MrJakecuzzi', url: 'https://www.youtube.com/@MrJakecuzzi', action: 'Visit YouTube' },
   { id: 'instagram', name: 'Instagram', identity: '@jakejustjacob', url: 'https://www.instagram.com/jakejustjacob/', action: 'View Instagram' },
+  { id: 'snapchat', name: 'Snapchat', identity: '@jakecuzzi', url: 'https://www.snapchat.com/@jakecuzzi', action: 'View Snapchat' },
 ] as const;
 export const linkedIn = { name: 'LinkedIn', url: 'https://www.linkedin.com/in/jacob-idolor/' };
 export const consultingProfiles = [

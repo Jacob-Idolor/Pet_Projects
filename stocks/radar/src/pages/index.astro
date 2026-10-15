@@ -3,10 +3,10 @@ import Layout from '../layouts/PersonalLayout.astro';
 import { guides } from '../data/guides';
 import SocialChannels from '../components/SocialChannels.astro';
 ---
-<Layout title="Jacob" description="Connect with Jacob on Twitch, YouTube and Instagram. Personal channels, practical systems notes and consulting, together at J Sol.">
+<Layout title="Jacob" description="Connect with Jacob on Twitch, YouTube, Instagram and Snapchat. Personal channels, practical systems notes and consulting, together at J Sol.">
   <div class="wrap">
     <section class="hero hero--social">
-      <div><p class="eyebrow">J Sol / Jacob</p><h1>Hi, I'm Jacob.<br /><em>Let's connect.</em></h1><p class="lead">Find me on Twitch, YouTube and Instagram. I also share practical notes on technology, systems and making everyday work a little easier.</p><div class="actions"><a class="button" href="/about#profiles">Connect with Jacob <span aria-hidden="true">&nearr;</span></a><a class="text-link" href="/about">A little more about me &rarr;</a></div></div>
+      <div><p class="eyebrow">J Sol / Jacob</p><h1>Hi, I'm Jacob.<br /><em>Let's connect.</em></h1><p class="lead">Find me on Twitch, YouTube, Instagram and Snapchat. I also share practical notes on technology, systems and making everyday work a little easier.</p><div class="actions"><a class="button" href="/about#profiles">Connect with Jacob <span aria-hidden="true">&nearr;</span></a><a class="text-link" href="/about">A little more about me &rarr;</a></div></div>
       <section class="channel-panel" aria-labelledby="channels-title"><h2 id="channels-title">Find me here</h2><SocialChannels /><p class="small channel-note">Public profiles open in a new tab.</p></section>
     </section>
     <section class="section" aria-labelledby="guides-title"><div class="section-head"><div><p class="eyebrow">Start somewhere useful</p><h2 id="guides-title">Small guides. Real questions.</h2></div><p>No daily publishing treadmill. Just a few things worth thinking through.</p></div><p class="small"><a href="/guides/before-you-automate">Start here: before you automate</a>. Choose one repetitive task, preview the change and plan a safe retry.</p><div class="cards">{guides.map(guide => <article class="card"><p class="eyebrow">{guide.category}</p><h3><a href={`/guides/${guide.slug}`}>{guide.title}</a></h3><p>{guide.description}</p><a class="read" href={`/guides/${guide.slug}`}>Read the guide <span aria-hidden="true">↗</span><span class="small"> · {guide.minutes} min</span></a></article>)}</div></section>
