@@ -1,16 +1,17 @@
-# Jacob Builds architecture
+# J Sol architecture
 
 ## Purpose and scope
 
-Jacob Builds is Jacob's personal home base for consulting, public personal
-channels and practical AI, automation and systems notes.
+J Sol is Jacob's personal home base, leading with his public personal channels
+and keeping practical AI, automation and systems notes and consulting available.
 It reuses stockswatch.cc and the existing static Astro/TypeScript application and
 Cloudflare Pages hosting. The owner explicitly retired the StocksWatch product
 on October 5, 2026. There are no new services, accounts, databases or payments.
 
 ## Active pages
 
-- `/`: introduction, prominent Connect action, three guide cards and author context.
+- `/`: clear Jacob introduction, prominent Connect action and Twitch/YouTube/Instagram
+  links before the existing three guide cards, working philosophy and author context.
 - `/guides`: the complete three-guide library.
 - `/guides/[slug]`: static articles from `src/data/guides.ts`.
 - `/resources`: tools evidenced by this repository, without affiliate links.
@@ -19,11 +20,17 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   the owner's exact public Upwork profile URL in a new tab; there is no email
   inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy, plus
-  a Connect section with verified personal Twitch, YouTube, LinkedIn and Instagram
-  destinations and the existing Guru/Upwork consulting profiles. The header and
+  a Connect section before the biography with verified Twitch, YouTube and Instagram
+  channels, a LinkedIn link and the existing Guru/Upwork consulting profiles under
+  a native keyboard-accessible details disclosure. The header and
   home hero link directly to `/about#profiles`; platform links open in a new tab.
   There are no channel embeds, live-status badges, highlight placeholders or
   new visitor/click analytics.
+
+`src/data/profiles.ts` is the shared inventory of owner-confirmed public URLs;
+`SocialChannels.astro` renders the same three channel cards on Home and About,
+with Twitch visually prominent. J Sol is the shared public title/header/footer
+brand; the existing j mark, visual palette, routes and content are retained.
 - `/privacy`: current data-handling explanation and legacy-service caveat.
 - Retired research/product URLs: noindex retirement notices with a link to guides.
 

@@ -16,7 +16,7 @@ const requiredFiles = [
 const contentChecks = [
   ["index.html", /Make room for life/],
   ["guides.html", /Before you automate/],
-  ["about.html", /Jacob Builds/],
+  ["about.html", /J Sol/],
   ["consulting.html", /Monitoring &amp; Alert Health Check/],
   ["sitemap.xml", /<loc>https?:\/\/[^<]+\/guides\/before-you-automate<\/loc>/],
 ];

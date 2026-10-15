@@ -20,7 +20,7 @@ for (const [path, marker] of pages) {
   });
   if (!response.ok) throw new Error(`Page unavailable: ${path} (HTTP ${response.status})`);
   const html = await response.text();
-  if (!html.includes(marker) || !html.includes("Jacob Builds")) {
+  if (!html.includes(marker) || !html.includes("J Sol")) {
     throw new Error(`Unexpected page content: ${path}`);
   }
   if (/<script\b[^>]*\bsrc\s*=|<form\b|<iframe\b/i.test(html)) {

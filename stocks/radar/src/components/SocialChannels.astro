@@ -1,0 +1,28 @@
+---
+import { channels } from '../data/profiles';
+---
+<ul class="social-channels">
+  {channels.map(channel => (
+    <li class:list={[channel.id, { featured: channel.id === 'twitch' }]}>
+      <a href={channel.url} target="_blank" rel="noopener noreferrer">
+        <span class="channel-name">{channel.name}</span>
+        <span class="channel-identity">{channel.identity}</span>
+        <span class="channel-action">{channel.action} <span aria-hidden="true">&nearr;</span></span>
+      </a>
+    </li>
+  ))}
+</ul>
+<style>
+  ul.social-channels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+  .social-channels li { margin: 0; min-width: 0; }
+  .social-channels a { display: flex; height: 100%; flex-direction: column; gap: 8px; padding: 22px; border: 1px solid var(--line); border-radius: 8px; background: #faf9f5; text-decoration: none; }
+  .social-channels a:hover { border-color: var(--blue); color: var(--ink); }
+  .featured { grid-column: 1 / -1; }
+  .featured a { padding: 28px; border-color: #c9bbdf; background: #f0eaf8; }
+  .featured a:hover { border-color: #57339a; }
+  .channel-name { font-size: 1.2rem; font-weight: 700; }
+  .featured .channel-name { font-size: 1.65rem; color: #57339a; }
+  .channel-identity { font-size: .9rem; color: var(--muted); overflow-wrap: anywhere; }
+  .channel-action { margin-top: 12px; font-size: .85rem; }
+  @media (max-width: 480px) { ul.social-channels { grid-template-columns: 1fr; } .social-channels a, .featured a { padding: 20px; } }
+</style>

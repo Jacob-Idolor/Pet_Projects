@@ -12,7 +12,7 @@ const { title, description, active, noindex = false, article } = Astro.props;
 const canonicalPath = Astro.url.pathname === '/index.html' ? '/' : Astro.url.pathname.replace(/\.html$/, '');
 const canonical = new URL(canonicalPath, Astro.site);
 const authorUrl = new URL('/about', Astro.site);
-const navigation = [['Connect', '/about#profiles'], ['Guides', '/guides'], ['Resources', '/resources'], ['Consulting', '/consulting'], ['About', '/about']];
+const navigation = [['Connect', '/about#profiles'], ['Guides', '/guides'], ['Resources', '/resources'], ['About', '/about'], ['Consulting', '/consulting']];
 const articleData = article && !noindex ? {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
@@ -32,15 +32,15 @@ const articleJson = articleData && JSON.stringify(articleData).replace(/</g, '\\
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>{title} · Jacob Builds</title>
+    <title>{title} · J Sol</title>
     <meta name="description" content={description} />
     <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow'} />
     {!noindex && <link rel="canonical" href={canonical} />}
-    <meta property="og:title" content={`${title} · Jacob Builds`} />
+    <meta property="og:title" content={`${title} · J Sol`} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={articleData ? 'article' : 'website'} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:site_name" content="Jacob Builds" />
+    <meta property="og:site_name" content="J Sol" />
     {articleData && <>
       <meta property="article:published_time" content={articleData.datePublished} />
       <meta property="article:modified_time" content={articleData.dateModified} />
@@ -53,10 +53,10 @@ const articleJson = articleData && JSON.stringify(articleData).replace(/</g, '\\
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <header class="header wrap">
-      <a class="brand" href="/" aria-label="Jacob Builds home"><span aria-hidden="true">j<span class="brand-dot">.</span></span> Jacob Builds</a>
-      <nav aria-label="Primary">{navigation.map(([label, href]) => <a href={href} aria-current={active === label ? 'page' : undefined}>{label}</a>)}</nav>
+      <a class="brand" href="/" aria-label="J Sol home"><span aria-hidden="true">j<span class="brand-dot">.</span></span> J Sol</a>
+      <nav aria-label="Primary">{navigation.map(([label, href]) => <a href={href} class:list={{ 'nav-connect': label === 'Connect' }} aria-current={active === label ? 'page' : undefined}>{label}</a>)}</nav>
     </header>
     <main id="main" tabindex="-1"><slot /></main>
-    <footer class="footer wrap"><div><a class="footer-name" href="/">Jacob Builds</a><p>Useful systems. A little more room for life.</p></div><div><a href="/about">About this project</a><a href="/privacy">Privacy</a><span>Built small. Kept simple.</span></div></footer>
+    <footer class="footer wrap"><div><a class="footer-name" href="/">J Sol</a><p>Useful systems. A little more room for life.</p></div><div><a href="/about">About this project</a><a href="/privacy">Privacy</a><span>Built small. Kept simple.</span></div></footer>
   </body>
 </html>
