@@ -1,31 +1,43 @@
 ---
 import SocialChannels from './SocialChannels.astro';
+import PlatformIcon from './PlatformIcon.astro';
 import { linkedIn, consultingProfiles } from '../data/profiles';
 ---
 <section id="profiles" aria-labelledby="profiles-title" tabindex="-1">
-  <h2 id="profiles-title">Connect with Jacob</h2>
-  <p>My channels and social profiles, all in one place. Public links open in a new tab.</p>
+  <div class="connect-heading"><div><p class="eyebrow">Around the internet</p><h2 id="profiles-title">Connect with Jacob</h2></div><p>My channels and social profiles, all in one place. Public links open in a new tab.</p></div>
   <SocialChannels />
-  <p class="professional-link"><a href={linkedIn.url} target="_blank" rel="noopener noreferrer">Find me on LinkedIn <span aria-hidden="true">&nearr;</span></a></p>
-  <details class="consulting-profiles">
-    <summary>Consulting &amp; freelance profiles</summary>
-    <p>Explore my <a href="/consulting">Monitoring &amp; Alert Health Check</a> for the service scope and deliverables.</p>
-    <ul class="profile-links">
-      {consultingProfiles.map(profile => (
-        <li><a href={profile.url} target="_blank" rel="noopener noreferrer">{profile.name} <span aria-hidden="true">&nearr;</span></a></li>
-      ))}
-    </ul>
-    <p class="small">Discuss scope and availability on your preferred platform before starting a project.</p>
-  </details>
+  <div class="connect-extras">
+    <p class="professional-link"><a href={linkedIn.url} target="_blank" rel="noopener noreferrer"><span class="extra-icon" aria-hidden="true"><PlatformIcon kind="linkedin" /></span><span>Find me on LinkedIn<span class="extra-description">Professional profile</span></span><span class="extra-arrow" aria-hidden="true"><PlatformIcon kind="arrow" /></span></a></p>
+    <details class="consulting-profiles">
+      <summary><span class="extra-icon" aria-hidden="true"><PlatformIcon kind="briefcase" /></span><span>Consulting &amp; freelance profiles<span class="extra-description">Upwork &amp; Guru</span></span><span class="extra-arrow" aria-hidden="true"><PlatformIcon kind="chevron" /></span></summary>
+      <div class="consulting-content"><p>Explore my <a href="/consulting">Monitoring &amp; Alert Health Check</a> for the service scope and deliverables.</p>
+      <ul class="profile-links">{consultingProfiles.map(profile => (<li><a href={profile.url} target="_blank" rel="noopener noreferrer">{profile.name} <span aria-hidden="true">&nearr;</span></a></li>))}</ul>
+      <p class="small">Discuss scope and availability on your preferred platform before starting a project.</p></div>
+    </details>
+  </div>
 </section>
 <style>
-  #profiles { scroll-margin-top: 24px; margin-block: 36px 48px; }
-  .professional-link { margin-block: 22px; font-size: .9rem; }
-  .consulting-profiles { padding: 18px 0; border-block: 1px solid var(--line); }
-  summary { cursor: pointer; padding-block: 4px; font-size: .95rem; }
-  .consulting-profiles p { margin-top: 20px; }
-  ul.profile-links { display: flex; flex-wrap: wrap; gap: 14px 28px; list-style: none; padding: 0; margin-block: 18px; }
+  #profiles { scroll-margin-top: 26px; margin-block: 36px 48px; padding: 36px; border: 1px solid #e3ddec; border-radius: 32px; background: #ffffffb8; box-shadow: 0 22px 70px -45px #38245666; }
+  .connect-heading { display: grid; grid-template-columns: 1.2fr 1fr; align-items: end; gap: 32px; margin-bottom: 30px; }
+  .connect-heading .eyebrow { margin-bottom: 12px; }
+  .connect-heading h2 { font-size: clamp(2.1rem, 4vw, 3.3rem); margin: 0; }
+  .connect-heading > p { margin: 0 0 4px; color: var(--muted); font-size: .95rem; line-height: 1.7; }
+  .connect-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; margin-top: 22px; }
+  .professional-link { margin: 0; }
+  .professional-link a, summary { display: flex; align-items: center; gap: 14px; padding: 20px; min-height: 96px; font-size: .9rem; font-weight: 650; text-decoration: none; }
+  .professional-link, .consulting-profiles { border: 1px solid #e4dfec; border-radius: 20px; background: #fff; }
+  .professional-link:hover, .consulting-profiles:hover { border-color: #bba8d8; }
+  .extra-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 12px; background: #f0ebf8; color: #64428d; }
+  .extra-description { display: block; font-size: .8rem; font-weight: 400; color: var(--muted); margin-top: 4px; }
+  .extra-arrow { margin-left: auto; flex: none; color: #776888; }
+  summary { cursor: pointer; list-style: none; line-height: 1.5; }
+  summary::-webkit-details-marker { display: none; }
+  .consulting-content { padding: 0 22px 22px; font-size: .9rem; }
+  .consulting-content p { margin: 4px 0 14px; }
+  ul.profile-links { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; padding: 0; margin-block: 16px; }
   .profile-links li { margin: 0; }
-  .profile-links a { display: inline-block; padding-block: 8px; }
-  .consulting-profiles p:last-child { margin-bottom: 0; }
+  .profile-links a { display: inline-block; padding: 10px 16px; border-radius: 999px; background: #f0ebf8; color: #4e287f; font-weight: 600; }
+  .consulting-content p:last-child { margin-bottom: 0; }
+  @media (max-width: 760px) { #profiles { padding: 22px; border-radius: 26px; } .connect-heading, .connect-extras { grid-template-columns: 1fr; gap: 18px; } .connect-heading { margin-bottom: 24px; } .professional-link a, summary { padding: 18px; } }
+  @media (max-width: 380px) { #profiles { padding: 16px; } .professional-link a, summary { gap: 10px; padding: 14px; } .extra-icon { width: 34px; height: 34px; } }
 </style>

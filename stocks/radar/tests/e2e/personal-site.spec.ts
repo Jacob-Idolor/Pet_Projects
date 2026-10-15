@@ -1,6 +1,22 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('channel cards respect reduced motion and keep decorative icons out of keyboard navigation', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  await page.goto('/about#profiles');
+  const channel = page.locator('.social-channels a').first();
+  await channel.hover();
+  expect(await channel.evaluate(node => getComputedStyle(node).transform)).toBe('none');
+  expect(await channel.evaluate(node => getComputedStyle(node).transitionDuration.split(',').every(value => parseFloat(value) === 0))).toBe(true);
+  for (const icon of await page.locator('#profiles svg').all()) {
+    await expect(icon).toHaveAttribute('aria-hidden', 'true');
+    await expect(icon).toHaveAttribute('focusable', 'false');
+  }
+  await expect(page.locator('#profiles [tabindex="0"]')).toHaveCount(0);
+  await context.close();
+});
+
 test('Connect reaches the approved public profiles by keyboard without JavaScript', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
