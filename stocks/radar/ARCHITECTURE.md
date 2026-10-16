@@ -10,7 +10,7 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
 
 ## Active pages
 
-- `/`: clear Jacob introduction, prominent Connect action and Twitch/YouTube/Instagram/Snapchat
+- `/`: clear Jacob introduction, prominent Connect action and Twitch/YouTube/Instagram/Snapchat/TikTok
   links before the existing three guide cards, working philosophy and author context.
 - `/guides`: the complete three-guide library.
 - `/guides/[slug]`: static articles from `src/data/guides.ts`.
@@ -20,7 +20,7 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   the owner's exact public Upwork profile URL in a new tab; there is no email
   inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy, plus
-  a Connect section before the biography with verified Twitch, YouTube, Instagram and Snapchat
+  a Connect section before the biography with verified Twitch, YouTube, Instagram, Snapchat and TikTok
   channels, a LinkedIn link and the existing Guru/Upwork consulting profiles under
   a native keyboard-accessible details disclosure. The header and
   home hero link directly to `/about#profiles`; platform links open in a new tab.
@@ -28,7 +28,7 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   new visitor/click analytics.
 
 `src/data/profiles.ts` is the shared inventory of owner-confirmed public URLs;
-`SocialChannels.astro` renders the same four channel cards on Home and About,
+`SocialChannels.astro` renders the same five channel cards on Home and About,
 with Twitch visually prominent. J Sol is the shared public title/header/footer
 brand; the existing j mark, routes and content are retained. Shared design
 uses bold system typography, a restrained violet palette, rounded surfaces and
