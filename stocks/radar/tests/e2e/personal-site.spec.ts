@@ -22,7 +22,7 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   const page = await context.newPage();
   await page.goto('/');
   await expect(page).toHaveTitle('Jacob · J Sol');
-  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(5);
+  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(6);
   await expect(page.getByRole('link', { name: 'Connect with Jacob', exact: true })).toHaveAttribute('href', '/about#profiles');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Connect', exact: true }).focus();
   await page.keyboard.press('Enter');
@@ -36,6 +36,7 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
     'https://www.instagram.com/jakejustjacob/',
     'https://www.snapchat.com/@jakecuzzi',
     'https://www.tiktok.com/@mrjakecuzzi',
+    'https://www.threads.com/@jakejustjacob',
     'https://www.linkedin.com/in/jacob-idolor/',
     'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f',
     'https://www.guru.com/freelancers/jacob-idolor',
