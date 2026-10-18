@@ -8,12 +8,14 @@ import { linkedIn, consultingProfiles } from '../data/profiles';
   <SocialChannels />
   <div class="connect-extras">
     <p class="professional-link"><a href={linkedIn.url} target="_blank" rel="noopener noreferrer"><span class="extra-icon" aria-hidden="true"><PlatformIcon kind="linkedin" /></span><span>Find me on LinkedIn<span class="extra-description">Professional profile</span></span><span class="extra-arrow" aria-hidden="true"><PlatformIcon kind="arrow" /></span></a></p>
-    <details class="consulting-profiles">
-      <summary><span class="extra-icon" aria-hidden="true"><PlatformIcon kind="briefcase" /></span><span>Consulting &amp; freelance profiles<span class="extra-description">Upwork &amp; Guru</span></span><span class="extra-arrow" aria-hidden="true"><PlatformIcon kind="chevron" /></span></summary>
-      <div class="consulting-content"><p>Explore my <a href="/consulting">Monitoring &amp; Alert Health Check</a> for the service scope and deliverables.</p>
+    <div class="consulting-profiles">
+      <details class="consulting-details">
+        <summary><span class="extra-icon" aria-hidden="true"><PlatformIcon kind="briefcase" /></span><span>Consulting &amp; freelance profiles</span><span class="extra-arrow" aria-hidden="true"><PlatformIcon kind="chevron" /></span></summary>
+        <div class="consulting-content"><p>Explore my <a href="/consulting">Monitoring &amp; Alert Health Check</a> for the service scope and deliverables.</p>
+        <p class="small">Discuss scope and availability on your preferred platform before starting a project.</p></div>
+      </details>
       <ul class="profile-links">{consultingProfiles.map(profile => (<li><a href={profile.url} target="_blank" rel="noopener noreferrer">{profile.name} <span aria-hidden="true">&nearr;</span></a></li>))}</ul>
-      <p class="small">Discuss scope and availability on your preferred platform before starting a project.</p></div>
-    </details>
+    </div>
   </div>
 </section>
 <style>
@@ -32,12 +34,15 @@ import { linkedIn, consultingProfiles } from '../data/profiles';
   .extra-arrow { margin-left: auto; flex: none; color: #776888; }
   summary { cursor: pointer; list-style: none; line-height: 1.5; }
   summary::-webkit-details-marker { display: none; }
+  .consulting-profiles summary { min-height: 0; padding-bottom: 8px; }
   .consulting-content { padding: 0 22px 22px; font-size: .9rem; }
   .consulting-content p { margin: 4px 0 14px; }
-  ul.profile-links { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; padding: 0; margin-block: 16px; }
+  ul.profile-links { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; padding: 0; margin: 0 20px 20px 74px; font-size: .8rem; }
   .profile-links li { margin: 0; }
-  .profile-links a { display: inline-block; padding: 10px 16px; border-radius: 999px; background: #f0ebf8; color: #4e287f; font-weight: 600; }
+  .profile-links a { display: inline-block; color: #4e287f; font-weight: 600; text-decoration: underline; text-underline-offset: .18em; }
   .consulting-content p:last-child { margin-bottom: 0; }
   @media (max-width: 760px) { #profiles { padding: 22px; border-radius: 26px; } .connect-heading, .connect-extras { grid-template-columns: 1fr; gap: 18px; } .connect-heading { margin-bottom: 24px; } .professional-link a, summary { padding: 18px; } }
   @media (max-width: 380px) { #profiles { padding: 16px; } .professional-link a, summary { gap: 10px; padding: 14px; } .extra-icon { width: 34px; height: 34px; } }
+  @media (max-width: 760px) { ul.profile-links { margin: 0 18px 18px 72px; } }
+  @media (max-width: 380px) { ul.profile-links { margin: 0 14px 14px 58px; } }
 </style>

@@ -21,8 +21,8 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy, plus
   a Connect section before the biography with verified Twitch, YouTube, Instagram, Snapchat, TikTok and Threads
-  channels, a LinkedIn link and the existing Guru/Upwork consulting profiles under
-  a native keyboard-accessible details disclosure. The header and
+  channels, a LinkedIn link and directly visible Guru/Upwork consulting links.
+  Service context remains in a native keyboard-accessible details disclosure. The header and
   home hero link directly to `/about#profiles`; platform links open in a new tab.
   There are no channel embeds, live-status badges, highlight placeholders or
   new visitor/click analytics.

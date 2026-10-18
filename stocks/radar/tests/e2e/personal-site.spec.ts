@@ -49,12 +49,13 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   }
   await page.keyboard.press('Tab');
   await expect(links.first()).toBeFocused();
-  const consulting = profiles.locator('details');
+  const consulting = profiles.locator('.consulting-details');
   await expect(consulting).not.toHaveAttribute('open');
+  const directProfiles = profiles.locator('.consulting-profiles > .profile-links');
+  await expect(directProfiles.getByRole('link', { name: 'Upwork', exact: true })).toBeVisible();
+  await expect(directProfiles.getByRole('link', { name: 'Guru', exact: true })).toBeVisible();
   await consulting.locator('summary').focus();
   await page.keyboard.press('Enter');
-  await expect(consulting.getByRole('link', { name: 'Upwork', exact: true })).toBeVisible();
-  await expect(consulting.getByRole('link', { name: 'Guru', exact: true })).toBeVisible();
   await expect(consulting.getByRole('link', { name: 'Monitoring & Alert Health Check', exact: true })).toHaveAttribute('href', '/consulting');
   await expect(page.locator('form, iframe, script[src]')).toHaveCount(0);
   await context.close();
