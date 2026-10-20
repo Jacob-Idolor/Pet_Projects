@@ -6,6 +6,7 @@ export const channels = [
   { id: 'snapchat', name: 'Snapchat', identity: '@jakecuzzi', url: 'https://www.snapchat.com/@jakecuzzi', action: 'View Snapchat' },
   { id: 'tiktok', name: 'TikTok', identity: '@mrjakecuzzi', url: 'https://www.tiktok.com/@mrjakecuzzi', action: 'View TikTok' },
   { id: 'threads', name: 'Threads', identity: '@jakejustjacob', url: 'https://www.threads.com/@jakejustjacob', action: 'View Threads' },
+  { id: 'goodreads', name: 'Goodreads', identity: 'Books & reviews', url: 'https://www.goodreads.com/user/show/109460896-jacob', action: 'View Goodreads' },
 ] as const;
 export const linkedIn = { name: 'LinkedIn', url: 'https://www.linkedin.com/in/jacob-idolor/' };
 export const consultingProfiles = [
