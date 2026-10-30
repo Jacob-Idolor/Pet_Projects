@@ -23,7 +23,7 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   await page.goto('/');
   await expect(page).toHaveTitle('Jacob � J Sol');
   await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(8);
-  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link', { name: 'Substack Jsol's Space Read on Substack' })).toHaveAttribute('href', 'https://idolorthoughts.substack.com/');
+  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link', { name: 'Substack Jsol\u2019s Space Read on Substack' })).toHaveAttribute('href', 'https://idolorthoughts.substack.com/');
   await expect(page.getByRole('link', { name: 'Connect with Jacob', exact: true })).toHaveAttribute('href', '/about#profiles');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Connect', exact: true }).focus();
   await page.keyboard.press('Enter');

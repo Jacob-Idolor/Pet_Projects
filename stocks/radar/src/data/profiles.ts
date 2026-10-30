@@ -7,7 +7,7 @@ export const channels = [
   { id: 'tiktok', name: 'TikTok', identity: '@mrjakecuzzi', url: 'https://www.tiktok.com/@mrjakecuzzi', action: 'View TikTok' },
   { id: 'threads', name: 'Threads', identity: '@jakejustjacob', url: 'https://www.threads.com/@jakejustjacob', action: 'View Threads' },
   { id: 'goodreads', name: 'Goodreads', identity: 'Books & reviews', url: 'https://www.goodreads.com/user/show/109460896-jacob', action: 'View Goodreads' },
-  { id: 'substack', name: 'Substack', identity: 'Jsol's Space', url: 'https://idolorthoughts.substack.com/', action: 'Read on Substack' },
+  { id: 'substack', name: 'Substack', identity: 'Jsol\u2019s Space', url: 'https://idolorthoughts.substack.com/', action: 'Read on Substack' },
 ] as const;
 export const linkedIn = { name: 'LinkedIn', url: 'https://www.linkedin.com/in/jacob-idolor/' };
 export const consultingProfiles = [
