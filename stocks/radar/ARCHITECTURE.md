@@ -93,6 +93,6 @@ Website retirement does not imply cancellation of external billing or subscripti
 Goodreads is labeled Books & reviews and points to the owner-confirmed public
 profile. This is a profile link; it does not imply written reviews or live syncing.
 
-Substack links to the owner-confirmed Jsol's Space publication at
+Substack links to the owner-confirmed Jsol’s Space publication at
 https://idolorthoughts.substack.com/. This is a public link only; it does not
 embed a signup form, synchronize accounts or publish content.
