@@ -11,6 +11,17 @@ const retirementPages = [
 export function checkPersonalPolicy(dist) {
   if (!existsSync(dist)) return ["Missing distribution; build the site first"];
   const findings = [];
+  const headersPath = resolve(dist, "_headers");
+  const headers = existsSync(headersPath) ? readFileSync(headersPath, "utf8") : "";
+  const globalHeaders = headers.match(/^\/\*\s*\r?\n((?:[ \t]+[^\r\n]*\r?\n?)*)/m)?.[1] ?? "";
+  const csp = globalHeaders.match(/^[ \t]*Content-Security-Policy:\s*([^\r\n]*)/im)?.[1] ?? "";
+  const directives = new Map(csp.split(";").map(part => {
+    const [name, ...values] = part.trim().split(/\s+/);
+    return [name.toLowerCase(), values.join(" ")];
+  }));
+  for (const name of ["default-src", "script-src", "base-uri", "object-src", "frame-ancestors", "form-action"]) {
+    if (directives.get(name) !== "'none'") findings.push(`_headers: global CSP must deny ${name}`);
+  }
   function inspect(directory) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = resolve(directory, entry.name);
