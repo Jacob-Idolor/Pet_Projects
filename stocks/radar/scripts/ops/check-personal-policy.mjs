@@ -15,12 +15,19 @@ export function checkPersonalPolicy(dist) {
   const headers = existsSync(headersPath) ? readFileSync(headersPath, "utf8") : "";
   const globalHeaders = headers.match(/^\/\*\s*\r?\n((?:[ \t]+[^\r\n]*\r?\n?)*)/m)?.[1] ?? "";
   const csp = globalHeaders.match(/^[ \t]*Content-Security-Policy:\s*([^\r\n]*)/im)?.[1] ?? "";
-  const directives = new Map(csp.split(";").map(part => {
-    const [name, ...values] = part.trim().split(/\s+/);
-    return [name.toLowerCase(), values.join(" ")];
-  }));
+  const directives = new Map();
+  for (const part of csp.split(";")) {
+    if (!part.trim()) continue;
+    const [rawName, ...values] = part.trim().split(/\s+/);
+    const name = rawName.toLowerCase();
+    if (directives.has(name)) findings.push(`_headers: duplicate CSP directive ${name}`);
+    else directives.set(name, values.join(" "));
+  }
   for (const name of ["default-src", "script-src", "base-uri", "object-src", "frame-ancestors", "form-action"]) {
     if (directives.get(name) !== "'none'") findings.push(`_headers: global CSP must deny ${name}`);
+  }
+  for (const name of ["script-src-elem", "script-src-attr"]) {
+    if (directives.has(name) && directives.get(name) !== "'none'") findings.push(`_headers: effective ${name} must be 'none'`);
   }
   function inspect(directory) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -29,6 +36,7 @@ export function checkPersonalPolicy(dist) {
       else if (entry.name.endsWith(".html")) {
         const html = readFileSync(path, "utf8");
         const file = relative(dist, path);
+        if (/<style\b|\sstyle\s*=/i.test(html)) findings.push(`${file}: inline style conflicts with CSP`);
         if (/pagead2\.googlesyndication\.com|adsbygoogle|google-analytics\.com|googletagmanager\.com/i.test(html)) {
           findings.push(`${file}: advertising or analytics integration`);
         }

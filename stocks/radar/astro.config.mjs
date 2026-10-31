@@ -10,5 +10,6 @@ export default defineConfig({
   trailingSlash: "never",
   build: {
     format: "file",
+    inlineStylesheets: "never",
   },
 });

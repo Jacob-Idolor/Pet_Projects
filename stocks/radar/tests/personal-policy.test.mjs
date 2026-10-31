@@ -65,3 +65,29 @@ test("static publishing policy rejects missing or permissive global CSP", () => 
     });
   }
 });
+
+test("static publishing policy rejects inline styles forbidden by CSP", () => {
+  for (const html of ['<style>h1{color:red}</style>', '<h1 style="color:red">Title</h1>']) {
+    fixture(html, dist => {
+      assert.ok(checkPersonalPolicy(dist).some(finding => finding.includes("inline style conflicts with CSP")));
+    });
+  }
+});
+
+test("CSP guard rejects duplicate directives in either order", () => {
+  for (const scripts of ["script-src 'unsafe-inline'; script-src 'none'", "script-src 'none'; script-src 'unsafe-inline'"]) {
+    fixture("<h1>Jacob</h1>", dist => {
+      writeFileSync(join(dist, "_headers"), `/*\n  Content-Security-Policy: default-src 'none'; ${scripts}; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'\n`);
+      assert.ok(checkPersonalPolicy(dist).some(finding => finding.includes("duplicate CSP directive script-src")));
+    });
+  }
+});
+
+test("CSP guard rejects permissive effective script element/attribute overrides", () => {
+  for (const directive of ["script-src-elem", "script-src-attr"]) {
+    fixture("<h1>Jacob</h1>", dist => {
+      writeFileSync(join(dist, "_headers"), `/*\n  Content-Security-Policy: default-src 'none'; script-src 'none'; ${directive} 'unsafe-inline'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'\n`);
+      assert.ok(checkPersonalPolicy(dist).some(finding => finding.includes(`effective ${directive}`)));
+    });
+  }
+});

@@ -88,6 +88,8 @@ nav a.nav-connect:hover { background: #52269e; }
 .meta { font-size: .85rem; color: var(--muted); margin-bottom: 32px; }
 .callout { background: #efe9f9; border: 1px solid #dfd3ef; border-radius: 22px; padding: 28px; margin-block: 30px; }
 .callout p:last-child { margin: 0; }
+.card .guide-title { font-size: 1.5rem; }
+.callout .callout-title { margin-top: 0; font-size: 1.3rem; }
 .resource { display: grid; grid-template-columns: 1fr 2fr; gap: 36px; padding: 32px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 24px; background: #fff; }
 .resource h2 { font-size: 1.5rem; }
 .resource p:last-child { margin: 0; }

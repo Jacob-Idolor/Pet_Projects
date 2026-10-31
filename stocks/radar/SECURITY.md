@@ -64,3 +64,16 @@ Residual work: immutable SHA pinning of third-party CI actions would reduce
 supply-chain exposure. Account permissions, credential rotation, branch-protection
 configuration and historic-secret remediation require separate scoped review;
 none were changed. No intrusive live scanning was performed.
+
+## CSP compatibility and guard regression checks
+
+Astro is configured with `build.inlineStylesheets: "never"`. Guide headings and
+article callout headings use external stylesheet classes instead of inline style
+attributes. The release policy rejects generated inline style blocks/attributes,
+duplicate CSP directives, and permissive `script-src-elem`/`script-src-attr`
+overrides. Chromium CI tests apply the exact built CSP to HTML responses because
+Astro preview itself ignores Cloudflare `_headers`. They cover all nine active
+routes at desktop/mobile widths, record `securitypolicyviolation` events, verify
+heading styles, and retain screenshots/inventory JSON with the reviewed/tested
+source-tree identities. The previous general browser suite did not by itself
+establish that every style was compatible with the proposed CSP.
