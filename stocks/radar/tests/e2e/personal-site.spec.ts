@@ -21,8 +21,9 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('/');
-  await expect(page).toHaveTitle('Jacob · J Sol');
-  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(7);
+  await expect(page).toHaveTitle('Jacob \u00b7 J Sol');
+  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(8);
+  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link', { name: 'Substack Jsol\u2019s Space Read on Substack' })).toHaveAttribute('href', 'https://idolorthoughts.substack.com/');
   await expect(page.getByRole('link', { name: 'Connect with Jacob', exact: true })).toHaveAttribute('href', '/about#profiles');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Connect', exact: true }).focus();
   await page.keyboard.press('Enter');
@@ -38,6 +39,7 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
     'https://www.tiktok.com/@mrjakecuzzi',
     'https://www.threads.com/@jakejustjacob',
     'https://www.goodreads.com/user/show/109460896-jacob',
+    'https://idolorthoughts.substack.com/',
     'https://www.linkedin.com/in/jacob-idolor/',
     'https://www.upwork.com/freelancers/~01970b1d2f8e96b33f',
     'https://www.guru.com/freelancers/jacob-idolor',

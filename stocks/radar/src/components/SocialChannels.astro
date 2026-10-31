@@ -22,16 +22,16 @@ import PlatformIcon from './PlatformIcon.astro';
   .channel-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
   .platform-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px; color: #ad233e; background: #fff0f2; }
   .instagram .platform-icon { color: #803991; background: #f6eaf9; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) { grid-column: 1 / -1; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) a { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px 18px; align-items: center; background: #fffef4; border-color: #e8e1bb; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) .channel-top { grid-column: 1; grid-row: 1 / span 2; margin: 0; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) .platform-icon { background: #fff2a5; color: #393015; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) .external-arrow { display: none; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) .channel-name { grid-column: 2; grid-row: 1; font-size: 1.2rem; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) .channel-identity { grid-column: 2; grid-row: 2; margin-top: 0; }
-  :is(.snapchat, .tiktok, .threads, .goodreads) .channel-action { grid-column: 3; grid-row: 1 / span 2; margin-top: 0; align-self: center; }
-  :is(.tiktok, .threads, .goodreads) a { background: #f7f6fa; border-color: #e2deeb; }
-  :is(.tiktok, .threads, .goodreads) .platform-icon { background: #ece9f3; color: #292136; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) { grid-column: 1 / -1; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) a { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px 18px; align-items: center; background: #fffef4; border-color: #e8e1bb; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-top { grid-column: 1; grid-row: 1 / span 2; margin: 0; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .platform-icon { background: #fff2a5; color: #393015; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .external-arrow { display: none; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-name { grid-column: 2; grid-row: 1; font-size: 1.2rem; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-identity { grid-column: 2; grid-row: 2; margin-top: 0; }
+  :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-action { grid-column: 3; grid-row: 1 / span 2; margin-top: 0; align-self: center; }
+  :is(.tiktok, .threads, .goodreads, .substack) a { background: #f7f6fa; border-color: #e2deeb; }
+  :is(.tiktok, .threads, .goodreads, .substack) .platform-icon { background: #ece9f3; color: #292136; }
   .external-arrow { color: #766a87; }
   .channel-name { font-size: 1.5rem; line-height: 1.2; font-weight: 750; letter-spacing: -.04em; }
   .channel-identity { margin-top: 7px; font-size: .9rem; color: #62576f; overflow-wrap: anywhere; }
@@ -46,5 +46,5 @@ import PlatformIcon from './PlatformIcon.astro';
   .featured .channel-action { padding: 10px 16px; background: #fff; color: #492271; border-radius: 999px; }
   @media (prefers-reduced-motion: no-preference) { .social-channels a { transition: transform .18s ease, box-shadow .18s ease; } .social-channels a:hover { transform: translateY(-3px); } }
   @media (max-width: 480px) { ul.social-channels { grid-template-columns: 1fr; gap: 14px; } .social-channels a { padding: 23px; } .featured a { padding: 26px; } .channel-top { margin-bottom: 20px; } }
-  @media (max-width: 480px) { :is(.snapchat, .tiktok, .threads, .goodreads) a { display: flex; gap: 0; align-items: stretch; } :is(.snapchat, .tiktok, .threads, .goodreads) .channel-top { margin-bottom: 20px; } :is(.snapchat, .tiktok, .threads, .goodreads) .external-arrow { display: inline-flex; } :is(.snapchat, .tiktok, .threads, .goodreads) .channel-name { font-size: 1.5rem; } :is(.snapchat, .tiktok, .threads, .goodreads) .channel-identity { margin-top: 7px; } :is(.snapchat, .tiktok, .threads, .goodreads) .channel-action { margin-top: 24px; align-self: flex-start; } }
+  @media (max-width: 480px) { :is(.snapchat, .tiktok, .threads, .goodreads, .substack) a { display: flex; gap: 0; align-items: stretch; } :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-top { margin-bottom: 20px; } :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .external-arrow { display: inline-flex; } :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-name { font-size: 1.5rem; } :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-identity { margin-top: 7px; } :is(.snapchat, .tiktok, .threads, .goodreads, .substack) .channel-action { margin-top: 24px; align-self: flex-start; } }
 </style>

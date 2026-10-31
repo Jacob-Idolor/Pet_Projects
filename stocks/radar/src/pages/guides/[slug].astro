@@ -13,7 +13,7 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('en-US', { dateSty
     <p class="meta">By <a href="/about" rel="author">Jacob</a> &middot; Published <time datetime={guide.publishedAt}>{formatDate(guide.publishedAt)}</time>{guide.modifiedAt !== guide.publishedAt && <> &middot; Updated <time datetime={guide.modifiedAt}>{formatDate(guide.modifiedAt)}</time></>} &middot; About {guide.minutes} minutes</p>
     <p class="lead">{guide.intro}</p>
     {guide.sections.map(section => <section><h2>{section.title}</h2>{section.paragraphs.map(paragraph => <p>{paragraph}</p>)}{'items' in section && section.items && <ul>{section.items.map(item => <li>{item}</li>)}</ul>}</section>)}
-    <aside class="callout"><h2 style="margin-top:0;font-size:1.3rem">One small next step</h2><p>{guide.takeaway}</p></aside>
+    <aside class="callout"><h2 class="callout-title">One small next step</h2><p>{guide.takeaway}</p></aside>
     <p class="small">General educational guidance. Adapt it to your environment, permissions and risk. Examples are illustrative unless identified as project history.</p>
     <section aria-labelledby="related-title"><h2 id="related-title">Keep exploring</h2><ul>{relatedGuides.map(item => <li><a href={`/guides/${item.slug}`}>{item.title}</a><p class="small">{item.description}</p></li>)}</ul></section>
     <a href="/guides">&larr; Back to all guides</a>
