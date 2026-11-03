@@ -1,3 +1,35 @@
+# November 3, 2026: local J Sol cleanup prepared
+
+Verified remote main `3b2d2150fe8e1955122bae4667c6812a3b197581` in a new
+isolated checkout. The original checkout's dirty work was left untouched.
+The active site is J Sol; publishing is already manual and market-data refreshes
+are already unscheduled. No additional scheduled job was disabled.
+
+The local cleanup removes the unreferenced StocksWatch layout/header, AdSense
+component/library, browser dashboard and their styles from the active tree.
+Archived pages/tests, the tested NBIS renderer, private-product safeguards,
+Buttondown component/configuration and external services are preserved.
+Legacy Python validation moves to a path-filtered workflow with its existing
+Python 3.13 hash-locked dependencies; standard-library pack tests remain in the
+normal validation job. Security, browser and Terraform checks are retained.
+
+Local verification: 105 JavaScript tests passed; typecheck and the offline
+15-page build passed; config and screener schema checks, static release,
+security and publishing-policy checks passed; npm audit found zero
+vulnerabilities; all 24 Chromium tests passed. All five Python tests passed
+with the explicitly hash-verified packages. The normal Linux-generated lock
+cannot resolve Windows-only tzdata in require-hashes mode on this host, so the
+local Python environment installed the listed packages with --no-deps instead.
+The CI install command remains unchanged. Terraform backend-free initialization,
+validation and recursive format checks passed; no plan or apply was run.
+
+These changes have not been pushed, published or deployed. Cloudflare preview
+branch settings and account billing could not be verified without an authorized
+signed-in session. No monetary savings, resource cancellation or live behavior
+change is claimed.
+
+---
+
 # October 7, 2026 (UTC): consulting page prepared for publication
 
 The owner selected the consulting website as the sole active local task, retained

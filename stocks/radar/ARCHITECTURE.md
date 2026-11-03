@@ -46,8 +46,10 @@ Each guide owns its date-only publication/modification values using the owner's
 Pacific calendar dates, links to the author and
 other guides, and emits article Open Graph plus BlogPosting JSON-LD metadata.
 The resources page links to official documentation for the four existing tools.
-The previous layout/styles and domain-specific libraries remain available locally,
-but are not imported by active pages. Archived pages and tests are preserved in
+The unused StocksWatch shell, AdSense component/library, browser dashboard and
+their styles have been removed from the active source tree. The tested NBIS
+renderer, data tools and dormant Buttondown integration remain available locally.
+Archived pages and tests are preserved in
 `archive/stockswatch-retired/` outside the application and active browser suite.
 
 ## Build and release
@@ -73,8 +75,12 @@ The owner explicitly approved the workflow transition and publication on October
 2026. This revision changes the parent publishing workflow to manual dispatch only;
 there are no scheduled or push-triggered deployments and no NBIS data fetch.
 Dependency audit, source checks, build, release/security scans and browser checks
-run before upload. PR/main-push validation retains the Python and legacy source
-checks and the Terraform job. The obsolete NBIS/AdSense build checklist is replaced
+run before upload. PR/main-push validation retains legacy JavaScript source checks,
+standard-library private-pack Python checks and the Terraform job. The separate
+`stocks-radar-legacy-validate.yml` workflow retains hash-locked Python 3.13 research
+checks for changes to their source, inputs, dependencies, tests or workflow, plus
+manual dispatch. Personal page/style edits avoid the market-data dependency
+installation. The obsolete NBIS/AdSense build checklist is replaced
 by policy:dist, which rejects ads, analytics, forms, iframes and third-party scripts
 and requires noindex on error and retirement pages. Existing secrets and hosting
 resources are unchanged. Protected-main review/merge requirements still apply.
