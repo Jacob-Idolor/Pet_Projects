@@ -54,6 +54,13 @@ and Terraform validation. See [DEPLOY.md](DEPLOY.md) for the publishing route.
 
 # Historical StocksWatch notes
 
+Archival reference only: the setup, feature descriptions and source map below
+describe the retired site. J Sol does not load the NBIS dashboard, ad components
+or newsletter form. Removed source paths can be recovered from the pre-cleanup
+Git commit `3b2d2150fe8e1955122bae4667c6812a3b197581`; they are not current
+maintenance instructions. Use the current stack and validation sections above
+and [ARCHITECTURE.md](ARCHITECTURE.md) for the active site.
+
 StocksWatch is a calm, source-linked daily research desk for Nebius Group (`NBIS`) and the AI infrastructure buildout. It is intentionally small: Astro static output, one daily snapshot, Cloudflare Pages, and GitHub Actions. It is educational and not financial advice.
 
 The old group watchlist and its quote/alert machinery have been retired. The NBIS desk is the main product and the foundation for a long-term, low-overhead digital asset.
@@ -121,7 +128,7 @@ AdSense is wired for later but is not required for the site to work. Ads are man
 
 The site is hosted on Cloudflare Pages with static output. Terraform configuration remains under `infra/terraform/`; no deployment or infrastructure mutation is performed by normal local builds.
 
-## Important files
+## Historical source map (before cleanup)
 
 ```text
 src/pages/index.astro          # NBIS research desk

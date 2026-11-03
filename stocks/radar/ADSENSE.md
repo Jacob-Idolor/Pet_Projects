@@ -1,4 +1,14 @@
-# AdSense readiness — StocksWatch
+# Archived AdSense readiness - StocksWatch
+
+Historical reference only. J Sol has no ads or analytics, and its publishing
+policy rejects ad scripts and units. The StocksWatch AdSense component, layout
+and Astro library listed below were removed during the local cleanup; their last
+pre-cleanup versions are in Git commit
+`3b2d2150fe8e1955122bae4667c6812a3b197581`. The table and setup instructions
+describe that retired implementation, not the active site. Do not apply these
+settings as part of normal J Sol maintenance. External account and hosting
+settings have not been verified or changed by this cleanup. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for current behavior.
 
 AdSense is prepared as a future, supplemental revenue stream for the NBIS research desk. It is not required for the site to build or operate, and no paid infrastructure is needed to keep the integration dormant.
 
@@ -30,7 +40,7 @@ Keep `PUBLIC_ADSENSE_CONSENT_READY=false` until the site's consent setup is veri
 
 Publisher verification uses the account meta tag; it never bypasses the consent gate or loads AdSense by itself. Cloudflare Web Analytics is configured at the hosting layer and is disclosed on the privacy page.
 
-## Files
+## Historical files
 
 | Path | Role |
 | --- | --- |
