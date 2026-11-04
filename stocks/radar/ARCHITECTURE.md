@@ -2,7 +2,7 @@
 
 ## Purpose and scope
 
-J Sol is Jacob's personal home base, leading with his public personal channels
+J Sol is Jacob's creator home base, leading with stories, small discoveries and his public personal channels
 and keeping practical AI, automation and systems notes and consulting available.
 It reuses stockswatch.cc and the existing static Astro/TypeScript application and
 Cloudflare Pages hosting. The owner explicitly retired the StocksWatch product
@@ -10,36 +10,31 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
 
 ## Active pages
 
-- `/`: clear Jacob introduction, prominent Connect action and Twitch/YouTube/Instagram/Snapchat/TikTok/Threads/Goodreads/Substack
-  links before the existing three guide cards, working philosophy and author context.
+- `/`: creator introduction, decorative editorial hero, topic cards linking to Substack/Goodreads/Twitch, core-channel shortcuts and a route to the grouped links hub. Guides and consulting remain accessible through the footer and hub.
 - `/guides`: the complete three-guide library.
 - `/guides/[slug]`: static articles from `src/data/guides.ts`.
+- `/links`: personal referrals with adjacent benefit disclosures, and a shared home for future labeled affiliate links and paid partnerships. Inventory: `src/data/referrals.ts`. No tracking, forms or embeds.
 - `/resources`: tools evidenced by this repository, without affiliate links.
 - `/consulting`: the approved $750 USD Monitoring & Alert Health Check, with
   clearly illustrative examples and assessment boundaries. The inquiry CTA opens
   the owner's exact public Upwork profile URL in a new tab; there is no email
   inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy, plus
-  a Connect section before the biography with verified Twitch, YouTube, Instagram, Snapchat, TikTok, Threads, Goodreads and Substack
+  a Connect section before the biography with verified YouTube, Instagram, TikTok, Twitch, Threads, Goodreads and Substack
   channels, a LinkedIn link and directly visible Guru/Upwork consulting links.
-  Service context remains in a native keyboard-accessible details disclosure. The header and
-  home hero link directly to `/about#profiles`; platform links open in a new tab.
+  Service context remains in a native keyboard-accessible details disclosure. The footer retains the `/about#profiles` shortcut; platform links open in a new tab.
   There are no channel embeds, live-status badges, highlight placeholders or
   new visitor/click analytics.
 
 `src/data/profiles.ts` is the shared inventory of owner-confirmed public URLs;
-`SocialChannels.astro` renders the same eight channel cards on Home and About,
-with Twitch visually prominent. J Sol is the shared public title/header/footer
-brand; the existing j mark, routes and content are retained. Shared design
-uses bold system typography, a restrained violet palette, rounded surfaces and
-local decorative SVG platform icons. Connect has a wider creator-focused panel;
+`SocialChannels.astro` preserves seven verified profile cards on About. `CoreChannels.astro` and `DestinationCard.astro` render the shared channel shortcuts on Home and Links. J Sol / Jacob is the public brand; existing routes, article content and favicon are retained. Shared design follows the approved Figma concept: warm paper, green ink, locally hosted DM Sans and Playfair Display, and an optimized editorial still life. Connect has a wider creator-focused panel;
 article reading width remains bounded. Motion is limited to hover feedback and
 disabled for reduced-motion preferences. No remote fonts or image assets are used.
 - `/privacy`: current data-handling explanation and legacy-service caveat.
 - Retired research/product URLs: noindex retirement notices with a link to guides.
 
-`PersonalLayout.astro` and `personal.css` provide the active shell and responsive
-styles. No client JavaScript is required. System fonts avoid external font requests.
+`PersonalLayout.astro`, `personal.css` and `creator.css` provide the active shell and responsive
+styles. No client JavaScript is required. The mobile menu uses the native HTML popover API with keyboard focus, Escape and light dismissal; a visible Close control is provided. Fonts and the optimized hero image are hosted locally, with no third-party asset requests.
 Canonicals, sitemap entries and internal links use extensionless routes, matching
 Cloudflare Pages' direct 200 responses; the physical build still contains .html files.
 Each guide owns its date-only publication/modification values using the owner's
@@ -56,8 +51,8 @@ but are not imported by active pages. Archived pages and tests are preserved in
 removes retired market data, health/settings feeds, downloads and advertising
 metadata from the distribution. It performs no live market-data requests.
 `verify:dist` checks active routes and excludes retired/private artifacts;
-`security:dist` scans for credentials. `freshness:live` now checks all nine reader-facing pages, valid build metadata
-and the expected revision, plus the exact public robots and nine-route sitemap endpoints, not market-data freshness. It rejects missing pages,
+`security:dist` scans for credentials. `freshness:live` now checks all ten reader-facing pages, valid build metadata
+and the expected revision, plus the exact public robots and ten-route sitemap endpoints, not market-data freshness. It rejects missing pages,
 homepage fallbacks, malformed metadata and a different deployed revision. This is only suitable after
 this redesign is deployed. The underlying checker is `check-personal-live.mjs`.
 Its SEO helper uses strict namespace-aware XML parsing for complete `urlset > url > loc`
@@ -96,3 +91,10 @@ profile. This is a profile link; it does not imply written reviews or live synci
 Substack links to the owner-confirmed Jsol’s Space publication at
 https://idolorthoughts.substack.com/. This is a public link only; it does not
 embed a signup form, synchronize accounts or publish content.
+
+
+## November 4 creator navigation
+
+The approved Figma home and links concept is implemented in Astro. Home topic cards lead to the owner-confirmed Substack, Goodreads and Twitch URLs; no empty topic pages or invented posts are created. `/links` groups the core channels, reading/writing, resources, personal referrals and professional work. Upwork and Guru have separate links. Facebook is named as a core channel but remains unlinked until its exact public URL is verified. Snapchat is omitted. Footer and mobile navigation retain guides, toolkit, consulting and `/about#profiles` access. The HSA referral benefit stays beside its link; privacy and toolkit copy explain the separation.
+
+Source hero: Figma node 2:30, AI-generated editorial still life, used decoratively with empty alt text and Astro responsive WebP variants. Font licenses are retained in `public/fonts`. No security-header changes, tracking or embedded channels were added.

@@ -1,10 +1,9 @@
 // Owner-confirmed public destinations. Keep personal and consulting identities distinct.
 export const channels = [
-  { id: 'twitch', name: 'Twitch', identity: 'jakecuzzi', url: 'https://www.twitch.tv/jakecuzzi', action: 'Visit Twitch' },
   { id: 'youtube', name: 'YouTube', identity: '@MrJakecuzzi', url: 'https://www.youtube.com/@MrJakecuzzi', action: 'Visit YouTube' },
   { id: 'instagram', name: 'Instagram', identity: '@jakejustjacob', url: 'https://www.instagram.com/jakejustjacob/', action: 'View Instagram' },
-  { id: 'snapchat', name: 'Snapchat', identity: '@jakecuzzi', url: 'https://www.snapchat.com/@jakecuzzi', action: 'View Snapchat' },
   { id: 'tiktok', name: 'TikTok', identity: '@mrjakecuzzi', url: 'https://www.tiktok.com/@mrjakecuzzi', action: 'View TikTok' },
+  { id: 'twitch', name: 'Twitch', identity: 'jakecuzzi', url: 'https://www.twitch.tv/jakecuzzi', action: 'Visit Twitch' },
   { id: 'threads', name: 'Threads', identity: '@jakejustjacob', url: 'https://www.threads.com/@jakejustjacob', action: 'View Threads' },
   { id: 'goodreads', name: 'Goodreads', identity: 'Books & reviews', url: 'https://www.goodreads.com/user/show/109460896-jacob', action: 'View Goodreads' },
   { id: 'substack', name: 'Substack', identity: 'Jsol\u2019s Space', url: 'https://idolorthoughts.substack.com/', action: 'Read on Substack' },

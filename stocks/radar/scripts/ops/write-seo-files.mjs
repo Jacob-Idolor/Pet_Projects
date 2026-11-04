@@ -25,6 +25,7 @@ Sitemap: ${site}/sitemap.xml
 `;
 
 const sitemapPages = [
+  { path: "/links", changefreq: "monthly", priority: "0.8" },
   { path: "/", changefreq: "monthly", priority: "1.0" },
   { path: "/guides", changefreq: "monthly", priority: "0.8" },
   { path: "/resources", changefreq: "monthly", priority: "0.6" },

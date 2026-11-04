@@ -9,12 +9,13 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const DIST = resolve(ROOT, "dist");
 const requiredFiles = [
   "index.html", "guides.html", "resources.html", "about.html", "privacy.html", "404.html",
-  "consulting.html",
+  "consulting.html", "links.html",
   "guides/before-you-automate.html", "guides/ai-output-you-can-check.html", "guides/starting-smaller.html",
   "build-meta.json", "robots.txt", "sitemap.xml",
 ];
 const contentChecks = [
-  ["index.html", /Make room for life/],
+  ["links.html", /HSA Store loyalty points/],
+  ["index.html", /A little curiosity/],
   ["guides.html", /Before you automate/],
   ["about.html", /J Sol/],
   ["consulting.html", /Monitoring &amp; Alert Health Check/],

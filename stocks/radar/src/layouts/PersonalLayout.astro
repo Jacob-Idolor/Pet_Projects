@@ -1,5 +1,6 @@
 ---
 import '../styles/personal.css';
+import '../styles/creator.css';
 interface Props {
   title: string;
   description: string;
@@ -12,7 +13,7 @@ const { title, description, active, noindex = false, article } = Astro.props;
 const canonicalPath = Astro.url.pathname === '/index.html' ? '/' : Astro.url.pathname.replace(/\.html$/, '');
 const canonical = new URL(canonicalPath, Astro.site);
 const authorUrl = new URL('/about', Astro.site);
-const navigation = [['Connect', '/about#profiles'], ['Guides', '/guides'], ['Resources', '/resources'], ['About', '/about'], ['Consulting', '/consulting']];
+const navigation = [['Stories', '/#stories'], ['Watch', '/links#watch'], ['Links', '/links'], ['About', '/about']];
 const articleData = article && !noindex ? {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
@@ -47,16 +48,22 @@ const articleJson = articleData && JSON.stringify(articleData).replace(/</g, '\\
       <meta property="article:author" content={authorUrl} />
       <script type="application/ld+json" set:html={articleJson} />
     </>}
-    <meta name="theme-color" content="#f7f7fb" />
+    <meta name="theme-color" content="#f5f2e9" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <header class="header wrap">
-      <a class="brand" href="/" aria-label="J Sol home"><span aria-hidden="true">j<span class="brand-dot">.</span></span> J Sol</a>
-      <nav aria-label="Primary">{navigation.map(([label, href]) => <a href={href} class:list={{ 'nav-connect': label === 'Connect' }} aria-current={active === label ? 'page' : undefined}>{label}</a>)}</nav>
+      <a class="brand" href="/" aria-label="J Sol / Jacob home">j. / Jacob</a>
+      <nav class="desktop-navigation" aria-label="Primary">{navigation.map(([label, href]) => <a href={href} aria-current={active === label ? 'page' : undefined}>{label}</a>)}</nav>
+      <button class="menu-toggle" popovertarget="mobile-menu">Menu <span aria-hidden="true">☰</span></button>
+      <nav id="mobile-menu" class="mobile-navigation" popover="auto" aria-label="Mobile navigation">
+        <div class="menu-heading"><strong>Find your way</strong><button popovertarget="mobile-menu" popovertargetaction="hide" aria-label="Close menu">Close ×</button></div>
+        {navigation.map(([label, href]) => <a href={label === 'Stories' ? '/' : label === 'Watch' ? '/links' : href} aria-current={active === label ? 'page' : undefined}>{label}</a>)}
+        <a href="/guides">Practical guides</a><a href="/resources">Toolkit</a><a href="/consulting">Consulting</a><a href="/about">All public profiles</a>
+      </nav>
     </header>
     <main id="main" tabindex="-1"><slot /></main>
-    <footer class="footer wrap"><div><a class="footer-name" href="/">J Sol</a><p>Useful systems. A little more room for life.</p></div><div><a href="/about">About this project</a><a href="/privacy">Privacy</a><span>Built small. Kept simple.</span></div></footer>
+    <footer class="footer"><div class="wrap"><a class="footer-name" href="/">J Sol / Jacob</a><p>A home for the things I’m learning and making.</p><div class="footer-links"><a href="/links">All links</a><a href="/guides">Practical guides</a><a href="/resources">Toolkit</a><a href="/consulting">Consulting</a><a href="/about#profiles">Connect</a><a href="/privacy">Privacy</a></div><p class="footer-domain">stockswatch.cc / Independent creator</p></div></footer>
   </body>
 </html>

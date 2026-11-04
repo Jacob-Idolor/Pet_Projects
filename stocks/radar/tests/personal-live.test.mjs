@@ -6,7 +6,8 @@ import { test } from "node:test";
 
 const checker = fileURLToPath(new URL("../scripts/ops/check-personal-live.mjs", import.meta.url));
 const pages = {
-  "/": "Make room for life.",
+  "/links": "One place.",
+  "/": "A little curiosity.",
   "/guides": "Before you automate",
   "/resources": "A small toolkit.",
   "/consulting": "Monitoring &amp; Alert Health Check",
@@ -70,7 +71,7 @@ async function runCheck({ missingPage, fallbackPage, metadata, injectedScript, r
 test("live check verifies the complete static reader journey and revision", async () => {
   const result = await runCheck();
   assert.equal(result.status, 0, result.output);
-  assert.match(result.output, /9 pages/);
+  assert.match(result.output, /10 pages/);
   assert.ok(result.requests.includes("/consulting"));
   assert.ok(result.requests.includes("/guides/starting-smaller"));
   for (const path of ["/nbis.json", "/downloads/research-workflow-sample.md", "/datacenter/app.js", "/datacenter/map.js", "/datacenter/style.css"]) assert.ok(result.requests.includes(path), path);
