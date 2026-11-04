@@ -15,7 +15,7 @@ const requiredFiles = [
 ];
 const contentChecks = [
   ["links.html", /HSA Store loyalty points/],
-  ["index.html", /Make room for life/],
+  ["index.html", /A little curiosity/],
   ["guides.html", /Before you automate/],
   ["about.html", /J Sol/],
   ["consulting.html", /Monitoring &amp; Alert Health Check/],

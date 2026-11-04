@@ -1,0 +1,6 @@
+---
+interface Props { name: string; description: string; href?: string; }
+const { name, description, href } = Astro.props;
+const external = href?.startsWith('https://');
+---
+{href ? <a class="destination-card" href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}><strong>{name} <span aria-hidden="true">↗</span></strong><span>{description}</span>{external && <span class="sr-only"> (opens in a new tab)</span>}</a> : <div class="destination-card destination-pending"><strong>{name}</strong><span>{description}</span><span class="small">Profile link coming soon</span></div>}

@@ -1,39 +1,19 @@
 ---
 import Layout from '../layouts/PersonalLayout.astro';
+import CoreChannels from '../components/CoreChannels.astro';
+import DestinationCard from '../components/DestinationCard.astro';
+import { channels, consultingProfiles, linkedIn } from '../data/profiles';
 import { referralLinks } from '../data/referrals';
+const readingDescriptions = { substack: 'Personal writing · Jsol’s Space', goodreads: 'Books & reviews', twitch: 'Live streams · jakecuzzi', threads: 'More conversation' };
+const reading = ['substack', 'goodreads', 'twitch', 'threads'].map(id => channels.find(channel => channel.id === id)!);
 ---
-<Layout title="Links & referrals" description="Jacob's personal referral links, with clear disclosures. One place to return to from Facebook, Instagram, YouTube and TikTok." active="Links">
-  <div class="wrap links-page">
-    <header class="page-head">
-      <p class="eyebrow">J Sol / Keep this link handy</p>
-      <h1>Shared once.<br />Easy to find again.</h1>
-      <p class="lead">Looking for a link I mentioned on Facebook, Instagram, YouTube or TikTok? My referrals live here, together in one place.</p>
-      <div class="hub-address"><span class="small">One address to bookmark</span><a href="/links">stockswatch.cc/links</a></div>
-    </header>
-    <section class="section" aria-labelledby="referrals-title">
-      <div class="section-head"><div><p class="eyebrow">The link collection</p><h2 id="referrals-title">Personal referrals</h2></div><p>Each listing explains my connection to the link, so you can decide for yourself.</p></div>
-      <div class="referral-list">
-        {referralLinks.map(link => <article class="referral-card" aria-labelledby={`${link.id}-title`}>
-          <div class="referral-symbol" aria-hidden="true">↗</div>
-          <div class="referral-body"><p class="eyebrow">{link.category}</p><h3 id={`${link.id}-title`}>{link.name}</h3><p>{link.description}</p><p class="referral-disclosure" id={`${link.id}-disclosure`}>{link.disclosure}</p><a class="button" href={link.url} target="_blank" rel="sponsored noopener noreferrer" aria-describedby={`${link.id}-disclosure`}>{link.action} <span aria-hidden="true">↗</span></a><p class="small link-note">Opens HSA Store in a new tab via a shortened referral link.</p></div>
-        </article>)}
-      </div>
-    </section>
-    <aside class="callout" aria-labelledby="disclosure-title"><h2 class="callout-title" id="disclosure-title">A note on referrals & partnerships</h2><p>Personal referrals, affiliate links and paid partnerships will be labeled individually. Any benefit I may receive will be explained beside the relevant link. A personal referral is not a paid brand partnership.</p><p>Offers and program terms can change. Check the destination for current details; no savings or rewards are guaranteed.</p></aside>
-    <section class="section hub-next" aria-labelledby="connect-title"><div><p class="eyebrow">Keep in touch</p><h2 id="connect-title">Four channels.<br />One home base.</h2><p class="lead">Facebook, Instagram, YouTube and TikTok are my main content channels. This page is the place to return to for shared links.</p></div><a class="button" href="/about#profiles">Find my public profiles <span aria-hidden="true">↗</span></a></section>
+<Layout title="Links & referrals" description="One place for Jacob’s social profiles, writing, reading, practical guides, professional work and clearly disclosed personal referrals." active="Links">
+  <div class="creator-page links-page">
+    <header class="links-intro wrap"><p class="eyebrow">The shortcuts</p><h1>One place.<br />All the good links.</h1><p class="lead">Choose what you came for. Everything has a little context, so you know where you’re going.</p><div class="inline-links jump-links" aria-label="Jump to a link category"><a href="#watch">Socials</a><a href="#reading">Read &amp; write</a><a href="#resources">Resources</a><a href="#referrals">Referrals</a><a href="#work">Work</a></div></header>
+    <section class="hub-section wrap hub-socials" id="watch" tabindex="-1" aria-labelledby="watch-title"><h2 id="watch-title">Watch &amp; connect</h2><CoreChannels /></section>
+    <section class="hub-section wrap" id="reading" tabindex="-1" aria-labelledby="reading-title"><h2 id="reading-title">Read, write &amp; hang out</h2><div class="destination-grid">{reading.map(channel => <DestinationCard name={channel.name} description={readingDescriptions[channel.id as keyof typeof readingDescriptions]} href={channel.url} />)}</div></section>
+    <section class="hub-section wrap" id="resources" tabindex="-1" aria-labelledby="resources-title"><h2 id="resources-title">Useful resources</h2><div class="destination-grid destination-grid-three"><DestinationCard name="Practical guides" description="Technology, systems & automation" href="/guides" /><DestinationCard name="Toolkit" description="The tools behind this project" href="/resources" /><DestinationCard name="Referrals & partnerships" description="Clear terms and disclosures" href="#referrals" /></div></section>
+    <section class="referral-section" id="referrals" tabindex="-1" aria-labelledby="referrals-title"><div class="wrap"><h2 id="referrals-title">Personal referrals</h2><p class="section-intro">A place for the links I share. Each one explains my connection, so you can decide for yourself.</p><div class="referral-list">{referralLinks.map(link => <article class="referral-card" aria-labelledby={`${link.id}-title`}><div><p class="eyebrow">{link.category}</p><h3 id={`${link.id}-title`}>{link.name}</h3><p>{link.description}</p></div><div><p class="referral-disclosure" id={`${link.id}-disclosure`}>{link.disclosure}</p><a class="button" href={link.url} target="_blank" rel="sponsored noopener noreferrer" aria-describedby={`${link.id}-disclosure`}>{link.action} <span aria-hidden="true">↗</span></a><p class="small link-note">Opens HSA Store in a new tab via a shortened referral link.</p></div></article>)}</div><aside class="recommendation-note"><h3>A note on recommendations</h3><p>Personal referrals, affiliate links and paid partnerships will be labeled individually, with any benefit I may receive explained beside the link. A personal referral is not a paid brand partnership. Check each destination’s current terms before buying.</p></aside></div></section>
+    <section class="hub-section wrap work-section" id="work" tabindex="-1" aria-labelledby="work-title"><h2 id="work-title">Professional work</h2><div class="destination-grid"><DestinationCard name="Consulting" description="Monitoring & Alert Health Check" href="/consulting" /><DestinationCard name="LinkedIn" description="Professional background" href={linkedIn.url} />{consultingProfiles.map(profile => <DestinationCard name={profile.name} description="Freelance profile" href={profile.url} />)}</div></section>
   </div>
 </Layout>
-<style>
-  .hub-address { display: flex; flex-direction: column; gap: 6px; padding: 20px 24px; margin-top: 28px; border: 1px solid var(--line); border-radius: 18px; background: #fff; width: fit-content; max-width: 100%; }
-  .hub-address a { font-weight: 750; overflow-wrap: anywhere; }
-  .referral-card { display: flex; gap: 28px; max-width: 850px; padding: 34px; border: 1px solid var(--line); border-radius: 24px; background: #fff; box-shadow: var(--shadow); }
-  .referral-symbol { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 60px; height: 60px; border-radius: 18px; background: #eee8f8; color: var(--accent); font-size: 2rem; }
-  .referral-body { min-width: 0; }
-  .referral-body .eyebrow { margin-bottom: 12px; }
-  .referral-body h3 { font-size: 2rem; }
-  .referral-disclosure { padding: 16px 20px; border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; background: #f5f1fb; font-size: .95rem; }
-  .link-note { margin: 12px 0 0; }
-  .hub-next { display: flex; align-items: center; justify-content: space-between; gap: 32px; }
-  .hub-next .button { flex-shrink: 0; }
-  @media (max-width: 760px) { .referral-card { padding: 24px; flex-direction: column; gap: 20px; } .hub-next { align-items: flex-start; flex-direction: column; } }
-</style>

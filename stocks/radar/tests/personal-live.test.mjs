@@ -6,8 +6,8 @@ import { test } from "node:test";
 
 const checker = fileURLToPath(new URL("../scripts/ops/check-personal-live.mjs", import.meta.url));
 const pages = {
-  "/links": "Shared once.",
-  "/": "Make room for life.",
+  "/links": "One place.",
+  "/": "A little curiosity.",
   "/guides": "Before you automate",
   "/resources": "A small toolkit.",
   "/consulting": "Monitoring &amp; Alert Health Check",

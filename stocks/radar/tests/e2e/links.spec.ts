@@ -25,7 +25,7 @@ for (const width of [320, 390, 1440]) {
   test(`referral hub is accessible and usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/links');
-    await expect(page.getByRole('navigation').getByRole('link', { name: 'Links', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('.desktop-navigation a[href="/links"]')).toHaveAttribute('aria-current', 'page');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(result.violations).toEqual([]);

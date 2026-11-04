@@ -40,7 +40,7 @@ for (const width of [1440, 390]) {
       expect(response?.headers()['content-security-policy']).toBe(csp);
       await page.evaluate(async () => { await document.fonts.ready; await new Promise(requestAnimationFrame); });
       await expect(page.locator('style, [style]')).toHaveCount(0);
-      await expect(page.locator('body')).toHaveCSS('font-family', /Segoe UI/);
+      await expect(page.locator('body')).toHaveCSS('font-family', /DM Sans/);
       if (route === '/about') await expect(page.locator('.connect-heading')).toHaveCSS('display', 'grid');
       if (route === '/guides') await expect(page.locator('.guide-title').first()).toHaveCSS('font-size', '24px');
       if (route.startsWith('/guides/')) {
