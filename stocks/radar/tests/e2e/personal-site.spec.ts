@@ -22,7 +22,7 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   const page = await context.newPage();
   await page.goto('/');
   await expect(page).toHaveTitle('Jacob \u00b7 J Sol');
-  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(8);
+  await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link')).toHaveCount(7);
   await expect(page.getByRole('region', { name: 'Find me here' }).getByRole('link', { name: 'Substack Jsol\u2019s Space Read on Substack' })).toHaveAttribute('href', 'https://idolorthoughts.substack.com/');
   await expect(page.getByRole('link', { name: 'Connect with Jacob', exact: true })).toHaveAttribute('href', '/about#profiles');
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Connect', exact: true }).focus();
@@ -32,11 +32,10 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   await expect(profiles).toBeVisible();
   await expect(profiles).toBeFocused();
   const destinations = [
-    'https://www.twitch.tv/jakecuzzi',
     'https://www.youtube.com/@MrJakecuzzi',
     'https://www.instagram.com/jakejustjacob/',
-    'https://www.snapchat.com/@jakecuzzi',
     'https://www.tiktok.com/@mrjakecuzzi',
+    'https://www.twitch.tv/jakecuzzi',
     'https://www.threads.com/@jakejustjacob',
     'https://www.goodreads.com/user/show/109460896-jacob',
     'https://idolorthoughts.substack.com/',
@@ -117,7 +116,7 @@ test('new reader journey works without JavaScript', async ({ browser, baseURL })
   await context.close();
 });
 
-for (const path of ['/', '/guides', '/resources', '/consulting', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller']) {
+for (const path of ['/', '/links', '/guides', '/resources', '/consulting', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller']) {
   test(`mobile accessibility and metadata: ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(path);
@@ -151,7 +150,7 @@ test('retired routes explain the change and private/data files are absent', asyn
 });
 
 test('all internal page links resolve and no third-party scripts are loaded', async ({ page, request }) => {
-  const paths = ['/', '/guides', '/resources', '/consulting', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller'];
+  const paths = ['/', '/links', '/guides', '/resources', '/consulting', '/about', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller'];
   const links = new Set<string>();
   for (const path of paths) {
     await page.goto(path);
@@ -193,8 +192,8 @@ test('sitemap URLs are direct 200 pages with matching canonicals', async ({ page
   const sitemap = await request.get('/sitemap.xml', { maxRedirects: 0 });
   expect(sitemap.status()).toBe(200);
   const urls = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
-  expect(urls).toHaveLength(9);
-  expect(new Set(urls).size).toBe(9);
+  expect(urls).toHaveLength(10);
+  expect(new Set(urls).size).toBe(10);
   for (const url of urls) {
     const parsed = new URL(url);
     expect(parsed.origin).toBe('https://stockswatch.cc');

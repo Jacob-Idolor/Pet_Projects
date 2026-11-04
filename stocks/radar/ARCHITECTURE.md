@@ -10,17 +10,18 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
 
 ## Active pages
 
-- `/`: clear Jacob introduction, prominent Connect action and Twitch/YouTube/Instagram/Snapchat/TikTok/Threads/Goodreads/Substack
+- `/`: clear Jacob introduction, prominent Connect action and YouTube/Instagram/TikTok/Twitch/Threads/Goodreads/Substack
   links before the existing three guide cards, working philosophy and author context.
 - `/guides`: the complete three-guide library.
 - `/guides/[slug]`: static articles from `src/data/guides.ts`.
+- `/links`: personal referrals with adjacent benefit disclosures, and a shared home for future labeled affiliate links and paid partnerships. Inventory: `src/data/referrals.ts`. No tracking, forms or embeds.
 - `/resources`: tools evidenced by this repository, without affiliate links.
 - `/consulting`: the approved $750 USD Monitoring & Alert Health Check, with
   clearly illustrative examples and assessment boundaries. The inquiry CTA opens
   the owner's exact public Upwork profile URL in a new tab; there is no email
   inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy, plus
-  a Connect section before the biography with verified Twitch, YouTube, Instagram, Snapchat, TikTok, Threads, Goodreads and Substack
+  a Connect section before the biography with verified YouTube, Instagram, TikTok, Twitch, Threads, Goodreads and Substack
   channels, a LinkedIn link and directly visible Guru/Upwork consulting links.
   Service context remains in a native keyboard-accessible details disclosure. The header and
   home hero link directly to `/about#profiles`; platform links open in a new tab.
@@ -28,8 +29,8 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   new visitor/click analytics.
 
 `src/data/profiles.ts` is the shared inventory of owner-confirmed public URLs;
-`SocialChannels.astro` renders the same eight channel cards on Home and About,
-with Twitch visually prominent. J Sol is the shared public title/header/footer
+`SocialChannels.astro` renders the same seven channel cards on Home and About,
+with YouTube visually prominent. J Sol is the shared public title/header/footer
 brand; the existing j mark, routes and content are retained. Shared design
 uses bold system typography, a restrained violet palette, rounded surfaces and
 local decorative SVG platform icons. Connect has a wider creator-focused panel;
@@ -56,8 +57,8 @@ but are not imported by active pages. Archived pages and tests are preserved in
 removes retired market data, health/settings feeds, downloads and advertising
 metadata from the distribution. It performs no live market-data requests.
 `verify:dist` checks active routes and excludes retired/private artifacts;
-`security:dist` scans for credentials. `freshness:live` now checks all nine reader-facing pages, valid build metadata
-and the expected revision, plus the exact public robots and nine-route sitemap endpoints, not market-data freshness. It rejects missing pages,
+`security:dist` scans for credentials. `freshness:live` now checks all ten reader-facing pages, valid build metadata
+and the expected revision, plus the exact public robots and ten-route sitemap endpoints, not market-data freshness. It rejects missing pages,
 homepage fallbacks, malformed metadata and a different deployed revision. This is only suitable after
 this redesign is deployed. The underlying checker is `check-personal-live.mjs`.
 Its SEO helper uses strict namespace-aware XML parsing for complete `urlset > url > loc`

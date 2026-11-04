@@ -3,6 +3,7 @@ import { validateRobots, parseSitemap } from "../lib/personal-seo.mjs";
 const site = (process.argv[2] || "https://stockswatch.cc").replace(/\/$/, "");
 const revision = Date.now();
 const pages = [
+  ["/links", "Shared once."],
   ["/", "Make room for life."],
   ["/guides", "Before you automate"],
   ["/resources", "A small toolkit."],

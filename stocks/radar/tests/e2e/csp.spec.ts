@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const routes = ['/', '/about', '/consulting', '/guides', '/resources', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller'];
+const routes = ['/', '/links', '/about', '/consulting', '/guides', '/resources', '/privacy', '/guides/before-you-automate', '/guides/ai-output-you-can-check', '/guides/starting-smaller'];
 const csp = readFileSync('dist/_headers', 'utf8').match(/Content-Security-Policy:\s*([^\r\n]+)/i)![1];
 const sourceTree = execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
 const reviewedHead = process.env.REVIEWED_HEAD_SHA || 'HEAD';
