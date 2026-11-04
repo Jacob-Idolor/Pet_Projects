@@ -1,10 +1,10 @@
 ---
 import DestinationCard from './DestinationCard.astro';
-import { channels } from '../data/profiles';
+import { channels, facebookPage } from '../data/profiles';
 const descriptions = { youtube: 'Videos & longer stories', instagram: 'Everyday moments', tiktok: 'Short clips & discoveries' };
 const core = channels.filter(channel => ['youtube', 'instagram', 'tiktok'].includes(channel.id));
 ---
 <div class="destination-grid core-channels">
   {core.map(channel => <DestinationCard name={channel.name} description={descriptions[channel.id as keyof typeof descriptions]} href={channel.url} />)}
-  <DestinationCard name="Facebook" description="Posts & conversation" />
+  <DestinationCard name={facebookPage.name} description="Posts & conversation" href={facebookPage.url} />
 </div>
