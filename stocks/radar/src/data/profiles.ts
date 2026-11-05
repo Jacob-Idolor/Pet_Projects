@@ -1,4 +1,6 @@
 // Owner-confirmed public destinations. Keep personal and consulting identities distinct.
+// Creator Page only; Jacob's personal Facebook profile is intentionally separate.
+export const facebookPage = { name: 'Facebook', url: 'https://www.facebook.com/profile.php?id=61596047859545' } as const;
 export const channels = [
   { id: 'youtube', name: 'YouTube', identity: '@MrJakecuzzi', url: 'https://www.youtube.com/@MrJakecuzzi', action: 'Visit YouTube' },
   { id: 'instagram', name: 'Instagram', identity: '@jakejustjacob', url: 'https://www.instagram.com/jakejustjacob/', action: 'View Instagram' },

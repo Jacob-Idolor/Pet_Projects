@@ -9,8 +9,13 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       await page.evaluate(() => document.fonts.ready);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect(page.locator('h1')).toHaveCount(1);
-      await expect(page.locator('a[href*="snapchat"], a[href*="facebook"]')).toHaveCount(0);
-      await expect(page.getByText('Profile link coming soon', { exact: true })).toBeVisible();
+      await expect(page.locator('a[href*="snapchat"]')).toHaveCount(0);
+      const facebook = page.locator('a[href*="facebook.com"]');
+      await expect(facebook).toHaveCount(1);
+      await expect(facebook).toHaveAttribute('href', 'https://www.facebook.com/profile.php?id=61596047859545');
+      await expect(facebook).toHaveAttribute('target', '_blank');
+      await expect(facebook).toHaveAttribute('rel', 'noopener noreferrer');
+      await expect(page.getByText('Profile link coming soon', { exact: true })).toHaveCount(0);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
       await page.screenshot({ path: `test-results/creator-${path === '/' ? 'home' : 'links'}-${width}.png`, fullPage: true });
     });
