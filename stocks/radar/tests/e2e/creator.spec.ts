@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for (const width of [320, 390, 768, 1024, 1440]) {
-  for (const path of ['/', '/links']) {
+  for (const path of ['/', '/links', '/about']) {
     test(`creator layout and accessibility ${path} at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(path);
@@ -17,7 +17,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       await expect(facebook).toHaveAttribute('rel', 'noopener noreferrer');
       await expect(page.getByText('Profile link coming soon', { exact: true })).toHaveCount(0);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
-      await page.screenshot({ path: `test-results/creator-${path === '/' ? 'home' : 'links'}-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `test-results/creator-${path === '/' ? 'home' : path.slice(1)}-${width}.png`, fullPage: true });
     });
   }
 }
