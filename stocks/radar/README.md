@@ -1,8 +1,9 @@
-# Jacob Builds
+# J Sol
 
-The current local application is a small personal publishing site about practical
-AI, automation and systems, reusing stockswatch.cc. Home, Guides, Resources and
-About are the main navigation, with three articles and a short privacy page.
+The current application is Jacob's personal site, reusing stockswatch.cc. Home
+and About feature his public channels; Guides, Resources and Consulting retain
+the practical AI, automation and systems content, with three articles and a
+short privacy page.
 The owner authorized retiring StocksWatch; the previous research and sales plan
 below is historical. See [ARCHITECTURE.md](ARCHITECTURE.md) for the active design
 and [LAUNCH_STATUS.md](LAUNCH_STATUS.md) for release blockers.
@@ -13,9 +14,13 @@ and [LAUNCH_STATUS.md](LAUNCH_STATUS.md) for release blockers.
 - Cloudflare Pages direct uploads through GitHub Actions and Wrangler. Terraform
   in `infra/terraform` defines the Pages project, custom-domain attachment and DNS
   CNAME, with `prevent_destroy` on the project. The old AWS site was retired.
-- The new build reads local content and makes no market-data requests. This
-  revision replaces scheduled Yahoo/SEC refreshes with a manual publishing
-  workflow; PR and main-push validation retain the preserved legacy source tests.
+- The build reads local content and makes no market-data requests. Publishing
+  is manual; there is no scheduled Yahoo/SEC refresh or push-triggered upload.
+  PR and main-push validation retain source, security, browser and Terraform
+  checks. Legacy Python checks run in `stocks-radar-legacy-validate.yml` when
+  their source, inputs, dependencies, tests or workflow change, or on manual
+  dispatch. Ordinary page/style edits do not install market-data dependencies.
+  Standard-library private-pack checks remain in the main validation job.
 - No accounts, database, checkout, newsletter form or analytics in the redesigned
   site. Legacy Stripe, Buttondown and sandbox Worker/R2 services have not been
   cancelled; removing website links does not close accounts or settle billing.
@@ -36,7 +41,7 @@ Run `npm test`, `npm run typecheck`, `npm run build`, `npm run verify:dist`,
 `npm run security:dist`, `npm run policy:dist`, `npm run security:deps` and
 `npm run test:e2e` before release.
 The build is static and strips retired data, downloads and ad metadata from dist.
-`freshness:live` now checks all eight reader-facing pages and build metadata;
+`freshness:live` checks all nine reader-facing pages, SEO files and build metadata;
 `EXPECTED_GIT_SHA` makes it reject a different deployed revision. It is suitable
 for the new site after deployment, and is not a market-data freshness check.
 
@@ -48,6 +53,13 @@ and Terraform validation. See [DEPLOY.md](DEPLOY.md) for the publishing route.
 ---
 
 # Historical StocksWatch notes
+
+Archival reference only: the setup, feature descriptions and source map below
+describe the retired site. J Sol does not load the NBIS dashboard, ad components
+or newsletter form. Removed source paths can be recovered from the pre-cleanup
+Git commit `3b2d2150fe8e1955122bae4667c6812a3b197581`; they are not current
+maintenance instructions. Use the current stack and validation sections above
+and [ARCHITECTURE.md](ARCHITECTURE.md) for the active site.
 
 StocksWatch is a calm, source-linked daily research desk for Nebius Group (`NBIS`) and the AI infrastructure buildout. It is intentionally small: Astro static output, one daily snapshot, Cloudflare Pages, and GitHub Actions. It is educational and not financial advice.
 
@@ -116,7 +128,7 @@ AdSense is wired for later but is not required for the site to work. Ads are man
 
 The site is hosted on Cloudflare Pages with static output. Terraform configuration remains under `infra/terraform/`; no deployment or infrastructure mutation is performed by normal local builds.
 
-## Important files
+## Historical source map (before cleanup)
 
 ```text
 src/pages/index.astro          # NBIS research desk
