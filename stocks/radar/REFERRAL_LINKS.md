@@ -19,7 +19,7 @@ loyalty points from qualifying purchases. No visitor benefit or reward amount
 is promised. Recheck https://hsastore.com/terms-and-conditions.html/ before
 changing the placement to business affiliate lead generation or a discount site.
 
-Facebook links on Home and Links use the owner-confirmed creator Page at
+Facebook links on Home, Links and About use the owner-confirmed creator Page at
 https://www.facebook.com/profile.php?id=61596047859545. The personal Facebook
 profile is intentionally separate. YouTube, Instagram and TikTok lead the verified public profile
 inventory. Other existing verified channels remain available; Snapchat is omitted.

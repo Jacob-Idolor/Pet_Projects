@@ -1,10 +1,12 @@
 ---
 import SocialChannels from './SocialChannels.astro';
+import DestinationCard from './DestinationCard.astro';
 import PlatformIcon from './PlatformIcon.astro';
-import { linkedIn, consultingProfiles } from '../data/profiles';
+import { linkedIn, consultingProfiles, facebookPage } from '../data/profiles';
 ---
 <section id="profiles" aria-labelledby="profiles-title" tabindex="-1">
   <div class="connect-heading"><div><p class="eyebrow">Around the internet</p><h2 id="profiles-title">Connect with Jacob</h2></div><p>My main content channels are Facebook, Instagram, YouTube and TikTok. Verified public profiles are linked below and open in a new tab.</p></div>
+  <div class="facebook-profile"><DestinationCard name={facebookPage.name} description="J Sol creator Page · Posts & conversation" href={facebookPage.url} /></div>
   <SocialChannels />
   <div class="connect-extras">
     <p class="professional-link"><a href={linkedIn.url} target="_blank" rel="noopener noreferrer"><span class="extra-icon" aria-hidden="true"><PlatformIcon kind="linkedin" /></span><span>Find me on LinkedIn<span class="extra-description">Professional profile</span></span><span class="extra-arrow" aria-hidden="true"><PlatformIcon kind="arrow" /></span></a></p>
@@ -19,6 +21,7 @@ import { linkedIn, consultingProfiles } from '../data/profiles';
   </div>
 </section>
 <style>
+  .facebook-profile { margin-bottom: 18px; }
   #profiles { scroll-margin-top: 26px; margin-block: 36px 48px; padding: 36px; border: 1px solid #e3ddec; border-radius: 32px; background: #ffffffb8; box-shadow: 0 22px 70px -45px #38245666; }
   .connect-heading { display: grid; grid-template-columns: 1.2fr 1fr; align-items: end; gap: 32px; margin-bottom: 30px; }
   .connect-heading .eyebrow { margin-bottom: 12px; }

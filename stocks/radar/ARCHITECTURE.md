@@ -20,7 +20,7 @@ on October 5, 2026. There are no new services, accounts, databases or payments.
   the owner's exact public Upwork profile URL in a new tab; there is no email
   inquiry link, embedded form, booking system or payment integration.
 - `/about`: owner-provided professional background and project philosophy, plus
-  a Connect section before the biography with verified YouTube, Instagram, TikTok, Twitch, Threads, Goodreads and Substack
+  a Connect section before the biography with verified Facebook creator Page, YouTube, Instagram, TikTok, Twitch, Threads, Goodreads and Substack
   channels, a LinkedIn link and directly visible Guru/Upwork consulting links.
   Service context remains in a native keyboard-accessible details disclosure. The footer retains the `/about#profiles` shortcut; platform links open in a new tab.
   There are no channel embeds, live-status badges, highlight placeholders or
@@ -98,3 +98,5 @@ embed a signup form, synchronize accounts or publish content.
 The approved Figma home and links concept is implemented in Astro. Home topic cards lead to the owner-confirmed Substack, Goodreads and Twitch URLs; no empty topic pages or invented posts are created. `/links` groups the core channels, reading/writing, resources, personal referrals and professional work. Upwork and Guru have separate links. Facebook links to the owner-confirmed creator Page at `https://www.facebook.com/profile.php?id=61596047859545`; the personal Facebook profile is intentionally separate. Snapchat is omitted. Footer and mobile navigation retain guides, toolkit, consulting and `/about#profiles` access. The HSA referral benefit stays beside its link; privacy and toolkit copy explain the separation.
 
 Source hero: Figma node 2:30, AI-generated editorial still life, used decoratively with empty alt text and Astro responsive WebP variants. Font licenses are retained in `public/fonts`. No security-header changes, tracking or embedded channels were added.
+
+The `/about#profiles` section renders the same `facebookPage` destination used by Home and Links, via the shared DestinationCard, before the preserved seven other channel cards.

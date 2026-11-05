@@ -29,6 +29,7 @@ test('Connect reaches the approved public profiles by keyboard without JavaScrip
   await expect(profiles).toBeVisible();
   await expect(profiles).toBeFocused();
   const destinations = [
+    'https://www.facebook.com/profile.php?id=61596047859545',
     'https://www.youtube.com/@MrJakecuzzi',
     'https://www.instagram.com/jakejustjacob/',
     'https://www.tiktok.com/@mrjakecuzzi',
