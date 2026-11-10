@@ -1,0 +1,24 @@
+---
+import { Image } from 'astro:assets';
+import cover from '../assets/pick-my-next-book-cover.png';
+import { featuredBookVote as video } from '../data/videos.mjs';
+---
+{video && <section class="book-vote wrap" id="book-vote" tabindex="-1" aria-labelledby="book-vote-title">
+  <div class="book-vote-panel">
+    <Image class="book-vote-cover" src={cover} alt="Pick My Next Book cover: Jacob holds three fantasy books." width={470} widths={[235, 470, 705, 941]} sizes="(max-width: 760px) calc(100vw - 96px), 270px" format="webp" quality={84} loading="lazy" />
+    <div class="book-vote-copy"><p class="eyebrow">Help choose what comes next</p><h2 id="book-vote-title">{video.title}</h2><p class="lead">{video.description}</p><a class="button" href={video.publications[0].url} target="_blank" rel="noopener noreferrer">Watch the vote video <span aria-hidden="true">↗</span></a><p class="small">Opens the published Facebook reel in a new tab.</p><p class="also-label">Prefer another platform?</p><ul class="video-platforms">{video.publications.slice(1).map(publication => <li><a href={publication.url} target="_blank" rel="noopener noreferrer">{publication.platform} <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></li>)}</ul></div>
+  </div>
+</section>}
+<style>
+  .book-vote { padding-block: 16px 40px; scroll-margin-top: 24px; }
+  .book-vote-panel { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: 64px; padding: 32px; border: 1px solid var(--line); border-radius: 24px; background: #fff; }
+  .book-vote-cover { display: block; width: 100%; max-width: 270px; height: auto; border-radius: 14px; margin: auto; }
+  .book-vote-copy { min-width: 0; }
+  .book-vote-copy .lead { font-size: 20px; }
+  .book-vote-copy .button { margin-bottom: 14px; }
+  .also-label { margin: 24px 0 6px; font-size: 14px; font-weight: 700; }
+  .video-platforms { display: flex; flex-wrap: wrap; gap: 4px 24px; padding: 0; margin: 0; list-style: none; }
+  .video-platforms a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; }
+  @media (max-width: 900px) { .book-vote-panel { gap: 32px; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); } }
+  @media (max-width: 760px) { .book-vote-panel { grid-template-columns: 1fr; padding: 24px; } .book-vote-copy .lead { font-size: 17px; } .book-vote-copy .button { width: 100%; } }
+</style>
