@@ -100,3 +100,18 @@ The approved Figma home and links concept is implemented in Astro. Home topic ca
 Source hero: Figma node 2:30, AI-generated editorial still life, used decoratively with empty alt text and Astro responsive WebP variants. Font licenses are retained in `public/fonts`. No security-header changes, tracking or embedded channels were added.
 
 The `/about#profiles` section renders the same `facebookPage` destination used by Home and Links, via the shared DestinationCard, before the preserved seven other channel cards.
+
+
+## November 10 creator content update
+
+The approved book-vote cover links to verified published videos across the core
+four platforms. A curated video shelf and creator-first About copy keep books,
+reflections and gaming prominent while preserving engineering and consulting.
+The shared layout supplies a branded 1200x630 share image. See CONTENT_UPDATES.md
+for provenance and maintenance commands.
+
+One shared visible primary navigation wraps on mobile and exposes Stories,
+Watch, Links and About. Replacing the popover avoids same-page overlay dismissal
+and focus issues without JavaScript or security-header changes. Anchor targets
+remain keyboard-focusable with visible focus indicators. Footer navigation
+preserves guides, toolkit, consulting, privacy and /about#profiles.

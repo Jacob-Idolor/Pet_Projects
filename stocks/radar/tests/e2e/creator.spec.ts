@@ -10,7 +10,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.locator('a[href*="snapchat"]')).toHaveCount(0);
-      const facebook = page.locator('a[href*="facebook.com"]');
+      const facebook = page.locator('a[href="https://www.facebook.com/profile.php?id=61596047859545"]');
       await expect(facebook).toHaveCount(1);
       await expect(facebook).toHaveAttribute('href', 'https://www.facebook.com/profile.php?id=61596047859545');
       await expect(facebook).toHaveAttribute('target', '_blank');
@@ -22,26 +22,23 @@ for (const width of [320, 390, 768, 1024, 1440]) {
   }
 }
 
-test('mobile menu opens by keyboard, escapes to its trigger and navigates without scripts', async ({ browser, baseURL }) => {
-  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+test('visible mobile navigation works by keyboard without scripts', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width: 320, height: 844 } });
   const page = await context.newPage();
   await page.goto('/');
-  const toggle = page.getByRole('button', { name: 'Menu', exact: true });
-  await toggle.focus();
+  const navigation = page.getByRole('navigation', { name: 'Primary' });
+  const stories = navigation.getByRole('link', { name: 'Stories', exact: true });
+  await expect(stories).toBeVisible();
+  await stories.focus();
   await page.keyboard.press('Enter');
-  const menu = page.getByRole('navigation', { name: 'Mobile navigation' });
-  await expect(menu).toBeVisible();
+  await expect(page.locator('#stories')).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(menu.getByRole('button', { name: 'Close menu' })).toBeFocused();
-  await page.keyboard.press('Escape');
-  await expect(menu).not.toBeVisible();
-  await expect(toggle).toBeFocused();
-  await toggle.click();
-  await menu.getByRole('link', { name: 'Links', exact: true }).click();
+  await expect(page.locator('#stories a').first()).toBeFocused();
+  await navigation.getByRole('link', { name: 'Links', exact: true }).focus();
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/links$/);
-  await expect(menu).not.toBeVisible();
-  await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await menu.getByRole('link', { name: 'All public profiles' }).click();
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'About', exact: true }).focus();
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.locator('#profiles')).toBeVisible();
   await context.close();
@@ -68,7 +65,7 @@ test('200 percent zoom reflow retains text, disclosures and usable navigation', 
   for (const path of ['/', '/links', '/consulting']) {
     await page.goto(path);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
     if (path === '/links') await expect(page.getByRole('article', { name: 'HSA Store' })).toContainText('loyalty points');
   }
 });

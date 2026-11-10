@@ -2,6 +2,8 @@
 import { Image } from 'astro:assets';
 import Layout from '../layouts/PersonalLayout.astro';
 import CoreChannels from '../components/CoreChannels.astro';
+import FeaturedBookVote from '../components/FeaturedBookVote.astro';
+import RecentVideos from '../components/RecentVideos.astro';
 import stillLife from '../assets/creator-still-life.png';
 import { channels } from '../data/profiles';
 const substack = channels.find(channel => channel.id === 'substack')!;
@@ -16,6 +18,7 @@ const twitch = channels.find(channel => channel.id === 'twitch')!;
       </div>
       <Image class="creator-image" src={stillLife} alt="" width={1052} height={880} widths={[342, 526, 1052]} sizes="(max-width: 760px) calc(100vw - 48px), (max-width: 1200px) 43vw, 526px" format="webp" quality={80} loading="eager" fetchpriority="high" />
     </section>
+    <FeaturedBookVote />
     <section class="interest-section wrap" id="stories" tabindex="-1" aria-labelledby="stories-title"><p class="eyebrow">Make yourself at home</p><h2 id="stories-title">Follow your curiosity.</h2><p class="section-intro">A few paths into my world. No need to choose just one.</p>
       <div class="topic-grid">
         <a class="topic-card sage" href={substack.url} target="_blank" rel="noopener noreferrer"><span class="topic-number">01</span><h3>Stories &amp; reflections</h3><p>Personal growth, everyday observations, and finding the words.</p><span class="topic-action">Read on Substack <span aria-hidden="true">↗</span></span><span class="sr-only"> (opens in a new tab)</span></a>
@@ -23,6 +26,7 @@ const twitch = channels.find(channel => channel.id === 'twitch')!;
         <a class="topic-card yellow" href={twitch.url} target="_blank" rel="noopener noreferrer"><span class="topic-number">03</span><h3>Gaming &amp; downtime</h3><p>Highlights, play, and making room for a little fun.</p><span class="topic-action">Visit Twitch <span aria-hidden="true">↗</span></span><span class="sr-only"> (opens in a new tab)</span></a>
       </div>
     </section>
+    <RecentVideos />
     <section class="watch-section" id="watch" aria-labelledby="watch-title"><div class="wrap"><h2 id="watch-title">Same Jacob. Your favorite platform.</h2><p>Watch, read, or say hello wherever you feel at home.</p><CoreChannels /></div></section>
     <section class="specific-section wrap" aria-labelledby="specific-title"><h2 id="specific-title">Looking for something specific?</h2><p class="section-intro">Find my reading list, writing, live streams, practical guides, and professional work in one organized place.</p><a class="button" href="/links">Open all my links <span aria-hidden="true">↗</span></a><div class="inline-links"><a href="/links#reading">Reading &amp; writing</a><a href="/links#referrals">Tools &amp; referrals</a><a href="/consulting">Consulting</a></div></section>
   </div>

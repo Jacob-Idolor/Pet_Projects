@@ -11,11 +11,12 @@ const requiredFiles = [
   "index.html", "guides.html", "resources.html", "about.html", "privacy.html", "404.html",
   "consulting.html", "links.html",
   "guides/before-you-automate.html", "guides/ai-output-you-can-check.html", "guides/starting-smaller.html",
-  "build-meta.json", "robots.txt", "sitemap.xml",
+  "build-meta.json", "robots.txt", "sitemap.xml", "social/j-sol-share.png",
 ];
 const contentChecks = [
   ["links.html", /HSA Store loyalty points/],
   ["index.html", /A little curiosity/],
+  ["index.html", /Pick My Next Book/],
   ["guides.html", /Before you automate/],
   ["about.html", /J Sol/],
   ["consulting.html", /Monitoring &amp; Alert Health Check/],

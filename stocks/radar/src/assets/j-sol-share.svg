@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <title>J Sol / Jacob</title>
+  <desc>Books, personal reflections and gaming. A little curiosity. A lot of real life.</desc>
+  <rect width="1200" height="630" fill="#f5f2e9"/>
+  <rect width="16" height="630" fill="#173d32"/>
+  <circle cx="1130" cy="98" r="152" fill="#e4ebd9"/>
+  <circle cx="1165" cy="110" r="92" fill="none" stroke="#173d32" stroke-opacity=".15" stroke-width="2"/>
+  <text x="76" y="91" fill="#173d32" font-family="Segoe UI, sans-serif" font-size="30" font-weight="700">j. / Jacob</text>
+  <text x="76" y="148" fill="#58665c" font-family="Segoe UI, sans-serif" font-size="16" font-weight="600" letter-spacing="2">STORIES · SMALL DISCOVERIES · REAL LIFE</text>
+  <text x="73" y="250" fill="#173d32" font-family="Georgia, serif" font-size="76">A little curiosity.</text>
+  <text x="73" y="338" fill="#173d32" font-family="Georgia, serif" font-size="76">A lot of real life.</text>
+  <rect x="76" y="389" width="160" height="55" rx="16" fill="#e4ebd9"/>
+  <rect x="252" y="389" width="220" height="55" rx="16" fill="#f0d8c4"/>
+  <rect x="488" y="389" width="168" height="55" rx="16" fill="#ebd98c"/>
+  <g fill="#173d32" font-family="Segoe UI, sans-serif" font-size="21" font-weight="600">
+    <text x="110" y="425">Books</text><text x="284" y="425">Reflections</text><text x="517" y="425">Gaming</text>
+  </g>
+  <rect y="530" width="1200" height="100" fill="#173d32"/>
+  <text x="76" y="592" fill="#f5f2e9" font-family="Segoe UI, sans-serif" font-size="30" font-weight="600">stockswatch.cc</text>
+  <text x="925" y="589" fill="#e4ebd9" font-family="Segoe UI, sans-serif" font-size="16" letter-spacing="1">INDEPENDENT CREATOR</text>
+</svg>
