@@ -70,6 +70,6 @@ const articleJson = articleData && JSON.stringify(articleData).replace(/</g, '\\
       <nav class="primary-navigation" aria-label="Primary">{navigation.map(([label, href]) => <a href={href} aria-current={active === label ? 'page' : undefined}>{label}</a>)}</nav>
     </header>
     <main id="main" tabindex="-1"><slot /></main>
-    <footer class="footer"><div class="wrap"><a class="footer-name" href="/">J Sol / Jacob</a><p>A home for the things I’m learning and making.</p><div class="footer-links"><a href="/links">All links</a><a href="/guides">Practical guides</a><a href="/resources">Toolkit</a><a href="/consulting">Consulting</a><a href="/about#profiles">Connect</a><a href="/privacy">Privacy</a></div><p class="footer-domain">stockswatch.cc / Independent creator</p></div></footer>
+    <footer class="footer"><div class="wrap"><a class="footer-name" href="/">J Sol / Jacob</a><p>A home for the things I’m learning and making.</p><div class="footer-links"><a href="/links">All links</a><a href="/guides">Practical guides</a><a href="/resources">Toolkit</a><a href="/references">References</a><a href="/consulting">Consulting</a><a href="/about#profiles">Connect</a><a href="/privacy">Privacy</a></div><p class="footer-domain">stockswatch.cc / Independent creator</p></div></footer>
   </body>
 </html>

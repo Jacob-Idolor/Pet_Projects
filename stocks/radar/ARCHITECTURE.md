@@ -115,3 +115,6 @@ Watch, Links and About. Replacing the popover avoids same-page overlay dismissal
 and focus issues without JavaScript or security-header changes. Anchor targets
 remain keyboard-focusable with visible focus indicators. Footer navigation
 preserves guides, toolkit, consulting, privacy and /about#profiles.
+
+## Reference shelf (November 12, 2026)
+/references collects 19 source-verified books plus the official Huberman Lab / Robert Greene episode. src/data/references.ts holds publisher links. PodcastReference uses a locally hosted credited YouTube thumbnail; no iframe, remote asset loads, tracking or personal draft videos. The page is intentionally a growing collection, not a complete posting history.
