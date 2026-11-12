@@ -4,6 +4,7 @@ import Layout from '../layouts/PersonalLayout.astro';
 import CoreChannels from '../components/CoreChannels.astro';
 import FeaturedBookVote from '../components/FeaturedBookVote.astro';
 import RecentVideos from '../components/RecentVideos.astro';
+import PodcastReference from '../components/PodcastReference.astro';
 import stillLife from '../assets/creator-still-life.png';
 import { channels } from '../data/profiles';
 const substack = channels.find(channel => channel.id === 'substack')!;
@@ -27,6 +28,8 @@ const twitch = channels.find(channel => channel.id === 'twitch')!;
       </div>
     </section>
     <RecentVideos />
+    <PodcastReference />
+    <div class="wrap"><a class="button" href="/references">Explore my references &amp; inspiration</a></div>
     <section class="watch-section" id="watch" aria-labelledby="watch-title"><div class="wrap"><h2 id="watch-title">Same Jacob. Your favorite platform.</h2><p>Watch, read, or say hello wherever you feel at home.</p><CoreChannels /></div></section>
     <section class="specific-section wrap" aria-labelledby="specific-title"><h2 id="specific-title">Looking for something specific?</h2><p class="section-intro">Find my reading list, writing, live streams, practical guides, and professional work in one organized place.</p><a class="button" href="/links">Open all my links <span aria-hidden="true">↗</span></a><div class="inline-links"><a href="/links#reading">Reading &amp; writing</a><a href="/links#referrals">Tools &amp; referrals</a><a href="/consulting">Consulting</a></div></section>
   </div>

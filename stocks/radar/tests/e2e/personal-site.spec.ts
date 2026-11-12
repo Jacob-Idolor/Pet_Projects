@@ -191,8 +191,8 @@ test('sitemap URLs are direct 200 pages with matching canonicals', async ({ page
   const sitemap = await request.get('/sitemap.xml', { maxRedirects: 0 });
   expect(sitemap.status()).toBe(200);
   const urls = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
-  expect(urls).toHaveLength(10);
-  expect(new Set(urls).size).toBe(10);
+  expect(urls).toHaveLength(11);
+  expect(new Set(urls).size).toBe(11);
   for (const url of urls) {
     const parsed = new URL(url);
     expect(parsed.origin).toBe('https://stockswatch.cc');
