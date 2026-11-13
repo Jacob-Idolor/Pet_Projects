@@ -1,6 +1,6 @@
 /**
  * Pure AdSense policy helpers (Node + browser). No Astro import.meta.env.
- * Used by src/lib/adsense.ts and unit tests.
+ * Retained for legacy policy regression tests; the active site has no ads.
  */
 
 export function isCustomDomain(url) {
