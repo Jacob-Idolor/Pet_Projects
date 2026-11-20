@@ -13,7 +13,7 @@ const { title, description, active, noindex = false, article } = Astro.props;
 const canonicalPath = Astro.url.pathname === '/index.html' ? '/' : Astro.url.pathname.replace(/\.html$/, '');
 const canonical = new URL(canonicalPath, Astro.site);
 const authorUrl = new URL('/about', Astro.site);
-const navigation = [['Stories', '/#stories'], ['Watch', '/#recent-videos'], ['Links', '/links'], ['About', '/about']];
+const navigation = [['Stories', '/#stories'], ['Watch', '/#recent-videos'], ['Links', '/links'], ['About', '/about'], ['Pantry Pilot', 'https://j-sol-pantry-pilot.supplesorbet16.chatgpt.site/']];
 const shareImage = new URL('/social/j-sol-share.png', Astro.site);
 const shareImageAlt = 'J Sol / Jacob — books, personal reflections and gaming. A little curiosity. A lot of real life.';
 const articleData = article && !noindex ? {

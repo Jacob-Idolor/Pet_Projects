@@ -118,3 +118,8 @@ preserves guides, toolkit, consulting, privacy and /about#profiles.
 
 ## Reference shelf (November 12, 2026)
 /references collects 19 source-verified books plus the official Huberman Lab / Robert Greene episode. src/data/references.ts holds publisher links. PodcastReference uses a locally hosted credited YouTube thumbnail; no iframe, remote asset loads, tracking or personal draft videos. The page is intentionally a growing collection, not a complete posting history.
+
+## Pantry Pilot
+
+The primary navigation links to the separate Pantry Pilot site. This site does not
+host the app, store pantry entries, add app assets, or embed an external service.
